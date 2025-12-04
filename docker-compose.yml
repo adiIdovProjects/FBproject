@@ -1,0 +1,23 @@
+
+services:
+  # ------------------------------------
+  # 1. PostgreSQL Database Service
+  # ------------------------------------
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      # משתנים אלו נמשכים מקובץ .env הראשי
+      POSTGRES_PASSWORD: ${DB_PASSWORD} 
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      # חשיפת הפורט 5432 היא חיונית, מכיוון שקוד ה-Python רץ מחוץ ל-Docker
+      - "5432:5432" 
+    volumes:
+      # ווליום לשמירת הנתונים באופן קבוע
+      - postgres_data:/var/lib/postgresql/data
+      
+volumes:
+  postgres_data:
