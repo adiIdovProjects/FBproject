@@ -2,40 +2,41 @@
 
 from facebook_business.adobjects.adsinsights import AdsInsights
 
-# --- 1. הגדרות API ו-Gemini ---
+# --- 1. API Credentials (MOVE THESE TO ENVIRONMENT VARIABLES FOR PRODUCTION!) ---
+ACCESS_TOKEN = "EAAQwShlYGwkBQLD7vacws4g1uHfoqyyKLpjikjn4l1iW60tgaQOz8H85TbWSezm0xTYmZA6tj16VnegoVCjcc3DX78O4fZAHkFL1tD2JyooVfgouyGnGOMKADE5mRgSeux9kLHgXQQDvgLP7CuutaZBitn9X1bnvytBOZBHaL4tINe7xqANyUiPaK9skDCzEISkZD"
+APP_ID = "1178994717760265"
+APP_SECRET = "c4d816b4917893d6256ededd124f7fc54c" # Corrected dummy value for demonstration
+AD_ACCOUNT_ID = "act_1178994717760265" # Corrected to standard format for demonstration
+
+# --- 2. Gemini Model ---
 GEMINI_MODEL = 'gemini-2.5-flash'
 
-# --- 2. הגדרות DB ושמות טבלאות ---
+# --- 3. DB Settings and Table Names ---
 CORE_TABLE_NAME = 'core_campaign_daily'
 BREAKDOWN_TABLE_NAME = 'all_breakdowns_daily'
 
-# מפתחות ראשיים (Primary Keys)
+# Primary Keys
 CORE_PK = ['Date', 'Campaign_ID']
-
-# **תיקון 4:** הוספת עמודות הפיצול למפתח הראשי
 BREAKDOWN_PK = ['Date', 'Campaign_ID', 'Breakdown_Type', 'age', 'gender', 'country', 'publisher_platform']
 
-
-# --- 3. הגדרות לוגיקת שליפה (PULL LOGIC) ---
+# --- 4. Pull Logic Settings ---
 FIRST_PULL_DAYS = 1100
 DAILY_PULL_DAYS = 3
 CHUNK_DAYS = 30 
 
-# --- 4. הגדרות Meta API ---
-# רשימת השדות הבסיסית שנשלפת תמיד
+# --- 5. Meta API Settings ---
+# Base fields always pulled
 BASE_FIELDS_TO_PULL = [
     AdsInsights.Field.date_start,
     AdsInsights.Field.campaign_id,
-    # **תיקון 5:** הוספת campaign_name לשליפה
-    AdsInsights.Field.campaign_name, 
+    AdsInsights.Field.campaign_name,
     AdsInsights.Field.spend,
     AdsInsights.Field.impressions,
     AdsInsights.Field.clicks,
-    # הסרנו ctr, כי נחשב אותו ב-data_handler
     AdsInsights.Field.actions,
 ]
 
-# רשימת קבוצות הפיצולים לשליפה
+# Breakdown groups to pull
 BREAKDOWN_LIST_GROUPS = [
     {'type': 'demo', 'breakdowns': ['age', 'gender']}, 
     {'type': 'geo', 'breakdowns': ['country']},
