@@ -40,5 +40,5 @@ BASE_FIELDS_TO_PULL = [
 BREAKDOWN_LIST_GROUPS = [
     {'type': 'demo', 'breakdowns': ['age', 'gender']}, 
     {'type': 'geo', 'breakdowns': ['country']},
-    {'type': 'placement', 'breakdowns': ['publisher_platform']}, 
+    {'type': 'placement', 'breakdowns': ['publisher_platform', 'publisher_platform_and_position']}, 
 ]
