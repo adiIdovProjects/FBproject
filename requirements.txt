@@ -1,0 +1,6 @@
+google-generativeai
+python-dotenv
+pandas
+SQLAlchemy
+psycopg2-binary
+schedule

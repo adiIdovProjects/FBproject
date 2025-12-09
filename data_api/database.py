@@ -1,35 +1,61 @@
-# data_api/database.py
+"""
+DATABASE.PY
+ 
+Purpose: Manages the configuration and initialization of the SQLAlchemy 
+database engine by reading environment variables. This file serves as 
+the centralized source for establishing the DB connection.
+
+Functions:
+- get_db_engine: Creates and returns the SQLAlchemy engine instance with 
+                 robust connection pooling settings.
+"""
 
 from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
+import logging
 
-# ודא שטעינת המשתנים מתבצעת
+logger = logging.getLogger(__name__)
+
+# Load environment variables
 load_dotenv() 
 
-# שליפת משתני DB
+# Retrieve DB variables
 DB_USER = os.getenv("POSTGRES_USER")
 DB_PASS = os.getenv("DB_PASSWORD") 
 DB_HOST = os.getenv("POSTGRES_HOST")
 DB_PORT = os.getenv("POSTGRES_PORT")
 DB_NAME = os.getenv("POSTGRES_DB")
 
-# בדיקה קריטית
+# Critical check
 if not all([DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME]):
-    raise EnvironmentError("❌ FATAL: One of the DB environment variables is missing or empty. Please check the .env ::file.data_api/database.py")
+    raise EnvironmentError("❌ FATAL: One of the DB environment variables is missing or empty. Please check the .env file.")
 
-# מחרוזת החיבור ל-PostgreSQL
+# PostgreSQL connection string
 DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# יצירת מנוע SQLAlchemy
+# Create the SQLAlchemy engine
 def get_db_engine():
-    """יוצר ומחזיר את מנוע SQLAlchemy לחיבור ל-DB."""
+    """
+    Creates and returns the SQLAlchemy engine for DB connection.
+    Includes pool management settings to prevent idle timeouts (f405 errors).
+    """
     try:
-        engine = create_engine(DATABASE_URL)
-        print("✅ SQLAlchemy Engine created and configured for API.")
+        # --- Critical Fix for f405 Errors / Idle Timeouts ---
+        # 1. pool_recycle=3600: Recycle connections after 1 hour (3600 seconds) 
+        #    to prevent DB server idle timeout closure.
+        # 2. pool_pre_ping=True: Test connections for liveness before using them 
+        #    from the pool, preventing the "f405" error.
+        engine = create_engine(
+            DATABASE_URL,
+            pool_recycle=3600,  
+            pool_pre_ping=True 
+        )
+        logger.info("✅ SQLAlchemy Engine created and configured for API with robust pooling.")
         return engine
     except Exception as e:
-        print(f"❌ Error creating DB engine: {e}")
+        logger.error(f"❌ Error creating DB engine: {e}")
         return None
 
+# Global Engine Instance
 ENGINE = get_db_engine()

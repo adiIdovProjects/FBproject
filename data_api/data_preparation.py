@@ -1,9 +1,15 @@
 """
 data_preparation.py
 
-Purpose: Contains functions for final data transformation, ensuring column names,
-data types, and structure match the target database schema for bulk insertion.
-This is called just before the final 'Load' step.
+Purpose: Contains functions for final data transformation, including:
+1. Defining the mapping between Fact columns and Dimension tables (DIMENSION_MAPPING).
+2. Extracting unique dimension members from the raw fact data and UPSERTing them (Dynamic Loading).
+3. Fetching Dimension ID-Name maps from the database (Lookup).
+4. Performing Dimension Lookup (Name -> ID) on Fact tables.
+5. Performing Type Casting and data cleaning for the final Load step.
+
+NOTE: Dimension Age (dim_age) is explicitly skipped from dynamic loading here, 
+as it is loaded statically from static_dimensions.py.
 """
 import pandas as pd
 import numpy as np
@@ -13,58 +19,51 @@ from typing import List, Dict, Any
 # --- CRITICAL IMPORTS for DB Lookup ---
 from data_api.db_connector import save_dataframe_to_db
 from data_api.database import ENGINE as engine 
-# Assuming this is the global engine instance
-from sqlalchemy import text # Needed for executing SQL queries
+from sqlalchemy import text
 # --- END CRITICAL IMPORTS ---
 
 logger = logging.getLogger(__name__)
 
-# --- Configuration for columns that need explicit casting ---
-# These are all the ID columns expected to be BIGINT in the PostgreSQL database.
-# MUST include all primary key and foreign key IDs for fact tables (the grain).
+# --- Configuration ---
+# All ID columns expected to be BIGINT in the database
 ID_COLUMNS_TO_CAST: List[str] = [
-    'date_id',
-    'campaign_id',
-    'ad_id',
-    'age_id',
-    'gender_id',
-    'country_id',
-    'placement_id'
+    'date_id', 'campaign_id', 'ad_id', 'age_id', 'gender_id', 'country_id', 'placement_id'
 ]
 
-# --- Mapping of fact columns to target dimension tables for pre-loading ---
-# 'source_cols' defines all columns required in the final dimension table (ID and Name).
-# FIXED: Updated source_cols to match the standardized DB Schema names.
+# --- Mapping ---
+# Maps fact columns (keys) to their corresponding dimension tables (values)
 DIMENSION_MAPPING: Dict[str, Dict[str, List[str] | str]] = {
+    # Entity Dimensions (PK is the external ID)
     'campaign_id': {'table': 'dim_campaign', 'pk': ['campaign_id'], 'source_cols': ['campaign_id', 'campaign_name']},
     'ad_id': {'table': 'dim_ad', 'pk': ['ad_id'], 'source_cols': ['ad_id', 'ad_name']},
-    # Attribute Dimensions: Use the DB column name (e.g., 'age_group') here
-    'age_id': {'table': 'dim_age', 'pk': ['age_id'], 'source_cols': ['age_id', 'age_group']},
-    'gender_id': {'table': 'dim_gender', 'pk': ['gender_id'], 'source_cols': ['gender_id', 'gender']},
-    'country_id': {'table': 'dim_country', 'pk': ['country_id'], 'source_cols': ['country_id', 'country']},
-    'placement_id': {'table': 'dim_placement', 'pk': ['placement_id'], 'source_cols': ['placement_id', 'placement_name']}, 
+    
+    # Attribute Dimensions (PK is the Name/Group, ID is auto-generated/placeholder)
+    'age_id': {'table': 'dim_age', 'pk': ['age_group'], 'source_cols': ['age_id', 'age_group']}, 
+    'gender_id': {'table': 'dim_gender', 'pk': ['gender'], 'source_cols': ['gender_id', 'gender']},
+    'country_id': {'table': 'dim_country', 'pk': ['country'], 'source_cols': ['country_id', 'country']},
+    'placement_id': {'table': 'dim_placement', 'pk': ['placement_name'], 'source_cols': ['placement_id', 'placement_name']},
 }
+
 
 def get_dimension_lookup_map(table_name: str, id_col: str, name_col: str) -> pd.Series:
     """
-    Fetches dimension ID and Name mapping from the database and returns a
-    Pandas Series mapping Name (index) -> ID (value).
-
-    This is used by prepare_dataframe_for_db to generate the Foreign Keys.
+    Fetches dimension ID and Name mapping from the database for Lookup.
+    Returns a Series: Index = name_col (e.g., '18-24'), Value = id_col (e.g., 5).
     """
     if engine is None:
-        logger.error(f"DB Engine not initialized for lookup map for {table_name}.")
         return pd.Series(dtype='object')
 
-    # We select the ID and Name columns
     sql_query = f'SELECT "{id_col}", "{name_col}" FROM "{table_name}"'
 
     try:
         with engine.connect() as connection:
             df_dim = pd.read_sql(text(sql_query), connection)
-            # Create a Series mapping Name -> ID
             df_dim.dropna(subset=[name_col, id_col], inplace=True)
-            # Ensure the ID column is numeric for later joining/mapping
+            
+            # Drop duplicates to prevent InvalidIndexError
+            df_dim.drop_duplicates(subset=[name_col], keep='first', inplace=True)
+
+            # Ensure ID column is Int64 for mapping consistency
             df_dim[id_col] = pd.to_numeric(df_dim[id_col], errors='coerce').fillna(0).astype('Int64')
             return df_dim.set_index(name_col)[id_col]
     except Exception as e:
@@ -74,135 +73,90 @@ def get_dimension_lookup_map(table_name: str, id_col: str, name_col: str) -> pd.
 
 def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
     """
-    Extracts unique dimension members from fact DataFrames and UPSERTs them.
-
-    Handles Attribute Dimensions by ensuring the DataFrame contains both
-    the ID (set to 0 for new members) and the Name, satisfying the DB schema
-    check.
+    Extracts unique dimension members (excluding Age) from fact DataFrames and UPSERTs them.
     """
     if not fact_dfs:
-        logger.info("No fact DataFrames provided. Skipping dimension pre-load.")
         return True
 
     all_dim_success = True
 
     for dim_id_col, config in DIMENSION_MAPPING.items():
         dim_table_name = config['table']
+        
+        # --- SKIP: dim_age is handled statically ---
+        if dim_table_name == 'dim_age':
+            continue 
+        # ------------------------------------------
+
         pk_col = config['pk'][0]
-        source_cols = config['source_cols']
-        name_col = source_cols[1] # The Name column (e.g., 'age_group', 'campaign_name')
+        source_cols = config['source_cols'] # e.g. ['gender_id', 'gender']
+        name_col = source_cols[1] # e.g. 'gender'
 
-        # Entity dims use the ID as PK (e.g., campaign_id), Attribute dims use Name as logic PK
-        # NOTE: Attribute dimensions (age, gender, country, placement) are defined by the source name.
         is_entity_dim = pk_col in ['campaign_id', 'ad_id']
-
-        # 1. Determine which columns we expect to find in the fact DF
-        # Attribute dimensions only need the Name to extract unique members
         required_source_cols_in_fact = source_cols if is_entity_dim else [name_col]
-
         all_dim_data = []
 
         for df_name, df in fact_dfs.items():
-            
-            # --- RENAME RAW COLUMNS TO DB NAMES ---
-            # This is crucial because raw data comes as 'publisher_platform' but DB expects 'placement_name'
-            if 'publisher_platform_and_position' in df.columns:
-                df.rename(columns={'publisher_platform_and_position': 'placement_name'}, inplace=True)
+            # Rename for consistency before extraction (same as in prepare_dataframe_for_db)
+            if 'platform_position' in df.columns:
+                df.rename(columns={'platform_position': 'placement_name'}, inplace=True)
             elif 'publisher_platform' in df.columns:
                 df.rename(columns={'publisher_platform': 'placement_name'}, inplace=True)
-            if 'age' in df.columns: # Assuming raw name is 'age'
+            if 'age' in df.columns: 
                 df.rename(columns={'age': 'age_group'}, inplace=True)
-            # ---------------------------------------
             
-            # Check if the required source columns (ID and Name, or just Name) are present
+            # Check if all required columns for the dimension exist
             if all(col in df.columns for col in required_source_cols_in_fact):
-
-                # Filter out the 'N/A' placeholder value from the data handler
+                # Filter out 'N/A' as we handle unknowns later
                 df_filtered = df[df[name_col] != 'N/A'].copy()
-
-                if df_filtered.empty:
-                    continue
-
-                # Select only the required columns (ID and Name for entity, just Name for attribute)
-                # Ensure we only get unique members
+                if df_filtered.empty: continue
+                
                 dim_df_subset = df_filtered[required_source_cols_in_fact].drop_duplicates(ignore_index=True)
                 all_dim_data.append(dim_df_subset)
 
         if not all_dim_data:
-            logger.debug(f"No unique non-'N/A' data found for dimension '{dim_table_name}'. Skipping.")
             continue
 
         combined_dim_df = pd.concat(all_dim_data, ignore_index=True)
+        
+        # Deduplication based on the name column
+        combined_dim_df.drop_duplicates(subset=[name_col], keep='first', inplace=True)
 
-        # --- Common Cleanup & Validation ---
-
-        # 2. Enforce unique key constraint and prepare for UPSERT
         if is_entity_dim:
-            # 2.1 Entity Dimension (PK is the ID)
+            # For Campaign/Ad, the PK is the ID itself, which must be unique and non-zero
             upsert_pk = config['pk']
-
-            # Cast the source PK (e.g., campaign_id) to Int64
             try:
                 combined_dim_df[pk_col] = pd.to_numeric(combined_dim_df[pk_col], errors='coerce').fillna(0).astype('Int64')
-            except Exception as e:
-                logger.error(f"Failed to cast primary key '{pk_col}' for {dim_table_name}: {e}", exc_info=False)
-                all_dim_success = False
+            except: 
+                logger.error(f"Failed to cast entity ID {pk_col} for {dim_table_name}")
                 continue
-
-            # Remove rows where the primary key (ID) is 0 (Unknown/Null)
+            
             combined_dim_df = combined_dim_df[combined_dim_df[pk_col] != 0]
-
-            # Enforce unique ID (PK constraint)
-            original_count = len(combined_dim_df)
-            combined_dim_df.drop_duplicates(subset=config['pk'], keep='first', inplace=True)
-            if len(combined_dim_df) < original_count:
-                 logger.warning(f"Dropped {original_count - len(combined_dim_df)} duplicate rows based on Primary Key '{pk_col}' in '{dim_table_name}'.")
-
             df_for_upsert = combined_dim_df
-
         else:
-            # 2.2 Attribute Dimension (PK is the Name for UPSERT logic)
-            # The UPSERT logic will use the 'name_col' as the conflict target,
-            # assuming the DB has a UNIQUE constraint on this column.
+            # For Attribute dims (Gender, Country, Placement), the PK is the name_col
             upsert_pk = [name_col]
-
-            # Enforce unique Name
-            original_count = len(combined_dim_df)
-            combined_dim_df.drop_duplicates(subset=[name_col], keep='first', inplace=True)
-            if len(combined_dim_df) < original_count:
-                 logger.warning(f"Dropped {original_count - len(combined_dim_df)} duplicate rows based on Name column '{name_col}' in '{dim_table_name}'.")
-
-            # --- CRITICAL FIX: Add the ID column (Surrogate Key) back, setting it to 0. ---
-            # This ensures the dataframe matches the DB schema before sending to to_sql.
+            # Ensure the ID column exists before saving (for the schema)
             if pk_col not in combined_dim_df.columns:
                 combined_dim_df[pk_col] = 0
+            df_for_upsert = combined_dim_df.copy()
 
-            df_for_upsert = combined_dim_df
-            # --- END CRITICAL FIX ---
+        # Clean strings
+        if name_col in df_for_upsert.columns:
+            df_for_upsert[name_col] = df_for_upsert[name_col].fillna('Unknown').astype(str).str.strip()
+            df_for_upsert = df_for_upsert[df_for_upsert[name_col] != '']
 
+        if df_for_upsert.empty: continue
 
-        # Step B: Address NOT NULL constraint on Name/Attribute column (ensure it's not empty string/null)
-        df_for_upsert[name_col] = df_for_upsert[name_col].fillna('Unknown').astype(str).str.strip()
-        
-        # Remove any rows where the attribute name might have ended up as an empty string after stripping
-        df_for_upsert = df_for_upsert[df_for_upsert[name_col] != '']
-
-        if df_for_upsert.empty:
-            logger.warning(f"Dimension data for '{dim_table_name}' is empty after cleaning. Skipping load.")
-            continue
-
-        # Step C: Final column selection - MUST include all columns defined in source_cols
-        # This is critical to ensure the DF matches the DB table structure
+        # Final column selection
         final_cols_for_db = [col for col in source_cols if col in df_for_upsert.columns]
         df_for_upsert = df_for_upsert[final_cols_for_db].copy()
         
-        # Ensure ID column is Int64 for consistency
         if pk_col in df_for_upsert.columns:
+             # Ensure the ID column is Int64 (0 if null/bad data)
              df_for_upsert[pk_col] = pd.to_numeric(df_for_upsert[pk_col], errors='coerce').fillna(0).astype('Int64')
 
-        # 4. Perform UPSERT into the dimension table
-        logger.info(f"Loading {len(df_for_upsert)} unique records (ID/Attribute) into {dim_table_name}...")
-
+        logger.info(f"Loading {len(df_for_upsert)} unique records into {dim_table_name}...")
         if not save_dataframe_to_db(df_for_upsert, dim_table_name, upsert_pk):
             all_dim_success = False
 
@@ -211,104 +165,48 @@ def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
 
 def prepare_dataframe_for_db(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
     """
-    Ensures all key ID columns are cast to the appropriate integer type
-    and that no NULL values remain in ID columns that serve as primary keys.
-
-    CRITICALLY: This function performs the Dimension Lookup/Mapping to create
-    the missing Foreign Key ID columns (e.g., 'age_id') from
-    the dimension name columns (e.g., 'age').
+    Performs Dimension Lookup (Name -> ID) and Type Casting.
     """
-    if df.empty:
-        logger.warning(f"Preparation skipped for {table_name}: DataFrame is empty.")
+    if df.empty: 
+        logger.info(f"DataFrame for {table_name} is empty, skipping preparation.")
         return df
-
-    logger.info(f"Starting type casting and de-duplication preparation for {table_name}.")
-
+        
+    logger.info(f"Starting preparation for {table_name}.")
     df_copy = df.copy()
 
-    # --- Dimension Lookup and Mapping (Fact Tables Only) ---
+    # --- Dimension Lookup ---
     if table_name.startswith('fact_'):
-        logger.info(f"Starting dimension lookups for {table_name}.")
-
         for dim_id_col, config in DIMENSION_MAPPING.items():
-
-            dim_name_col = config['source_cols'][1]
+            dim_name_col = config['source_cols'][1] # e.g. age_group
             dim_table_name = config['table']
-            
-            # --- RENAME RAW COLUMNS TO DB NAMES ---
-            # Ensure the DF has the column name we expect in the DB (standardization)
-            if 'publisher_platform_and_position' in df_copy.columns:
-                 df_copy.rename(columns={'publisher_platform_and_position': 'placement_name'}, inplace=True)
-            elif 'publisher_platform' in df_copy.columns:
-                 df_copy.rename(columns={'publisher_platform': 'placement_name'}, inplace=True)
-            if 'age' in df_copy.columns:
-                 df_copy.rename(columns={'age': 'age_group'}, inplace=True)
-            # ---------------------------------------
 
-            # Check if the fact DF contains the dimension NAME column (e.g., 'age_group', 'placement_name')
+            # Rename raw columns to match DB schema expectations
+            if 'age' in df_copy.columns: df_copy.rename(columns={'age': 'age_group'}, inplace=True)
+            if 'publisher_platform' in df_copy.columns: df_copy.rename(columns={'publisher_platform': 'placement_name'}, inplace=True)
+            if 'platform_position' in df_copy.columns: df_copy.rename(columns={'platform_position': 'placement_name'}, inplace=True)
+
+
             if dim_name_col in df_copy.columns:
-
-                # Fetch the lookup map (Name -> ID)
+                # Get the map (e.g. '18-24' -> 5)
                 lookup_map = get_dimension_lookup_map(dim_table_name, dim_id_col, dim_name_col)
-
+                
+                # IMPORTANT: Map the name to the ID. If not found, map result is NaN.
                 if lookup_map.empty:
-                    logger.warning(f"Lookup map for {dim_table_name} is empty. All {dim_id_col} will be set to 0 (Unknown).")
-                    df_copy[dim_id_col] = 0
+                    df_copy[dim_id_col] = 0 # Default to 0 (Unknown) if map is empty
                 else:
-                    # Perform the actual mapping using the dimension NAME column.
-                    # .astype(str).str.strip() ensures clean matching to the map index.
+                    # Convert source column to string, strip spaces, and map
                     df_copy[dim_id_col] = df_copy[dim_name_col].astype(str).str.strip().map(lookup_map)
-
-                logger.debug(f"Successfully mapped '{dim_name_col}' to '{dim_id_col}' for {table_name}.")
-
-                # Drop the source name column after mapping is complete,
-                # as the fact table should only store the ID.
+                
+                # After mapping, we drop the descriptive column
                 df_copy.drop(columns=[dim_name_col], errors='ignore', inplace=True)
-
-    # --- END Dimension Lookup and Mapping ---
-
-
-    # --- Enforce Fact Table Grain Uniqueness (Deduplication) ---
-    if table_name.startswith('fact_'):
-        # Filter ID_COLUMNS_TO_CAST to include only those columns that exist in the DF *after* lookup
-        subset_cols = [col for col in ID_COLUMNS_TO_CAST if col in df_copy.columns]
-
-        # The 'date_id' is always assumed to be part of the fact table grain
-        if 'date_id' not in subset_cols and 'date_id' in df_copy.columns:
-            subset_cols.append('date_id')
-            
-        if subset_cols:
-            # We don't drop duplicates yet, as the aggregation logic in db_connector 
-            # handles true duplicates for additive metrics. This step is only for logging/info.
-             logger.debug(f"Fact table grain for deduplication/aggregation: {subset_cols}")
-        else:
-             logger.warning(f"No ID columns found for grain check in Fact table '{table_name}'.")
-             
-    # --- END Deduplication ---
-
 
     # --- Type Casting ---
     for col in ID_COLUMNS_TO_CAST:
         if col in df_copy.columns:
             try:
-                # 1. Clean up any leading/trailing spaces (if string source)
-                if df_copy[col].dtype == object:
-                    df_copy[col] = df_copy[col].astype(str).str.strip()
-
-                # 2. Convert to numeric. Errors (like non-numeric strings or unmapped NaNs) are converted to NaN.
-                df_copy[col] = pd.to_numeric(df_copy[col], errors='coerce')
-
-                # 3. CRITICAL: Fill any NaN/NULL values with 0.
-                # This handles lookup failures/original NaNs and maps them to the Unknown Member.
-                df_copy[col] = df_copy[col].fillna(0)
-
-                # 4. Convert to Pandas nullable integer type ('Int64').
-                df_copy[col] = df_copy[col].astype('Int64')
-
-                logger.debug(f"Successfully cast column '{col}' to 'Int64' for {table_name}.")
-
+                # Coerce errors (e.g., NaNs from failed lookup), fill NaNs with 0, and ensure Int64 type
+                df_copy[col] = pd.to_numeric(df_copy[col], errors='coerce').fillna(0).astype('Int64')
             except Exception as e:
-                logger.error(f"FATAL: Could not cast column '{col}' for table {table_name}. Data issue suspected: {e}", exc_info=False)
+                logger.error(f"Failed to cast column '{col}' to 'Int64' in {table_name}: {e}")
 
-    logger.info(f"Finished type casting preparation for {table_name}.")
     return df_copy

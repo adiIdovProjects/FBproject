@@ -52,18 +52,18 @@ def init_api_connection():
     try:
         if not AD_ACCOUNT_ID or not ACCESS_TOKEN or not APP_ID or not APP_SECRET:
             logger.critical("FATAL: One of the FACEBOOK API variables is missing or empty. Please check the .env file")
-            return None, False
+            return None
         
         FacebookAdsApi.init(APP_ID, APP_SECRET, ACCESS_TOKEN)
         logger.info("Meta API connection established.")
         
-        logger.debug(f"Using Ad Account ID: {AD_ACCOUNT_ID}")
+        logger.info(f"Using Ad Account ID: {AD_ACCOUNT_ID}")
         
-        return AD_ACCOUNT_ID, True
+        return AD_ACCOUNT_ID
     
     except Exception as e:
         logger.error(f"Failed to initialize Meta API: {e}")
-        return None, False
+        return None
 
 
 def get_date_chunks(since_days, chunk_days):
