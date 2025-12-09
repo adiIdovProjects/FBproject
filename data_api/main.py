@@ -47,7 +47,6 @@ def etl_pipeline(start_date: date, end_date: date):
         logger.error("Failed to initialize Meta API connection. Exiting ETL.")
         return
 
-    # ✅ תיקון 2: חישוב ימי המשיכה בפועל מהטווח שהתקבל מ-main()
     days_to_pull_int = (end_date - start_date).days
     
     # Fetch Core Data
@@ -57,11 +56,10 @@ def etl_pipeline(start_date: date, end_date: date):
     # Fetch Breakdown Data (Age/Gender, Placement, Country)
     df_breakdowns = {}
     
-    # ✅ תיקון 3: לולאה על מבנה הרשימה של BREAKDOWN_LIST_GROUPS
     for group_dict in BREAKDOWN_LIST_GROUPS:
         group_name = group_dict['type']
         breakdowns_list = group_dict['breakdowns']
-        key = group_name # השתמש ב-'type' כמפתח במקום ב-'_'.join()
+        key = group_name 
         
         # ❗ שימוש ב-days_to_pull_int
         df_breakdowns[key] = get_breakdown_data(api_connection, breakdowns_list, days_to_pull_int)
@@ -70,8 +68,6 @@ def etl_pipeline(start_date: date, end_date: date):
 
     # 3. T (Transform) Stage - Clean, Calculate, and Split
     logger.info("Starting T (Transform) Stage: Cleaning and calculating KPIs...")
-
-    # ✅ תיקון 4: טיפול בשגיאת 'No objects to concatenate'
     dfs_to_concat = [df for df in raw_data_dfs.values() if not df.empty]
     
     if not dfs_to_concat:
@@ -79,11 +75,6 @@ def etl_pipeline(start_date: date, end_date: date):
         return 
         
     combined_df = pd.concat(dfs_to_concat, ignore_index=True)
-
-    # השורה הזו מיותרת כעת לאחר הבדיקה של dfs_to_concat
-    # if combined_df.empty:
-    #     logger.warning("No data retrieved from Meta API. Exiting ETL.")
-    #     return
 
     fact_dfs = clean_and_calculate(combined_df)
     
@@ -154,16 +145,11 @@ def main():
     latest_date = get_latest_date_in_db(MAIN_FACT_TABLE)
 
     if latest_date:
-        # ריצה יומית (Incremental Pull)
         start_date = latest_date
         end_date = date.today() 
         logger.info(f"DB found: Latest date is {latest_date}. Starting Incremental Pull from {start_date} to {end_date}.")
     else:
-        # ריצה היסטורית (Initial Historical Pull)
         end_date = date.today()
-        
-        # ✅ תיקון 1: חישוב start_date נכון למשיכה היסטורית (1100 ימים)
-        # יש לוודא ש-FIRST_PULL_DAYS הוא integer ב-config.py
         start_date = end_date - timedelta(days=FIRST_PULL_DAYS) 
         
         logger.info(f"DB is empty. Starting Initial Historical Pull from {start_date} to {end_date}.")

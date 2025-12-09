@@ -41,11 +41,6 @@ def get_db_engine():
     Includes pool management settings to prevent idle timeouts (f405 errors).
     """
     try:
-        # --- Critical Fix for f405 Errors / Idle Timeouts ---
-        # 1. pool_recycle=3600: Recycle connections after 1 hour (3600 seconds) 
-        #    to prevent DB server idle timeout closure.
-        # 2. pool_pre_ping=True: Test connections for liveness before using them 
-        #    from the pool, preventing the "f405" error.
         engine = create_engine(
             DATABASE_URL,
             pool_recycle=3600,  

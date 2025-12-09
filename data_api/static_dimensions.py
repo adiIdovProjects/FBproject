@@ -64,7 +64,6 @@ UNKNOWN_MEMBER_DEFS: Dict[str, Dict[str, Any]] = {
     },
     'dim_gender': {
         'gender_id': 0, 
-        # ✅ FIX: Column name corrected to 'gender'
         'gender': 'N/A'
     },
     'dim_country': {
@@ -85,10 +84,6 @@ def load_dim_age_static() -> bool:
     try:
         # 1. Create a DataFrame from the static list
         df_age = pd.DataFrame(STATIC_AGE_GROUPS, columns=['age_group'])
-
-        # 🛑 FIX קריטי: הוסר הטור 'age_id'. 
-        # ה-DB יקצה את ה-ID באופן אוטומטי (ID>0) וימנע את סינון רשומות ID=0.
-        # df_age['age_id'] = pd.Series([None] * len(df_age), dtype=pd.Int64Dtype()) # הוסר!
 
         logger.info(f"Loading {len(df_age)} static age groups into dim_age...")
 
@@ -115,17 +110,12 @@ def load_dim_gender_static() -> bool:
 
     try:
         # 1. Create a DataFrame from the static list
-        # ✅ FIX: Column name corrected to 'gender' (במקום 'gender_group')
         df_gender = pd.DataFrame(STATIC_GENDER_GROUPS, columns=['gender'])
-
-        # 🛑 FIX קריטי: הוסר הטור 'gender_id'. 
-        # ה-DB יקצה את ה-ID באופן אוטומטי (ID>0) וימנע את סינון רשומות ID=0.
-        # df_gender['gender_id'] = pd.Series([None] * len(df_gender), dtype=pd.Int64Dtype()) # הוסר!
 
         logger.info(f"Loading {len(df_gender)} static gender groups into dim_gender...")
 
         # 2. Use the existing UPSERT logic. PK is ['gender']
-        # ✅ FIX: Primary Key corrected to 'gender'
+
         success = save_dataframe_to_db(df_gender, 'dim_gender', ['gender'])
 
         if success:

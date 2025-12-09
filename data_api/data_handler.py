@@ -4,10 +4,10 @@ DATA_HANDLER.PY
 Purpose: Handles the data cleaning, transformation, and calculation steps 
 after data extraction (E) and before the loading (L) stage. This includes 
 renaming columns, cleaning missing values, extracting complex JSON fields 
-(like 'actions'), and calculating derived KPIs (CTR, CPC, CPA).
+(like 'actions').
 
 Functions:
-- extract_actions: Splits the Meta API 'actions' field into 'purchases' and 'leads'.
+- extract_actions: Splits the Meta API 'actions' field into 'purchases' and 'leads' (now vectorized).
 - split_dataframes_by_granularity: Splits the single DataFrame into Core and Breakdown DataFrames.
 - clean_and_calculate: The main orchestration function for all processing steps.
 """
@@ -15,7 +15,8 @@ Functions:
 import pandas as pd
 import numpy as np
 import logging
-import json # <--- חיוני לטיפול בטורים מורכבים
+import json # נשאר חיוני לצורך המרת מחרוזות JSON לרשימת מילונים וקטורית ב-extract_actions
+from pandas import json_normalize # ייבוא מפורש לבהירות
 from typing import Dict, List, Any 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,6 @@ DEFAULT_DATE_STRING = '1970-01-01'
 COLUMN_RENAME_MAP = {
     'Ad_Name': 'ad_name', 
     'Date': 'date_start', 
-    # ✅ FIX 1: הוספת מיפוי לטורי פלייסמנט כדי להבטיח שהנתונים ייכנסו ל-fact_placement_metrics
     'publisher_platform': 'placement_name',
     'platform_position': 'placement_name', 
     'placement': 'placement_name'
@@ -38,62 +38,80 @@ COLUMN_RENAME_MAP = {
 
 # Column Definitions for consistency checks
 METRIC_COLUMNS = ['spend', 'impressions', 'clicks', 'purchases', 'leads']
-# ❌ REMOVED: KPIS_COLUMNS (כיוון שהם מסוננים על ידי ה-DB)
 DIM_COLS = ['campaign_name', 'ad_id', 'ad_name', 'placement_name', 'country', 'age_group', 'gender']
 
 # --- Defining the required columns for the CORE Fact Table ---
 CORE_DIM_COLS = ['campaign_name', 'ad_id', 'ad_name'] 
-# ✅ FIX 2: הסרת KPIS מ-CORE_METRIC_COLS
 CORE_METRIC_COLS = METRIC_COLUMNS 
 
 def extract_actions(df: pd.DataFrame) -> pd.DataFrame:
     """
     Splits the 'actions' column (a complex array/list of dicts) into 
-    separate 'purchases' and 'leads' metric columns. (הגרסה הנקייה והמוגנת)
+    separate 'purchases' and 'leads' metric columns using vectorized methods 
+    (pd.json_normalize and pivot_table).
     """
     
+    # 1. Initialize metric columns (preserving existing data or setting to 0.0)
     df['purchases'] = df.get('purchases', 0.0)
     df['leads'] = df.get('leads', 0.0)
 
     if 'actions' in df.columns and not df['actions'].empty:
         
-        # --- תיקון סופי ל-JSON: מטפל ב-NaN ומבצע המרה בטוחה ---
         df['actions'].fillna('[]', inplace=True)
         
-        def safe_json_load(data):
-            if isinstance(data, str):
-                try:
-                    return json.loads(data)
-                except json.JSONDecodeError:
-                    return [] 
-            return data 
-
-        df['actions'] = df['actions'].apply(safe_json_load)
-        # --------------------------------------------------------
+        # --- Vectorized Step 1: Safely Parse JSON Strings to List of Dicts ---
+        # משתמשים ב-apply ו-json.loads באופן ממוקד רק כדי להמיר מחרוזות JSON לאובייקטי פייתון (רשימת מילונים).
+        # זו הדרך המהירה ביותר ב-Pandas להתמודד עם המרה מבנית זו.
+        df['actions'] = df['actions'].apply(
+            lambda x: json.loads(x) if isinstance(x, str) and x.strip().startswith(('{', '[')) else x
+        )
         
-        def find_action_value(actions_list, action_type):
-            """Helper to extract metric value from the actions list."""
-            if not isinstance(actions_list, list):
-                return 0.0
+        # זיהוי שורות עם רשימת Actions תקינה
+        df_with_actions = df[df['actions'].apply(lambda x: isinstance(x, list) and len(x) > 0)]
+        
+        if not df_with_actions.empty:
             
-            for item in actions_list:
-                if isinstance(item, dict) and item.get('action_type') == action_type:
-                    try:
-                        return float(item.get('value', 0))
-                    except (TypeError, ValueError):
-                        return 0.0
-            return 0.0
+            # --- Vectorized Step 2: Flatten/Normalize and Aggregate ---
+            
+            # 1. Explode: יוצר שורה חדשה לכל "פעולה" (Action) בתוך הרשימה, ושומר על האינדקס המקורי
+            df_exploded = df_with_actions.explode('actions')
+            
+            # 2. Normalize: פותח את המילון (Dict) בתוך עמודת 'actions' לטורים חדשים
+            df_normalized = json_normalize(
+                df_exploded['actions'],
+                errors='ignore'
+            ).set_index(df_exploded.index) # משייך מחדש את האינדקס המקורי
+            
+            # 3. ודא שהטור 'value' קיים וניתן להמרה למספר (Vectorized Numeric Conversion)
+            df_normalized['value'] = pd.to_numeric(df_normalized.get('value', 0), errors='coerce').fillna(0)
+            
+            # 4. Pivot: צבירת הערכים (value) לפי סוג הפעולה (action_type) והאינדקס המקורי
+            df_metrics = df_normalized.pivot_table(
+                index=df_normalized.index, 
+                columns='action_type', 
+                values='value', 
+                aggfunc='sum', 
+                fill_value=0.0
+            )
 
-        df['purchases'] = df['actions'].apply(lambda x: find_action_value(x, 'offsite_conversion.fb_pixel_purchase'))
-        df['leads'] = df['actions'].apply(lambda x: find_action_value(x, 'lead'))
+            # --- Vectorized Step 3: Merge back and Update ---
+            
+            purchase_key = 'offsite_conversion.fb_pixel_purchase'
+            lead_key = 'lead'
+            
+            # עדכון טורי purchases/leads בנתונים החדשים מהצבירה
+            if purchase_key in df_metrics.columns:
+                # שימוש ב-reindex ו-fillna כדי למזג באופן וקטורי ולשמור על ערכים קיימים שאינם NaN
+                df['purchases'] = df_metrics[purchase_key].reindex(df.index).fillna(df['purchases']).astype(float)
+                
+            if lead_key in df_metrics.columns:
+                df['leads'] = df_metrics[lead_key].reindex(df.index).fillna(df['leads']).astype(float)
 
+    # 5. ניקוי סופי: הסר את הטור המורכב 'actions'
     if 'actions' in df.columns:
         df = df.drop(columns=['actions'])
         
     return df
-
-
-# ❌ REMOVED: הפונקציה calculate_kpis הוסרה כולה מהקובץ.
 
 
 def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
@@ -122,7 +140,6 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
     
     df_core = df[is_core_data].copy()
     
-    # סינון טורים בהתאם ל-CORE_METRIC_COLS המעודכן (ללא KPIs)
     core_final_cols = [col for col in base_cols if col in df_core.columns]
     
     if not df_core.empty:
@@ -166,22 +183,6 @@ def clean_and_calculate(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     # 1. Rename columns to snake_case using the provided map
     df.rename(columns={k: v for k, v in COLUMN_RENAME_MAP.items() if k in df.columns}, inplace=True)
     
-    # --- DEBUG: Inspecting ALL Columns for Complex Data Types (נשאר לדיבוג) ---
-    print("\n--- DEBUG: Inspecting ALL Columns for Complex Data Types ---")
-    for col in df.columns:
-        first_non_null = df[col].dropna().iloc[0] if not df[col].dropna().empty else None
-        
-        if first_non_null is not None:
-            if isinstance(first_non_null, (list, dict)):
-                print(f"!!! DEBUG CRASH ALERT !!! Column '{col}' contains native Python type: {type(first_non_null)}.")
-                print(f"Sample Value: {first_non_null}")
-            elif isinstance(first_non_null, str) and first_non_null.strip().startswith(('{', '[')):
-                print(f"!!! DEBUG CRASH WARNING !!! Column '{col}' contains unparsed JSON String. First element type: {type(first_non_null)}.")
-                print(f"Sample Value: {first_non_null[:100]}...")
-            
-    print("--- DEBUG: Inspection complete. Proceeding to Data Processing ---\n")
-    # ----------------------------------------
-
     # 2. Handling Actions (Converting actions to purchases and leads)
     df = extract_actions(df)
     
@@ -215,8 +216,6 @@ def clean_and_calculate(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         else:
             df[col] = 0.0
     
-    # 6. Calculating KPI metrics - REMOVED!
-    # אין צורך בחישוב KPIs כיוון שהם אינם נשמרים בטבלאות ה-Fact.
 
     # 7. Splitting the single DataFrame into multiple DataFrames for loading
     fact_dfs_dict = split_dataframes_by_granularity(df)
