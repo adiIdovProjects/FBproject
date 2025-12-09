@@ -8,8 +8,8 @@ Purpose: Contains functions for final data transformation, including:
 4. Performing Dimension Lookup (Name -> ID) on Fact tables using the cache.
 5. Performing Type Casting and data cleaning for the final Load step.
 
-NOTE: Dimension Age (dim_age) is explicitly skipped from dynamic loading here, 
-as it is loaded statically from static_dimensions.py.
+NOTE: Dimension Age (dim_age) and Gender (dim_gender) are explicitly skipped from dynamic loading here, 
+as they are loaded statically from static_dimensions.py.
 """
 import pandas as pd
 import numpy as np
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # --- Configuration ---
 # All ID columns expected to be BIGINT in the database
 ID_COLUMNS_TO_CAST: List[str] = [
-    'date_id', 'campaign_id', 'ad_id', 'age_id', 'gender_id', 'country_id', 'placement_id'
+    'date_id', 'campaign_id', 'adset_id', 'ad_id', 'age_id', 'gender_id', 'country_id', 'placement_id'
 ]
 
 # --- Mapping ---
@@ -35,6 +35,8 @@ ID_COLUMNS_TO_CAST: List[str] = [
 DIMENSION_MAPPING: Dict[str, Dict[str, List[str] | str]] = {
     # Entity Dimensions (PK is the external ID)
     'campaign_id': {'table': 'dim_campaign', 'pk': ['campaign_id'], 'source_cols': ['campaign_id', 'campaign_name']},
+    # ✅ הוספה: Ad Set Dimension (Entity)
+    'adset_id': {'table': 'dim_adset', 'pk': ['adset_id'], 'source_cols': ['adset_id', 'adset_name']},
     'ad_id': {'table': 'dim_ad', 'pk': ['ad_id'], 'source_cols': ['ad_id', 'ad_name']},
     
     # Attribute Dimensions (PK is the Name/Group, ID is auto-generated/placeholder)
@@ -137,7 +139,8 @@ def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
         source_cols = config['source_cols'] # e.g. ['country_id', 'country']
         name_col = source_cols[1] # e.g. 'country'
 
-        is_entity_dim = pk_col in ['campaign_id', 'ad_id']
+        # ✅ עדכון: הוספת 'adset_id' לזיהוי Entity Dimensions
+        is_entity_dim = pk_col in ['campaign_id', 'adset_id', 'ad_id']
         required_source_cols_in_fact = source_cols if is_entity_dim else [name_col]
         all_dim_data = []
 
@@ -164,7 +167,7 @@ def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
         combined_dim_df.drop_duplicates(subset=[name_col], keep='first', inplace=True)
 
         if is_entity_dim:
-            # For Campaign/Ad, the PK is the ID itself
+            # For Campaign/Adset/Ad, the PK is the ID itself
             upsert_pk = config['pk']
             try:
                 combined_dim_df[pk_col] = pd.to_numeric(combined_dim_df[pk_col], errors='coerce').fillna(0).astype('Int64')
@@ -231,8 +234,7 @@ def prepare_dataframe_for_db(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
             dim_name_col = config['source_cols'][1] # e.g. age_group
             
             # --- REDUNDANT RENAME REMOVED HERE ---
-            # NOTE: Renaming raw columns (like 'age' or 'publisher_platform') 
-            # is now handled upstream in data_handler.py.
+            # NOTE: Renaming raw columns is now handled upstream in data_handler.py.
             # -------------------------------------
 
             if dim_name_col in df_copy.columns:
@@ -258,8 +260,11 @@ def prepare_dataframe_for_db(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
                 # After mapping, we drop the descriptive column
                 df_copy.drop(columns=[dim_name_col], errors='ignore', inplace=True)
             else:
-                 # If the descriptive column is missing, still ensure the ID column exists and is 0
-                 df_copy[dim_id_col] = 0
+                # If the descriptive column is missing, still ensure the ID column exists and is 0
+                # NOTE: This can incorrectly set entity IDs (like adset_id) to 0 if the name column 
+                # was dropped prematurely or was never present in the fact data, but maintains the original code structure.
+                if dim_id_col not in df_copy.columns:
+                     df_copy[dim_id_col] = 0
 
     # --- Type Casting ---
     for col in ID_COLUMNS_TO_CAST:

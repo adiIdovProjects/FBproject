@@ -38,10 +38,13 @@ COLUMN_RENAME_MAP = {
 
 # Column Definitions for consistency checks
 METRIC_COLUMNS = ['spend', 'impressions', 'clicks', 'purchases', 'leads']
-DIM_COLS = ['campaign_name', 'ad_id', 'ad_name', 'placement_name', 'country', 'age_group', 'gender']
+
+# ✅ FIX: הוספת adset_id ו-adset_name
+DIM_COLS = ['campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name', 'placement_name', 'country', 'age_group', 'gender']
 
 # --- Defining the required columns for the CORE Fact Table ---
-CORE_DIM_COLS = ['campaign_name', 'ad_id', 'ad_name'] 
+# ✅ FIX: הוספת adset_id ו-adset_name לגרעין (Grain) של טבלת Core
+CORE_DIM_COLS = ['campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name'] 
 CORE_METRIC_COLS = METRIC_COLUMNS 
 
 def extract_actions(df: pd.DataFrame) -> pd.DataFrame:
@@ -120,6 +123,7 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
     based on their level of granularity (Core vs. Breakdown).
     """
     
+    # ✅ FIX: base_cols כולל כעת adset_id ו-adset_name 
     base_cols = ['date_id', 'date_start', 'campaign_id'] + CORE_DIM_COLS + CORE_METRIC_COLS
     
     breakdown_groups = {
@@ -200,6 +204,7 @@ def clean_and_calculate(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     
     
     # 4. Cleaning and handling MISSING_DIM_VALUE for dimension columns
+    # DIM_COLS כולל כעת את adset_id ו-adset_name 
     all_potential_dim_cols = ['campaign_id'] + DIM_COLS 
     
     for col in all_potential_dim_cols:
@@ -216,7 +221,6 @@ def clean_and_calculate(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         else:
             df[col] = 0.0
     
-
     # 7. Splitting the single DataFrame into multiple DataFrames for loading
     fact_dfs_dict = split_dataframes_by_granularity(df)
     

@@ -1,5 +1,3 @@
-# config.py
-
 from facebook_business.adobjects.adsinsights import AdsInsights
 
 
@@ -17,10 +15,10 @@ BREAKDOWN_PK = ['Date', 'Campaign_ID', 'Breakdown_Type', 'age', 'gender', 'count
 # Fact Table Composite Primary Keys (Used for UPSERT logic in db_connector.py)
 # These must match the unique constraints defined in db_schema.py
 FACT_TABLE_PKS = {
-    'fact_core_metrics': ['date_id', 'campaign_id', 'ad_id'],
-    'fact_placement_metrics': ['date_id', 'campaign_id', 'ad_id', 'placement_id'],
-    'fact_age_gender_metrics': ['date_id', 'campaign_id', 'ad_id', 'age_id', 'gender_id'],
-    'fact_country_metrics': ['date_id', 'campaign_id', 'ad_id', 'country_id'],
+    'fact_core_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id'],
+    'fact_placement_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'placement_id'],
+    'fact_age_gender_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'age_id', 'gender_id'],
+    'fact_country_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'country_id'],
 }
 
 # --- 4. Pull Logic Settings ---
@@ -34,6 +32,10 @@ BASE_FIELDS_TO_PULL = [
     AdsInsights.Field.date_start,
     AdsInsights.Field.campaign_id,
     AdsInsights.Field.campaign_name,
+    AdsInsights.Field.adset_id,      
+    AdsInsights.Field.adset_name,   
+    AdsInsights.Field.ad_id,         
+    AdsInsights.Field.ad_name,       
     AdsInsights.Field.spend,
     AdsInsights.Field.impressions,
     AdsInsights.Field.clicks,
