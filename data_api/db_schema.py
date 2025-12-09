@@ -6,7 +6,7 @@ using SQLAlchemy ORM. This file contains the Dimension and Fact table definition
 and the function to create the schema in the PostgreSQL database.
 
 Schema Architecture: 
-- 7 Dimension Tables (Campaign, Ad, Placement, Country, Age, Gender, DATE)
+- 8 Dimension Tables (Campaign, Ad, AdSet, Placement, Country, Age, Gender, DATE)
 - 4 Fact Tables (Core, Placement, AgeGender, Country)
 
 Functions:
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 # -----------------------------------------------
-# --- DIMENSIONS (7 Tables) ---
+# --- DIMENSIONS (8 Tables) ---
 # -----------------------------------------------
 
 class DimDate(Base):
@@ -62,6 +62,13 @@ class DimAd(Base):
     ad_name = Column(String, nullable=False)
     # Metadata
     creative_name = Column(String)
+
+class DimAdset(Base):
+    """Dimension table for Ad Set details."""
+    __tablename__ = 'dim_adset'
+    # adset_id הוא המפתח הטבעי והמפתח הראשי
+    adset_id = Column(BigInteger, primary_key=True) 
+    adset_name = Column(String(255), nullable=False)
 
 class DimPlacement(Base):
     """Dimension table for Ad Placement (e.g., Facebook, Instagram, Audience Network)."""
@@ -98,44 +105,37 @@ class DimGender(Base):
 
 class FactCoreMetrics(Base):
     """
-    Fact table for core metrics aggregated by Date, Campaign, and Ad.
-    This is the lowest common denominator of all data.
+    Fact table for core metrics aggregated by Date, Campaign, Adset, and Ad.
+    GRAIN: date_id, campaign_id, adset_id, ad_id
     """
     __tablename__ = 'fact_core_metrics'
 
-    # Surrogate Primary Key (Internal for SQLAlchemy)
-    id = Column(Integer, primary_key=True)
-
-    # Foreign Keys (Natural Key) - Composite PK for UPSERT: date_id, campaign_id, ad_id
-    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), nullable=False)
-    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), nullable=False)
-    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), nullable=False)
+    # Composite Primary Key (Natural Key/Grain)
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False) # Adset added to PK
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
 
     # Core Metrics
     spend = Column(Float)
     impressions = Column(BigInteger)
     clicks = Column(BigInteger)
     purchases = Column(Integer)
-
-    # Enforce Composite PK in DB using UniqueConstraint for UPSERT logic
-    # GRAIN: date_id + campaign_id + ad_id
-    __table_args__ = (
-        UniqueConstraint('date_id', 'campaign_id', 'ad_id', name='uc_core_metrics'),
-    )
+    
+    # אין צורך ב-UniqueConstraint
+    # __table_args__ = ()
 
 
 class FactPlacementMetrics(Base):
-    """Fact table for metrics aggregated by Ad and Placement."""
+    """Fact table for metrics aggregated by Ad, Adset, and Placement."""
     __tablename__ = 'fact_placement_metrics'
 
-    # Surrogate Primary Key (Internal for SQLAlchemy)
-    id = Column(Integer, primary_key=True)
-
-    # Foreign Keys (Natural Key) - Composite PK for UPSERT: date_id, ad_id, placement_id
-    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), nullable=False)
-    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), nullable=False)
-    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), nullable=False)
-    placement_id = Column(Integer, ForeignKey('dim_placement.placement_id'), nullable=False)
+    # Composite Primary Key (Natural Key/Grain: date_id, campaign_id, adset_id, ad_id, placement_id)
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False) # Adset added to PK
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    placement_id = Column(Integer, ForeignKey('dim_placement.placement_id'), primary_key=True, nullable=False)
 
     # Metrics
     spend = Column(Float)
@@ -143,69 +143,56 @@ class FactPlacementMetrics(Base):
     clicks = Column(BigInteger)
     purchases = Column(Integer)
 
-    # Enforce Composite PK in DB using UniqueConstraint for UPSERT logic
-    # GRAIN: date_id + campaign_id + ad_id + placement_id
-    __table_args__ = (
-        UniqueConstraint('date_id', 'campaign_id', 'ad_id', 'placement_id', name='uc_placement_metrics'),
-    )
+    # אין צורך ב-UniqueConstraint
+    # __table_args__ = ()
 
 class FactAgeGenderMetrics(Base):
-    """Fact table for metrics aggregated by Age and Gender."""
+    """Fact table for metrics aggregated by Ad, Adset, Age, and Gender."""
     __tablename__ = 'fact_age_gender_metrics'
 
-    # Surrogate Primary Key (Internal for SQLAlchemy)
-    id = Column(Integer, primary_key=True)
-
-    # Foreign Keys (Natural Key) - Composite PK for UPSERT: date_id, ad_id, age_id, gender_id
-    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), nullable=False)
-    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), nullable=False)
-    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), nullable=False)
-    age_id = Column(Integer, ForeignKey('dim_age.age_id'), nullable=False)
-    gender_id = Column(Integer, ForeignKey('dim_gender.gender_id'), nullable=False)
+    # Composite Primary Key (Natural Key/Grain: date_id, campaign_id, adset_id, ad_id, age_id, gender_id)
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False) # Adset added to PK
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    age_id = Column(Integer, ForeignKey('dim_age.age_id'), primary_key=True, nullable=False)
+    gender_id = Column(Integer, ForeignKey('dim_gender.gender_id'), primary_key=True, nullable=False)
 
     # Metrics
     spend = Column(Float)
     clicks = Column(BigInteger)
     purchases = Column(Integer)
-
-    # Enforce Composite PK
-    # GRAIN: date_id + campaign_id + ad_id + age_id + gender_id
-    __table_args__ = (
-        UniqueConstraint('date_id', 'campaign_id', 'ad_id', 'age_id', 'gender_id', name='uc_age_gender'),
-    )
+    
+    # אין צורך ב-UniqueConstraint
+    # __table_args__ = ()
 
 class FactCountryMetrics(Base):
-    """Fact table for metrics aggregated by Country."""
+    """Fact table for metrics aggregated by Ad, Adset, and Country."""
     __tablename__ = 'fact_country_metrics'
 
-    # Surrogate Primary Key (Internal for SQLAlchemy)
-    id = Column(Integer, primary_key=True)
-
-    # Foreign Keys (Natural Key) - Composite PK for UPSERT: date_id, ad_id, country_id
-    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), nullable=False)
-    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), nullable=False)
-    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), nullable=False)
-    country_id = Column(Integer, ForeignKey('dim_country.country_id'), nullable=False)
+    # Composite Primary Key (Natural Key/Grain: date_id, campaign_id, adset_id, ad_id, country_id)
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False) # Adset added to PK
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    country_id = Column(Integer, ForeignKey('dim_country.country_id'), primary_key=True, nullable=False)
 
     # Metrics
     spend = Column(Float)
     clicks = Column(BigInteger)
     purchases = Column(Integer)
 
-    # Enforce Composite PK
-    # GRAIN: date_id + campaign_id + ad_id + country_id
-    __table_args__ = (
-        UniqueConstraint('date_id', 'campaign_id', 'ad_id', 'country_id', name='uc_country'),
-    )
+    # אין צורך ב-UniqueConstraint
+    # __table_args__ = ()
 
 # -----------------------------------------------
 # --- Schema Creation Function ---
 # -----------------------------------------------
 
 def create_db_schema():
-    """Creates all 11 tables defined in Base (7 Dim + 4 Fact) if they do not exist."""
+    """Creates all 12 tables defined in Base (8 Dim + 4 Fact) if they do not exist."""
     if engine:
-        logger.info("⏳ Attempting to create all 11 Star Schema tables (if they don't exist)...")
+        logger.info("⏳ Attempting to create all 12 Star Schema tables (if they don't exist)...")
         Base.metadata.create_all(engine)
         logger.info("✅ Database schema creation complete.")
     else:
