@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 
 # 1. Age Groups (from Meta/Facebook standard)
 STATIC_AGE_GROUPS: List[str] = [
-    '13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+', 'Unknown'
+    '13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'
 ]
 
 # 2. Gender Groups (from Meta/Facebook standard)
 STATIC_GENDER_GROUPS: List[str] = [
-    'male', 'female', 'Unknown' # 'Unknown' handles unmapped or NULL values
+    'male', 'female'
 ]
 
 # -------------------------------

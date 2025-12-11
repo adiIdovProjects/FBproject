@@ -5,7 +5,6 @@ processes it, and loads it into the Star Schema.
 """
 
 import pandas as pd
-# --- הוספנו את datetime לייבוא כדי ש-strptime תעבוד ---
 from datetime import date, timedelta, datetime
 from data_api.db_connector import (
     is_first_pull, get_latest_date_in_db, load_all_fact_tables,
@@ -18,10 +17,10 @@ from data_api.db_schema import create_db_schema
 from data_api.data_preparation import (
     prepare_dataframe_for_db,
     load_all_dimensions_from_facts,
+    load_lookup_cache, 
+    get_all_unique_date_ids 
 )
-# --- UPDATED: Import both static load functions ---
 from data_api.static_dimensions import load_dim_age_static, load_dim_gender_static
-# --- END UPDATED IMPORT ---
 
 from config import FIRST_PULL_DAYS, DAILY_PULL_DAYS, BREAKDOWN_LIST_GROUPS, FACT_TABLE_PKS
 import logging
@@ -30,6 +29,12 @@ from typing import Dict, List, Any
 logger = logging.getLogger(__name__)
 
 MAIN_FACT_TABLE = 'fact_placement_metrics'
+
+# List of dimension tables that require the Surrogate Key '0' (Unknown Member)
+DIMENSIONS_FOR_UNKNOWN_MEMBER = [
+    'dim_campaign', 'dim_adset', 'dim_ad', 'dim_creative', 
+    'dim_country', 'dim_placement','dim_age', 'dim_gender'
+]
 
 def etl_pipeline(start_date: date, end_date: date):
     """
@@ -48,26 +53,22 @@ def etl_pipeline(start_date: date, end_date: date):
         logger.error("Failed to initialize Meta API connection. Exiting ETL.")
         return
 
-    # חישוב נכון של טווח הימים ל-API, כעת ש-start_date ו-end_date הם אובייקטי date
     days_to_pull_int = (end_date - start_date).days
     
     if days_to_pull_int <= 0:
-        logger.warning("DB is already up to date. No new data to pull.")
+        logger.warning("DB is already up to date or date range is invalid. No new data to pull.")
         return
 
     # Fetch Core Data
-    # ❗ שימוש ב-days_to_pull_int (1100 בריצה ראשונה, 3 בריצה יומית)
     df_core = get_core_campaign_data(api_connection, days_to_pull_int)
     
-    # Fetch Breakdown Data (Age/Gender, Placement, Country)
+    # Fetch Breakdown Data
     df_breakdowns = {}
     
     for group_dict in BREAKDOWN_LIST_GROUPS:
         group_name = group_dict['type']
         breakdowns_list = group_dict['breakdowns']
         key = group_name
-        
-        # ❗ שימוש ב-days_to_pull_int
         df_breakdowns[key] = get_breakdown_data(api_connection, breakdowns_list, days_to_pull_int)
 
     raw_data_dfs = {'core': df_core, **df_breakdowns}
@@ -81,27 +82,46 @@ def etl_pipeline(start_date: date, end_date: date):
         return
         
     combined_df = pd.concat(dfs_to_concat, ignore_index=True)
-
     fact_dfs = clean_and_calculate(combined_df)
     
     if not fact_dfs:
         logger.error("Transformation stage failed: No fact tables were generated.")
         return
 
-    # 4. Dimension Loading Phase (Pre-Fact Load)
-    logger.info("Starting Dimension Pre-Load Phase...")
+    # 4. Dimension Loading Phase (Pre-Fact Load) 
+    logger.info("Starting Dimension Pre-Load Phase: Ensuring FK integrity...")
 
-    # A. Static Dimensions - Must be loaded first!
-    # CRITICAL FIX for Foreign Key: Load age and gender ranges (including 'Unknown') first.
+    # A. Static Dimensions
     load_dim_age_static()
-    load_dim_gender_static() # --- NEW CALL ---
-
-    # B. Dynamic Dimensions - Load unique members from the raw data
+    load_dim_gender_static() 
+    
+    # B. Unknown Members (Surrogate Key 0)
+    # Must ensure the Key=0 exists for all dimensions before facts are processed.
+    logger.info("A. Ensuring 'Unknown Member' (Key=0) exists in all core dimension tables.")
+    for dim_table in DIMENSIONS_FOR_UNKNOWN_MEMBER:
+        ensure_unknown_members_exist(dim_table)
+    
+    # C. Dynamic Dimensions
+    # Load all new identifiers from fact tables into the dimension tables. Must run before cache load.
+    logger.info("B. Dynamically loading new dimension members from fact data.")
     load_all_dimensions_from_facts(fact_dfs)
 
-    # C. Unknown Members Fallback - Ensure key 0 exists everywhere, even if static/dynamic loading failed.
-    # This must run after all dimensions are defined (static and dynamic)
-    ensure_unknown_members_exist()
+    # D. Date Dimensions (Pre-load)
+    # Load new dates into dim_date.
+    logger.info("C. Pre-loading all unique dates into dim_date for FK integrity.")
+    all_date_ids_list = get_all_unique_date_ids(fact_dfs)
+
+    if all_date_ids_list:
+        # The ensure_dates_exist function expects a DataFrame with a date_id column.
+        date_df_for_preload = pd.DataFrame({'date_id': all_date_ids_list})
+        ensure_dates_exist(date_df_for_preload) 
+    else:
+        logger.warning("No date_ids found in the batch. Skipping dim_date pre-load.")
+    
+    # E. Pre-load Dimension Cache (Must run last in Dimension Phase!)
+    # Loading the cache must only happen after all dimensions (static, unknown, and dynamic) are loaded into the DB.
+    logger.info("D. Loading Dimension ID-Name maps into global lookup cache.")
+    load_lookup_cache()
     
     # --- FACT LOADING PHASE ---
     prepared_fact_dfs = {}
@@ -109,7 +129,8 @@ def etl_pipeline(start_date: date, end_date: date):
     
     for table_name, df in fact_dfs.items():
         if df.empty: continue
-            
+        
+        # This step uses the Lookup Cache loaded in step 4.E
         prepared_df = prepare_dataframe_for_db(df, table_name)
         
         # Validation
@@ -124,12 +145,6 @@ def etl_pipeline(start_date: date, end_date: date):
         logger.error("No fact tables were successfully prepared for loading.")
         return
     
-    # 5. Pre-load dates (CRITICAL for FK integrity)
-    if 'fact_core_metrics' in prepared_fact_dfs:
-        ensure_dates_exist(prepared_fact_dfs['fact_core_metrics'])
-    else:
-        logger.error("Cannot perform dim_date pre-load: 'fact_core_metrics' is missing from prepared data.")
-    
     # 6. L (Load) Stage
     load_success = load_all_fact_tables(prepared_fact_dfs, FACT_TABLE_PKS)
 
@@ -141,28 +156,27 @@ def etl_pipeline(start_date: date, end_date: date):
 
 
 def main():
-    # Initialize the Logging system - mandatory to see the output
+    # Initialize the Logging system
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
     # 1. Determine the date range to pull
-    latest_date_str = get_latest_date_in_db(MAIN_FACT_TABLE) # מקבלים מחרוזת (str)
+    latest_date_str = get_latest_date_in_db(MAIN_FACT_TABLE)
     end_date = date.today()
 
     if latest_date_str:
-        # ❗ תיקון קריטי: המרת המחרוזת לאובייקט datetime.date
+        # CRITICAL FIX: Convert the string from DB to a datetime.date object
         try:
             start_date = datetime.strptime(latest_date_str, '%Y-%m-%d').date()
             
-            # הוספת יום אחד כדי למשוך מהיום שאחרי התאריך האחרון ב-DB
+            # Add one day to pull from the day after the last date in the DB
             start_date = start_date + timedelta(days=1)
             
-            # לוגיקה למקרה שה-DB כבר מעודכן (start_date > end_date)
+            # Logic for when the DB is already up-to-date (start_date > end_date)
             if start_date > end_date:
-                # נמשוך טווח קטן קבוע לאחור (למשל, יומיים) כדי לוודא שאין פערים
-                # DAILY_PULL_DAYS הוא כנראה 2 או 3 בקובץ config
+                # Pull a small, fixed range backwards (e.g., 2-3 days) to ensure no gaps
                 start_date = end_date - timedelta(days=DAILY_PULL_DAYS)
                 
         except ValueError:
@@ -171,12 +185,11 @@ def main():
         
         logger.info(f"DB found: Latest date is {latest_date_str}. Starting Incremental Pull from {start_date} to {end_date}.")
     else:
-        # משיכה ראשונית (First Pull)
+        # Initial Historical Pull
         start_date = end_date - timedelta(days=FIRST_PULL_DAYS)
         logger.info(f"DB is empty. Starting Initial Historical Pull from {start_date} to {end_date}.")
     
     # 2. Run the main process
-    # כעת start_date ו-end_date הם אובייקטי datetime.date, והחיסור יעבוד
     etl_pipeline(start_date, end_date)
 
 if __name__ == '__main__':

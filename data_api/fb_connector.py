@@ -10,6 +10,7 @@ Key Fix:
   a Pandas DataFrame object, even if empty, to prevent AttributeError: 'dict' 
   object has no attribute 'shape' in the calling script.
 - Simplified the progress logging structure within the concurrent loop for stability.
+- ADDED: Function to fetch Ad Creative details using the AdCreative API.
 
 Functions:
 - init_api_connection: Initializes the Facebook Ads API connection.
@@ -18,12 +19,16 @@ Functions:
 - _fetch_single_chunk: Wrapper for parallel execution logic.
 - get_core_campaign_data: Fetches the primary campaign/ad metrics data in parallel.
 - get_breakdown_data: Fetches data for specific breakdowns in parallel.
+- get_unique_creative_details: Fetches detailed creative attributes.
 """
 
 import pandas as pd
+import json # NEW: Needed to handle complex fields like object_story_spec
+from typing import List # NEW: For type hinting
 from facebook_business.api import FacebookAdsApi
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.adobjects.adsinsights import AdsInsights
+from facebook_business.adobjects.adcreative import AdCreative # NEW: For Creative API calls
 from facebook_business.exceptions import FacebookRequestError
 from config import BASE_FIELDS_TO_PULL, CHUNK_DAYS, BREAKDOWN_LIST_GROUPS
 from datetime import date, timedelta
@@ -139,6 +144,7 @@ def get_insights_for_chunk(account, params, fields, chunk_index, total_chunks, m
 
 
 def _fetch_single_chunk(ad_account_id, fields_to_pull, chunk_info, level, breakdowns=None):
+    """Wrapper function to execute the fetch logic for parallel processing."""
     try:
         account = AdAccount(f'act_{ad_account_id}')
         
@@ -146,7 +152,8 @@ def _fetch_single_chunk(ad_account_id, fields_to_pull, chunk_info, level, breakd
         end_date = chunk_info['end_date']
         chunk_index = chunk_info['index']
         
-        total_chunks = -1
+        # total_chunks is not passed to the thread, so use a placeholder
+        total_chunks = -1 
         
         params = {
             'level': level, 
@@ -176,6 +183,7 @@ def _fetch_single_chunk(ad_account_id, fields_to_pull, chunk_info, level, breakd
 
 
 def get_core_campaign_data(ad_account_id, since_days):
+    """Fetches core campaign data, including the Creative ID and Video Metrics."""
     data_list = []
     
     date_chunks = get_date_chunks(since_days, CHUNK_DAYS)
@@ -185,6 +193,7 @@ def get_core_campaign_data(ad_account_id, since_days):
         logger.warning("No date range to pull data for.")
         return pd.DataFrame()
     
+    # Extract field names from the AdsInsights.Field constants if they are used
     fields_to_pull = [field.split('.')[-1] if 'AdsInsights.Field.' in str(field) else field for field in BASE_FIELDS_TO_PULL]
     
     logger.info(f"Starting CORE Campaign data parallel fetch in {total_chunks} chunks using {MAX_WORKERS} workers.")
@@ -223,10 +232,85 @@ def get_core_campaign_data(ad_account_id, since_days):
         
     logger.info(f"Total CORE data fetch completed. Successful Chunks: {success_chunks}/{total_chunks}. Rows: {len(data_list)}.")
     
+    # We must ensure all video metrics and ad_creative_id are pulled if requested in BASE_FIELDS_TO_PULL
     return pd.DataFrame(data_list)
 
 
+def get_unique_creative_details(creative_ids: List[str]) -> pd.DataFrame:
+    """
+    Fetches detailed attributes for a list of unique Ad Creative IDs 
+    using the Ad Creative API. This is used to populate the dim_creative table.
+    """
+    if not creative_ids:
+        logger.warning("No creative IDs provided to fetch details for.")
+        return pd.DataFrame()
+
+    unique_creative_ids = list(set(creative_ids))
+    logger.info(f"Fetching details for {len(unique_creative_ids)} unique Creative IDs...")
+    
+    # Fields requested from the AdCreative API
+    CREATIVE_FIELDS = [
+        AdCreative.Field.id,
+        AdCreative.Field.name,
+        AdCreative.Field.title,
+        AdCreative.Field.body,
+        AdCreative.Field.call_to_action_type,
+        AdCreative.Field.object_story_spec, # Complex object containing URL/media info
+    ]
+
+    creative_data_list = []
+    
+    # Loop over each Creative ID
+    for creative_id in unique_creative_ids:
+        try:
+            creative = AdCreative(creative_id)
+            # api_get returns the full data
+            data = creative.api_get(fields=CREATIVE_FIELDS).export_all_data()
+            
+            # Convert object_story_spec to a JSON string for storage in DB
+            if 'object_story_spec' in data and data['object_story_spec'] is not None:
+                # Handle cases where the field might be missing or empty
+                data['object_story_spec'] = json.dumps(data['object_story_spec'])
+            else:
+                data['object_story_spec'] = None
+                
+            creative_data_list.append(data)
+            
+        except FacebookRequestError as e:
+            # Log the API error but continue processing other IDs
+            api_message = e.body().get('error', {}).get('message', 'N/A')
+            logger.error(f"Error fetching creative details for ID {creative_id}. API Status: {e.api_status()}. Message: {api_message}")
+            # In case of an error, save the ID with default values
+            creative_data_list.append({
+                'id': creative_id, 
+                'name': 'N/A (API Error)', 
+                'title': None, 
+                'body': None, 
+                'call_to_action_type': None, 
+                'object_story_spec': None
+            })
+        except Exception as e:
+            logger.critical(f"Unhandled error fetching creative ID {creative_id}: {e}", exc_info=True)
+            creative_data_list.append({
+                'id': creative_id, 
+                'name': 'N/A (Critical Error)', 
+                'title': None, 
+                'body': None, 
+                'call_to_action_type': None, 
+                'object_story_spec': None
+            })
+
+
+    if creative_data_list:
+        # Rename the 'id' column to 'creative_id' to match the database schema
+        df = pd.DataFrame(creative_data_list).rename(columns={'id': 'creative_id'})
+        return df
+    
+    return pd.DataFrame()
+
+
 def get_breakdown_data(ad_account_id, breakdowns_list, since_days):
+    """Fetches breakdown data (e.g., by age, gender, placement)."""
     data_list = []
     
     date_chunks = get_date_chunks(since_days, CHUNK_DAYS)
@@ -236,6 +320,7 @@ def get_breakdown_data(ad_account_id, breakdowns_list, since_days):
     if not date_chunks:
         return pd.DataFrame()
 
+    # Extract field names from the AdsInsights.Field constants if they are used
     fields_to_pull = [field.split('.')[-1] if 'AdsInsights.Field.' in str(field) else field for field in BASE_FIELDS_TO_PULL]
     
     logger.info(f"Starting Breakdown ({breakdown_name}) parallel fetch in {total_chunks} chunks using {MAX_WORKERS} workers.")
