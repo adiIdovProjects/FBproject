@@ -8,8 +8,9 @@ Purpose: Contains functions for final data transformation, including:
 4. Performing Dimension Lookup (Name -> ID) on Fact tables using the cache.
 5. Performing Type Casting and data cleaning for the final Load step.
 
-NOTE: Dimension Age (dim_age) and Gender (dim_gender) are explicitly skipped from dynamic loading here, 
-as they are loaded statically from static_dimensions.py.
+NOTE: Dimension Age (dim_age) and Gender (dim_gender) are explicitly skipped from dynamic loading here,
+as they are loaded statically from static_dimensions.py. dim_creative is now handled dynamically if
+new IDs arrive from the fact data.
 """
 import pandas as pd
 import numpy as np
@@ -18,7 +19,7 @@ from typing import List, Dict, Any
 
 # --- CRITICAL IMPORTS for DB Lookup ---
 from data_api.db_connector import save_dataframe_to_db
-from data_api.database import ENGINE as engine 
+from data_api.database import ENGINE as engine
 from sqlalchemy import text
 # --- END CRITICAL IMPORTS ---
 
@@ -27,20 +28,21 @@ logger = logging.getLogger(__name__)
 # --- Configuration ---
 # All ID columns expected to be BIGINT in the database
 ID_COLUMNS_TO_CAST: List[str] = [
-    'date_id', 'campaign_id', 'adset_id', 'ad_id', 'age_id', 'gender_id', 'country_id', 'placement_id'
+    'date_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'age_id', 'gender_id', 'country_id', 'placement_id'
 ]
 
 # --- Mapping ---
 # Maps fact columns (keys) to their corresponding dimension tables (values)
 DIMENSION_MAPPING: Dict[str, Dict[str, List[str] | str]] = {
-    # Entity Dimensions (PK is the external ID)
+    # Entity Dimensions (PK is the external ID) - Skip Name->ID Lookup
     'campaign_id': {'table': 'dim_campaign', 'pk': ['campaign_id'], 'source_cols': ['campaign_id', 'campaign_name']},
-    # ✅ הוספה: Ad Set Dimension (Entity)
     'adset_id': {'table': 'dim_adset', 'pk': ['adset_id'], 'source_cols': ['adset_id', 'adset_name']},
     'ad_id': {'table': 'dim_ad', 'pk': ['ad_id'], 'source_cols': ['ad_id', 'ad_name']},
+    # NEW: Creative Dimension (Entity)
+    'creative_id': {'table': 'dim_creative', 'pk': ['creative_id'], 'source_cols': ['creative_id', 'ad_name']},
     
-    # Attribute Dimensions (PK is the Name/Group, ID is auto-generated/placeholder)
-    'age_id': {'table': 'dim_age', 'pk': ['age_group'], 'source_cols': ['age_id', 'age_group']}, 
+    # Attribute Dimensions (PK is the Name/Group, ID is auto-generated/placeholder) - Requires Name->ID Lookup
+    'age_id': {'table': 'dim_age', 'pk': ['age_group'], 'source_cols': ['age_id', 'age_group']},
     'gender_id': {'table': 'dim_gender', 'pk': ['gender'], 'source_cols': ['gender_id', 'gender']},
     'country_id': {'table': 'dim_country', 'pk': ['country'], 'source_cols': ['country_id', 'country']},
     'placement_id': {'table': 'dim_placement', 'pk': ['placement_name'], 'source_cols': ['placement_id', 'placement_name']},
@@ -62,7 +64,7 @@ def get_dimension_lookup_map(table_name: str, id_col: str, name_col: str) -> pd.
 
     # Note: dim_date is handled by ensure_dates_exist and doesn't need ID lookup
     if id_col == 'date_id':
-        return pd.Series(dtype='object') 
+        return pd.Series(dtype='object')
 
     sql_query = f'SELECT "{id_col}", "{name_col}" FROM "{table_name}"'
 
@@ -95,16 +97,16 @@ def load_lookup_cache() -> None:
     logger.info("Pre-loading dimension lookup maps into global cache...")
 
     # Clear existing cache
-    DIMENSION_LOOKUP_CACHE = {} 
+    DIMENSION_LOOKUP_CACHE = {}
     
     for dim_id_col, config in DIMENSION_MAPPING.items():
-        # date_id is explicitly an integer ID and doesn't need string-to-ID lookup
-        if dim_id_col == 'date_id':
+        # date_id and entity IDs (campaign, adset, ad, creative) do not require string-to-ID lookup
+        if dim_id_col in ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id']:
             continue
             
         dim_table_name = config['table']
         dim_name_col = config['source_cols'][1]
-            
+        
         try:
             lookup_map = get_dimension_lookup_map(dim_table_name, dim_id_col, dim_name_col)
             if not lookup_map.empty:
@@ -118,9 +120,36 @@ def load_lookup_cache() -> None:
     logger.info(f"Finished caching. {len(DIMENSION_LOOKUP_CACHE)} dimension maps loaded.")
 
 
+def get_all_unique_date_ids(fact_dfs: Dict[str, pd.DataFrame]) -> List[int]:
+    """
+    💥 NEW FUNCTION: Collects all unique date_id values from all fact DataFrames.
+    This list is used in main.py to ensure dim_date has all necessary entries
+    before the fact tables are loaded, preventing Foreign Key errors.
+    """
+    if not fact_dfs:
+        return []
+    
+    all_dates = pd.Series(dtype='Int64')
+    
+    logger.info("Collecting all unique date_ids across all fact tables...")
+
+    for df_name, df in fact_dfs.items():
+        if 'date_id' in df.columns and not df.empty:
+            # Filter out the default '0' ID (which is for '1970-01-01' / Unknown date)
+            # Use Int64 type for Series concatenation to handle potential NaNs correctly
+            valid_dates = df[df['date_id'] != 0]['date_id']
+            all_dates = pd.concat([all_dates, valid_dates.astype('Int64')], ignore_index=True)
+
+    # Clean up, remove duplicates, and return as a list of standard Python integers
+    unique_dates = all_dates.dropna().drop_duplicates().astype(int).tolist()
+    logger.info(f"Found {len(unique_dates)} unique date_ids in the current batch.")
+    return unique_dates
+
+
 def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
     """
-    Extracts unique dimension members (excluding Age/Gender) from fact DataFrames and UPSERTs them.
+    Extracts unique dimension members (excluding Age/Gender/Date) from fact DataFrames and UPSERTs them.
+    Creative is now included in dynamic loading.
     """
     if not fact_dfs:
         return True
@@ -130,24 +159,20 @@ def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
     for dim_id_col, config in DIMENSION_MAPPING.items():
         dim_table_name = config['table']
         
-        # --- SKIP: dim_age and dim_gender are handled statically ---
+        # Skip statically loaded and pre-loaded dimensions (Age, Gender are static; Date is pre-loaded).
         if dim_table_name in ['dim_age', 'dim_gender', 'dim_date']:
-            continue 
-        # ------------------------------------------
+            continue
 
         pk_col = config['pk'][0]
         source_cols = config['source_cols'] # e.g. ['country_id', 'country']
         name_col = source_cols[1] # e.g. 'country'
 
-        # ✅ עדכון: הוספת 'adset_id' לזיהוי Entity Dimensions
-        is_entity_dim = pk_col in ['campaign_id', 'adset_id', 'ad_id']
+        # Creative is an entity dim along with Campaign/Adset/Ad
+        is_entity_dim = pk_col in ['campaign_id', 'adset_id', 'ad_id', 'creative_id']
         required_source_cols_in_fact = source_cols if is_entity_dim else [name_col]
         all_dim_data = []
 
         for df_name, df in fact_dfs.items():
-            
-            # --- REDUNDANT RENAME REMOVED HERE ---
-            # NOTE: Renaming (e.g., 'age' -> 'age_group') is now handled upstream in data_handler.py
             
             # Check if all required columns for the dimension exist
             if all(col in df.columns for col in required_source_cols_in_fact):
@@ -163,18 +188,22 @@ def load_all_dimensions_from_facts(fact_dfs: Dict[str, pd.DataFrame]) -> bool:
 
         combined_dim_df = pd.concat(all_dim_data, ignore_index=True)
         
-        # Deduplication based on the name column
-        combined_dim_df.drop_duplicates(subset=[name_col], keep='first', inplace=True)
+        # CRITICAL FIX: Deduplicate based on the Natural Primary Key (config['pk']).
+        # This correctly uses the external ID (e.g., 'creative_id') for Entity Dims
+        # and the descriptive column (e.g., 'country') for Attribute Dims.
+        combined_dim_df.drop_duplicates(subset=config['pk'], keep='first', inplace=True)
 
         if is_entity_dim:
-            # For Campaign/Adset/Ad, the PK is the ID itself
+            # For Campaign/Adset/Ad/Creative, the PK is the ID itself
             upsert_pk = config['pk']
             try:
+                # Ensure the ID is numeric and handle NaNs/bad data as 0 before dropping
                 combined_dim_df[pk_col] = pd.to_numeric(combined_dim_df[pk_col], errors='coerce').fillna(0).astype('Int64')
-            except: 
+            except:
                 logger.error(f"Failed to cast entity ID {pk_col} for {dim_table_name}")
                 continue
             
+            # Filter out the "Unknown Member" (ID=0) as it's pre-loaded in main.py
             combined_dim_df = combined_dim_df[combined_dim_df[pk_col] != 0]
             df_for_upsert = combined_dim_df
         else:
@@ -211,7 +240,7 @@ def prepare_dataframe_for_db(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
     """
     Performs Dimension Lookup (Name -> ID) using the cache and Type Casting.
     """
-    if df.empty: 
+    if df.empty:
         logger.info(f"DataFrame for {table_name} is empty, skipping preparation.")
         return df
         
@@ -222,21 +251,30 @@ def prepare_dataframe_for_db(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
     global DIMENSION_LOOKUP_CACHE
     if not DIMENSION_LOOKUP_CACHE and table_name.startswith('fact_'):
         logger.warning("Dimension lookup cache is empty. Loading it now. (Performance warning: Should be done once in main.py)")
-        load_lookup_cache() 
+        load_lookup_cache()
 
-    # --- Dimension Lookup ---
+    # --- Dimension Lookup & Column Cleanup ---
     if table_name.startswith('fact_'):
         for dim_id_col, config in DIMENSION_MAPPING.items():
             
             if dim_id_col == 'date_id':
                 continue # date_id is already prepared as ID in data_handler
 
-            dim_name_col = config['source_cols'][1] # e.g. age_group
+            dim_name_col = config['source_cols'][1] # e.g. age_group, ad_name
+            pk_col = config['pk'][0]
             
-            # --- REDUNDANT RENAME REMOVED HERE ---
-            # NOTE: Renaming raw columns is now handled upstream in data_handler.py.
-            # -------------------------------------
+            # Entity Dimensions have their External ID as PK (e.g., campaign_id, creative_id)
+            is_entity_dim = pk_col in ['campaign_id', 'adset_id', 'ad_id', 'creative_id']
 
+            if is_entity_dim:
+                # For Entity Dimensions, the ID (Foreign Key) is already present in the fact data.
+                # We skip the costly Name -> ID lookup, but must drop the descriptive column (e.g., ad_name).
+                if dim_name_col in df_copy.columns:
+                    df_copy.drop(columns=[dim_name_col], errors='ignore', inplace=True)
+                
+                continue # Skip the rest of the lookup logic
+
+            # --- Name -> ID Lookup for Attribute Dimensions (e.g., age_group -> age_id) ---
             if dim_name_col in df_copy.columns:
                 # Retrieve the map from the global cache
                 lookup_map = DIMENSION_LOOKUP_CACHE.get(dim_id_col)
@@ -254,17 +292,15 @@ def prepare_dataframe_for_db(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
                         .astype(str)
                         .str.strip()
                         .map(lookup_map)
-                        .fillna(default_id) 
+                        .fillna(default_id)
                     )
                 
                 # After mapping, we drop the descriptive column
                 df_copy.drop(columns=[dim_name_col], errors='ignore', inplace=True)
             else:
                 # If the descriptive column is missing, still ensure the ID column exists and is 0
-                # NOTE: This can incorrectly set entity IDs (like adset_id) to 0 if the name column 
-                # was dropped prematurely or was never present in the fact data, but maintains the original code structure.
                 if dim_id_col not in df_copy.columns:
-                     df_copy[dim_id_col] = 0
+                    df_copy[dim_id_col] = 0
 
     # --- Type Casting ---
     for col in ID_COLUMNS_TO_CAST:

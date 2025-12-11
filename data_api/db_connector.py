@@ -21,7 +21,7 @@ from sqlalchemy import text, inspect
 from sqlalchemy.exc import OperationalError, NoSuchTableError
 from datetime import date, datetime 
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union
 
 # --- Import Global Engine ---
 # Assuming 'data_api.database' provides the engine instance
@@ -44,10 +44,18 @@ UNKNOWN_MEMBER_DEFAULTS: Dict[str, Dict[str, Any]] = {
         'status': 'N/A', 
         'objective': 'N/A'
     },
+    'dim_adset': { # >> תיקון: הוספת ממד AdSet
+        'adset_id': 0,
+        'adset_name': 'Unknown AdSet'
+    },
     'dim_ad': {
         'ad_id': 0, 
         'ad_name': 'Unknown Ad', 
         'creative_name': 'N/A'
+    },
+    'dim_creative': { # >> תיקון: הוספת ממד Creative
+        'creative_id': 0,
+        'creative_name': 'Unknown Creative'
     },
     'dim_placement': {
         'placement_id': 0, 
@@ -101,7 +109,7 @@ def is_first_pull(table_name: str) -> bool:
         logger.error(f"General Error checking DB status for {table_name}: {e}. Assuming first pull.")
         return True
 
-def get_latest_date_in_db(table_name: str) -> str | None:
+def get_latest_date_in_db(table_name: str) -> Union[str, None]:
     """
     Fetches the latest (MAX) 'date' existing in the given table by joining
     with the dim_date table.
@@ -133,9 +141,12 @@ def get_latest_date_in_db(table_name: str) -> str | None:
             
             if result and result[0]:
                 date_val = result[0]
+                # Ensure the date value is converted to a string in YYYY-MM-DD format
                 if isinstance(date_val, (datetime, date)):
                     return date_val.strftime('%Y-%m-%d')
-                return None
+                # If it's already a string (unlikely for a date column MAX), return it
+                if isinstance(date_val, str):
+                    return date_val
             return None
             
     except Exception as e:
@@ -176,7 +187,7 @@ def save_dataframe_to_db(df: pd.DataFrame, table_name: str, primary_keys: List[s
         
         # Ensure all designated primary key columns are *always* kept, even if schema inspection failed/missed them
         for pk in primary_keys:
-            if pk not in df_cols_to_keep and pk in df.columns:
+            if pk in df.columns and pk not in df_cols_to_keep:
                 df_cols_to_keep.append(pk)
                 logger.warning(
                     f"For {table_name}, mandatory PK column '{pk}' was not returned by DB schema inspection "
@@ -188,7 +199,7 @@ def save_dataframe_to_db(df: pd.DataFrame, table_name: str, primary_keys: List[s
 
         dropped_cols = [col for col in df.columns if col not in df_filtered.columns.tolist()]
         if dropped_cols:
-              logger.info(f"Filtered DataFrame for {table_name}. Dropped non-schema columns: {dropped_cols}")
+             logger.info(f"Filtered DataFrame for {table_name}. Dropped non-schema columns: {dropped_cols}")
         
     except NoSuchTableError:
         # This is expected for the very first pull when the table doesn't exist yet
@@ -226,8 +237,9 @@ def save_dataframe_to_db(df: pd.DataFrame, table_name: str, primary_keys: List[s
                     f"Filtered out {initial_count - len(df_clean)} rows from {table_name} "
                     f"because {id_col_name}=0, which is reserved for the Unknown Member."
                 )
-                        
+                    
     # Re-check PK presence based on the primary_keys list
+    # Use the intersection of user-provided keys and the actual DF columns
     pk_cols_present_in_df = [col for col in primary_keys if col in df_clean.columns]
     
     if not pk_cols_present_in_df:
@@ -253,6 +265,7 @@ def save_dataframe_to_db(df: pd.DataFrame, table_name: str, primary_keys: List[s
         return True
 
     # 2. Cardinality Check (Aggregate fact metrics based on the Primary Key)
+    # List of all potential metric columns
     metric_cols_all = ['spend', 'impressions', 'clicks', 'purchases', 'leads', 'ctr', 'cpc', 'cpa_lead', 'cpa_purchase']
     metric_cols_present = [col for col in metric_cols_all if col in df_to_process.columns]
 
@@ -274,7 +287,6 @@ def save_dataframe_to_db(df: pd.DataFrame, table_name: str, primary_keys: List[s
             initial_count = len(df_to_process)
             
             # Perform aggregation
-            # dropna=False is important here to retain rows with NaN in grouping keys if needed, though they should have been filtered out by integrity check.
             df_agg = df_to_process.groupby(group_by_cols, dropna=False).agg(agg_funcs).reset_index()
             
             df_final_load = df_agg
@@ -292,18 +304,8 @@ def save_dataframe_to_db(df: pd.DataFrame, table_name: str, primary_keys: List[s
     df_to_load = df_final_load
     
     # --- CRITICAL CHECK: Ensure all primary_keys are present for the ON CONFLICT clause ---
-    # The primary_keys list defines the ON CONFLICT target. We check that the DF contains 
-    # all columns needed for this clause.
-    missing_pk_cols = [col for col in primary_keys if col not in df_to_load.columns]
-    
-    if missing_pk_cols:
-        # This is expected for attribute dimensions where the pk_col (ID) was dropped 
-        # before load, but the UPSERT key is the name_col. 
-        # If any of the required UPSERT keys are missing, we fail.
-        # We use pk_cols_present_in_df for the final conflict check to match the DF content.
-        final_pk_cols_for_conflict = pk_cols_present_in_df 
-    else:
-        final_pk_cols_for_conflict = primary_keys
+    # The final list of columns to use for ON CONFLICT target are the ones present in the DF
+    final_pk_cols_for_conflict = pk_cols_present_in_df 
         
     if not final_pk_cols_for_conflict:
           logger.error(
@@ -408,46 +410,53 @@ def load_all_fact_tables(
 
 
 # --- Function to ensure Unknown Members (Key 0) exist in dimensions ---
-def ensure_unknown_members_exist() -> None:
+# ❗ התיקון הקריטי: שינוי חתימת הפונקציה לקבלת שם טבלה
+def ensure_unknown_members_exist(table_name: str) -> None:
     """
-    Ensures that the 'Unknown Member' (Surrogate Key 0) exists in all 
-    relevant dimension tables (dim_campaign, dim_ad, etc.) to satisfy 
-    ForeignKey constraints for unmapped/null fact data.
+    Ensures that the 'Unknown Member' (Surrogate Key 0) exists in the specified
+    dimension table (dim_campaign, dim_ad, etc.) to satisfy ForeignKey constraints.
     """
     if engine is None:
         logger.critical("DB Engine is not initialized. Cannot ensure unknown members exist.")
         return
         
-    for table_name, default_row in UNKNOWN_MEMBER_DEFAULTS.items():
-        # Get the PK column name (e.g., 'ad_id')
-        pk_col = list(default_row.keys())[0] 
-        pk_value = default_row[pk_col]
+    # 1. בדיקה האם שם הטבלה קיים בהגדרות
+    if table_name not in UNKNOWN_MEMBER_DEFAULTS:
+        logger.warning(
+            f"Table '{table_name}' is not configured in UNKNOWN_MEMBER_DEFAULTS. Skipping unknown member check."
+        )
+        return
         
-        try:
-            with engine.begin() as connection:
-                # 1. Check if the record with the key (e.g., ad_id=0) already exists
-                # Use parameterized query for safety
-                check_query = text(f'SELECT "{pk_col}" FROM "{table_name}" WHERE "{pk_col}" = :pk_val')
-                
-                # Use a dictionary for params to prevent SQL injection issues with dynamic queries
-                result = connection.execute(check_query, {'pk_val': pk_value}).fetchone()
-                
-                if result:
-                    logger.debug(f"Unknown member ({pk_col}={pk_value}) already exists in {table_name}.")
-                    continue
+    # 2. שליפת הנתונים המתאימים לטבלה הספציפית
+    default_row = UNKNOWN_MEMBER_DEFAULTS[table_name]
+    
+    # Get the PK column name (e.g., 'ad_id')
+    pk_col = list(default_row.keys())[0] 
+    pk_value = default_row[pk_col] # אמור להיות 0
+    
+    try:
+        with engine.begin() as connection:
+            # 1. Check if the record with the key (e.g., ad_id=0) already exists
+            check_query = text(f'SELECT "{pk_col}" FROM "{table_name}" WHERE "{pk_col}" = :pk_val')
+            
+            result = connection.execute(check_query, {'pk_val': pk_value}).fetchone()
+            
+            if result:
+                logger.debug(f"Unknown member ({pk_col}={pk_value}) already exists in {table_name}.")
+                return # יציאה מהפונקציה אם החבר קיים
 
-                # 2. If it doesn't exist, construct and execute the INSERT query
-                columns = ', '.join([f'"{c}"' for c in default_row.keys()])
-                placeholders = ', '.join([f':{c}' for c in default_row.keys()])
-                
-                insert_query = text(f'INSERT INTO "{table_name}" ({columns}) VALUES ({placeholders})')
-                
-                # Execute with the full default_row dictionary as parameters
-                connection.execute(insert_query, default_row)
-                logger.info(f"SUCCESS: Inserted Unknown Member ({pk_col}={pk_value}) into {table_name}.")
-                
-        except Exception as e:
-            logger.error(f"CRITICAL ERROR inserting Unknown Member into {table_name}: {e}", exc_info=True)
+            # 2. If it doesn't exist, construct and execute the INSERT query
+            columns = ', '.join([f'"{c}"' for c in default_row.keys()])
+            placeholders = ', '.join([f':{c}' for c in default_row.keys()])
+            
+            insert_query = text(f'INSERT INTO "{table_name}" ({columns}) VALUES ({placeholders})')
+            
+            # Execute with the full default_row dictionary as parameters
+            connection.execute(insert_query, default_row)
+            logger.info(f"SUCCESS: Inserted Unknown Member ({pk_col}={pk_value}) into {table_name}.")
+            
+    except Exception as e:
+        logger.error(f"CRITICAL ERROR inserting Unknown Member into {table_name}: {e}", exc_info=True)
 
 
 # --- Foreign Key Pre-Load Logic (Date Dimension) ---
@@ -465,10 +474,10 @@ def ensure_dates_exist(dataframe: pd.DataFrame, date_id_column: str = 'date_id')
         return
 
     # 1. Extract unique date IDs from the new fact data (ensure they are Int type for lookup)
-    # Using Int64 here to handle potential NaNs (which should be filtered out later if they lead to an FK of 0)
+    # Use 'Int64' string alias for the nullable integer type
     new_date_ids = dataframe[date_id_column].astype('Int64', errors='ignore').unique()
-    # Filter out any lingering NaNs
-    new_date_ids = pd.Series(new_date_ids).dropna().tolist() 
+    # Filter out any lingering NaNs and convert to list of standard Python integers
+    new_date_ids = pd.Series(new_date_ids).dropna().astype(int).tolist() 
     
     if not new_date_ids:
         logger.info("No valid date IDs found in the current batch. Skipping dim_date check.")

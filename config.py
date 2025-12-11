@@ -15,7 +15,7 @@ BREAKDOWN_PK = ['Date', 'Campaign_ID', 'Breakdown_Type', 'age', 'gender', 'count
 # Fact Table Composite Primary Keys (Used for UPSERT logic in db_connector.py)
 # These must match the unique constraints defined in db_schema.py
 FACT_TABLE_PKS = {
-    'fact_core_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id'],
+    'fact_core_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id'],
     'fact_placement_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'placement_id'],
     'fact_age_gender_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'age_id', 'gender_id'],
     'fact_country_metrics': ['date_id', 'campaign_id', 'adset_id', 'ad_id', 'country_id'],

@@ -15,8 +15,8 @@ Functions:
 import pandas as pd
 import numpy as np
 import logging
-import json # נשאר חיוני לצורך המרת מחרוזות JSON לרשימת מילונים וקטורית ב-extract_actions
-from pandas import json_normalize # ייבוא מפורש לבהירות
+import json # Essential for vectorized JSON parsing in extract_actions
+from pandas import json_normalize # Explicit import for clarity
 from typing import Dict, List, Any 
 
 logger = logging.getLogger(__name__)
@@ -31,20 +31,34 @@ COLUMN_RENAME_MAP = {
     'Date': 'date_start', 
     'publisher_platform': 'placement_name',
     'platform_position': 'placement_name', 
-    'placement': 'placement_name'
+    'placement': 'placement_name',
+    'ad_creative_id': 'creative_id' # NEW: Renaming for Creative Dimension
     # ------------------------------------------------------------------------
 }
 # --- End Renaming Map ---
 
 # Column Definitions for consistency checks
-METRIC_COLUMNS = ['spend', 'impressions', 'clicks', 'purchases', 'leads']
+METRIC_COLUMNS: List[str] = [
+    'spend', 'impressions', 'clicks', 'purchases', 'leads', # 'leads' נכלל כנדרש
+    # NEW: Video View Metrics
+    'video_p100_watched_actions', 
+    'video_p75_watched_actions', 
+    'video_p50_watched_actions',
+    'video_p25_watched_actions',
+    'video_30_sec_watched_actions',
+    'video_avg_time_watched_actions'
+]
 
-# ✅ FIX: הוספת adset_id ו-adset_name
-DIM_COLS = ['campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name', 'placement_name', 'country', 'age_group', 'gender']
+# All dimension columns present in the raw data (including breakdowns)
+DIM_COLS: List[str] = [
+    'campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name', 
+    'creative_id', # NEW: Creative ID
+    'placement_name', 'country', 'age_group', 'gender'
+]
 
 # --- Defining the required columns for the CORE Fact Table ---
-# ✅ FIX: הוספת adset_id ו-adset_name לגרעין (Grain) של טבלת Core
-CORE_DIM_COLS = ['campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name'] 
+# Core dimensions define the grain: Date, Campaign, Adset, Ad, Creative
+CORE_DIM_COLS: List[str] = ['campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name', 'creative_id'] 
 CORE_METRIC_COLS = METRIC_COLUMNS 
 
 def extract_actions(df: pd.DataFrame) -> pd.DataFrame:
@@ -63,32 +77,31 @@ def extract_actions(df: pd.DataFrame) -> pd.DataFrame:
         df['actions'].fillna('[]', inplace=True)
         
         # --- Vectorized Step 1: Safely Parse JSON Strings to List of Dicts ---
-        # משתמשים ב-apply ו-json.loads באופן ממוקד רק כדי להמיר מחרוזות JSON לאובייקטי פייתון (רשימת מילונים).
-        # זו הדרך המהירה ביותר ב-Pandas להתמודד עם המרה מבנית זו.
+        # Using apply and json.loads is the most efficient way in Pandas to handle this structural conversion.
         df['actions'] = df['actions'].apply(
             lambda x: json.loads(x) if isinstance(x, str) and x.strip().startswith(('{', '[')) else x
         )
         
-        # זיהוי שורות עם רשימת Actions תקינה
+        # Identify rows with a valid list of Actions
         df_with_actions = df[df['actions'].apply(lambda x: isinstance(x, list) and len(x) > 0)]
         
         if not df_with_actions.empty:
             
             # --- Vectorized Step 2: Flatten/Normalize and Aggregate ---
             
-            # 1. Explode: יוצר שורה חדשה לכל "פעולה" (Action) בתוך הרשימה, ושומר על האינדקס המקורי
+            # 1. Explode: Creates a new row for each 'action' in the list, preserving the original index
             df_exploded = df_with_actions.explode('actions')
             
-            # 2. Normalize: פותח את המילון (Dict) בתוך עמודת 'actions' לטורים חדשים
+            # 2. Normalize: Flattens the Dict inside the 'actions' column into new columns
             df_normalized = json_normalize(
                 df_exploded['actions'],
                 errors='ignore'
-            ).set_index(df_exploded.index) # משייך מחדש את האינדקס המקורי
+            ).set_index(df_exploded.index) # Re-associate the original index
             
-            # 3. ודא שהטור 'value' קיים וניתן להמרה למספר (Vectorized Numeric Conversion)
+            # 3. Ensure the 'value' column exists and is numeric (Vectorized Numeric Conversion)
             df_normalized['value'] = pd.to_numeric(df_normalized.get('value', 0), errors='coerce').fillna(0)
             
-            # 4. Pivot: צבירת הערכים (value) לפי סוג הפעולה (action_type) והאינדקס המקורי
+            # 4. Pivot: Aggregate the values by action_type and the original index
             df_metrics = df_normalized.pivot_table(
                 index=df_normalized.index, 
                 columns='action_type', 
@@ -102,15 +115,15 @@ def extract_actions(df: pd.DataFrame) -> pd.DataFrame:
             purchase_key = 'offsite_conversion.fb_pixel_purchase'
             lead_key = 'lead'
             
-            # עדכון טורי purchases/leads בנתונים החדשים מהצבירה
+            # Update purchases/leads columns with the new aggregated data
             if purchase_key in df_metrics.columns:
-                # שימוש ב-reindex ו-fillna כדי למזג באופן וקטורי ולשמור על ערכים קיימים שאינם NaN
+                # Use reindex and fillna to merge vectorially and preserve existing non-NaN values
                 df['purchases'] = df_metrics[purchase_key].reindex(df.index).fillna(df['purchases']).astype(float)
                 
             if lead_key in df_metrics.columns:
                 df['leads'] = df_metrics[lead_key].reindex(df.index).fillna(df['leads']).astype(float)
 
-    # 5. ניקוי סופי: הסר את הטור המורכב 'actions'
+    # 5. Final cleanup: Remove the complex 'actions' column
     if 'actions' in df.columns:
         df = df.drop(columns=['actions'])
         
@@ -123,7 +136,8 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
     based on their level of granularity (Core vs. Breakdown).
     """
     
-    # ✅ FIX: base_cols כולל כעת adset_id ו-adset_name 
+    # base_cols now includes 'creative_id'
+    # כולל עמודות מפתח (ID/Name) ועמודות מדד
     base_cols = ['date_id', 'date_start', 'campaign_id'] + CORE_DIM_COLS + CORE_METRIC_COLS
     
     breakdown_groups = {
@@ -134,7 +148,22 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
     
     fact_dfs = {}
 
-    # --- 1. Identify the Core Data ---
+    # --- 1. Fix: Identify the Core Data (כל השורות בגרנולריות של Creative ID) ---
+    
+    # התיקון הקריטי: טבלת הליבה מוגדרת לפי Creative ID, וצריכה לכלול את כל השורות 
+    # שנשלפו בגרנולריות זו. הסינון הקודם (is_core_data) רוקן את ה-DF.
+    df_core = df.copy() # משתמשים בכל השורות
+    
+    # הגדרת העמודות הסופיות לטבלת fact_core_metrics (מפתחות ID/Name ומדדים)
+    core_final_cols = [col for col in base_cols if col in df_core.columns]
+    
+    if not df_core.empty and core_final_cols:
+        # יצירת Fact Core Metrics table
+        fact_dfs['fact_core_metrics'] = df_core[core_final_cols].copy()
+        logger.info(f"Fact Core Metrics DF created with {len(df_core)} rows.")
+    
+    # --- 2. Split Breakdown Data ---
+    # מזהים שורות שאינן Core טהור (כלומר, מכילות פירוט כלשהו)
     is_core_data = (
         (df['age_group'] == MISSING_DIM_VALUE) & 
         (df['gender'] == MISSING_DIM_VALUE) & 
@@ -142,14 +171,6 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
         (df['placement_name'] == MISSING_DIM_VALUE)
     )
     
-    df_core = df[is_core_data].copy()
-    
-    core_final_cols = [col for col in base_cols if col in df_core.columns]
-    
-    if not df_core.empty:
-        fact_dfs['fact_core_metrics'] = df_core[core_final_cols]
-    
-    # --- 2. Split Breakdown Data ---
     df_breakdown = df[~is_core_data].copy()
 
     for group_name, dim_list in breakdown_groups.items():
@@ -158,6 +179,7 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
             logger.warning(f"Missing one or more expected dimension columns for {group_name}. Skipping split for this group.")
             continue
             
+        # Filter condition: Check if at least one of the dimensions in the list is NOT the missing value
         filter_condition = np.full(len(df_breakdown), False)
         for dim in dim_list:
             filter_condition = filter_condition | (df_breakdown[dim] != MISSING_DIM_VALUE)
@@ -165,6 +187,7 @@ def split_dataframes_by_granularity(df: pd.DataFrame) -> Dict[str, pd.DataFrame]
         df_group = df_breakdown[filter_condition].copy()
         
         if not df_group.empty:
+            # Final columns include base columns + the specific breakdown dimensions
             group_final_cols = [col for col in base_cols + dim_list if col in df_group.columns]
             
             table_key = f'fact_{group_name}'
@@ -196,7 +219,7 @@ def clean_and_calculate(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         df['date_id'] = df['date_dt'].dt.strftime('%Y%m%d').fillna('0')
         df['date_id'] = pd.to_numeric(df['date_id'], errors='coerce', downcast='integer').fillna(0).astype(int)
         df['date_start'] = df['date_dt'].dt.strftime('%Y-%m-%d').fillna(DEFAULT_DATE_STRING)
-        df.drop(columns=['date_dt'], inplace=True)
+        df.drop(columns=['date_dt'], errors='ignore', inplace=True)
     else:
         logger.error("Missing 'date_start' column after renaming. Cannot create date_id.")
         df['date_id'] = 0 
@@ -204,24 +227,30 @@ def clean_and_calculate(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     
     
     # 4. Cleaning and handling MISSING_DIM_VALUE for dimension columns
-    # DIM_COLS כולל כעת את adset_id ו-adset_name 
+    # all_potential_dim_cols includes campaign_id + all columns in DIM_COLS (which now includes creative_id)
     all_potential_dim_cols = ['campaign_id'] + DIM_COLS 
     
     for col in all_potential_dim_cols:
         if col in df.columns:
-            # Fill NaNs with MISSING_DIM_VALUE and ensure it's string type
+            # CRITICAL FIX: Standardize API's 'Unknown' string to the internal MISSING_DIM_VALUE ('N/A')
+            df[col] = df[col].astype(str).str.strip().replace('Unknown', MISSING_DIM_VALUE)
+            
+            # Fill NaNs (for true NULLs) with MISSING_DIM_VALUE and ensure it's string type
             df[col] = df[col].fillna(MISSING_DIM_VALUE).astype(str) 
         else:
+            # Ensure column exists even if missing in raw data
             df[col] = MISSING_DIM_VALUE
 
     # 5. Handling metrics (ensuring they are numeric and filling NaNs/missing with 0.0)
     for col in METRIC_COLUMNS:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(float)
+            # Coerce non-numeric values to NaN, fill NaNs with 0, and cast to float
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0).astype(float)
         else:
+            # Ensure metric column exists and is 0.0 if not found
             df[col] = 0.0
     
-    # 7. Splitting the single DataFrame into multiple DataFrames for loading
+    # 6. Splitting the single DataFrame into multiple DataFrames for loading
     fact_dfs_dict = split_dataframes_by_granularity(df)
     
     logger.info(f"Data processing complete. Split into {len(fact_dfs_dict)} fact tables.")
