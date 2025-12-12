@@ -1,7 +1,9 @@
+// DynamicChartPage.tsx (הקובץ המתוקן והמאוחד)
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Loader2, TrendingUp, Calendar, Zap, LayoutGrid } from 'lucide-react';
+import { Loader2, TrendingUp, Calendar, Zap, LayoutGrid, ChevronDown, Clock, X, SlidersHorizontal } from 'lucide-react';
 
 // ייבוא קומפוננטות Recharts מתוך חבילת Recharts
 import * as Recharts from 'recharts';
@@ -41,16 +43,14 @@ const GRANULARITY_OPTIONS = [
 ];
 
 // ----------------------------------------------------------------------
-// 2. UTILITIES AND HOOKS (שימוש בפונקציות הקיימות)
+// 2. UTILITIES AND HOOKS
 // ----------------------------------------------------------------------
-
-// ... [העתק והדבק את הפונקציות formatDate, safeParseNumber, getInitialApiBaseUrl מ-page.tsx] ...
 
 /**
  * Formats a Date object into 'YYYY-MM-DD' string for the API.
  */
 const formatDate = (date: Date | null): string | null => {
-    if (!date) return null;
+    if (!date || isNaN(date.getTime())) return null; 
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -58,6 +58,83 @@ const formatDate = (date: Date | null): string | null => {
     if (year < 1000) return null;
     return `${year}-${pad(month)}-${pad(day)}`;
 };
+
+/**
+ * Utility function to calculate date ranges based on a key (הועתק מ-DateFilter.tsx המקורי).
+ */
+const calculateDateRange = (key: string): { start: Date | null, end: Date | null } => { 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+
+    const start = new Date(today);
+    const end = new Date(today);
+    
+    const dayOfWeek = today.getDay(); 
+
+    switch (key) {
+        case 'yesterday':
+            start.setDate(today.getDate() - 1);
+            end.setDate(today.getDate() - 1);
+            return { start, end };
+        case 'today_and_yesterday':
+            start.setDate(today.getDate() - 1);
+            return { start, end };
+        case 'last_7_days':
+            start.setDate(today.getDate() - 6); 
+            return { start, end };
+        case 'last_14_days':
+            start.setDate(today.getDate() - 13);
+            return { start, end };
+        case 'last_28_days':
+            start.setDate(today.getDate() - 27);
+            return { start, end };
+        case 'last_30_days':
+            start.setDate(today.getDate() - 29);
+            return { start, end };
+        case 'this_week':
+             const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+             start.setDate(today.getDate() - daysToSubtract);
+             return { start, end };
+        case 'last_week':
+             const startOfThisWeek = calculateDateRange('this_week').start!;
+             start.setTime(startOfThisWeek.getTime());
+             start.setDate(start.getDate() - 7);
+             end.setTime(startOfThisWeek.getTime());
+             end.setDate(end.getDate() - 1); 
+             return { start, end };
+        case 'this_month':
+            start.setDate(1); // First day of the current month
+            return { start, end };
+        case 'last_month':
+            const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            end.setTime(startOfThisMonth.getTime());
+            end.setDate(end.getDate() - 1);
+            start.setFullYear(today.getFullYear(), today.getMonth() - 1, 1);
+            return { start, end };
+        case 'maximum':
+            return { start: new Date(2020, 0, 1), end: today };
+        case 'custom':
+        default:
+            return { start: null, end: null };
+    }
+}
+
+// --- הגדרות טווחי תאריכים קבועים (הועתק מ-DateFilter.tsx המקורי) ---
+const QUICK_SELECT_OPTIONS = [ 
+    { key: 'yesterday', label: 'אתמול' },
+    { key: 'today_and_yesterday', label: 'היום ואתמול' },
+    { key: 'last_7_days', label: '7 ימים אחרונים' },
+    { key: 'last_14_days', label: '14 ימים אחרונים' },
+    { key: 'last_28_days', label: '28 ימים אחרונים' },
+    { key: 'last_30_days', label: '30 ימים אחרונים' },
+    { key: 'this_week', label: 'השבוע הנוכחי' },
+    { key: 'last_week', label: 'שבוע שעבר' },
+    { key: 'this_month', label: 'החודש הנוכחי' },
+    { key: 'last_month', label: 'חודש שעבר' },
+    { key: 'maximum', label: 'מקסימלי (כל הנתונים)' },
+    { key: 'custom', label: 'התאמה אישית' },
+];
+
 
 const safeParseNumber = (value: any): number => {
     if (value === null || typeof value === 'undefined' || value === '') return 0;
@@ -145,7 +222,198 @@ const useDynamicFetchData = (
 
 
 // ----------------------------------------------------------------------
-// 3. THE DYNAMIC CHART COMPONENT
+// 3. DATE FILTER COMPONENT (מעודכן לגודל הגדול)
+// ----------------------------------------------------------------------
+
+interface DateFilterProps {
+    onDateRangeChange: (startDate: string | null, endDate: string | null) => void;
+}
+
+/**
+ * רכיב DateFilter מתקדם (מדומה Popover) - **מעודכן לגודל 255.11X37.6**
+ */
+const DateFilter: React.FC<DateFilterProps> = ({ onDateRangeChange }) => {
+    
+    const defaultRangeKey = 'last_7_days';
+    const initialDates = useMemo(() => calculateDateRange(defaultRangeKey), []);
+
+    const [selectedKey, setSelectedKey] = useState<string>(defaultRangeKey);
+    const [isOpen, setIsOpen] = useState(false); 
+    
+    // States עבור מצב 'Custom' בלבד
+    const [customStartDate, setCustomStartDate] = useState<string | null>(formatDate(initialDates.start));
+    const [customEndDate, setCustomEndDate] = useState<string | null>(formatDate(initialDates.end));
+
+    // --- חישוב טווחי התאריכים הסופיים ---
+    const { finalStartDate, finalEndDate, label } = useMemo(() => {
+        let start: Date | null = null;
+        let end: Date | null = null;
+        let currentLabel = QUICK_SELECT_OPTIONS.find(opt => opt.key === selectedKey)?.label || '';
+
+        if (selectedKey === 'custom') {
+            currentLabel = 'התאמה אישית';
+            return { finalStartDate: customStartDate, finalEndDate: customEndDate, label: currentLabel };
+        } else {
+            const calculated = calculateDateRange(selectedKey);
+            start = calculated.start;
+            end = calculated.end;
+        }
+
+        return { 
+            finalStartDate: formatDate(start), 
+            finalEndDate: formatDate(end), 
+            label: currentLabel 
+        };
+    }, [selectedKey, customStartDate, customEndDate]);
+
+    // 1. אפקט לדיווח שינויי תאריכים ל-Parent
+    useEffect(() => {
+        // מפעיל את onDateRangeChange רק אם יש תאריכים חוקיים כדי למנוע קריאות API מיותרות
+        if (finalStartDate && finalEndDate) {
+            onDateRangeChange(finalStartDate, finalEndDate);
+        }
+    }, [finalStartDate, finalEndDate, onDateRangeChange]);
+
+    // --- פונקציות לוגיקה --- 
+    const handleQuickSelect = (key: string) => {
+        setSelectedKey(key);
+        setIsOpen(false);
+        if (key !== 'custom') {
+            const calculated = calculateDateRange(key);
+            setCustomStartDate(formatDate(calculated.start));
+            setCustomEndDate(formatDate(calculated.end));
+        }
+    };
+
+    const handleClear = () => {
+        // איפוס לברירת מחדל (7 ימים אחרונים)
+        handleQuickSelect(defaultRangeKey);
+    };
+
+    const formatDisplayDate = (dateString: string | null): string => {
+        if (!dateString) return 'בחר תאריך';
+        try {
+            const [year, month, day] = dateString.split('-');
+            // רק יום וחודש
+            return `${day}-${month}`; 
+        } catch (e) {
+            return dateString;
+        }
+    };
+
+    // עיצוב התאריכים בתוך הכפתור 
+    const displayRange = `${formatDisplayDate(finalStartDate)} - ${formatDisplayDate(finalEndDate)}`;
+
+    return (
+        // *** שינוי: שימוש ב-w-64 (256px) ו-py-2 ***
+        <div className="relative w-full md:w-auto z-10" dir="rtl">
+            {/* 1. כפתור Date Picker הראשי */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                // **UPDATED**: w-64, px-4 py-2
+                className="flex items-center justify-between px-4 py-2 bg-gray-800 text-gray-100 rounded-lg border border-gray-700 hover:bg-gray-700 transition duration-150 shadow-lg w-64"
+            >
+                {/* **UPDATED**: w-5 h-5, text-sm */}
+                <div className="flex items-center space-x-2 space-x-reverse whitespace-nowrap">
+                    <Calendar className="w-5 h-5 text-indigo-400" /> 
+                    <span className="text-sm font-semibold">{label}</span> 
+                </div>
+                {/* **UPDATED**: text-sm, w-4 h-4 */}
+                <div className="flex items-center text-sm font-medium text-gray-300 whitespace-nowrap">
+                    {displayRange}
+                    <ChevronDown className={`w-4 h-4 mr-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`} /> 
+                </div>
+            </button>
+
+            {/* 2. Popover (סימולציה) */}
+            {isOpen && (
+                <div 
+                    // **UPDATED**: w-80
+                    className="absolute right-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden" 
+                    onBlur={() => setIsOpen(false)} 
+                    tabIndex={-1}
+                >
+                    {/* כותרת Popover - **UPDATED**: p-4, text-base */}
+                    <div className="p-4 flex justify-between items-center bg-gray-700/50">
+                        <p className="text-gray-200 font-semibold flex items-center space-x-2 space-x-reverse text-base">
+                            <Clock className="w-5 h-5 text-indigo-400" />
+                            <span>בחירה מהירה</span>
+                        </p>
+                        {/* כפתור סגירה - **UPDATED**: w-5 h-5 */}
+                        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition">
+                            <X className="w-5 h-5" /> 
+                        </button>
+                    </div>
+
+                    {/* קיצורי דרך - **UPDATED**: p-2, py-2, text-sm */}
+                    <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
+                        {QUICK_SELECT_OPTIONS.map((opt) => (
+                            <button 
+                                key={opt.key}
+                                onClick={() => handleQuickSelect(opt.key)}
+                                className={`w-full text-right px-3 py-2 text-sm rounded-md transition duration-100 ${selectedKey === opt.key ? 'bg-indigo-600 text-white font-bold' : 'text-gray-200 hover:bg-gray-700'}`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* אפשרות התאמה אישית - **UPDATED**: p-4, text-sm, w-5 h-5 */}
+                    <div className="p-4 border-t border-gray-700">
+                        <h4 className="text-gray-400 text-sm font-semibold flex items-center space-x-2 space-x-reverse mb-3">
+                            <SlidersHorizontal className="w-5 h-5 text-gray-400" />
+                            <span>התאמה אישית</span>
+                        </h4>
+                        <div className="flex flex-col space-y-3">
+                            <label className="flex flex-col text-sm font-medium text-gray-400">
+                                תאריך התחלה
+                                <input
+                                    type="date"
+                                    value={customStartDate || ''}
+                                    onChange={(e) => {
+                                        setCustomStartDate(e.target.value);
+                                        setSelectedKey('custom');
+                                    }}
+                                    // **UPDATED**: p-2, text-sm
+                                    className="mt-1 p-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 text-sm w-full"
+                                    dir="ltr" // תאריך מוצג ב-LTR
+                                />
+                            </label>
+                            <label className="flex flex-col text-sm font-medium text-gray-400">
+                                תאריך סיום
+                                <input
+                                    type="date"
+                                    value={customEndDate || ''}
+                                    onChange={(e) => {
+                                        setCustomEndDate(e.target.value);
+                                        setSelectedKey('custom');
+                                    }}
+                                    // **UPDATED**: p-2, text-sm
+                                    className="mt-1 p-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 text-sm w-full"
+                                    dir="ltr" // תאריך מוצג ב-LTR
+                                />
+                            </label>
+                        </div>
+                    </div>
+                    
+                    {/* כפתור ניקוי/איפוס - **UPDATED**: p-4, py-2, text-sm */}
+                    <div className="p-4 border-t border-gray-700">
+                        <button
+                            onClick={handleClear}
+                            className="w-full text-center py-2 text-sm text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition duration-150"
+                        >
+                            איפוס לברירת מחדל
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// ----------------------------------------------------------------------
+// 4. THE DYNAMIC CHART COMPONENT (ללא שינוי מהקוד הקודם שלך)
 // ----------------------------------------------------------------------
 
 interface DynamicChartProps {
@@ -279,99 +547,20 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ startDate, endDate, apiBase
     );
 };
 
+
 // ----------------------------------------------------------------------
-// 4. WRAPPER PAGE COMPONENT (דף מלא)
+// 5. DynamicChartPage Component. The main page wrapper.
 // ----------------------------------------------------------------------
 
-// ... [העתק והדבק את DateFilter מ-page.tsx] ...
-// (כדי לא לחזור על קוד, נניח שהעתקת את DateFilter ו-formatDate לתוך קובץ זה)
-
-// DateFilter Component (מפשט גרסה מקובץ page.tsx)
-interface DateFilterProps {
-    onDateRangeChange: (startDate: string | null, endDate: string | null) => void;
-}
-const DateFilter: React.FC<DateFilterProps> = ({ onDateRangeChange }) => {
-    // ... (העתק והדבק את הקוד של DateFilter)
-    const today = new Date();
-    const defaultEndDate = formatDate(today);
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const defaultStartDate = formatDate(sevenDaysAgo);
-
-    const [startDate, setStartDate] = useState<string | null>(defaultStartDate);
-    const [endDate, setEndDate] = useState<string | null>(defaultEndDate);
-
-    useEffect(() => {
-        onDateRangeChange(startDate, endDate);
-    }, [startDate, endDate, onDateRangeChange]);
-    
-    const handleQuickSelect = (days: number) => {
-        const end = new Date();
-        const start = new Date(end);
-        start.setDate(end.getDate() - days);
-        setEndDate(formatDate(end));
-        setStartDate(formatDate(start));
-    };
-
-    return (
-        <div className="bg-gray-800 p-6 rounded-xl shadow-2xl mb-8 border border-gray-700" dir="rtl">
-            <h2 className="text-xl font-semibold text-gray-200 mb-4 flex items-center space-x-2 justify-end space-x-reverse">
-                <span>בורר טווח תאריכים</span>
-                <Calendar className="w-6 h-6 text-indigo-400" />
-            </h2>
-            <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
-                <div className="flex space-x-4 space-x-reverse">
-                    <label className="flex flex-col text-sm font-medium text-gray-400">
-                        <span>תאריך התחלה:</span>
-                        <input
-                            type="date"
-                            value={startDate || ''}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="mt-1 p-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 text-right"
-                        />
-                    </label>
-                    <label className="flex flex-col text-sm font-medium text-gray-400">
-                        <span>תאריך סיום:</span>
-                        <input
-                            type="date"
-                            value={endDate || ''}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="mt-1 p-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 text-right"
-                        />
-                    </label>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <button 
-                        onClick={() => handleQuickSelect(7)} 
-                        className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md"
-                    >
-                        7 ימים אחרונים
-                    </button>
-                    <button 
-                        onClick={() => handleQuickSelect(30)} 
-                        className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md"
-                    >
-                        30 ימים אחרונים
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-/**
- * DynamicChartPage Component. The main page wrapper.
- */
 export default function DynamicChartPage() {
     const [apiBaseUrl] = useState(getInitialApiBaseUrl);
 
-    const today = new Date();
-    const defaultEndDate = formatDate(today);
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const defaultStartDate = formatDate(sevenDaysAgo);
+    // הלוגיקה של DateFilter דורשת טווח התחלתי (7 ימים אחרונים)
+    const defaultRangeKey = 'last_7_days';
+    const initialDates = useMemo(() => calculateDateRange(defaultRangeKey), []);
 
-    const [startDate, setStartDate] = useState<string | null>(defaultStartDate);
-    const [endDate, setEndDate] = useState<string | null>(defaultEndDate);
+    const [startDate, setStartDate] = useState<string | null>(formatDate(initialDates.start));
+    const [endDate, setEndDate] = useState<string | null>(formatDate(initialDates.end));
 
     const handleDateRangeChange = useCallback((start: string | null, end: string | null) => {
         setStartDate(start);
@@ -385,10 +574,12 @@ export default function DynamicChartPage() {
                 <p className="text-gray-400">הצגת מגמת זמן עבור מטריקה נבחרת לפי גרנולריות (יומי/שבועי/חודשי).</p>
             </header>
             
-            {/* 1. בורר תאריכים */}
-            <DateFilter onDateRangeChange={handleDateRangeChange} />
+            {/* בורר תאריכים */}
+            <div className="flex justify-end mb-8">
+                <DateFilter onDateRangeChange={handleDateRangeChange} />
+            </div>
 
-            {/* 2. הגרף הדינמי */}
+            {/* הגרף הדינמי */}
             <DynamicChart startDate={startDate} endDate={endDate} apiBaseUrl={apiBaseUrl} />
             
             <footer className="mt-10 text-center text-sm text-gray-500">
