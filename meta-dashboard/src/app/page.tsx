@@ -1,7 +1,12 @@
+// page.tsx (הקובץ המתוקן)
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ArrowUp, ArrowDown, Loader2, Calendar, Filter, DollarSign, MousePointer, Repeat, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
+// ייבוא רכיב הפילטר והפונקציות הנחוצות (נתיב משוער: ../components/DateFilter)
+import DateFilter, { formatDate, calculateDateRange } from '../components/DateFilter';
+// ייבוא האייקונים הדרושים
+import { ArrowUp, ArrowDown, Loader2, Calendar, Filter, DollarSign, MousePointer, Repeat, ArrowRight, TrendingUp, TrendingDown, ChevronDown, Clock, X, SlidersHorizontal, Settings } from 'lucide-react';
 
 // ייבוא קומפוננטות Recharts מתוך חבילת Recharts
 import * as Recharts from 'recharts';
@@ -30,11 +35,7 @@ interface KpiCardProps {
     title: string;
     value: string;
     icon: React.ComponentType<{ className: string }>;
-    trend: 'up' | 'down' | 'flat';
-}
-
-interface DateFilterProps {
-    onDateRangeChange: (startDate: string | null, endDate: string | null) => void;
+    trend: 'up' | 'down' | 'flat'; // Literal Type
 }
 
 // ----------------------------------------------------------------------
@@ -46,31 +47,11 @@ interface DateFilterProps {
  * @returns {string}
  */
 const getInitialApiBaseUrl = (): string => {
-    return 'http://localhost:8000'; 
-};
-
-/**
- * Formats a Date object into 'YYYY-MM-DD' string for the API.
- * *** תיקון קל: שימוש בפונקציות Date כדי לוודא פורמט תקין ומניעת תאריכים חריגים ***
- * @param {Date | null} date
- * @returns {string | null}
- */
-const formatDate = (date: Date | null): string | null => {
-    if (!date) return null;
-    
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // getMonth() is 0-indexed
-    const day = date.getDate();
-    
-    // קביעת הקידומת (Padding) ל-0
-    const pad = (num: number) => num.toString().padStart(2, '0');
-
-    // מונע תאריכי אפס/שנה לא תקינה כמו 0002
-    if (year < 1000) {
-        return null;
+    // בברירת מחדל משתמש ב-localhost (כדי למנוע שגיאות SSR)
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        return 'http://localhost:8000';
     }
-    
-    return `${year}-${pad(month)}-${pad(day)}`;
+    return 'http://localhost:8000'; 
 };
 
 /**
@@ -119,7 +100,6 @@ const useFetchData = (endpoint: string, startDate: string | null, endDate: strin
                         console.log(`[DEBUG] API Response successful on attempt ${i + 1}. Status: ${response.status}`);
                         break; 
                     } else if (response.status === 400) {
-                        // אם זה 400, זה כנראה שגיאת פורמט תאריך. אין טעם לנסות שוב.
                         throw new Error(`HTTP error! Status: ${response.status}. ודא שפורמט התאריכים (YYYY-MM-DD) תקין.`);
                     } else if (i === MAX_RETRIES - 1) {
                         throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
@@ -167,93 +147,6 @@ const useFetchData = (endpoint: string, startDate: string | null, endDate: strin
     }, [fetchData]);
 
     return { data, loading, error };
-};
-
-// ----------------------------------------------------------------------
-// 3. DATE FILTER COMPONENT
-// ----------------------------------------------------------------------
-
-/**
- * DateFilter Component. Allows selecting a date range.
- */
-const DateFilter: React.FC<DateFilterProps> = ({ onDateRangeChange }) => {
-    // הגדרת תאריכי ברירת המחדל לשבוע האחרון
-    const today = new Date();
-    const defaultEndDate = formatDate(today);
-    
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const defaultStartDate = formatDate(sevenDaysAgo);
-
-    const [startDate, setStartDate] = useState<string | null>(defaultStartDate);
-    const [endDate, setEndDate] = useState<string | null>(defaultEndDate);
-
-    useEffect(() => {
-        onDateRangeChange(startDate, endDate);
-    }, [startDate, endDate, onDateRangeChange]);
-    
-    const handleQuickSelect = (days: number) => {
-        const end = new Date();
-        const start = new Date(end);
-        start.setDate(end.getDate() - days);
-        setEndDate(formatDate(end));
-        setStartDate(formatDate(start));
-    };
-
-
-    return (
-        <div className="bg-gray-800 p-6 rounded-xl shadow-2xl mb-8 border border-gray-700" dir="rtl">
-            <h2 className="text-xl font-semibold text-gray-200 mb-4 flex items-center space-x-2 justify-end space-x-reverse">
-                <span>בורר טווח תאריכים</span>
-                <Filter className="w-6 h-6 text-indigo-400" />
-            </h2>
-            <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
-                
-                {/* קלטי תאריכים */}
-                <div className="flex space-x-4 space-x-reverse">
-                    <label className="flex flex-col text-sm font-medium text-gray-400">
-                        <span className="flex items-center space-x-1 space-x-reverse">
-                            <Calendar className="w-4 h-4 text-indigo-400" />
-                            <span>תאריך התחלה:</span>
-                        </span>
-                        <input
-                            type="date"
-                            value={startDate || ''}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="mt-1 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-700 text-gray-100 text-right"
-                        />
-                    </label>
-                    <label className="flex flex-col text-sm font-medium text-gray-400">
-                        <span className="flex items-center space-x-1 space-x-reverse">
-                            <Calendar className="w-4 h-4 text-indigo-400" />
-                            <span>תאריך סיום:</span>
-                        </span>
-                        <input
-                            type="date"
-                            value={endDate || ''}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="mt-1 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-700 text-gray-100 text-right"
-                        />
-                    </label>
-                </div>
-
-                {/* בחירות מהירות */}
-                <div className="flex flex-wrap gap-2">
-                    <button 
-                        onClick={() => handleQuickSelect(7)} 
-                        className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md"
-                    >
-                        7 ימים אחרונים
-                    </button>
-                    <button 
-                        onClick={() => handleQuickSelect(30)} 
-                        className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md"
-                    >
-                        30 ימים אחרונים
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
 };
 
 // ----------------------------------------------------------------------
@@ -308,6 +201,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon: IconComponent, tr
  * KpiContainer Component. Fetches core metrics data and calculates summary KPIs.
  */
 const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBaseUrl }) => {
+    // השתמש ב-useFetchData עם הפרמטרים המועברים
     const { data, loading, error } = useFetchData('/api/reports/core_summary/', startDate, endDate, apiBaseUrl);
 
     // Calculate aggregated metrics from the daily data
@@ -315,11 +209,12 @@ const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBase
         if (loading || data.length === 0) {
             return {
                 totalSpend: 0,
+                totalImpressions: 0, 
                 totalClicks: 0,
                 totalPurchases: 0,
-                ctr: 0,
-                cpc: 0,
-                cpa: 0,
+                ctr: 0, // Click-Through Rate
+                cpc: 0, // Cost Per Click
+                cpa: 0, // Cost Per Acquisition (Purchase)
             };
         }
 
@@ -345,6 +240,7 @@ const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBase
 
         return {
             totalSpend: totalSpend,
+            totalImpressions: totalImpressions, 
             totalClicks: totalClicks,
             totalPurchases: totalPurchases,
             ctr: ctr,
@@ -352,14 +248,23 @@ const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBase
             cpa: cpa,
         };
     }, [data, loading]);
-    
+
+    // Format numbers for display
+    const formatValue = useCallback((value: number, isCurrency: boolean = false): string => {
+        if (isNaN(value) || !isFinite(value)) {
+            return isCurrency ? '$0.00' : '0';
+        }
+        // שימוש בפורמט מטבע דולרי ($)
+        return isCurrency 
+            ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : value.toLocaleString(undefined, { maximumFractionDigits: isCurrency ? 2 : 0 });
+    }, []);
 
     if (loading) {
         return <div className="text-center p-8"><Loader2 className="w-8 h-8 mx-auto animate-spin text-indigo-400" /> <p className="text-gray-400 mt-2">טוען מדדי KPI...</p></div>;
     }
 
     if (error) {
-        // הצגת שגיאה 
         return <div className="p-4 bg-red-900/50 border border-red-400 text-red-300 rounded-xl mb-4" dir="rtl">שגיאה באחזור נתוני KPI: {error}</div>;
     }
     
@@ -369,21 +274,11 @@ const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBase
             <p className="text-sm mt-1">אנא ודא ששרת ה-FastAPI מופעל ומחזיר נתונים עבור הטווח הנבחר.</p>
         </div>;
     }
-    
-    // פונקציית עזר לעיצוב ערכים
-    const formatValue = (value: number, isCurrency: boolean = false) => {
-        if (isNaN(value) || !isFinite(value)) {
-            return isCurrency ? '$0.00' : '0';
-        }
-        return isCurrency 
-            ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : value.toLocaleString(undefined, { maximumFractionDigits: isCurrency ? 2 : 0 });
-    };
-
 
     // --- KPI DATA ---
     const kpiData: KpiCardProps[] = [
         { title: 'הוצאה כוללת', value: formatValue(summary.totalSpend, true), trend: 'up', icon: DollarSign },
+        { title: 'הופעות סה"כ', value: formatValue(summary.totalImpressions), trend: 'up', icon: Calendar }, 
         { title: 'קליקים סה"כ', value: formatValue(summary.totalClicks), trend: 'up', icon: MousePointer },
         { title: 'רכישות סה"כ', value: formatValue(summary.totalPurchases), trend: 'up', icon: ArrowRight },
         // CTR מוצג כאחוז
@@ -396,14 +291,11 @@ const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBase
         <div className="mb-8" dir="rtl">
             {/* אינדיקטור חזותי לסטטוס הנתונים */}
             <p className={`text-sm mb-4 font-mono ${data.length > 0 ? 'text-green-400' : 'text-yellow-400'}`}>
-                {data.length > 0 
-                    ? `מעבד ${data.length} רשומות יומיות עבור הטווח הנבחר. (הוצאה כוללת: ${formatValue(summary.totalSpend, true)})` 
-                    : `אין רשומות יומיות לעיבוד (וודא שה-API מחזיר נתונים).`}
+                {data.length > 0 ? `מעבד ${data.length} רשומות יומיות עבור הטווח הנבחר. (הוצאה כוללת: ${formatValue(summary.totalSpend, true)})` : `אין רשומות יומיות לעיבוד (וודא שה-API מחזיר נתונים).`}
             </p>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                 {kpiData.map((kpi, index) => (
-                    <KpiCard key={index} {...kpi} />
+                    <KpiCard key={index} {...kpi} /> 
                 ))}
             </div>
         </div>
@@ -411,13 +303,14 @@ const KpiContainer: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBase
 };
 
 // ----------------------------------------------------------------------
-// 6. DAILY CHART COMPONENT
+// 6. DAILY CHART COMPONENT 
 // ----------------------------------------------------------------------
 
 /**
  * DailyChart Component. Displays daily trend for core metrics using Recharts.
  */
 const DailyChart: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBaseUrl }) => {
+    // השתמש ב-useFetchData עם הפרמטרים המועברים
     const { data, loading, error } = useFetchData('/api/reports/core_summary/', startDate, endDate, apiBaseUrl);
 
     if (loading) {
@@ -425,95 +318,127 @@ const DailyChart: React.FC<KpiContainerProps> = ({ startDate, endDate, apiBaseUr
     }
 
     if (error) {
-        return <div className="text-center py-20 text-red-400 font-semibold" dir="rtl">{error}</div>;
+        return <div className="p-4 bg-red-900/50 border border-red-400 text-red-300 rounded-xl mb-4" dir="rtl">שגיאה בטעינת הגרף: {error}</div>;
     }
 
-    // סידור הנתונים לגרף: מיון לפי תאריך
+    if (data.length === 0) {
+        return <div className="text-center py-20 text-gray-400"><Settings className="w-8 h-8 mx-auto" /> <p className="mt-2">אין נתונים יומיים להצגה בגרף עבור הטווח הנבחר.</p></div>;
+    }
+
+    // נתונים לגרף: date, total_spend, total_clicks, total_purchases
     const chartData = data.map(item => ({
-        // *** שימוש במפתחות total_XXX למיפוי לקריאת Recharts ***
-        date: item.date, // שימוש ב-date כציר ה-X
-        spend: item.total_spend, // מיפוי ל-spend עבור הגרף
-        clicks: item.total_clicks, // מיפוי ל-clicks עבור הגרף
-        purchases: item.total_purchases, // מיפוי ל-purchases עבור הגרף
+        date: item.date,
+        spend: item.total_spend,
+        clicks: item.total_clicks,
+        purchases: item.total_purchases,
     })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Custom Tooltip content
+    const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            // פורמט תאריך נקי יותר
+            const formattedDate = new Date(label).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return (
+                <div className="bg-gray-900/90 border border-gray-700 p-3 rounded-lg shadow-xl text-right text-sm" dir="rtl">
+                    <p className="text-white font-bold mb-1">{formattedDate}</p>
+                    {payload.map((item: any, index: number) => {
+                        // שימוש במעצב ספציפי עבור ה-Tooltip
+                        const formattedValue = item.name.includes('($)') 
+                            ? new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(item.value)
+                            : new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(item.value);
+
+                        return (
+                            <p key={index} style={{ color: item.stroke }} className="font-medium">
+                                {item.name}: {formattedValue}
+                            </p>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        return null;
+    };
 
 
     return (
         <div className="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700" dir="rtl">
-            <h2 className="text-xl font-semibold text-gray-200 mb-4">מגמת ביצועים יומית (הוצאה, קליקים, רכישות)</h2>
-            
-            {chartData.length === 0 ? (
-                <div className="text-center py-20 text-gray-400">אין נתונים זמינים לטווח התאריכים הנבחר.</div>
-            ) : (
-                <div className="h-96 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                            data={chartData}
-                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }} 
-                        >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="date" stroke="#9ca3af" angle={-15} textAnchor="end" height={50} />
-                            {/* Spend on the left axis */}
-                            <YAxis yAxisId="left" stroke="#6366f1" domain={['auto', 'auto']} /> 
-                            {/* Clicks/Purchases on the right axis */}
-                            <YAxis yAxisId="right" orientation="right" stroke="#10b981" />
-                            <Tooltip 
-                                formatter={(value: number, name: string) => [value.toLocaleString(undefined, { maximumFractionDigits: 2 }), name]}
-                                labelStyle={{ fontWeight: 'bold', color: '#e5e7eb' }}
-                                contentStyle={{ 
-                                    backgroundColor: '#1f2937', 
-                                    border: '1px solid #4b5563', 
-                                    borderRadius: '8px', 
-                                    padding: '10px', 
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-                                    color: '#f3f4f6' 
-                                }} 
-                            />
-                            <Legend wrapperStyle={{ color: '#e5e7eb' }} />
-                            
-                            {/* Lines for different metrics */}
-                            <Line yAxisId="left" type="monotone" dataKey="spend" stroke="#6366f1" name="הוצאה ($)" dot={false} strokeWidth={2} />
-                            <Line yAxisId="right" type="monotone" dataKey="clicks" stroke="#f59e0b" name="קליקים" dot={false} strokeWidth={2} />
-                            <Line yAxisId="right" type="monotone" dataKey="purchases" stroke="#10b981" name="רכישות" dot={false} strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            )}
+            <h3 className="text-xl font-bold text-gray-100 mb-4">מגמת ביצועים יומית (הוצאה, קליקים, רכישות)</h3>
+            <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
+                    {/* X-Axis: תאריכים */}
+                    <XAxis 
+                        dataKey="date" 
+                        stroke="#9ca3af" 
+                        tickLine={false} 
+                        axisLine={{ stroke: '#4b5563' }}
+                        tickFormatter={(tick) => new Date(tick).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' })}
+                        style={{ fontSize: '12px' }}
+                        interval="preserveStart"
+                    />
+                    {/* Y-Axis: הוצאה (משמאל) */}
+                    <YAxis 
+                        yAxisId="left" 
+                        stroke="#9ca3af" 
+                        tickLine={false} 
+                        axisLine={{ stroke: '#4b5563' }}
+                        tickFormatter={(value) => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(value)}
+                        style={{ fontSize: '12px' }}
+                    />
+                    {/* Y-Axis: קליקים/רכישות (מימין) */}
+                    <YAxis 
+                        yAxisId="right" 
+                        orientation="right" 
+                        stroke="#f59e0b" // צבע לנתונים בציר ימין
+                        tickLine={false} 
+                        axisLine={{ stroke: '#4b5563' }}
+                        tickFormatter={(value) => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(value)}
+                        style={{ fontSize: '12px' }}
+                    />
+                    
+                    <Tooltip content={<CustomTooltip />} />
+                    
+                    <Legend wrapperStyle={{ color: '#e5e7eb', direction: 'rtl', paddingRight: '25px' }} />
+                    
+                    {/* Lines for different metrics */}
+                    <Line yAxisId="left" type="monotone" dataKey="spend" stroke="#6366f1" name="הוצאה ($)" dot={false} strokeWidth={2} />
+                    <Line yAxisId="right" type="monotone" dataKey="clicks" stroke="#f59e0b" name="קליקים" dot={false} strokeWidth={2} />
+                    <Line yAxisId="right" type="monotone" dataKey="purchases" stroke="#10b981" name="רכישות" dot={false} strokeWidth={2} />
+                </LineChart>
+            </ResponsiveContainer>
         </div>
     );
 };
 
 // ----------------------------------------------------------------------
-// 7. MAIN DASHBOARD COMPONENT (The Page Component)
+// 7. MAIN DASHBOARD COMPONENT (PerformanceDashboard)
 // ----------------------------------------------------------------------
 
 /**
- * Main component that ties all the parts together and manages the global date state and API URL state.
+ * Main dashboard component. Manages core state (API URL and date range).
  */
 export default function PerformanceDashboard() {
-    // 1. טיפול ב-API Base URL (כדי למנוע שגיאות SSR)
+    // 1. טיפול ב-API Base URL
     const [apiBaseUrl, setApiBaseUrl] = useState(getInitialApiBaseUrl);
 
     useEffect(() => {
-        // קוד זה יופעל רק בצד הלקוח (הדפדפן)
         if (typeof window !== 'undefined') {
-            const calculatedUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://localhost:8000' 
-                : window.location.origin;
-            setApiBaseUrl(calculatedUrl);
-            console.log(`[INIT] API Base URL set to: ${calculatedUrl}`);
+            const calculatedUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : window.location.origin;
+            // setApiBaseUrl(calculatedUrl); // נשאר עם http://localhost:8000 לצורך בדיקה מקומית
         }
-    }, []); 
+    }, []);
 
-    // 2. טיפול בטווח תאריכים
-    const today = new Date();
-    const defaultEndDate = formatDate(today);
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const defaultStartDate = formatDate(sevenDaysAgo);
+    // 2. טיפול ב-Date State
+    // ברירת מחדל ל'7 ימים אחרונים'
+    const defaultRangeKey = 'last_7_days';
+    // משתמש בפונקציה המיובאת
+    const initialDates = calculateDateRange(defaultRangeKey); 
 
-    const [startDate, setStartDate] = useState<string | null>(defaultStartDate);
-    const [endDate, setEndDate] = useState<string | null>(defaultEndDate);
+    const [startDate, setStartDate] = useState<string | null>(formatDate(initialDates.start));
+    const [endDate, setEndDate] = useState<string | null>(formatDate(initialDates.end));
 
+    // פונקציה שתעבור ל-DateFilter
     const handleDateRangeChange = useCallback((start: string | null, end: string | null) => {
         setStartDate(start);
         setEndDate(end);
@@ -526,8 +451,10 @@ export default function PerformanceDashboard() {
                 <p className="text-gray-400">ניתוח מדדי הליבה והמגמות היומיות לטווח התאריכים הנבחר.</p>
             </header>
             
-            {/* 1. בורר תאריכים */}
-            <DateFilter onDateRangeChange={handleDateRangeChange} />
+            {/* 1. בורר תאריכים - ה-div שמשתמש ב-flex justify-end ידחוף את הפילטר לצד ימין (בהקשר RTL) */}
+            <div className="mb-8 flex justify-end">
+                <DateFilter onDateRangeChange={handleDateRangeChange} />
+            </div>
 
             {/* 2. מדדי KPI מצטברים */}
             <KpiContainer startDate={startDate} endDate={endDate} apiBaseUrl={apiBaseUrl} />
@@ -535,9 +462,8 @@ export default function PerformanceDashboard() {
             {/* 3. גרף מגמות יומי */}
             <DailyChart startDate={startDate} endDate={endDate} apiBaseUrl={apiBaseUrl} />
             
-            <footer className="mt-10 text-center text-sm text-gray-500">
-                <p>מערכת דו"חות מבוססת Next.js ו-FastAPI.</p>
-                <p className="text-xs mt-1 text-gray-600">כתובת ה-API הנוכחית: {apiBaseUrl}</p>
+            <footer className="mt-10 text-center text-sm text-gray-600">
+                &copy; {new Date().getFullYear()} Performance Dashboard. All rights reserved.
             </footer>
         </div>
     );
