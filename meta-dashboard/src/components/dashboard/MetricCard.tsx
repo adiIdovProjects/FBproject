@@ -1,0 +1,122 @@
+/**
+ * MetricCard Component
+ * Displays a single KPI metric with trend indicator using Tremor
+ */
+
+import React from 'react';
+import { Card, Metric, Text } from '@tremor/react';
+import { Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+import { MetricCardProps } from '../../types/dashboard.types';
+
+export const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  trend,
+  icon: Icon,
+  format,
+  isLoading = false,
+  currency = 'USD',  // Default to USD if not provided
+}) => {
+  // Format the value based on type
+  const formatValue = (val: number | string): string => {
+    if (typeof val === 'string') return val;
+
+    if (isNaN(val) || !isFinite(val)) {
+      return format === 'currency' ? `${currency} 0.00` : '0';
+    }
+
+    switch (format) {
+      case 'currency':
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(val);
+
+      case 'percentage':
+        return `${val.toFixed(2)}%`;
+
+      case 'decimal':
+        return val.toFixed(2);
+
+      case 'number':
+      default:
+        return val.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    }
+  };
+
+  // Determine if trend is favorable (green) or unfavorable (red)
+  const getTrendStyle = (): { color: string; bgColor: string; icon: 'up' | 'down'; isGood: boolean } => {
+    if (trend === undefined || trend === null || trend === 0) {
+      return { color: 'text-gray-400', bgColor: 'bg-gray-700', icon: 'up', isGood: false };
+    }
+
+    const isPositive = trend > 0;
+    const isNegative = trend < 0;
+
+    // For cost metrics (CPC, CPA, Spend), lower is better
+    const isCostMetric = title.includes('CPC') || title.includes('CPA') || title.includes('Spend');
+
+    let isGood = false;
+
+    if (isCostMetric) {
+      // For cost metrics: down is good (green), up is bad (red)
+      isGood = isNegative;
+    } else {
+      // For performance metrics: up is good (green), down is bad (red)
+      isGood = isPositive;
+    }
+
+    return {
+      color: isGood ? 'text-green-400' : 'text-red-400',
+      bgColor: isGood ? 'bg-green-900/30' : 'bg-red-900/30',
+      icon: isPositive ? 'up' : 'down',
+      isGood
+    };
+  };
+
+  const trendStyle = getTrendStyle();
+
+  return (
+    <Card
+      className="card-gradient border-border-subtle hover:border-accent/50 transition-all duration-500 shadow-2xl hover:shadow-accent/10 overflow-hidden relative group"
+      decoration="top"
+      decorationColor="indigo"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-accent/10 transition-all duration-700"></div>
+
+      {/* Header with Icon */}
+      <div className="flex items-center justify-between mb-5 relative z-10">
+        <Text className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{title}</Text>
+        <div className="p-2.5 bg-accent/10 rounded-xl group-hover:scale-110 transition-transform">
+          <Icon className="w-4 h-4 text-accent" />
+        </div>
+      </div>
+
+      {/* Value and Trend */}
+      {isLoading ? (
+        <div className="flex items-center text-gray-400 py-3 relative z-10">
+          <Loader2 className="w-6 h-6 animate-spin text-accent" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1 relative z-10">
+          <Metric className="text-white text-3xl font-black tracking-tighter text-glow">{formatValue(value)}</Metric>
+
+          {trend !== undefined && trend !== null && trend !== 0 && (
+            <div className={`mt-3 flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${trendStyle.bgColor} ${trendStyle.color}`}>
+              {trendStyle.icon === 'up' ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : (
+                <TrendingDown className="w-3 h-3" />
+              )}
+              <span>{Math.abs(trend).toFixed(1)}%</span>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+};
+
+export default MetricCard;

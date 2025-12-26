@@ -1,0 +1,130 @@
+/**
+ * Dashboard TypeScript Types
+ * Defines all interfaces and types for the Performance Overview Dashboard
+ */
+
+import React, { ReactNode } from 'react';
+
+// API Response Types
+export interface DailyMetric {
+  date: string;
+  total_spend: number;
+  total_impressions: number;
+  total_clicks: number;
+  total_purchases?: number;
+  total_leads?: number;
+  purchase_value?: number;
+}
+
+export interface ActionMetric {
+  date: string;
+  action_type: string;
+  action_count: number;
+  action_value: number;
+}
+
+// Calculated Metrics
+export interface CalculatedMetrics {
+  spend: number;
+  ctr: number;  // Click-through rate
+  cpc: number;  // Cost per click
+  clicks: number;
+  actions: number;  // Purchases + Leads
+  cpa: number;  // Cost per action
+  roas: number;  // Return on ad spend
+  impressions: number;
+  cpm: number;  // Cost per mille (1000 impressions)
+}
+
+// Metric Card Props
+export interface MetricCardProps {
+  title: string;
+  value: string | number;
+  trend?: number;  // Percentage change vs previous period
+  icon: React.ComponentType<{ className?: string }>;
+  format: 'currency' | 'number' | 'decimal' | 'percentage';
+  isLoading?: boolean;
+  currency?: string;  // Currency code (e.g., "USD", "EUR", "ILS")
+}
+
+// Chart Data Point
+export interface ChartDataPoint {
+  date: string;
+  value: number;
+  [key: string]: any;  // Allow additional dynamic properties
+}
+
+// Metric Selector Options
+export type MetricType = 'actions' | 'spend' | 'clicks' | 'ctr' | 'cpc' | 'cpm' | 'impressions' | 'cpa' | 'roas';
+
+export interface MetricOption {
+  value: MetricType;
+  label: string;
+  format: 'currency' | 'number' | 'decimal' | 'percentage';
+}
+
+// Date Range
+export interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
+// Dashboard State
+export interface DashboardState {
+  dateRange: DateRange;
+  selectedMetric: MetricType;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// API Service Response
+export interface ApiResponse<T> {
+  data: T;
+  error?: string;
+}
+
+// Backend API Response Types (from FastAPI)
+export interface BackendMetricsPeriod {
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  purchases: number;
+  purchase_value: number;
+  roas: number;
+  cpa: number;
+}
+
+export interface BackendChangePercentage {
+  spend?: number;
+  impressions?: number;
+  clicks?: number;
+  ctr?: number;
+  cpc?: number;
+  cpm?: number;
+  purchases?: number;
+  purchase_value?: number;
+  roas?: number;
+  cpa?: number;
+}
+
+export interface BackendOverviewResponse {
+  current_period: BackendMetricsPeriod;
+  previous_period?: BackendMetricsPeriod;
+  change_percentage?: BackendChangePercentage;
+  currency: string;  // Currency code (e.g., "USD", "EUR", "ILS")
+}
+
+export interface BackendTimeSeriesPoint {
+  date: string;
+  spend?: number;
+  clicks?: number;
+  impressions?: number;
+  ctr?: number;
+  cpc?: number;
+  cpm?: number;
+  purchases?: number;
+  roas?: number;
+}

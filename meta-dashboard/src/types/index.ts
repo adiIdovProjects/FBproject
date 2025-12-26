@@ -1,21 +1,21 @@
 // src/types.ts
 
-// Data format returned from the API for daily or detailed reports (core_summary)
+// פורמט הנתונים החוזרים מה-API עבור דוחות יומיים או מפורטים (core_summary)
 export interface DailyKpi {
-  date: string; // ISO format (YYYY-MM-DD)
+  date: string; // פורמט ISO (YYYY-MM-DD)
   spend: number;
   purchases: number;
-  // Any additional fields returned (e.g., clicks, impressions)
+  // וכל שדה נוסף שאתה מחזיר (כמו clicks, impressions)
 }
 
-// Aggregated data format (calculated in the Frontend or Backend summary)
+// פורמט הנתונים המסוכמים (מחושב ב-Frontend)
 export interface KpiSummary {
   total_spend: number;
   total_purchases: number;
   cpa: number;
 }
 
-// Data format returned for the Creative Breakdown Report
+// ✅ NEW: פורמט הנתונים החוזרים עבור דוח פירוט קריאייטיב
 export interface CreativeMetric {
     creative_name: string;
     total_spend: number;

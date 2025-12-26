@@ -1,9 +1,37 @@
-# קבצים שמכילים סודות ואסור להעלות אותם
+# Secrets
 .env
 
-# תיקיות שנוצרות אוטומטית (ויתכנו בתוכן קבצים סודיים)
+# Python
 venv/
+.venv/
 __pycache__/
-
-# קבצים זמניים נוספים ש-Python יוצרת
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Node.js
+node_modules/
+.npm
+/meta-dashboard/.next/
+/website-front/.next/
+dist/
+build/
+.DS_Store
+*.log
+.eslintcache
+
+# Misc
+.claude/
+.gemini/
+.antigravity/

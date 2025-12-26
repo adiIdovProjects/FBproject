@@ -5,7 +5,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import pandas as pd
-from config import GEMINI_MODEL # <-- ייבוא חדש
+from backend.config.settings import GEMINI_MODEL # <-- ייבוא חדש
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

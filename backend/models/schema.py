@@ -1,0 +1,273 @@
+"""
+models/schema.py - Complete Database Schema (Lean & Efficient)
+"""
+
+from sqlalchemy import (
+    Column, Integer, String, Float, Date, BigInteger, Boolean, Text,
+    ForeignKey, UniqueConstraint, Index
+)
+from sqlalchemy.orm import declarative_base
+import logging
+
+logger = logging.getLogger(__name__)
+Base = declarative_base()
+
+# ==============================================================================
+# DIMENSION TABLES
+# ==============================================================================
+
+class DimAccount(Base):
+    __tablename__ = 'dim_account'
+    
+    account_id = Column(BigInteger, primary_key=True)
+    account_name = Column(String(255), nullable=False)
+    currency = Column(String(3), nullable=False, default='USD')
+
+
+class DimDate(Base):
+    __tablename__ = 'dim_date'
+    
+    date_id = Column(BigInteger, primary_key=True)
+    date = Column(Date, nullable=False, unique=True)
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    day_of_week = Column(String(10), nullable=False)
+    
+    __table_args__ = (
+        Index('idx_dim_date_year_month', 'year', 'month'),
+    )
+
+
+class DimCampaign(Base):
+    __tablename__ = 'dim_campaign'
+    
+    campaign_id = Column(BigInteger, primary_key=True)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), nullable=False)
+    campaign_name = Column(String(255), nullable=False)
+    objective = Column(String(50))
+    campaign_status = Column(String(20))
+    
+    __table_args__ = (
+        Index('idx_dim_campaign_account', 'account_id'),
+        Index('idx_dim_campaign_status', 'campaign_status'),
+    )
+
+
+class DimAdset(Base):
+    __tablename__ = 'dim_adset'
+    
+    adset_id = Column(BigInteger, primary_key=True)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), nullable=False)
+    adset_name = Column(String(255), nullable=False)
+    adset_status = Column(String(20))
+    targeting_type = Column(String(50))
+    targeting_summary = Column(Text)
+    
+    __table_args__ = (
+        Index('idx_dim_adset_campaign', 'campaign_id'),
+        Index('idx_dim_adset_status', 'adset_status'),
+    )
+
+
+class DimAd(Base):
+    __tablename__ = 'dim_ad'
+    
+    ad_id = Column(BigInteger, primary_key=True)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), nullable=False)
+    creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'))
+    ad_name = Column(String(255), nullable=False)
+    ad_status = Column(String(20))
+    
+    __table_args__ = (
+        Index('idx_dim_ad_adset', 'adset_id'),
+        Index('idx_dim_ad_creative', 'creative_id'),
+        Index('idx_dim_ad_status', 'ad_status'),
+    )
+
+
+class DimCreative(Base):
+    __tablename__ = 'dim_creative'
+    
+    creative_id = Column(BigInteger, primary_key=True)
+    title = Column(String(255))
+    body = Column(String(500))
+    call_to_action_type = Column(String(50))
+    image_url = Column(String(2048))
+    video_url = Column(String(2048))
+    video_length_seconds = Column(Integer)
+    is_video = Column(Boolean, default=False)
+
+
+class DimPlacement(Base):
+    __tablename__ = 'dim_placement'
+    
+    placement_id = Column(Integer, primary_key=True, autoincrement=True)
+    placement_name = Column(String(50), nullable=False, unique=True)
+
+
+class DimCountry(Base):
+    __tablename__ = 'dim_country'
+    
+    country_id = Column(Integer, primary_key=True, autoincrement=True)
+    country = Column(String(100), nullable=False, unique=True)
+    country_code = Column(String(2))
+
+
+class DimAge(Base):
+    __tablename__ = 'dim_age'
+    
+    age_id = Column(Integer, primary_key=True, autoincrement=True)
+    age_group = Column(String(20), nullable=False, unique=True)
+
+
+class DimGender(Base):
+    __tablename__ = 'dim_gender'
+    
+    gender_id = Column(Integer, primary_key=True, autoincrement=True)
+    gender = Column(String(20), nullable=False, unique=True)
+
+
+class DimActionType(Base):
+    __tablename__ = 'dim_action_type'
+    
+    action_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    action_type = Column(String(100), nullable=False, unique=True)
+    is_conversion = Column(Boolean, default=False)
+
+
+# ==============================================================================
+# FACT TABLES
+# ==============================================================================
+
+class FactCoreMetrics(Base):
+    __tablename__ = 'fact_core_metrics'
+    
+    # Composite PK
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False)
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'), primary_key=True, nullable=False)
+    
+    # Core metrics (raw)
+    spend = Column(Float, nullable=False, default=0.0)
+    impressions = Column(BigInteger, nullable=False, default=0)
+    clicks = Column(BigInteger, nullable=False, default=0)
+    
+    # Top conversions (7d_click attribution) - for query speed
+    purchases = Column(BigInteger, nullable=False, default=0)
+    purchase_value = Column(Float, nullable=False, default=0.0)
+    leads = Column(BigInteger, nullable=False, default=0)
+    add_to_cart = Column(BigInteger, nullable=False, default=0)
+    lead_website = Column(BigInteger, nullable=False, default=0)  
+    lead_form = Column(BigInteger, nullable=False, default=0)    
+    
+    # Video metrics (optional)
+    video_plays = Column(BigInteger, default=0)
+    video_p25_watched = Column(BigInteger, default=0)
+    video_p50_watched = Column(BigInteger, default=0)
+    video_p75_watched = Column(BigInteger, default=0)
+    video_p100_watched = Column(BigInteger, default=0)
+    video_avg_time_watched = Column(BigInteger, default=0)
+    
+    __table_args__ = (
+        UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
+                        name='uq_fact_core'),
+        Index('idx_fact_core_date', 'date_id'),
+        Index('idx_fact_core_campaign', 'campaign_id'),
+    )
+
+
+class FactPlacementMetrics(Base):
+    __tablename__ = 'fact_placement_metrics'
+    
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False)
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'), primary_key=True, nullable=False)
+    placement_id = Column(Integer, ForeignKey('dim_placement.placement_id'), primary_key=True, nullable=False)
+    
+    spend = Column(Float, nullable=False, default=0.0)
+    impressions = Column(BigInteger, nullable=False, default=0)
+    clicks = Column(BigInteger, nullable=False, default=0)
+    
+    __table_args__ = (
+        UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'placement_id',
+                        name='uq_fact_placement'),
+    )
+
+
+class FactAgeGenderMetrics(Base):
+    __tablename__ = 'fact_age_gender_metrics'
+    
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False)
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'), primary_key=True, nullable=False)
+    age_id = Column(Integer, ForeignKey('dim_age.age_id'), primary_key=True, nullable=False)
+    gender_id = Column(Integer, ForeignKey('dim_gender.gender_id'), primary_key=True, nullable=False)
+    
+    spend = Column(Float, nullable=False, default=0.0)
+    impressions = Column(BigInteger, nullable=False, default=0)
+    clicks = Column(BigInteger, nullable=False, default=0)
+    
+    __table_args__ = (
+        UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
+                        'age_id', 'gender_id', name='uq_fact_age_gender'),
+    )
+
+
+class FactCountryMetrics(Base):
+    __tablename__ = 'fact_country_metrics'
+    
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False)
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'), primary_key=True, nullable=False)
+    country_id = Column(Integer, ForeignKey('dim_country.country_id'), primary_key=True, nullable=False)
+    
+    spend = Column(Float, nullable=False, default=0.0)
+    impressions = Column(BigInteger, nullable=False, default=0)
+    clicks = Column(BigInteger, nullable=False, default=0)
+    
+    __table_args__ = (
+        UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'country_id',
+                        name='uq_fact_country'),
+    )
+
+
+class FactActionMetrics(Base):
+    """CRITICAL: Granular action/conversion tracking"""
+    __tablename__ = 'fact_action_metrics'
+    
+    date_id = Column(BigInteger, ForeignKey('dim_date.date_id'), primary_key=True, nullable=False)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), primary_key=True, nullable=False)
+    campaign_id = Column(BigInteger, ForeignKey('dim_campaign.campaign_id'), primary_key=True, nullable=False)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), primary_key=True, nullable=False)
+    ad_id = Column(BigInteger, ForeignKey('dim_ad.ad_id'), primary_key=True, nullable=False)
+    creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'), primary_key=True, nullable=False)
+    action_type_id = Column(Integer, ForeignKey('dim_action_type.action_type_id'), primary_key=True, nullable=False)
+    attribution_window = Column(String(20), primary_key=True, nullable=False)
+    
+    action_count = Column(BigInteger, nullable=False, default=0)
+    action_value = Column(Float, nullable=False, default=0.0)
+    
+    __table_args__ = (
+        UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
+                        'action_type_id', 'attribution_window', name='uq_fact_action'),
+        Index('idx_fact_action_type', 'action_type_id'),
+        Index('idx_fact_action_date', 'date_id'),
+    )
+
+
+def create_schema(engine):
+    """Create all tables"""
+    Base.metadata.create_all(engine)
+    logger.info("✅ Database schema created successfully")
