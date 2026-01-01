@@ -233,7 +233,7 @@ class CoreTransformer:
         # רשימת ישויות למיזוג
         entities = [
             ('campaign_id', ['campaign_name', 'campaign_status', 'objective']),
-            ('adset_id', ['adset_name', 'adset_status']),
+            ('adset_id', ['adset_name', 'adset_status', 'targeting']),
             ('ad_id', ['ad_name', 'ad_status', 'creative_id']),
             ('creative_id', ['title', 'body', 'image_url', 'video_url', 'is_video'])
         ]
@@ -304,6 +304,7 @@ class CoreTransformer:
         metric_cols = [
             'spend', 'impressions', 'clicks',
             'purchases', 'purchase_value', 'leads', 'add_to_cart',
+            'lead_website', 'lead_form',
             'video_plays', 'video_p25_watched', 'video_p50_watched',
             'video_p75_watched', 'video_p100_watched', 'video_avg_time_watched'
         ]

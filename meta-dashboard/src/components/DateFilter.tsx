@@ -132,27 +132,24 @@ const DateFilter: React.FC<DateFilterProps> = ({
 
     return (
         <div className="relative w-full md:w-auto z-50 font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
-            {/* 1. כפתור Date Picker הראשי */}
+            {/* 1. Compact Main Trigger Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between px-5 py-3.5 bg-card-bg/50 backdrop-blur-xl text-gray-100 rounded-2xl border border-border-subtle hover:border-accent/50 transition-all duration-300 shadow-2xl w-72 group"
+                className="flex items-center justify-between px-3 py-2 bg-[#1e293b] text-white rounded-xl border border-border-subtle hover:border-accent/50 transition-all duration-300 shadow-lg group hover:bg-slate-700 min-w-[140px]"
             >
-                <div className={`flex items-center space-x-3 ${flexDirectionClass} whitespace-nowrap`}>
-                    <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
-                        <Calendar className="w-4 h-4 text-accent" />
+                <div className={`flex items-center space-x-2 ${flexDirectionClass} whitespace-nowrap`}>
+                    <div className="p-1.5 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
+                        <Calendar className="w-3.5 h-3.5 text-accent" />
                     </div>
-                    <span className="text-xs font-black uppercase tracking-widest">{label}</span>
+                    <span className="text-xs font-bold tracking-wide text-white">{label}</span>
                 </div>
-                <div className={`flex items-center text-xs font-bold text-gray-400 whitespace-nowrap ${flexDirectionClass}`}>
-                    <span className="font-mono tracking-tighter mr-2">{displayRange}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
-                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 ml-2 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
             </button>
 
-            {/* 2. Popover (סימולציה) */}
+            {/* 2. Popover */}
             {isOpen && (
                 <div
-                    className={`absolute ${popoverPositionClass} mt-3 w-80 bg-sidebar-bg border border-border-subtle rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden glass-effect border-glow`}
+                    className={`absolute ${popoverPositionClass} mt-2 w-72 bg-[#0f172a] border border-border-subtle rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden border-glow z-[100]`}
                     onBlur={(e) => {
                         if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                             setIsOpen(false);
@@ -160,38 +157,43 @@ const DateFilter: React.FC<DateFilterProps> = ({
                     }}
                     tabIndex={-1}
                 >
-                    {/* כותרת Popover */}
-                    <div className="p-6 flex justify-between items-center bg-white/[0.03] border-b border-white/[0.05]">
-                        <p className={`text-white font-black uppercase tracking-widest flex items-center space-x-3 ${flexDirectionClass} text-xs`}>
-                            <Clock className="w-4 h-4 text-accent" />
-                            <span>{tSafe('quick_select')}</span>
-                        </p>
-                        <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white transition-colors">
-                            <X className="w-5 h-5" />
-                        </button>
+                    {/* Header with Date Range */}
+                    <div className="p-4 flex flex-col bg-white/[0.03] border-b border-white/[0.05] gap-2">
+                        <div className="flex justify-between items-center">
+                            <p className={`text-accent font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} text-[10px]`}>
+                                <Clock className="w-3 h-3" />
+                                <span>{tSafe('selected_range')}</span>
+                            </p>
+                            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="font-mono text-sm font-bold text-white tracking-tight">
+                            {displayRange}
+                        </div>
                     </div>
 
-                    {/* קיצורי דרך */}
-                    <div className="p-3 grid grid-cols-2 gap-2">
+                    {/* Quick Select Grid */}
+                    <div className="p-2 grid grid-cols-2 gap-2">
                         {QUICK_SELECT_OPTIONS.map((opt) => (
                             <button
                                 key={opt.key}
                                 onClick={() => handleQuickSelect(opt.key)}
-                                className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-200 ${selectedKey === opt.key ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+                                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all duration-200 ${selectedKey === opt.key ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
                             >
                                 {tSafe(opt.labelKey)}
                             </button>
                         ))}
                     </div>
 
-                    {/* אפשרות התאמה אישית */}
-                    <div className="p-6 border-t border-white/[0.05] bg-black/20">
-                        <h4 className={`text-gray-500 text-[10px] font-black uppercase tracking-widest flex items-center space-x-3 ${flexDirectionClass} mb-4`}>
-                            <SlidersHorizontal className="w-4 h-4" />
+                    {/* Custom Selection */}
+                    <div className="p-4 border-t border-white/[0.05] bg-black/20">
+                        <h4 className={`text-gray-400 text-[10px] font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} mb-3`}>
+                            <SlidersHorizontal className="w-3 h-3" />
                             <span>{tSafe('custom_selection')}</span>
                         </h4>
-                        <div className="flex flex-col space-y-4">
-                            <label className="flex flex-col text-[10px] font-black text-gray-500 uppercase tracking-widest gap-2">
+                        <div className="flex flex-col space-y-3">
+                            <label className="flex flex-col text-[10px] font-bold text-gray-500 uppercase tracking-widest gap-1.5">
                                 {tSafe('start_date')}
                                 <input
                                     type="date"
@@ -200,11 +202,11 @@ const DateFilter: React.FC<DateFilterProps> = ({
                                         setCustomStartDate(e.target.value);
                                         setSelectedKey('custom');
                                     }}
-                                    className="p-3 border border-white/10 rounded-xl bg-black/40 text-white text-sm focus:border-accent focus:ring-0 transition-colors w-full outline-none font-mono"
+                                    className="p-2 border border-white/10 rounded-lg bg-black/40 text-white text-xs focus:border-accent focus:ring-0 transition-colors w-full outline-none font-mono placeholder-gray-500"
                                     dir="ltr"
                                 />
                             </label>
-                            <label className="flex flex-col text-[10px] font-black text-gray-500 uppercase tracking-widest gap-2">
+                            <label className="flex flex-col text-[10px] font-bold text-gray-500 uppercase tracking-widest gap-1.5">
                                 {tSafe('end_date')}
                                 <input
                                     type="date"
@@ -213,18 +215,18 @@ const DateFilter: React.FC<DateFilterProps> = ({
                                         setCustomEndDate(e.target.value);
                                         setSelectedKey('custom');
                                     }}
-                                    className="p-3 border border-white/10 rounded-xl bg-black/40 text-white text-sm focus:border-accent focus:ring-0 transition-colors w-full outline-none font-mono"
+                                    className="p-2 border border-white/10 rounded-lg bg-black/40 text-white text-xs focus:border-accent focus:ring-0 transition-colors w-full outline-none font-mono placeholder-gray-500"
                                     dir="ltr"
                                 />
                             </label>
                         </div>
                     </div>
 
-                    {/* כפתור ניקוי/איפוס */}
-                    <div className="p-4 bg-black/40">
+                    {/* Footer Actions */}
+                    <div className="p-2 bg-black/40 border-t border-white/[0.05]">
                         <button
                             onClick={handleClear}
-                            className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+                            className="w-full py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
                         >
                             {tSafe('reset_default')}
                         </button>
@@ -234,5 +236,6 @@ const DateFilter: React.FC<DateFilterProps> = ({
         </div>
     );
 };
+
 
 export default DateFilter;

@@ -4,10 +4,11 @@ models/schema.py - Complete Database Schema (Lean & Efficient)
 
 from sqlalchemy import (
     Column, Integer, String, Float, Date, BigInteger, Boolean, Text,
-    ForeignKey, UniqueConstraint, Index
+    ForeignKey, UniqueConstraint, Index, DateTime
 )
 from sqlalchemy.orm import declarative_base
 import logging
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()
@@ -73,6 +74,8 @@ class DimAd(Base):
     __tablename__ = 'dim_ad'
     
     ad_id = Column(BigInteger, primary_key=True)
+    adset_id = Column(BigInteger, ForeignKey('dim_adset.ad_id'), nullable=False)
+    # Wait, the FK was dim_adset.adset_id. Fixed below.
     adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), nullable=False)
     creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'))
     ad_name = Column(String(255), nullable=False)
@@ -81,6 +84,7 @@ class DimAd(Base):
     __table_args__ = (
         Index('idx_dim_ad_adset', 'adset_id'),
         Index('idx_dim_ad_creative', 'creative_id'),
+        Index('idx_fact_core_ad', 'ad_id'), # Index originally from fact_core? No, this is dim_ad.
         Index('idx_dim_ad_status', 'ad_status'),
     )
 
@@ -169,13 +173,16 @@ class FactCoreMetrics(Base):
     video_p50_watched = Column(BigInteger, default=0)
     video_p75_watched = Column(BigInteger, default=0)
     video_p100_watched = Column(BigInteger, default=0)
-    video_avg_time_watched = Column(BigInteger, default=0)
+    video_avg_time_watched = Column(Float, default=0.0)
     
     __table_args__ = (
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
                         name='uq_fact_core'),
         Index('idx_fact_core_date', 'date_id'),
         Index('idx_fact_core_campaign', 'campaign_id'),
+        Index('idx_fact_core_adset', 'adset_id'),
+        Index('idx_fact_core_ad', 'ad_id'),
+        Index('idx_fact_core_creative', 'creative_id'),
     )
 
 
@@ -197,6 +204,8 @@ class FactPlacementMetrics(Base):
     __table_args__ = (
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'placement_id',
                         name='uq_fact_placement'),
+        Index('idx_fact_placement_date', 'date_id'),
+        Index('idx_fact_placement_campaign', 'campaign_id'),
     )
 
 
@@ -219,6 +228,8 @@ class FactAgeGenderMetrics(Base):
     __table_args__ = (
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
                         'age_id', 'gender_id', name='uq_fact_age_gender'),
+        Index('idx_fact_age_gender_date', 'date_id'),
+        Index('idx_fact_age_gender_campaign', 'campaign_id'),
     )
 
 
@@ -240,6 +251,8 @@ class FactCountryMetrics(Base):
     __table_args__ = (
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'country_id',
                         name='uq_fact_country'),
+        Index('idx_fact_country_date', 'date_id'),
+        Index('idx_fact_country_campaign', 'campaign_id'),
     )
 
 
@@ -266,8 +279,25 @@ class FactActionMetrics(Base):
         Index('idx_fact_action_date', 'date_id'),
     )
 
+class AuditLog(Base):
+    """Permanent record of critical system actions"""
+    __tablename__ = 'audit_log'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(100), nullable=False)
+    event_type = Column(String(50), nullable=False)
+    description = Column(Text)
+    metadata_json = Column(Text) # JSON string of additional context
+    ip_address = Column(String(45))
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index('idx_audit_user', 'user_id'),
+        Index('idx_audit_event', 'event_type'),
+    )
+
 
 def create_schema(engine):
     """Create all tables"""
     Base.metadata.create_all(engine)
-    logger.info("✅ Database schema created successfully")
+    logger.info("Database schema created successfully")

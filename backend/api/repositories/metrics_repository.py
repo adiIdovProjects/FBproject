@@ -47,7 +47,8 @@ class MetricsRepository:
         self,
         start_date: date,
         end_date: date,
-        campaign_status: Optional[str] = None
+        campaign_status: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
         Get aggregated metrics for a date range.
@@ -56,18 +57,32 @@ class MetricsRepository:
             start_date: Start date
             end_date: End date
             campaign_status: Optional status filter (ACTIVE, PAUSED, ALL)
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             Dict with aggregated metrics
         """
-        query = text("""
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
+        query = text(f"""
             SELECT
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.purchases) as purchases,
                 SUM(f.purchase_value) as purchase_value,
                 SUM(f.leads) as leads,
+                SUM(f.lead_website) as lead_website,
+                SUM(f.lead_form) as lead_form,
                 SUM(f.add_to_cart) as add_to_cart,
                 SUM(f.video_plays) as video_plays,
                 SUM(f.video_p25_watched) as video_p25_watched,
@@ -80,15 +95,31 @@ class MetricsRepository:
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 AND (:status IS NULL OR :status = 'ALL' OR c.campaign_status = :status)
+                {account_filter}
         """)
 
         params = {
             'start_date': start_date,
             'end_date': end_date,
-            'status': campaign_status
+            'status': campaign_status,
+            **param_account_ids
         }
 
         result = self.db.execute(query, params).fetchone()
@@ -100,9 +131,13 @@ class MetricsRepository:
             'spend': float(result.spend or 0),
             'impressions': int(result.impressions or 0),
             'clicks': int(result.clicks or 0),
+            'conversions': int(result.conversions or 0),
+            'conversion_value': float(result.conversion_value or 0),
             'purchases': int(result.purchases or 0),
             'purchase_value': float(result.purchase_value or 0),
             'leads': int(result.leads or 0),
+            'lead_website': int(result.lead_website or 0),
+            'lead_form': int(result.lead_form or 0),
             'add_to_cart': int(result.add_to_cart or 0),
             'video_plays': int(result.video_plays or 0),
             'video_p25_watched': int(result.video_p25_watched or 0),
@@ -120,7 +155,8 @@ class MetricsRepository:
         search_query: Optional[str] = None,
         sort_by: str = "spend",
         sort_direction: str = "desc",
-        limit: int = 100
+        limit: int = 100,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get campaign-level metrics breakdown.
@@ -133,6 +169,7 @@ class MetricsRepository:
             sort_by: Column to sort by
             sort_direction: asc or desc
             limit: Maximum number of results
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             List of campaign metrics dicts
@@ -147,6 +184,15 @@ class MetricsRepository:
         search_filter = ""
         if search_query:
             search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
+
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
 
         # Validate sort column
         valid_sort_cols = ['spend', 'impressions', 'clicks', 'purchases', 'purchase_value']
@@ -166,15 +212,34 @@ class MetricsRepository:
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value
+                SUM(f.purchase_value) as purchase_value,
+                SUM(f.lead_website) as lead_website,
+                SUM(f.lead_form) as lead_form
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {status_filter}
                 {search_filter}
+                {account_filter}
             GROUP BY c.campaign_id, c.campaign_name, c.campaign_status
             ORDER BY {sort_by} {sort_direction}
             LIMIT :limit
@@ -183,7 +248,8 @@ class MetricsRepository:
         params = {
             'start_date': start_date,
             'end_date': end_date,
-            'limit': limit
+            'limit': limit,
+            **param_account_ids
         }
         
         if search_query:
@@ -205,8 +271,12 @@ class MetricsRepository:
                 'spend': float(row.spend or 0),
                 'impressions': int(row.impressions or 0),
                 'clicks': int(row.clicks or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
                 'purchases': int(row.purchases or 0),
-                'purchase_value': float(row.purchase_value or 0)
+                'purchase_value': float(row.purchase_value or 0),
+                'lead_website': int(row.lead_website or 0),
+                'lead_form': int(row.lead_form or 0)
             })
 
         return campaigns
@@ -216,7 +286,8 @@ class MetricsRepository:
         start_date: date,
         end_date: date,
         granularity: str = "day",
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get time series metrics data.
@@ -226,6 +297,7 @@ class MetricsRepository:
             end_date: End date
             granularity: day, week, or month
             campaign_id: Optional filter by campaign
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             List of time series data points
@@ -242,26 +314,55 @@ class MetricsRepository:
         if campaign_id is not None:
             campaign_filter = "AND f.campaign_id = :campaign_id"
 
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
         query = text(f"""
             SELECT
                 {date_trunc}::date as date,
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value
+                SUM(f.purchase_value) as purchase_value,
+                SUM(f.lead_website) as lead_website,
+                SUM(f.lead_form) as lead_form
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {campaign_filter}
+                {account_filter}
             GROUP BY {date_trunc}
             ORDER BY date ASC
         """)
 
         params = {
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            **param_account_ids
         }
 
         if campaign_id is not None:
@@ -276,8 +377,10 @@ class MetricsRepository:
                 'spend': float(row.spend or 0),
                 'impressions': int(row.impressions or 0),
                 'clicks': int(row.clicks or 0),
-                'purchases': int(row.purchases or 0),
-                'purchase_value': float(row.purchase_value or 0)
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
+                'lead_website': int(row.lead_website or 0),
+                'lead_form': int(row.lead_form or 0)
             })
 
         return time_series
@@ -287,7 +390,9 @@ class MetricsRepository:
         start_date: date,
         end_date: date,
         campaign_id: Optional[int] = None,
-        group_by: str = 'both'
+        group_by: str = 'both',
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Get age and gender breakdown metrics.
@@ -297,6 +402,8 @@ class MetricsRepository:
             end_date: End date
             campaign_id: Optional filter by campaign
             group_by: 'age', 'gender', or 'both'
+            campaign_status: Optional status filter
+            search_query: Optional search filter
 
         Returns:
             List of age/gender breakdowns
@@ -304,6 +411,17 @@ class MetricsRepository:
         campaign_filter = ""
         if campaign_id is not None:
             campaign_filter = "AND f.campaign_id = :campaign_id"
+
+        # Build status filter
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+            
+        # Build search filter
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
         # Determine grouping
         group_cols = []
@@ -329,9 +447,12 @@ class MetricsRepository:
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_age a ON f.age_id = a.age_id
             JOIN dim_gender g ON f.gender_id = g.gender_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {campaign_filter}
+                {status_filter}
+                {search_filter}
             GROUP BY {group_by_str}
             ORDER BY spend DESC
         """)
@@ -343,6 +464,14 @@ class MetricsRepository:
 
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        # Add status params
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
 
         results = self.db.execute(query, params).fetchall()
 
@@ -362,7 +491,9 @@ class MetricsRepository:
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Get placement breakdown metrics.
@@ -371,6 +502,8 @@ class MetricsRepository:
             start_date: Start date
             end_date: End date
             campaign_id: Optional filter by campaign
+            campaign_status: Optional status filter
+            search_query: Optional search filter
 
         Returns:
             List of placement breakdowns
@@ -378,6 +511,17 @@ class MetricsRepository:
         campaign_filter = ""
         if campaign_id is not None:
             campaign_filter = "AND f.campaign_id = :campaign_id"
+
+        # Build status filter
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+            
+        # Build search filter
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
         query = text(f"""
             SELECT
@@ -388,9 +532,12 @@ class MetricsRepository:
             FROM fact_placement_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_placement p ON f.placement_id = p.placement_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {campaign_filter}
+                {status_filter}
+                {search_filter}
             GROUP BY p.placement_name
             ORDER BY spend DESC
         """)
@@ -402,6 +549,14 @@ class MetricsRepository:
 
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        # Add status params
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
 
         results = self.db.execute(query, params).fetchall()
 
@@ -420,7 +575,9 @@ class MetricsRepository:
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Get platform breakdown metrics (derived from placement_name).
@@ -429,6 +586,8 @@ class MetricsRepository:
             start_date: Start date
             end_date: End date
             campaign_id: Optional filter by campaign
+            campaign_status: Optional status filter
+            search_query: Optional search filter
             
         Returns:
             List of platform breakdowns
@@ -436,6 +595,17 @@ class MetricsRepository:
         campaign_filter = ""
         if campaign_id is not None:
             campaign_filter = "AND f.campaign_id = :campaign_id"
+
+        # Build status filter
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+            
+        # Build search filter
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
         # Use SPLIT_PART to extract platform from 'Facebook Feed' -> 'Facebook'
         query = text(f"""
@@ -447,9 +617,12 @@ class MetricsRepository:
             FROM fact_placement_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_placement p ON f.placement_id = p.placement_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {campaign_filter}
+                {status_filter}
+                {search_filter}
             GROUP BY platform
             ORDER BY spend DESC
         """)
@@ -461,6 +634,14 @@ class MetricsRepository:
 
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        # Add status params
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
 
         results = self.db.execute(query, params).fetchall()
 
@@ -510,8 +691,8 @@ class MetricsRepository:
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
-                SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.video_plays) as video_plays,
                 SUM(f.video_p25_watched) as video_p25_watched,
                 SUM(f.video_p50_watched) as video_p50_watched,
@@ -523,6 +704,20 @@ class MetricsRepository:
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {video_filter}
@@ -556,8 +751,8 @@ class MetricsRepository:
                 'spend': float(row.spend or 0),
                 'impressions': int(row.impressions or 0),
                 'clicks': int(row.clicks or 0),
-                'purchases': int(row.purchases or 0),
-                'purchase_value': float(row.purchase_value or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
                 'video_plays': int(row.video_plays or 0),
                 'video_p25_watched': int(row.video_p25_watched or 0),
                 'video_p50_watched': int(row.video_p50_watched or 0),
@@ -572,7 +767,9 @@ class MetricsRepository:
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Get adset-level metrics and targeting info.
@@ -580,6 +777,17 @@ class MetricsRepository:
         campaign_filter = ""
         if campaign_id is not None:
             campaign_filter = "AND f.campaign_id = :campaign_id"
+
+        # Build status filter
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+            
+        # Build search filter
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
         query = text(f"""
             SELECT
@@ -590,14 +798,35 @@ class MetricsRepository:
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value
+                SUM(f.purchase_value) as purchase_value,
+                SUM(f.lead_website) as lead_website,
+                SUM(f.lead_form) as lead_form
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_adset a ON f.adset_id = a.adset_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {campaign_filter}
+                {status_filter}
+                {search_filter}
             GROUP BY a.adset_id, a.adset_name, a.targeting_type, a.targeting_summary
             ORDER BY spend DESC
         """)
@@ -609,6 +838,14 @@ class MetricsRepository:
 
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        # Add status params
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
 
         results = self.db.execute(query, params).fetchall()
 
@@ -622,18 +859,115 @@ class MetricsRepository:
                 'spend': float(row.spend or 0),
                 'impressions': int(row.impressions or 0),
                 'clicks': int(row.clicks or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
+                'lead_website': int(row.lead_website or 0),
+                'lead_form': int(row.lead_form or 0)
+            })
+
+        return adsets
+
+    def get_ad_breakdown(
+        self,
+        start_date: date,
+        end_date: date,
+        campaign_id: Optional[int] = None,
+        adset_id: Optional[int] = None,
+        search_query: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get ad-level metrics breakdown.
+        """
+        campaign_filter = ""
+        if campaign_id is not None:
+            campaign_filter = "AND f.campaign_id = :campaign_id"
+
+        adset_filter = ""
+        if adset_id is not None:
+            adset_filter = "AND f.adset_id = :adset_id"
+
+        # Build search filter for ad name
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(ad.ad_name) LIKE :search_query"
+
+        query = text(f"""
+            SELECT
+                ad.ad_id,
+                ad.ad_name,
+                ad.ad_status,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id
+                  AND f.account_id = conv.account_id
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {campaign_filter}
+                {adset_filter}
+                {search_filter}
+            GROUP BY ad.ad_id, ad.ad_name, ad.ad_status
+            ORDER BY spend DESC
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        if campaign_id is not None:
+            params['campaign_id'] = campaign_id
+
+        if adset_id is not None:
+            params['adset_id'] = adset_id
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        results = self.db.execute(query, params).fetchall()
+
+        ads = []
+        for row in results:
+            ads.append({
+                'ad_id': int(row.ad_id),
+                'ad_name': str(row.ad_name),
+                'ad_status': str(row.ad_status or 'UNKNOWN'),
+                'spend': float(row.spend or 0),
+                'impressions': int(row.impressions or 0),
+                'clicks': int(row.clicks or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
                 'purchases': int(row.purchases or 0),
                 'purchase_value': float(row.purchase_value or 0)
             })
 
-        return adsets
+        return ads
 
     def get_country_breakdown(
         self,
         start_date: date,
         end_date: date,
         campaign_id: Optional[int] = None,
-        top_n: int = 10
+        top_n: int = 10,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Get country breakdown metrics.
@@ -643,6 +977,8 @@ class MetricsRepository:
             end_date: End date
             campaign_id: Optional filter by campaign
             top_n: Number of top countries to return
+            campaign_status: Optional status filter
+            search_query: Optional search filter
 
         Returns:
             List of country breakdowns
@@ -650,6 +986,17 @@ class MetricsRepository:
         campaign_filter = ""
         if campaign_id is not None:
             campaign_filter = "AND f.campaign_id = :campaign_id"
+
+        # Build status filter
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+            
+        # Build search filter
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
         query = text(f"""
             SELECT
@@ -660,9 +1007,12 @@ class MetricsRepository:
             FROM fact_country_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_country c ON f.country_id = c.country_id
+            JOIN dim_campaign cmp ON f.campaign_id = cmp.campaign_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {campaign_filter}
+                {status_filter.replace('c.', 'cmp.')}
+                {search_filter.replace('c.', 'cmp.')}
             GROUP BY c.country
             ORDER BY spend DESC
             LIMIT :top_n
@@ -676,6 +1026,14 @@ class MetricsRepository:
 
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        # Add status params
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
 
         results = self.db.execute(query, params).fetchall()
 
@@ -721,8 +1079,8 @@ class MetricsRepository:
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
-                SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.video_plays) as video_plays,
                 SUM(f.video_p25_watched) as video_p25_watched,
                 SUM(f.video_p50_watched) as video_p50_watched,
@@ -734,6 +1092,20 @@ class MetricsRepository:
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE cr.creative_id = :creative_id
                 AND d.date >= :start_date
                 AND d.date <= :end_date
@@ -759,10 +1131,21 @@ class MetricsRepository:
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
                 SUM(f.video_plays) as video_plays,
-                SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
+            LEFT JOIN (
+                SELECT date_id, account_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.creative_id = conv.creative_id
             WHERE f.creative_id = :creative_id
                 AND d.date >= :start_date
                 AND d.date <= :end_date
@@ -784,8 +1167,8 @@ class MetricsRepository:
                 'impressions': int(row.impressions or 0),
                 'clicks': int(row.clicks or 0),
                 'video_plays': int(row.video_plays or 0),
-                'purchases': int(row.purchases or 0),
-                'purchase_value': float(row.purchase_value or 0)
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0)
             })
 
         return {
@@ -797,11 +1180,11 @@ class MetricsRepository:
             'image_url': str(result.image_url) if result.image_url else None,
             'video_url': str(result.video_url) if result.video_url else None,
             'call_to_action_type': str(result.call_to_action_type) if result.call_to_action_type else None,
-            'spend': float(result.spend or 0),
-            'impressions': int(result.impressions or 0),
-            'clicks': int(result.clicks or 0),
-            'purchases': int(result.purchases or 0),
-            'purchase_value': float(result.purchase_value or 0),
+                'spend': float(result.spend or 0),
+                'impressions': int(result.impressions or 0),
+                'clicks': int(result.clicks or 0),
+                'conversions': int(result.conversions or 0),
+                'conversion_value': float(result.conversion_value or 0),
             'video_plays': int(result.video_plays or 0),
             'video_p25_watched': int(result.video_p25_watched or 0),
             'video_p50_watched': int(result.video_p50_watched or 0),
@@ -842,8 +1225,8 @@ class MetricsRepository:
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
-                SUM(f.purchases) as purchases,
-                SUM(f.purchase_value) as purchase_value,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
                 SUM(f.video_plays) as video_plays,
                 SUM(f.video_p25_watched) as video_p25_watched,
                 SUM(f.video_p100_watched) as video_p100_watched,
@@ -853,6 +1236,20 @@ class MetricsRepository:
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
             WHERE cr.creative_id IN ({placeholders})
                 AND d.date >= :start_date
                 AND d.date <= :end_date
@@ -880,8 +1277,8 @@ class MetricsRepository:
                 'spend': float(row.spend or 0),
                 'impressions': int(row.impressions or 0),
                 'clicks': int(row.clicks or 0),
-                'purchases': int(row.purchases or 0),
-                'purchase_value': float(row.purchase_value or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
                 'video_plays': int(row.video_plays or 0),
                 'video_p25_watched': int(row.video_p25_watched or 0),
                 'video_p100_watched': int(row.video_p100_watched or 0)
@@ -915,7 +1312,10 @@ class MetricsRepository:
                     ELSE 0 END) as avg_completion_rate,
                 AVG(CASE WHEN f.video_plays > 0
                     THEN (f.video_p50_watched::float / f.video_plays) * 100
-                    ELSE 0 END) as avg_hold_rate
+                    ELSE 0 END) as avg_hold_rate,
+                AVG(CASE WHEN f.video_plays > 0
+                    THEN f.video_avg_time_watched
+                    ELSE 0 END) as avg_video_time
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
@@ -980,6 +1380,7 @@ class MetricsRepository:
             'avg_hook_rate': float(result.avg_hook_rate or 0) if result else 0.0,
             'avg_completion_rate': float(result.avg_completion_rate or 0) if result else 0.0,
             'avg_hold_rate': float(result.avg_hold_rate or 0) if result else 0.0,
+            'avg_video_time': float(result.avg_video_time or 0) if result else 0.0,
             'top_videos': top_videos_list
         }
 
@@ -989,8 +1390,8 @@ class MetricsRepository:
             'spend': 0.0,
             'impressions': 0,
             'clicks': 0,
-            'purchases': 0,
-            'purchase_value': 0.0,
+            'conversions': 0,
+            'conversion_value': 0.0,
             'leads': 0,
             'add_to_cart': 0,
             'video_plays': 0,

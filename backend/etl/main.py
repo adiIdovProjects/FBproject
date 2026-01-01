@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+import time
 from datetime import date, timedelta, datetime
 from typing import Dict
 
@@ -41,11 +42,9 @@ from transformers.fact_builder import build_fact_tables
 from transformers.dimension_builder import extract_dimensions, prepare_dimension_for_load
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from utils.logging_utils import setup_logging, get_logger
+setup_logging()
+logger = get_logger(__name__)
 
 MAIN_FACT_TABLE = 'fact_core_metrics'
 
@@ -56,7 +55,13 @@ class ETLPipeline:
     def __init__(self):
         self.engine = get_db_engine()
         self.extractor = FacebookExtractor()
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = get_logger(self.__class__.__name__)
+        self.stats = {
+            "extract": {},
+            "transform": {},
+            "load": {"dimensions": {}, "facts": {}},
+            "durations": {}
+        }
     
     def run(self, start_date: date, end_date: date):
         """
@@ -67,39 +72,59 @@ class ETLPipeline:
             end_date: End date for data pull
         """
         
-        self.logger.info(f"="*80)
-        self.logger.info(f"Starting ETL Pipeline: {start_date} to {end_date}")
-        self.logger.info(f"="*80)
+        start_time_total = time.time()
+        self.logger.info(
+            f"Starting ETL Pipeline: {start_date} to {end_date}",
+            extra={"event": "etl_start", "start_date": str(start_date), "end_date": str(end_date)}
+        )
         
         try:
             # Step 1: Ensure schema exists
             self._ensure_schema()
             
             # Step 2: Extract data from Facebook
+            start_extract = time.time()
             raw_data = self._extract_data(start_date, end_date)
+            self.stats["durations"]["extract"] = round(time.time() - start_extract, 2)
             
             if not raw_data:
                 self.logger.warning("No data extracted. Exiting.")
                 return
             
             # Step 3: Transform data
+            start_transform = time.time()
             transformed_data = self._transform_data(raw_data)
+            self.stats["durations"]["transform"] = round(time.time() - start_transform, 2)
             
             # Step 4: Load dimensions
+            start_load_dim = time.time()
             self._load_dimensions(transformed_data)
+            self.stats["durations"]["load_dimensions"] = round(time.time() - start_load_dim, 2)
             
             # Step 5: Load facts
+            start_load_fact = time.time()
             self._load_facts(transformed_data)
+            self.stats["durations"]["load_facts"] = round(time.time() - start_load_fact, 2)
 
             # Step 6: Validate data quality
             self._validate_loaded_data()
 
-            self.logger.info("="*80)
-            self.logger.info("ETL Pipeline completed successfully!")
-            self.logger.info("="*80)
+            total_duration = round(time.time() - start_time_total, 2)
+            self.logger.info(
+                f"ETL Pipeline completed successfully in {total_duration}s",
+                extra={
+                    "event": "etl_complete",
+                    "duration_s": total_duration,
+                    "stats": self.stats
+                }
+            )
             
         except Exception as e:
-            self.logger.error(f"ETL Pipeline failed: {e}", exc_info=True)
+            self.logger.error(
+                f"ETL Pipeline failed: {e}", 
+                extra={"event": "etl_failure", "stats": self.stats},
+                exc_info=True
+            )
             raise
     
     def _ensure_schema(self):
@@ -174,6 +199,13 @@ class ETLPipeline:
             self.logger.warning("creative_id missing from metadata!")
             df_creatives = pd.DataFrame()
 
+        self.stats["extract"] = {
+            "core_rows": len(df_core),
+            "metadata_rows": len(df_metadata),
+            "creatives_rows": len(df_creatives),
+            "breakdowns": {k: len(v) for k, v in breakdowns.items()}
+        }
+
         return {
             'core': df_core,
             'breakdowns': breakdowns,
@@ -225,6 +257,13 @@ class ETLPipeline:
         # Extract dimensions
         self.logger.info("3.6: Extracting dimension members...")
         dimensions = extract_dimensions(df_clean, df_actions, raw_data.get('creatives'), raw_data.get('account_info'))
+
+        self.stats["transform"] = {
+            "combined_rows": len(df_combined),
+            "clean_rows": len(df_clean),
+            "action_rows": len(df_actions),
+            "fact_tables": {k: len(v) for k, v in fact_tables.items()}
+        }
 
         return {
             'facts': fact_tables,
@@ -284,8 +323,10 @@ class ETLPipeline:
             
             if success:
                 self.logger.info(f"✅ Loaded {dim_name}: {len(df_prepared)} rows")
+                self.stats["load"]["dimensions"][dim_name] = len(df_prepared)
             else:
                 self.logger.error(f"❌ Failed to load {dim_name}")
+                self.stats["load"]["dimensions"][dim_name] = "FAILED"
         
         # Reload lookup cache
         self.logger.info("4.5: Reloading lookup cache...")
@@ -448,8 +489,10 @@ class ETLPipeline:
             
             if success:
                 self.logger.info(f"✅ Loaded {fact_name}: {len(df_prepared)} rows")
+                self.stats["load"]["facts"][fact_name] = len(df_prepared)
             else:
                 self.logger.error(f"❌ Failed to load {fact_name}")
+                self.stats["load"]["facts"][fact_name] = "FAILED"
         
         # Load fact_action_metrics
         if not actions.empty:
@@ -464,8 +507,10 @@ class ETLPipeline:
             
             if success:
                 self.logger.info(f"✅ Loaded fact_action_metrics: {len(df_actions_prepared)} rows")
+                self.stats["load"]["facts"]["fact_action_metrics"] = len(df_actions_prepared)
             else:
                 self.logger.error(f"❌ Failed to load fact_action_metrics")
+                self.stats["load"]["facts"]["fact_action_metrics"] = "FAILED"
     
     def _prepare_fact_for_load(self, df: pd.DataFrame, fact_name: str) -> pd.DataFrame:
         """

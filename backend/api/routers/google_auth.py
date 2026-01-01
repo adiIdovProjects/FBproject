@@ -7,7 +7,7 @@ from api.repositories.user_repository import UserRepository
 from api.utils.security import create_access_token
 import os
 
-router = APIRouter(prefix="/auth/google", tags=["google_auth"])
+router = APIRouter(prefix="/api/v1/auth/google", tags=["google_auth"])
 google_service = GoogleAuthService()
 
 @router.get("/login")
@@ -32,22 +32,23 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         
         # 3. Save to DB
         repo = UserRepository(db)
-        # Check if user exists by google_id or email
-        user = db.query(repo.db.query(repo.model).filter(repo.model.google_id == g_user["sub"])).first() # Pseudo-code
-        
         from models.user_schema import User
+        
+        # Check if user exists by google_id
         user = db.query(User).filter(User.google_id == g_user["sub"]).first()
         
         if not user:
+            # Check if user exists by email
             user = db.query(User).filter(User.email == g_user["email"]).first()
             if user:
-                # Update existing user
+                # Link Google ID to existing user
                 user.google_id = g_user["sub"]
                 user.google_access_token = access_token
                 user.google_refresh_token = refresh_token or user.google_refresh_token
                 user.google_token_expires_at = expires_at
                 db.commit()
             else:
+                # Create NEW user
                 user = User(
                     email=g_user["email"],
                     full_name=g_user.get("name"),
@@ -60,7 +61,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
                 db.commit()
                 db.refresh(user)
         else:
-            # Update tokens
+            # Update tokens for existing Google user
             user.google_access_token = access_token
             if refresh_token:
                 user.google_refresh_token = refresh_token
@@ -70,9 +71,9 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         # 4. Create app JWT
         app_token = create_access_token(subject=user.id)
         
-        # Step 3: Redirect to Facebook connection
+        # Step 3: Redirect to website frontend (port 3001)
         # The frontend will pick up the token and show "Step 2: Connect Facebook"
-        frontend_url = "http://localhost:3001/connect"
+        frontend_url = os.getenv("GOOGLE_OAUTH_REDIRECT_URL", "http://localhost:3001/connect")
         return RedirectResponse(f"{frontend_url}?token={app_token}&step=google_done")
         
     except Exception as e:

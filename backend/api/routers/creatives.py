@@ -15,7 +15,7 @@ import os
 # Add paths for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db
+from api.dependencies import get_db, get_current_user
 from api.services.metrics_service import MetricsService
 from api.schemas.responses import (
     CreativeMetrics,
@@ -25,7 +25,11 @@ from api.schemas.responses import (
 )
 
 
-router = APIRouter(prefix="/api/v1/creatives", tags=["creatives"])
+router = APIRouter(
+    prefix="/api/v1/creatives", 
+    tags=["creatives"],
+    dependencies=[Depends(get_current_user)]
+)
 
 
 class CreativeComparisonRequest(BaseModel):
@@ -46,7 +50,7 @@ def get_creatives(
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     is_video: Optional[bool] = Query(None, description="Filter by video/image creatives"),
-    min_spend: float = Query(100, ge=0, description="Minimum spend threshold"),
+    min_spend: float = Query(0, ge=0, description="Minimum spend threshold"),
     sort_by: str = Query("spend", description="Metric to sort by"),
     db: Session = Depends(get_db)
 ):

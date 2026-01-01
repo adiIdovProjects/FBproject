@@ -143,10 +143,12 @@ class MetricsService:
                 ctr=self.calculator.ctr(campaign['clicks'], campaign['impressions']),
                 cpc=self.calculator.cpc(campaign['spend'], campaign['clicks']),
                 cpm=self.calculator.cpm(campaign['spend'], campaign['impressions']),
+                conversions=campaign['conversions'],
+                conversion_value=campaign['conversion_value'],
                 purchases=campaign['purchases'],
                 purchase_value=campaign['purchase_value'],
-                roas=self.calculator.roas(campaign['purchase_value'], campaign['spend']),
-                cpa=self.calculator.cpa(campaign['spend'], campaign['purchases'])
+                roas=self.calculator.roas(campaign['conversion_value'], campaign['spend'], campaign['conversions']),
+                cpa=self.calculator.cpa(campaign['spend'], campaign['conversions'])
             )
             campaign_metrics.append(metrics)
 
@@ -206,21 +208,24 @@ class MetricsService:
             if prev:
                 prev_metrics = {
                     'spend': prev['spend'],
+                    'conversions': prev['conversions'],
+                    'conversion_value': prev['conversion_value'],
                     'purchases': prev['purchases'],
                     'purchase_value': prev['purchase_value'],
-                    'roas': self.calculator.roas(prev['purchase_value'], prev['spend']),
-                    'cpa': self.calculator.cpa(prev['spend'], prev['purchases'])
+                    'roas': self.calculator.roas(prev['conversion_value'], prev['spend'], prev['conversions']),
+                    'cpa': self.calculator.cpa(prev['spend'], prev['conversions'])
                 }
 
             # Build comparison object
             comparison = CampaignComparisonMetrics(
                 **current.model_dump(),
                 previous_spend=prev_metrics['spend'] if prev_metrics else None,
-                previous_purchases=prev_metrics['purchases'] if prev_metrics else None,
+                previous_conversions=prev_metrics['conversions'] if prev_metrics else None,
+                previous_conversion_value=prev_metrics['conversion_value'] if prev_metrics else None,
                 previous_roas=prev_metrics['roas'] if prev_metrics else None,
                 previous_cpa=prev_metrics['cpa'] if prev_metrics else None,
                 spend_change_pct=self.calculator.change_percentage(current.spend, prev_metrics['spend']) if prev_metrics else None,
-                purchases_change_pct=self.calculator.change_percentage(float(current.purchases), float(prev_metrics['purchases'])) if prev_metrics and prev_metrics['purchases'] is not None else None,
+                conversions_change_pct=self.calculator.change_percentage(current.conversions, prev_metrics['conversions']) if prev_metrics else None,
                 roas_change_pct=self.calculator.change_percentage(current.roas, prev_metrics['roas']) if prev_metrics else None,
                 cpa_change_pct=self.calculator.change_percentage(current.cpa, prev_metrics['cpa']) if prev_metrics else None
             )
@@ -264,8 +269,8 @@ class MetricsService:
                 ctr=self.calculator.ctr(point['clicks'], point['impressions']),
                 cpc=self.calculator.cpc(point['spend'], point['clicks']),
                 cpm=self.calculator.cpm(point['spend'], point['impressions']),
-                purchases=point['purchases'],
-                roas=self.calculator.roas(point['purchase_value'], point['spend'])
+                conversions=point['conversions'],
+                roas=self.calculator.roas(point['conversion_value'], point['spend'], point['conversions'])
             )
             data_points.append(data_point)
 
@@ -276,7 +281,9 @@ class MetricsService:
         start_date: date,
         end_date: date,
         campaign_id: Optional[int] = None,
-        group_by: str = 'both'
+        group_by: str = 'both',
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[AgeGenderBreakdown]:
         """
         Get demographic breakdown with calculated metrics.
@@ -291,7 +298,7 @@ class MetricsService:
             List of AgeGenderBreakdown
         """
         breakdowns = self.repository.get_age_gender_breakdown(
-            start_date, end_date, campaign_id, group_by
+            start_date, end_date, campaign_id, group_by, campaign_status, search_query
         )
 
         # Calculate derived metrics for each breakdown
@@ -305,7 +312,7 @@ class MetricsService:
                 impressions=breakdown['impressions'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
                 cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
-                purchases=0,  # Not in fact_age_gender_metrics table
+                conversions=0,  # Not in fact_age_gender_metrics table
                 roas=0.0      # Would need to join with fact_action_metrics
             )
             age_gender_metrics.append(metrics)
@@ -316,7 +323,9 @@ class MetricsService:
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[PlacementBreakdown]:
         """
         Get placement breakdown with calculated metrics.
@@ -330,7 +339,7 @@ class MetricsService:
             List of PlacementBreakdown
         """
         breakdowns = self.repository.get_placement_breakdown(
-            start_date, end_date, campaign_id
+            start_date, end_date, campaign_id, campaign_status, search_query
         )
 
         # Calculate derived metrics for each breakdown
@@ -343,7 +352,7 @@ class MetricsService:
                 impressions=breakdown['impressions'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
                 cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
-                purchases=0,  # Not in fact_placement_metrics table
+                conversions=0,  # Not in fact_placement_metrics table
                 roas=0.0      # Would need to join with fact_action_metrics
             )
             placement_metrics.append(metrics)
@@ -354,7 +363,9 @@ class MetricsService:
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[PlacementBreakdown]:
         """
         Get platform breakdown with calculated metrics.
@@ -368,7 +379,7 @@ class MetricsService:
             List of PlacementBreakdown (reusing structure as it fits)
         """
         breakdowns = self.repository.get_platform_breakdown(
-            start_date, end_date, campaign_id
+            start_date, end_date, campaign_id, campaign_status, search_query
         )
 
         # Calculate derived metrics for each breakdown
@@ -381,7 +392,7 @@ class MetricsService:
                 impressions=breakdown['impressions'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
                 cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
-                purchases=0,
+                conversions=0,
                 roas=0.0
             )
             platform_metrics.append(metrics)
@@ -393,7 +404,7 @@ class MetricsService:
         start_date: date,
         end_date: date,
         is_video: Optional[bool] = None,
-        min_spend: float = 100,
+        min_spend: float = 0,
         sort_by: str = "spend"
     ) -> List[CreativeMetrics]:
         """
@@ -451,9 +462,12 @@ class MetricsService:
                 completion_rate=completion_rate,
                 hold_rate=hold_rate,
                 avg_watch_time=avg_watch_time,
+                conversions=creative['conversions'],
+                conversion_value=creative['conversion_value'],
                 purchases=creative['purchases'],
-                roas=self.calculator.roas(creative['purchase_value'], creative['spend']),
-                cpa=self.calculator.cpa(creative['spend'], creative['purchases'])
+                purchase_value=creative['purchase_value'],
+                roas=self.calculator.roas(creative['conversion_value'], creative['spend'], creative['conversions']),
+                cpa=self.calculator.cpa(creative['spend'], creative['conversions'])
             )
             creative_metrics.append(metrics)
 
@@ -469,30 +483,40 @@ class MetricsService:
         Returns:
             MetricsPeriod with calculated metrics
         """
+        conversion_value = raw_metrics['conversion_value']
+        purchase_value = raw_metrics['purchase_value']
+        purchases = raw_metrics['purchases']
+        spend = raw_metrics['spend']
+        roas = self.calculator.roas(conversion_value, spend, raw_metrics['conversions'])
+
         return MetricsPeriod(
-            spend=raw_metrics['spend'],
+            spend=spend,
             impressions=raw_metrics['impressions'],
             clicks=raw_metrics['clicks'],
             ctr=self.calculator.ctr(raw_metrics['clicks'], raw_metrics['impressions']),
-            cpc=self.calculator.cpc(raw_metrics['spend'], raw_metrics['clicks']),
-            cpm=self.calculator.cpm(raw_metrics['spend'], raw_metrics['impressions']),
-            purchases=raw_metrics['purchases'],
-            purchase_value=raw_metrics['purchase_value'],
-            roas=self.calculator.roas(raw_metrics['purchase_value'], raw_metrics['spend']),
-            cpa=self.calculator.cpa(raw_metrics['spend'], raw_metrics['purchases'])
+            cpc=self.calculator.cpc(spend, raw_metrics['clicks']),
+            cpm=self.calculator.cpm(spend, raw_metrics['impressions']),
+            conversions=raw_metrics['conversions'],
+            conversion_value=conversion_value,
+            purchases=purchases,
+            purchase_value=purchase_value,
+            roas=self.calculator.roas(conversion_value, spend, raw_metrics['conversions']),
+            cpa=self.calculator.cpa(spend, raw_metrics['conversions'])
         )
 
     def get_adset_breakdown(
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[AdsetBreakdown]:
         """
         Get adset-level breakdown with calculated metrics.
         """
         adsets = self.repository.get_adset_breakdown(
-            start_date, end_date, campaign_id
+            start_date, end_date, campaign_id, campaign_status, search_query
         )
 
         adset_metrics = []
@@ -507,9 +531,12 @@ class MetricsService:
                 impressions=adset['impressions'],
                 ctr=self.calculator.ctr(adset['clicks'], adset['impressions']),
                 cpc=self.calculator.cpc(adset['spend'], adset['clicks']),
+                conversions=adset['conversions'],
+                conversion_value=adset['conversion_value'],
                 purchases=adset['purchases'],
-                roas=self.calculator.roas(adset['purchase_value'], adset['spend']),
-                cpa=self.calculator.cpa(adset['spend'], adset['purchases'])
+                purchase_value=adset['purchase_value'],
+                roas=self.calculator.roas(adset['conversion_value'], adset['spend'], adset['conversions']),
+                cpa=self.calculator.cpa(adset['spend'], adset['conversions'])
             )
             adset_metrics.append(metrics)
 
@@ -520,7 +547,9 @@ class MetricsService:
         start_date: date,
         end_date: date,
         campaign_id: Optional[int] = None,
-        top_n: int = 10
+        top_n: int = 10,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
     ) -> List[CountryBreakdown]:
         """
         Get country breakdown with calculated metrics.
@@ -535,7 +564,7 @@ class MetricsService:
             List of CountryBreakdown
         """
         breakdowns = self.repository.get_country_breakdown(
-            start_date, end_date, campaign_id, top_n
+            start_date, end_date, campaign_id, top_n, campaign_status, search_query
         )
 
         # Calculate derived metrics for each breakdown
@@ -547,7 +576,7 @@ class MetricsService:
                 clicks=breakdown['clicks'],
                 impressions=breakdown['impressions'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
-                purchases=0,  # Not in fact_country_metrics table
+                conversions=0,  # Not in fact_country_metrics table
                 roas=0.0      # Would need to join with fact_action_metrics
             )
             country_metrics.append(metrics)
@@ -580,8 +609,8 @@ class MetricsService:
         ctr = self.calculator.ctr(detail['clicks'], detail['impressions'])
         cpc = self.calculator.cpc(detail['spend'], detail['clicks'])
         cpm = self.calculator.cpm(detail['spend'], detail['impressions'])
-        roas = self.calculator.roas(detail['purchase_value'], detail['spend'])
-        cpa = self.calculator.cpa(detail['spend'], detail['purchases'])
+        roas = self.calculator.roas(detail['conversion_value'], detail['spend'], detail['conversions'])
+        cpa = self.calculator.cpa(detail['spend'], detail['conversions'])
 
         # Calculate video metrics if applicable
         video_metrics = None
@@ -611,6 +640,8 @@ class MetricsService:
             ctr=ctr,
             cpc=cpc,
             cpm=cpm,
+            conversions=detail['conversions'],
+            conversion_value=detail['conversion_value'],
             purchases=detail['purchases'],
             purchase_value=detail['purchase_value'],
             roas=roas,
@@ -628,8 +659,8 @@ class MetricsService:
                 ctr=self.calculator.ctr(point['clicks'], point['impressions']),
                 cpc=self.calculator.cpc(point['spend'], point['clicks']),
                 cpm=self.calculator.cpm(point['spend'], point['impressions']),
-                purchases=point['purchases'],
-                roas=self.calculator.roas(point['purchase_value'], point['spend'])
+                conversions=point['conversions'],
+                roas=self.calculator.roas(point['conversion_value'], point['spend'], point['conversions'])
             )
             trend.append(trend_point)
 
@@ -678,7 +709,7 @@ class MetricsService:
         for creative in creatives:
             ctr = self.calculator.ctr(creative['clicks'], creative['impressions'])
             cpc = self.calculator.cpc(creative['spend'], creative['clicks'])
-            roas = self.calculator.roas(creative['purchase_value'], creative['spend'])
+            roas = self.calculator.roas(creative['conversion_value'], creative['spend'], creative['conversions'])
             hook_rate = None
             completion_rate = None
 
@@ -698,7 +729,7 @@ class MetricsService:
                 'ctr': ctr,
                 'cpc': cpc,
                 'roas': roas,
-                'purchases': creative['purchases'],
+                'conversions': creative['conversions'],
                 'hook_rate': hook_rate,
                 'completion_rate': completion_rate
             }
@@ -716,7 +747,7 @@ class MetricsService:
             winner_id = None
             winner_value = None
 
-            # Higher is better for: spend, roas, ctr, hook_rate, completion_rate
+            # Higher is better for: spend, roas, ctr, hook_rate, completion_rate, conversions
             # Lower is better for: cpc, cpa
             is_higher_better = metric_name not in ['cpc', 'cpa']
 
@@ -786,8 +817,8 @@ class MetricsService:
                 hook_rate=video['hook_rate'],
                 completion_rate=video['completion_rate'],
                 hold_rate=None,
-                purchases=0,
-                roas=0.0
+                conversions=0,
+                roas=None
             )
             top_videos.append(creative)
 
@@ -825,6 +856,7 @@ class MetricsService:
             average_hook_rate=avg_hook,
             average_completion_rate=avg_completion,
             average_hold_rate=insights_data['avg_hold_rate'],
+            average_video_time=insights_data['avg_video_time'],
             best_performing_length=best_length,
             insights=insights,
             top_videos=top_videos
@@ -847,13 +879,13 @@ class MetricsService:
         """
         return ChangePercentage(
             spend=self.calculator.change_percentage(current.spend, previous.spend),
-            impressions=self.calculator.change_percentage(float(current.impressions), float(previous.impressions)),
-            clicks=self.calculator.change_percentage(float(current.clicks), float(previous.clicks)),
+            impressions=self.calculator.change_percentage(current.impressions, previous.impressions),
+            clicks=self.calculator.change_percentage(current.clicks, previous.clicks),
             ctr=self.calculator.change_percentage(current.ctr, previous.ctr),
             cpc=self.calculator.change_percentage(current.cpc, previous.cpc),
             cpm=self.calculator.change_percentage(current.cpm, previous.cpm),
-            purchases=self.calculator.change_percentage(float(current.purchases), float(previous.purchases)),
-            purchase_value=self.calculator.change_percentage(current.purchase_value, previous.purchase_value),
+            conversions=self.calculator.change_percentage(current.conversions, previous.conversions),
+            conversion_value=self.calculator.change_percentage(current.conversion_value, previous.conversion_value),
             roas=self.calculator.change_percentage(current.roas, previous.roas),
             cpa=self.calculator.change_percentage(current.cpa, previous.cpa)
         )

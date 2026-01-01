@@ -3,6 +3,7 @@
  * Handles all API calls for the Performance Overview Dashboard
  */
 
+import { apiClient } from './apiClient';
 import {
   CalculatedMetrics,
   DateRange,
@@ -10,24 +11,20 @@ import {
   BackendTimeSeriesPoint,
 } from '../types/dashboard.types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
-
 /**
  * Fetch overview metrics from the backend (KPIs with trends)
  */
 export async function fetchOverviewMetrics(dateRange: DateRange): Promise<BackendOverviewResponse> {
   const { startDate, endDate } = dateRange;
-  const url = `${API_BASE_URL}/api/v1/metrics/overview?start_date=${startDate}&end_date=${endDate}&compare_to_previous=true`;
-
   try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data: BackendOverviewResponse = await response.json();
-    return data;
+    const response = await apiClient.get<BackendOverviewResponse>('/api/v1/metrics/overview', {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+        compare_to_previous: true,
+      },
+    });
+    return response.data;
   } catch (error) {
     console.error('[Dashboard Service] Error fetching overview metrics:', error);
     throw error;
@@ -39,17 +36,15 @@ export async function fetchOverviewMetrics(dateRange: DateRange): Promise<Backen
  */
 export async function fetchTrendData(dateRange: DateRange): Promise<BackendTimeSeriesPoint[]> {
   const { startDate, endDate } = dateRange;
-  const url = `${API_BASE_URL}/api/v1/metrics/trend?start_date=${startDate}&end_date=${endDate}&granularity=day`;
-
   try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data: BackendTimeSeriesPoint[] = await response.json();
-    return data;
+    const response = await apiClient.get<BackendTimeSeriesPoint[]>('/api/v1/metrics/trend', {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+        granularity: 'day',
+      },
+    });
+    return response.data;
   } catch (error) {
     console.error('[Dashboard Service] Error fetching trend data:', error);
     throw error;
@@ -73,7 +68,7 @@ export async function fetchMetricsWithTrends(dateRange: DateRange) {
       ctr: overviewData.current_period.ctr,
       cpc: overviewData.current_period.cpc,
       clicks: overviewData.current_period.clicks,
-      actions: overviewData.current_period.purchases, // Backend returns purchases as actions
+      actions: overviewData.current_period.conversions,
       cpa: overviewData.current_period.cpa,
       roas: overviewData.current_period.roas,
       impressions: overviewData.current_period.impressions,
@@ -82,41 +77,41 @@ export async function fetchMetricsWithTrends(dateRange: DateRange) {
 
     const previous: CalculatedMetrics | null = overviewData.previous_period
       ? {
-          spend: overviewData.previous_period.spend,
-          ctr: overviewData.previous_period.ctr,
-          cpc: overviewData.previous_period.cpc,
-          clicks: overviewData.previous_period.clicks,
-          actions: overviewData.previous_period.purchases,
-          cpa: overviewData.previous_period.cpa,
-          roas: overviewData.previous_period.roas,
-          impressions: overviewData.previous_period.impressions,
-          cpm: overviewData.previous_period.cpm,
-        }
+        spend: overviewData.previous_period.spend,
+        ctr: overviewData.previous_period.ctr,
+        cpc: overviewData.previous_period.cpc,
+        clicks: overviewData.previous_period.clicks,
+        actions: overviewData.previous_period.conversions,
+        cpa: overviewData.previous_period.cpa,
+        roas: overviewData.previous_period.roas,
+        impressions: overviewData.previous_period.impressions,
+        cpm: overviewData.previous_period.cpm,
+      }
       : null;
 
     const trends = overviewData.change_percentage
       ? {
-          spend: overviewData.change_percentage.spend || 0,
-          ctr: overviewData.change_percentage.ctr || 0,
-          cpc: overviewData.change_percentage.cpc || 0,
-          clicks: overviewData.change_percentage.clicks || 0,
-          actions: overviewData.change_percentage.purchases || 0,
-          cpa: overviewData.change_percentage.cpa || 0,
-          roas: overviewData.change_percentage.roas || 0,
-          impressions: overviewData.change_percentage.impressions || 0,
-          cpm: overviewData.change_percentage.cpm || 0,
-        }
+        spend: overviewData.change_percentage.spend || 0,
+        ctr: overviewData.change_percentage.ctr || 0,
+        cpc: overviewData.change_percentage.cpc || 0,
+        clicks: overviewData.change_percentage.clicks || 0,
+        actions: overviewData.change_percentage.conversions || 0,
+        cpa: overviewData.change_percentage.cpa || 0,
+        roas: overviewData.change_percentage.roas || 0,
+        impressions: overviewData.change_percentage.impressions || 0,
+        cpm: overviewData.change_percentage.cpm || 0,
+      }
       : {
-          spend: 0,
-          ctr: 0,
-          cpc: 0,
-          clicks: 0,
-          actions: 0,
-          cpa: 0,
-          roas: 0,
-          impressions: 0,
-          cpm: 0,
-        };
+        spend: 0,
+        ctr: 0,
+        cpc: 0,
+        clicks: 0,
+        actions: 0,
+        cpa: 0,
+        roas: 0,
+        impressions: 0,
+        cpm: 0,
+      };
 
     // Map daily data for charts
     const dailyData = trendData.map((point) => ({
@@ -124,9 +119,11 @@ export async function fetchMetricsWithTrends(dateRange: DateRange) {
       total_spend: point.spend || 0,
       total_impressions: point.impressions || 0,
       total_clicks: point.clicks || 0,
-      total_purchases: point.purchases || 0,
-      total_leads: 0, // Backend doesn't separate leads in time series yet
-      purchase_value: 0, // Not available in time series
+      total_conversions: point.conversions || 0,
+      total_lead_website: point.lead_website || 0,
+      total_lead_form: point.lead_form || 0,
+      total_leads: (point.lead_website || 0) + (point.lead_form || 0),
+      conversion_value: point.conversion_value || 0,
     }));
 
     return {
@@ -134,7 +131,7 @@ export async function fetchMetricsWithTrends(dateRange: DateRange) {
       previous,
       trends,
       dailyData,
-      currency: overviewData.currency || 'USD',  // Include currency from API
+      currency: overviewData.currency || 'USD',
     };
   } catch (error) {
     console.error('[Dashboard Service] Error fetching metrics with trends:', error);

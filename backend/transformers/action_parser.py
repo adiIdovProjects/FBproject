@@ -18,7 +18,11 @@ try:
     from config.settings import ACTION_TYPES_TO_TRACK, UNKNOWN_MEMBER_ID
 except ImportError:
     # Default list if settings is missing
-    ACTION_TYPES_TO_TRACK = ['purchase', 'lead_website', 'lead_form', 'lead_total', 'add_to_cart']
+    ACTION_TYPES_TO_TRACK = [
+        'purchase', 'lead', 'add_to_cart', 'initiate_checkout', 
+        'complete_registration', 'view_content', 'appointment', 'schedule', 
+        'contact', 'submit_application', 'start_trial'
+    ]
     UNKNOWN_MEMBER_ID = 0
 
 
@@ -31,13 +35,11 @@ def normalize_action_type(raw_type: str) -> str:
         
     raw_lower = raw_type.lower()
     
-    # 1. הפרדת לידים
+    # 1. Distinguish between Lead Sources
     if 'lead' in raw_lower:
-        if 'offsite' in raw_lower or 'pixel' in raw_lower:
-            return 'lead_website'
-        if 'onsite' in raw_lower or 'form' in raw_lower:
+        if 'onsite' in raw_lower or 'on-ads' in raw_lower or 'form' in raw_lower:
             return 'lead_form'
-        return 'lead_total'
+        return 'lead_website'
         
     # 2. נרמול רכישות (תופס offsite_conversion.fb_pixel_purchase וכו')
     if 'purchase' in raw_lower:
@@ -48,10 +50,20 @@ def normalize_action_type(raw_type: str) -> str:
         return 'add_to_cart'
     if 'initiate_checkout' in raw_lower:
         return 'initiate_checkout'
-    if 'complete_registration' in raw_lower:
+    if 'complete_registration' in raw_lower or 'registration' in raw_lower:
         return 'complete_registration'
     if 'view_content' in raw_lower:
         return 'view_content'
+    if 'appointment' in raw_lower:
+        return 'appointment'
+    if 'schedule' in raw_lower:
+        return 'schedule'
+    if 'contact' in raw_lower:
+        return 'contact'
+    if 'submit_application' in raw_lower or 'application' in raw_lower:
+        return 'submit_application'
+    if 'start_trial' in raw_lower or 'trial' in raw_lower:
+        return 'start_trial'
         
     return raw_lower
 
@@ -96,36 +108,55 @@ def parse_actions_from_row(row: Dict[str, Any]) -> List[Dict[str, Any]]:
                     value_lookup[f"{raw_type}_{key}"] = v
                 except: pass
     
-    # Process each action
+    # Process each action and accumulate by normalized type
+    accumulated_counts = {}
+    
     for action in actions:
         raw_type = action.get('action_type', '')
         norm_type = normalize_action_type(raw_type)
         
-        # Filter: Only keep what we track
         if norm_type not in ACTION_TYPES_TO_TRACK:
             continue
-        
+            
         for key, val in action.items():
             if key == 'action_type': continue
             
             attribution_window = '7d_click' if key == 'value' else key
-            
             try: count = int(float(val))
             except: count = 0
             
             if count == 0: continue
             
-            # Get value using normalized type first
-            action_value = value_lookup.get(f"{norm_type}_{attribution_window}", 
-                           value_lookup.get(f"{raw_type}_{attribution_window}", 0.0))
-            
-            result_rows.append({
-                **base_keys,
-                'action_type': norm_type,
-                'attribution_window': attribution_window,
-                'action_count': count,
-                'action_value': action_value,
-            })
+            # Key for accumulation
+            acc_key = (norm_type, attribution_window)
+            accumulated_counts[acc_key] = accumulated_counts.get(acc_key, 0) + count
+
+    # Deduplicate Leads: Standard 'lead' (lead_website) often includes 'lead_form'
+    # For each attribution window, if both exist, adjust lead_website
+    windows = set(k[1] for k in accumulated_counts.keys())
+    for window in windows:
+        website_key = ('lead_website', window)
+        form_key = ('lead_form', window)
+        
+        if website_key in accumulated_counts and form_key in accumulated_counts:
+            # Website (standard lead) is the superset. 
+            # Real website leads = total - form leads
+            total_leads = accumulated_counts[website_key]
+            form_leads = accumulated_counts[form_key]
+            accumulated_counts[website_key] = max(0, total_leads - form_leads)
+
+    # Convert accumulated results to final rows
+    for (norm_type, attribution_window), count in accumulated_counts.items():
+        # Get value using normalized type first
+        action_value = value_lookup.get(f"{norm_type}_{attribution_window}", 0.0)
+        
+        result_rows.append({
+            **base_keys,
+            'action_type': norm_type,
+            'attribution_window': attribution_window,
+            'action_count': count,
+            'action_value': action_value,
+        })
             
     return result_rows
 
@@ -154,10 +185,11 @@ def extract_top_conversions_for_fact_core(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty or 'actions' not in df.columns:
         return df
     
-    # Initialize columns
-    core_metrics = ['purchases', 'purchase_value', 'leads_website', 'leads_form', 'add_to_cart']
+    # Initialize columns only if they don't exist (to avoid overwriting metrics from core_transformer)
+    core_metrics = ['purchases', 'purchase_value', 'leads', 'add_to_cart', 'lead_website', 'lead_form', 'video_avg_time_watched']
     for col in core_metrics:
-        df[col] = 0.0 if 'value' in col else 0
+        if col not in df.columns:
+            df[col] = 0.0 if ('value' in col or 'time' in col) else 0
     
     for idx, row in df.iterrows():
         def safe_json_load(val):
@@ -176,20 +208,35 @@ def extract_top_conversions_for_fact_core(df: pd.DataFrame) -> pd.DataFrame:
             val = float(av.get('7d_click', av.get('value', 0)))
             v_lookup[nt] = v_lookup.get(nt, 0.0) + val
             
-        # Extract counts
+        # Extract counts with deduplication for leads
+        row_lead_standard = 0  # from 'lead' (standard)
+        row_lead_form = 0      # from 'onsite_conversion.lead'
+        
         for action in actions:
-            nt = normalize_action_type(action.get('action_type', ''))
+            raw_type = action.get('action_type', '')
+            nt = normalize_action_type(raw_type)
             count = int(float(action.get('7d_click', action.get('value', 0))))
             
             if nt == 'purchase':
                 df.at[idx, 'purchases'] += count
                 df.at[idx, 'purchase_value'] = v_lookup.get('purchase', 0.0)
             elif nt == 'lead_website':
-                df.at[idx, 'leads_website'] += count
+                row_lead_standard += count
             elif nt == 'lead_form':
-                df.at[idx, 'leads_form'] += count
+                row_lead_form += count
+            elif nt == 'lead':
+                row_lead_standard += count
             elif nt == 'add_to_cart':
                 df.at[idx, 'add_to_cart'] += count
+        
+        # Deduplicate: standard lead often includes form leads
+        final_leads = max(row_lead_standard, row_lead_form)
+        final_lead_form = row_lead_form
+        final_lead_website = max(0, final_leads - final_lead_form)
+        
+        df.at[idx, 'leads'] += final_leads
+        df.at[idx, 'lead_form'] += final_lead_form
+        df.at[idx, 'lead_website'] += final_lead_website
     
     return df
 

@@ -8,11 +8,15 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { BreakdownRow, BreakdownType, DateRange } from '../../types/campaigns.types';
 import { fetchBreakdown } from '../../services/campaigns.service';
+import { fetchInsightsSummary, InsightItem } from '../../services/insights.service';
+import InsightCard from '../insights/InsightCard';
 
 interface BreakdownTabsProps {
   dateRange: DateRange;
   currency?: string;
   isRTL?: boolean;
+  statusFilter?: string[];
+  searchQuery?: string;
 }
 
 type Tab = {
@@ -32,6 +36,8 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   dateRange,
   currency = 'USD',
   isRTL = false,
+  statusFilter = [],
+  searchQuery = '',
 }) => {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState<BreakdownType>('adset');
@@ -40,16 +46,26 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch breakdown data when tab changes or date range changes
+  // Track if component has been interacted with (lazy loading)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+  // Insights state
+  const [breakdownInsights, setBreakdownInsights] = useState<InsightItem[]>([]);
+  const [isInsightsLoading, setIsInsightsLoading] = useState(false);
+
+  // Check if any row has conversion value
+  const hasConversionValue = breakdownData.some(row => (row.conversion_value || 0) > 0);
+
+  // Fetch breakdown data when tab changes or date range changes (only after first interaction)
   useEffect(() => {
     const loadBreakdownData = async () => {
-      if (!dateRange.startDate || !dateRange.endDate) return;
+      if (!dateRange.startDate || !dateRange.endDate || !hasLoadedOnce) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        const data = await fetchBreakdown(dateRange, activeTab, demographicSubTab);
+        const data = await fetchBreakdown(dateRange, activeTab, demographicSubTab, statusFilter, searchQuery);
         setBreakdownData(data);
       } catch (err: any) {
         console.error('[BreakdownTabs] Error fetching breakdown:', err);
@@ -60,15 +76,50 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
     };
 
     loadBreakdownData();
-  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate]);
+  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, statusFilter, searchQuery]);
+
+  // Fetch insights when breakdown tab changes
+  useEffect(() => {
+    const loadBreakdownInsights = async () => {
+      if (!hasLoadedOnce || !dateRange.startDate || !dateRange.endDate) return;
+
+      setIsInsightsLoading(true);
+      try {
+        const insights = await fetchInsightsSummary(
+          dateRange,
+          'campaigns',
+          {
+            breakdownType: activeTab,
+            breakdownGroupBy: activeTab === 'age-gender' ? demographicSubTab : undefined
+          }
+        );
+        setBreakdownInsights(insights);
+      } catch (err: any) {
+        console.error('[BreakdownTabs] Error fetching insights:', err);
+        setBreakdownInsights([]);
+      } finally {
+        setIsInsightsLoading(false);
+      }
+    };
+
+    loadBreakdownInsights();
+  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce]);
+
+  // Load data on first tab click
+  const handleTabClick = (tabId: BreakdownType) => {
+    setActiveTab(tabId);
+    if (!hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  };
 
   // Format currency
-  const formatCurrency = (value: number): string => {
+  const formatCurrency = (value: number, decimals: number = 0): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
     }).format(value);
   };
 
@@ -90,7 +141,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
           {TABS.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={`
                 px-6 py-5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative
                 ${activeTab === tab.id
@@ -134,25 +185,43 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
 
       {/* Tab Content */}
       <div className="p-6">
+        {/* Breakdown Insights */}
+        {hasLoadedOnce && breakdownInsights.length > 0 && (
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {breakdownInsights.map((insight, idx) => (
+              <InsightCard key={idx} insight={insight} />
+            ))}
+          </div>
+        )}
+
+        {!hasLoadedOnce && !isLoading && (
+          <div className="flex items-center justify-center h-64 text-gray-400">
+            <div className="text-center">
+              <p className="text-lg font-medium mb-2">{t('click_tab_to_load') || 'Click a tab to load breakdown data'}</p>
+              <p className="text-sm text-gray-500">{t('breakdown_lazy_load') || 'Data will load when you select a breakdown type'}</p>
+            </div>
+          </div>
+        )}
+
         {isLoading && (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
           </div>
         )}
 
-        {error && !isLoading && (
+        {error && !isLoading && hasLoadedOnce && (
           <div className="flex items-center justify-center h-64 text-red-400">
             {error}
           </div>
         )}
 
-        {!isLoading && !error && breakdownData.length === 0 && (
+        {!isLoading && !error && hasLoadedOnce && breakdownData.length === 0 && (
           <div className="flex items-center justify-center h-64 text-gray-400">
             {t('no_data_available')}
           </div>
         )}
 
-        {!isLoading && !error && breakdownData.length > 0 && (
+        {!isLoading && !error && hasLoadedOnce && breakdownData.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-750 border-b border-gray-700">
@@ -190,11 +259,16 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     {t('cpc')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('purchases')}
+                    {t('conversions')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('roas')}
+                    {t('leads') || 'Leads'}
                   </th>
+                  {hasConversionValue && (
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                      {t('roas')}
+                    </th>
+                  )}
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
                     {t('cpa')}
                   </th>
@@ -258,15 +332,22 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                       {formatCurrency(row.cpc)}
                     </td>
 
-                    {/* Purchases */}
+                    {/* Conversions */}
                     <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatNumber(row.purchases)}
+                      {formatNumber(row.conversions)}
+                    </td>
+
+                    {/* Leads (Consolidated) */}
+                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                      {formatNumber((row.lead_website || 0) + (row.lead_form || 0))}
                     </td>
 
                     {/* ROAS */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {row.roas.toFixed(2)}
-                    </td>
+                    {hasConversionValue && (
+                      <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                        {row.conversions > 0 ? row.roas.toFixed(2) : 'N/A'}
+                      </td>
+                    )}
 
                     {/* CPA */}
                     <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">

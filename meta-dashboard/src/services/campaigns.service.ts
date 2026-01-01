@@ -3,27 +3,19 @@
  * Handles all API calls for the Campaign Performance Analysis page
  */
 
+import { apiClient } from './apiClient';
 import { CampaignRow, BreakdownRow, TimeGranularity, BreakdownType, DateRange } from '../types/campaigns.types';
-import { getPreviousPeriod } from '../utils/date';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
 
 /**
  * Fetch campaigns for a specific date range
  */
 async function fetchCampaigns(dateRange: DateRange): Promise<any[]> {
   const { startDate, endDate } = dateRange;
-  const url = `${API_BASE_URL}/api/v1/metrics/campaigns?start_date=${startDate}&end_date=${endDate}`;
-
   try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
+    const response = await apiClient.get<any[]>('/api/v1/metrics/campaigns', {
+      params: { start_date: startDate, end_date: endDate },
+    });
+    return response.data;
   } catch (error) {
     console.error('[Campaigns Service] Error fetching campaigns:', error);
     throw error;
@@ -42,33 +34,40 @@ export async function fetchCampaignsWithComparison(
 ): Promise<CampaignRow[]> {
   const { startDate, endDate } = dateRange;
 
-  const params = new URLSearchParams({
+  const params: any = {
     start_date: startDate,
     end_date: endDate,
     sort_by: sortBy,
     sort_direction: sortDirection,
     limit: '100',
-  });
+  };
 
   if (status.length > 0) {
-    status.forEach((s) => params.append('status', s));
+    // Axios handles array params correctly if configured, but let's be explicit if needed
+    // Typically Axios standard is `status[]`, but backend might expect `status` multiple times.
+    // FastAPI standard handles `status` multiple times. 
+    // We can pass paramsSerializer to Axios if needed, but default usually works for simple arrays.
+    // The previous implementation used URLSearchParams which repeats the key.
+    // Let's rely on Axios default behavior first, assuming standard array serialization.
+    // If FastAPI needs repeated keys (e.g. ?status=ACTIVE&status=PAUSED), we might need `paramsSerializer`.
+    // For safety, let's stick to simple object here and let Axios handle it. 
+    // If it fails, we'll fix serialization.
+    params.status = status;
   }
 
   if (searchQuery) {
-    params.append('search', searchQuery);
+    params.search = searchQuery;
   }
 
-  const url = `${API_BASE_URL}/api/v1/metrics/campaigns/comparison?${params.toString()}`;
-
   try {
-    const response = await fetch(url);
+    const response = await apiClient.get<CampaignRow[]>('/api/v1/metrics/campaigns/comparison', {
+      params,
+      paramsSerializer: {
+        indexes: null // Result: status=ACTIVE&status=PAUSED (no brackets) - Correct for FastAPI
+      }
+    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data: CampaignRow[] = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
     console.error('[Campaigns Service] Error fetching campaigns with comparison:', error);
     throw error;
@@ -83,17 +82,15 @@ export async function fetchTrendData(
   granularity: TimeGranularity = 'day'
 ): Promise<any[]> {
   const { startDate, endDate } = dateRange;
-  const url = `${API_BASE_URL}/api/v1/metrics/trend?start_date=${startDate}&end_date=${endDate}&granularity=${granularity}`;
-
   try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
+    const response = await apiClient.get<any[]>('/api/v1/metrics/trend', {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+        granularity,
+      },
+    });
+    return response.data;
   } catch (error) {
     console.error('[Campaigns Service] Error fetching trend data:', error);
     throw error;
@@ -106,36 +103,49 @@ export async function fetchTrendData(
 export async function fetchBreakdown(
   dateRange: DateRange,
   breakdownType: BreakdownType,
-  groupBy: 'age' | 'gender' | 'both' = 'both'
+  groupBy: 'age' | 'gender' | 'both' = 'both',
+  status: string[] = [],
+  searchQuery: string = ''
 ): Promise<BreakdownRow[]> {
   const { startDate, endDate } = dateRange;
 
   // Map breakdown type to API endpoint
   const endpointMap: Record<BreakdownType, string> = {
-    'placement': '/api/v1/breakdowns/placement',
+    'placement': '/api/v1/metrics/breakdowns/placement',
     'platform': '/api/v1/metrics/breakdowns/platform',
     'age-gender': '/api/v1/metrics/breakdowns/age-gender',
-    'country': '/api/v1/breakdowns/country',
-    'adset': '/api/v1/breakdowns/adset',
+    'country': '/api/v1/metrics/breakdowns/country',
+    'adset': '/api/v1/metrics/breakdowns/adset',
   };
 
   const endpoint = endpointMap[breakdownType];
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
-  url.searchParams.append('start_date', startDate);
-  url.searchParams.append('end_date', endDate);
+
+  const params: any = {
+    start_date: startDate,
+    end_date: endDate
+  };
 
   if (breakdownType === 'age-gender') {
-    url.searchParams.append('group_by', groupBy);
+    params.group_by = groupBy;
+  }
+
+  if (status.length > 0) {
+    params.status = status;
+  }
+
+  if (searchQuery) {
+    params.search = searchQuery;
   }
 
   try {
-    const response = await fetch(url.toString());
+    const response = await apiClient.get(endpoint, {
+      params,
+      paramsSerializer: {
+        indexes: null // Correct for FastAPI repeated params
+      }
+    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    const data = response.data;
 
     // Map backend response to BreakdownRow format
     return data.map((item: any) => {
@@ -159,7 +169,8 @@ export async function fetchBreakdown(
         impressions: item.impressions || 0,
         ctr: item.ctr || 0,
         cpc: item.cpc || 0,
-        purchases: item.purchases || 0,
+        conversions: item.conversions || 0,
+        conversion_value: item.conversion_value || 0,
         roas: item.roas || 0,
         cpa: item.cpa || 0,
         adset_id: item.adset_id,
@@ -178,27 +189,13 @@ export async function fetchBreakdown(
  */
 export async function exportToSheets(dateRange: DateRange): Promise<{ url: string }> {
   const { startDate, endDate } = dateRange;
-  const url = `${API_BASE_URL}/api/v1/export/google-sheets`;
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        start_date: startDate,
-        end_date: endDate,
-        report_type: 'campaigns',
-      }),
+    const response = await apiClient.post<{ spreadsheet_url: string }>('/api/v1/export/google-sheets', {
+      start_date: startDate,
+      end_date: endDate,
+      report_type: 'campaigns',
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return { url: data.spreadsheet_url };
+    return { url: response.data.spreadsheet_url };
   } catch (error) {
     console.error('[Campaigns Service] Error exporting to Google Sheets:', error);
     throw error;
@@ -210,27 +207,15 @@ export async function exportToSheets(dateRange: DateRange): Promise<{ url: strin
  */
 export async function exportToExcel(dateRange: DateRange): Promise<Blob> {
   const { startDate, endDate } = dateRange;
-  const url = `${API_BASE_URL}/api/v1/export/excel`;
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        start_date: startDate,
-        end_date: endDate,
-        report_type: 'campaigns',
-      }),
+    const response = await apiClient.post('/api/v1/export/excel', {
+      start_date: startDate,
+      end_date: endDate,
+      report_type: 'campaigns',
+    }, {
+      responseType: 'blob' // Important for file download
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    return blob;
+    return response.data;
   } catch (error) {
     console.error('[Campaigns Service] Error exporting to Excel:', error);
     throw error;

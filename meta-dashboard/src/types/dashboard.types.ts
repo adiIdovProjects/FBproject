@@ -11,9 +11,11 @@ export interface DailyMetric {
   total_spend: number;
   total_impressions: number;
   total_clicks: number;
-  total_purchases?: number;
+  total_conversions?: number;
   total_leads?: number;
-  purchase_value?: number;
+  total_lead_website?: number;
+  total_lead_form?: number;
+  conversion_value?: number;
 }
 
 export interface ActionMetric {
@@ -29,7 +31,7 @@ export interface CalculatedMetrics {
   ctr: number;  // Click-through rate
   cpc: number;  // Cost per click
   clicks: number;
-  actions: number;  // Purchases + Leads
+  actions: number;  // Dynamic Conversions (sum of selected actions)
   cpa: number;  // Cost per action
   roas: number;  // Return on ad spend
   impressions: number;
@@ -91,8 +93,10 @@ export interface BackendMetricsPeriod {
   ctr: number;
   cpc: number;
   cpm: number;
-  purchases: number;
-  purchase_value: number;
+  conversions: number;
+  conversion_value: number;
+  lead_website: number;
+  lead_form: number;
   roas: number;
   cpa: number;
 }
@@ -104,8 +108,8 @@ export interface BackendChangePercentage {
   ctr?: number;
   cpc?: number;
   cpm?: number;
-  purchases?: number;
-  purchase_value?: number;
+  conversions?: number;
+  conversion_value?: number;
   roas?: number;
   cpa?: number;
 }
@@ -125,6 +129,21 @@ export interface BackendTimeSeriesPoint {
   ctr?: number;
   cpc?: number;
   cpm?: number;
-  purchases?: number;
+  conversions?: number;
+  lead_website?: number;
+  lead_form?: number;
+  conversion_value?: number;
   roas?: number;
+}
+
+// AI Investigator Types
+export interface AIQueryResponse {
+  answer: string;
+  data?: any[];
+  chart_config?: {
+    type: string;
+    x_axis: string;
+    y_axis: string;
+  };
+  sql_query?: string;
 }

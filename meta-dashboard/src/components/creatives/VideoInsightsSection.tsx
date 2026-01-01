@@ -47,9 +47,9 @@ export const VideoInsightsSection: React.FC<VideoInsightsSectionProps> = ({
                     <Text className="text-gray-400">{t('extracted_avg_hold_rate')}</Text>
                     <Metric className="text-blue-400">{data.average_hold_rate.toFixed(1)}%</Metric>
                 </Card>
-                <Card className="bg-gray-800 border-gray-700" decoration="left" decorationColor="amber">
-                    <Text className="text-gray-400">{t('extracted_best_length')}</Text>
-                    <Metric className="text-amber-400">{data.best_performing_length}</Metric>
+                <Card className="bg-gray-800 border-gray-700" decoration="left" decorationColor="purple">
+                    <Text className="text-gray-400">{t('extracted_avg_video_time')}</Text>
+                    <Metric className="text-purple-400">{data.average_video_time.toFixed(1)}s</Metric>
                 </Card>
             </Grid>
 

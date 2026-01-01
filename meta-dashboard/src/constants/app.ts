@@ -11,9 +11,9 @@ export type Granularity = 'day' | 'week' | 'month';
 // ----------------------------------------------------------------------
 
 export const METRIC_OPTIONS = [
-    { key: 'total_spend' as const, labelKey: 'total_spend' as TranslationKeys, color: '#6366f1', format: (v: number) => `$${v.toFixed(2)}` },
+    { key: 'total_spend' as const, labelKey: 'total_spend' as TranslationKeys, color: '#6366f1', format: (v: number) => `$${v.toFixed(0)}` },
     { key: 'total_clicks' as const, labelKey: 'total_clicks' as TranslationKeys, color: '#f59e0b', format: (v: number) => v.toLocaleString() },
-    { key: 'total_purchases' as const, labelKey: 'total_purchases' as TranslationKeys, color: '#14b8a6', format: (v: number) => v.toLocaleString() },
+    { key: 'total_conversions' as const, labelKey: 'total_conversions' as TranslationKeys, color: '#14b8a6', format: (v: number) => v.toLocaleString() },
     { key: 'total_impressions' as const, labelKey: 'total_impressions' as TranslationKeys, color: '#10b981', format: (v: number) => v.toLocaleString() },
     { key: 'total_ctr' as const, labelKey: 'total_ctr' as TranslationKeys, color: '#f97316', format: (v: number) => `${(v * 100).toFixed(2)}%` },
     { key: 'total_cpc' as const, labelKey: 'total_cpc' as TranslationKeys, color: '#ef4444', format: (v: number) => `$${v.toFixed(2)}` },
@@ -36,8 +36,6 @@ export const QUICK_SELECT_OPTIONS = [
     { key: 'last_7_days' as const, labelKey: 'last_7_days' as TranslationKeys },
     { key: 'last_14_days' as const, labelKey: 'last_14_days' as TranslationKeys },
     { key: 'last_30_days' as const, labelKey: 'last_30_days' as TranslationKeys },
-    { key: 'this_week' as const, labelKey: 'this_week' as TranslationKeys },
-    { key: 'last_week' as const, labelKey: 'last_week' as TranslationKeys },
     { key: 'this_month' as const, labelKey: 'this_month' as TranslationKeys },
     { key: 'last_month' as const, labelKey: 'last_month' as TranslationKeys },
     { key: 'maximum' as const, labelKey: 'maximum' as TranslationKeys },
@@ -45,7 +43,7 @@ export const QUICK_SELECT_OPTIONS = [
 ] as const;
 export type QuickSelectKey = typeof QUICK_SELECT_OPTIONS[number]['key'];
 
-export const DEFAULT_DATE_RANGE_KEY: QuickSelectKey = 'maximum';
+export const DEFAULT_DATE_RANGE_KEY: QuickSelectKey = 'last_30_days';
 
 // ----------------------------------------------------------------------
 // 4. FILTER DEFINITIONS (מבנה קבוצתי חדש)

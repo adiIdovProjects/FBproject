@@ -22,7 +22,8 @@ export interface CreativeMetrics {
     completion_rate: number | null;
     hold_rate: number | null;
     avg_watch_time: number | null;
-    purchases: number;
+    conversions: number;
+    conversion_value: number;
     roas: number;
     cpa: number;
 }
@@ -37,12 +38,13 @@ export interface VideoInsightsResponse {
     average_hook_rate: number;
     average_completion_rate: number;
     average_hold_rate: number;
+    average_video_time: number;
     best_performing_length: string;
     insights: VideoInsight[];
     top_videos: CreativeMetrics[];
 }
 
-export type CreativeSortMetric = 'spend' | 'roas' | 'ctr' | 'hook_rate' | 'purchases';
+export type CreativeSortMetric = 'spend' | 'roas' | 'ctr' | 'hook_rate' | 'conversions';
 
 export interface CreativesFilter {
     dateRange: DateRange;

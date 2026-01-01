@@ -59,32 +59,36 @@ class MetricCalculator:
         return (spend / impressions * 1000) if impressions > 0 else 0.0
 
     @staticmethod
-    def roas(purchase_value: float, spend: float) -> float:
+    def roas(revenue: float, spend: float, conversions: int = 1) -> Optional[float]:
         """
         Calculate Return on Ad Spend.
+        ROAS only exists/shows if there is at least one conversion event.
 
         Args:
-            purchase_value: Total purchase/revenue value
+            revenue: Total conversion value
             spend: Total spend amount
+            conversions: Number of conversion events (must be > 0)
 
         Returns:
-            ROAS ratio (e.g., 1.88 means $1.88 revenue per $1 spent)
+            ROAS ratio or None if no conversions or spend is 0.
         """
-        return (purchase_value / spend) if spend > 0 else 0.0
+        if spend <= 0 or conversions <= 0:
+            return None
+        return revenue / spend
 
     @staticmethod
-    def cpa(spend: float, purchases: int) -> float:
+    def cpa(spend: float, conversions: int) -> float:
         """
-        Calculate Cost Per Acquisition.
+        Calculate Cost Per Acquisition based on conversions.
 
         Args:
             spend: Total spend amount
-            purchases: Number of purchases/conversions
+            conversions: Number of conversions
 
         Returns:
             Cost per acquisition (e.g., 108.60)
         """
-        return (spend / purchases) if purchases > 0 else 0.0
+        return (spend / conversions) if conversions > 0 else 0.0
 
     @staticmethod
     def hook_rate(video_p25_watched: int, video_plays: int) -> float:
@@ -147,6 +151,6 @@ class MetricCalculator:
             Percentage change (e.g., 24.9 for 24.9% increase)
             Returns None if previous value is 0 (to avoid infinity)
         """
-        if previous == 0:
+        if current is None or previous is None or previous == 0:
             return None
         return ((current - previous) / previous) * 100

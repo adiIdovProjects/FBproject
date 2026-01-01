@@ -27,11 +27,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
     switch (format) {
       case 'currency':
+        const isSpend = title.toLowerCase().includes('spend') || title.toLowerCase().includes('הוצאה');
         return new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: currency,
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumFractionDigits: isSpend ? 0 : 2,
+          maximumFractionDigits: isSpend ? 0 : 2,
         }).format(val);
 
       case 'percentage':
@@ -55,13 +56,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     const isPositive = trend > 0;
     const isNegative = trend < 0;
 
-    // For cost metrics (CPC, CPA, Spend), lower is better
-    const isCostMetric = title.includes('CPC') || title.includes('CPA') || title.includes('Spend');
+    // Check metric type
+    const isSpendMetric = title.includes('Spend') || title.toLowerCase().includes('הוצאה');
+    const isEfficiencyMetric = title.includes('CPC') || title.includes('CPA');
 
     let isGood = false;
 
-    if (isCostMetric) {
-      // For cost metrics: down is good (green), up is bad (red)
+    if (isSpendMetric) {
+      // For Spend: up is good (more investment), down is bad (less investment)
+      isGood = isPositive;
+    } else if (isEfficiencyMetric) {
+      // For efficiency metrics (CPC, CPA): down is good (lower cost), up is bad (higher cost)
       isGood = isNegative;
     } else {
       // For performance metrics: up is good (green), down is bad (red)

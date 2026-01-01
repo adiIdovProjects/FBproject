@@ -84,13 +84,18 @@ ACTIVE_BREAKDOWN_GROUPS = [g for g in BREAKDOWN_GROUPS if g['enabled']]
 
 ACTION_TYPES_TO_TRACK = [
     'purchase',
-    'lead_website', 
-    'lead_form',     
-    'lead_total',    
+    'lead',
+    'lead_website',
+    'lead_form',
     'add_to_cart',
     'initiate_checkout',
     'complete_registration',
-    'view_content'
+    'view_content',
+    'appointment',
+    'schedule',
+    'contact',
+    'submit_application',
+    'start_trial'
 ]
 
 # ==============================================================================
@@ -232,3 +237,9 @@ UNKNOWN_MEMBER_DEFAULTS = {
         'is_conversion': False,
     },
 }
+
+# ==============================================================================
+# AI & GEMINI CONFIGURATION
+# ==============================================================================
+
+GEMINI_MODEL = "gemini-2.0-flash"

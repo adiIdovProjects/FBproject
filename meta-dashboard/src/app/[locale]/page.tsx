@@ -5,8 +5,9 @@
  * Main dashboard page showing KPIs and performance trends
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useQuery } from '@tanstack/react-query';
 import {
   DollarSign,
   MousePointer,
@@ -17,32 +18,29 @@ import {
 
 // Components
 import { MainLayout } from '../../components/MainLayout';
-import Navigation from '../../components/Navigation';
 import DateFilter from '../../components/DateFilter';
-import LanguageSwitcher from '../../components/LanguageSwitcher';
 import MetricCard from '../../components/dashboard/MetricCard';
 import SkeletonMetricCard from '../../components/dashboard/SkeletonMetricCard';
 import ActionsMetricsChart from '../../components/dashboard/ActionsMetricsChart';
+import InsightCard from '../../components/insights/InsightCard';
 
 // Services & Types
 import { fetchMetricsWithTrends } from '../../services/dashboard.service';
+import { fetchInsightsSummary } from '../../services/insights.service';
 import { MetricType, DateRange } from '../../types/dashboard.types';
 
 // Utilities
 import { formatDate, calculateDateRange } from '../../utils/date';
 
-const DEFAULT_DATE_RANGE_KEY = 'maximum';
+const DEFAULT_DATE_RANGE_KEY = 'last_30_days';
 
 export default function PerformanceDashboard() {
   const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar' || locale === 'he';
-  const dir = isRTL ? 'rtl' : 'ltr';
 
   // Debug logging
   console.log('[Dashboard] Current locale:', locale);
-  console.log('[Dashboard] Title translation:', t('dynamic_dashboard_title'));
-  console.log('[Dashboard] Spend translation:', t('total_spend'));
 
   // Initialize date range
   const initialDates = useMemo(() => calculateDateRange(DEFAULT_DATE_RANGE_KEY), []);
@@ -56,35 +54,32 @@ export default function PerformanceDashboard() {
   // Chart metric selection
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('actions');
 
-  // Data state
-  const [metricsData, setMetricsData] = useState<any>(null);
-  const [currency, setCurrency] = useState<string>('USD');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // React Query: Fetch Metrics
+  const {
+    data: metricsData,
+    isLoading: isMetricsLoading,
+    error: metricsError
+  } = useQuery({
+    queryKey: ['dashboard-metrics', startDate, endDate],
+    queryFn: () => fetchMetricsWithTrends({ startDate, endDate }),
+    enabled: !!startDate && !!endDate,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  // Fetch data when date range changes
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!startDate || !endDate) return;
+  // React Query: Fetch Insights
+  const {
+    data: insights,
+    isLoading: isInsightsLoading
+  } = useQuery({
+    queryKey: ['dashboard-insights', startDate, endDate],
+    queryFn: () => fetchInsightsSummary({ startDate, endDate }, 'dashboard'),
+    enabled: !!startDate && !!endDate,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const dateRange: DateRange = { startDate, endDate };
-        const data = await fetchMetricsWithTrends(dateRange);
-        setMetricsData(data);
-        setCurrency(data.currency || 'USD');  // Set currency from API
-      } catch (err: any) {
-        console.error('[Dashboard] Error fetching data:', err);
-        setError(err.message || 'Failed to fetch data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [startDate, endDate]);
+  const isLoading = isMetricsLoading || isInsightsLoading;
+  const currency = metricsData?.currency || 'USD';
+  const error = metricsError ? (metricsError as Error).message : null;
 
   // Handle date range change
   const handleDateRangeChange = (start: string | null, end: string | null) => {
@@ -106,7 +101,6 @@ export default function PerformanceDashboard() {
           t={t}
           isRTL={isRTL}
         />
-        <LanguageSwitcher />
       </div>
 
       {/* Error Message */}
@@ -166,7 +160,7 @@ export default function PerformanceDashboard() {
             />
 
             <MetricCard
-              title={t('total_purchases')}
+              title={t('total_conversions')}
               value={metricsData?.current.actions || 0}
               trend={metricsData?.trends.actions}
               icon={ShoppingCart}
@@ -184,16 +178,27 @@ export default function PerformanceDashboard() {
               currency={currency}
             />
 
-            <MetricCard
-              title={t('extracted_roas')}
-              value={metricsData?.current.roas || 0}
-              trend={metricsData?.trends.roas}
-              icon={TrendingUp}
-              format="decimal"
-              isLoading={isLoading}
-            />
+            {(metricsData?.current.conversion_value || 0) > 0 && (
+              <MetricCard
+                title={t('extracted_roas')}
+                value={metricsData?.current.roas || 0}
+                trend={metricsData?.trends.roas}
+                icon={TrendingUp}
+                format="decimal"
+                isLoading={isLoading}
+              />
+            )}
           </>
         )}
+      </div>
+
+      {/* Quick Insights */}
+      <div className="mb-8">
+        <InsightCard
+          insights={insights || []}
+          isLoading={isLoading}
+          isRTL={isRTL}
+        />
       </div>
 
       {/* Performance Chart */}

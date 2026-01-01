@@ -92,7 +92,11 @@ def _extract_dim_action_type(df: pd.DataFrame) -> pd.DataFrame:
     
     # Conversion types usually include purchase, lead, etc.
     # We can infer based on the name or use the config list
-    conversion_keywords = ['purchase', 'lead', 'add_to_cart', 'initiate_checkout', 'complete_registration']
+    conversion_keywords = [
+        'purchase', 'lead', 'add_to_cart', 'initiate_checkout', 
+        'complete_registration', 'schedule', 'appointment', 'contact', 
+        'submit_application', 'start_trial'
+    ]
     
     def is_conversion(action_type):
         return any(k in action_type.lower() for k in conversion_keywords)
@@ -249,9 +253,23 @@ def _extract_dim_adset(df: pd.DataFrame) -> pd.DataFrame:
             
             if interest_names:
                 has_interests = True
-                summary_parts.append(f"Targeting: {', '.join(interest_names[:5])}")
+                summary_parts.append(f"Interests: {', '.join(interest_names[:5])}")
+
+        # 3. Analyze Geo Locations
+        geo = targeting.get('geo_locations', {})
+        if geo:
+            geo_parts = []
+            if 'countries' in geo:
+                geo_parts.extend(geo['countries'])
+            if 'cities' in geo:
+                geo_parts.extend([c.get('name') for c in geo['cities'] if c.get('name')])
+            if 'custom_locations' in geo:
+                geo_parts.extend([l.get('name') or 'Custom Location' for l in geo['custom_locations']])
+            
+            if geo_parts:
+                summary_parts.append(f"Geo: {', '.join(geo_parts[:3])}")
         
-        # 3. Determine Final Targeting Type
+        # 4. Determine Final Targeting Type
         if has_custom and has_interests:
             t_type = 'Mix Audience'
         elif has_lookalike:

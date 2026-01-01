@@ -14,7 +14,7 @@ import os
 # Add paths for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db
+from api.dependencies import get_db, get_current_user
 from api.services.metrics_service import MetricsService
 from api.schemas.responses import (
     AgeGenderBreakdown,
@@ -23,7 +23,11 @@ from api.schemas.responses import (
     AdsetBreakdown
 )
 
-router = APIRouter(prefix="/api/v1/breakdowns", tags=["breakdowns"])
+router = APIRouter(
+    prefix="/api/v1/breakdowns", 
+    tags=["breakdowns"],
+    dependencies=[Depends(get_current_user)]
+)
 
 
 @router.get(

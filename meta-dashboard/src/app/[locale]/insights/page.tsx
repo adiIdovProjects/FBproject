@@ -1,0 +1,176 @@
+"use client";
+
+/**
+ * Insights Page
+ * Dedicated page for comprehensive AI-powered strategic insights and recommendations
+ */
+
+import { useState, useEffect, useMemo } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Lightbulb } from 'lucide-react';
+
+// Components
+import { MainLayout } from '../../../components/MainLayout';
+import DateFilter from '../../../components/DateFilter';
+import InsightsSection from '../../../components/insights/InsightsSection';
+import PrioritizedRecommendations from '../../../components/insights/PrioritizedRecommendations';
+
+// Services & Types
+import { fetchDeepInsights, DeepInsightsResponse } from '../../../services/insights.service';
+
+// Utilities
+import { formatDate, calculateDateRange } from '../../../utils/date';
+
+const DEFAULT_DATE_RANGE_KEY = 'last_30_days';
+
+export default function InsightsPage() {
+  const t = useTranslations();
+  const locale = useLocale();
+  const isRTL = locale === 'ar' || locale === 'he';
+
+  // Initialize date range
+  const initialDates = useMemo(() => calculateDateRange(DEFAULT_DATE_RANGE_KEY), []);
+  const [startDate, setStartDate] = useState<string>(
+    formatDate(initialDates.start) || formatDate(new Date()) || ''
+  );
+  const [endDate, setEndDate] = useState<string>(
+    formatDate(initialDates.end) || formatDate(new Date()) || ''
+  );
+
+  // Data state
+  const [deepInsights, setDeepInsights] = useState<DeepInsightsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch deep insights
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!startDate || !endDate) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const dateRange = { startDate, endDate };
+        const data = await fetchDeepInsights(dateRange);
+        setDeepInsights(data);
+      } catch (err: any) {
+        console.error('[Insights Page] Error fetching insights:', err);
+        setError(err.message || 'Failed to fetch insights');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [startDate, endDate]);
+
+  // Handle date range change
+  const handleDateRangeChange = (start: string | null, end: string | null) => {
+    if (start) setStartDate(start);
+    if (end) setEndDate(end);
+  };
+
+  return (
+    <MainLayout
+      title={t('insights')}
+      description={t('ai_powered_strategic_recommendations')}
+    >
+      {/* Date Filter */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <DateFilter
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={handleDateRangeChange}
+          lang={locale as any}
+          t={t}
+          isRTL={isRTL}
+        />
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-900/50 border border-red-400 text-red-300 rounded-xl">
+          <p className="font-bold">Error Loading Insights</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="space-y-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
+              <div className="h-6 w-48 bg-gray-700 rounded animate-pulse mb-4"></div>
+              <div className="space-y-3">
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="h-4 bg-gray-700 rounded animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Insights Content */}
+      {!isLoading && deepInsights && (
+        <>
+          {/* Executive Summary Card */}
+          {deepInsights.executive_summary && (
+            <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-xl p-6 mb-8 shadow-lg">
+              <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <Lightbulb className="w-6 h-6 text-indigo-400" />
+                <h2 className="text-2xl font-bold text-indigo-200">{t('executive_summary')}</h2>
+              </div>
+              <p className={`text-gray-200 leading-relaxed text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                {deepInsights.executive_summary}
+              </p>
+            </div>
+          )}
+
+          {/* Key Findings Section */}
+          <InsightsSection
+            title={t('key_findings')}
+            items={deepInsights.key_findings}
+            isRTL={isRTL}
+          />
+
+          {/* Performance Trends Section */}
+          <InsightsSection
+            title={t('performance_trends')}
+            items={deepInsights.performance_trends}
+            isRTL={isRTL}
+          />
+
+          {/* Strategic Recommendations Section */}
+          <PrioritizedRecommendations
+            items={deepInsights.recommendations}
+            isRTL={isRTL}
+          />
+
+          {/* Opportunities Section */}
+          <InsightsSection
+            title={t('opportunities')}
+            items={deepInsights.opportunities}
+            isRTL={isRTL}
+          />
+
+          {/* Generated Timestamp */}
+          {deepInsights.generated_at && (
+            <div className={`mt-8 text-center text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+              ✨ Generated at {new Date(deepInsights.generated_at).toLocaleString(locale)}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !deepInsights && !error && (
+        <div className="text-center py-12">
+          <Lightbulb className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-400">No insights available for this period</p>
+        </div>
+      )}
+    </MainLayout>
+  );
+}

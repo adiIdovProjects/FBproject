@@ -13,7 +13,7 @@ class FacebookAuthService:
     def __init__(self):
         self.app_id = os.getenv("FACEBOOK_APP_ID")
         self.app_secret = os.getenv("FACEBOOK_APP_SECRET")
-        self.redirect_uri = os.getenv("FACEBOOK_REDIRECT_URI", "http://localhost:3001/api/auth/callback/facebook")
+        self.redirect_uri = os.getenv("FACEBOOK_REDIRECT_URI", "http://localhost:8000/api/v1/auth/facebook/callback")
 
     def get_login_url(self, state: str) -> str:
         """Generate the Facebook OAuth login URL"""

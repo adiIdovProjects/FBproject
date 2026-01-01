@@ -13,7 +13,6 @@ import { DollarSign, ShoppingCart, TrendingUp, Search, Filter } from 'lucide-rea
 import { MainLayout } from '../../../components/MainLayout';
 import Navigation from '../../../components/Navigation';
 import DateFilter from '../../../components/DateFilter';
-import LanguageSwitcher from '../../../components/LanguageSwitcher';
 import MetricCard from '../../../components/dashboard/MetricCard';
 import SkeletonMetricCard from '../../../components/dashboard/SkeletonMetricCard';
 import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsChart';
@@ -21,9 +20,11 @@ import TimeGranularityToggle from '../../../components/campaigns/TimeGranularity
 import ExportButton from '../../../components/campaigns/ExportButton';
 import CampaignsTable from '../../../components/campaigns/CampaignsTable';
 import BreakdownTabs from '../../../components/campaigns/BreakdownTabs';
+import InsightCard from '../../../components/insights/InsightCard';
 
 // Services & Types
 import { fetchCampaignsWithComparison, fetchTrendData } from '../../../services/campaigns.service';
+import { fetchInsightsSummary, InsightItem } from '../../../services/insights.service';
 import { CampaignRow, TimeGranularity, CampaignMetrics, DateRange } from '../../../types/campaigns.types';
 import { MetricType } from '../../../types/dashboard.types';
 import { useCallback } from 'react';
@@ -63,8 +64,20 @@ export default function CampaignsPage() {
   const [exportMessage, setExportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Filters
+  const [searchValue, setSearchValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
+  // Insights state
+  const [insights, setInsights] = useState<InsightItem[]>([]);
+
+  // Handle search debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchValue);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchValue]);
 
   // Fetch data when date range changes
   useEffect(() => {
@@ -77,22 +90,22 @@ export default function CampaignsPage() {
       try {
         const dateRange: DateRange = { startDate, endDate };
 
-        // Fetch campaigns with comparison
-        const campaignsData = await fetchCampaignsWithComparison(dateRange, statusFilter, searchQuery);
-        setCampaigns(campaignsData);
+        // Fetch campaigns with comparison, overview, and insights in parallel
+        const [campaignsData, overviewData, insightsData] = await Promise.all([
+          fetchCampaignsWithComparison(dateRange, statusFilter, searchQuery),
+          fetch(`${API_BASE_URL}/api/v1/metrics/overview?start_date=${startDate}&end_date=${endDate}`)
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null),
+          fetchInsightsSummary(dateRange, 'campaigns', {
+            campaignFilter: searchQuery || undefined
+          })
+        ]);
 
-        // Fetch overview to get account currency
-        try {
-          const overviewUrl = `${API_BASE_URL}/api/v1/metrics/overview?start_date=${startDate}&end_date=${endDate}`;
-          const overviewRes = await fetch(overviewUrl);
-          if (overviewRes.ok) {
-            const overviewData = await overviewRes.json();
-            if (overviewData.currency) {
-              setCurrency(overviewData.currency);
-            }
-          }
-        } catch (currErr) {
-          console.error('[Campaigns Page] Error fetching currency:', currErr);
+        setCampaigns(campaignsData);
+        setInsights(insightsData);
+
+        if (overviewData?.currency) {
+          setCurrency(overviewData.currency);
         }
       } catch (err: any) {
         console.error('[Campaigns Page] Error fetching campaigns:', err);
@@ -130,29 +143,31 @@ export default function CampaignsPage() {
     if (campaigns.length === 0) {
       return {
         totalSpend: 0,
-        avgRoas: 0,
         totalPurchases: 0,
+        avgRoas: 0,
+        totalConversions: 0,
         avgCpa: 0,
         spendTrend: 0,
-        roasTrend: 0,
         purchasesTrend: 0,
+        roasTrend: 0,
+        conversionsTrend: 0,
         cpaTrend: 0,
       };
     }
 
     // Sum current period
     const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0);
-    const totalPurchases = campaigns.reduce((sum, c) => sum + c.purchases, 0);
-    const avgRoas = campaigns.reduce((sum, c) => sum + c.roas, 0) / campaigns.length;
-    const avgCpa = totalPurchases > 0 ? totalSpend / totalPurchases : 0;
+    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
+    const totalConversionValue = campaigns.reduce((sum, c) => sum + (c.conversion_value || 0), 0);
+    const avgRoas = totalSpend > 0 && totalConversions > 0 ? totalConversionValue / totalSpend : 0;
+    const avgCpa = totalConversions > 0 ? totalSpend / totalConversions : 0;
 
     // Sum previous period
     const previousSpend = campaigns.reduce((sum, c) => sum + (c.previous_spend || 0), 0);
-    const previousPurchases = campaigns.reduce((sum, c) => sum + (c.previous_purchases || 0), 0);
-    const previousRoas = campaigns
-      .filter(c => c.previous_roas !== undefined)
-      .reduce((sum, c) => sum + (c.previous_roas || 0), 0) / campaigns.length;
-    const previousCpa = previousPurchases > 0 ? previousSpend / previousPurchases : 0;
+    const previousConversions = campaigns.reduce((sum, c) => sum + (c.previous_conversions || 0), 0);
+    const previousConversionValue = campaigns.reduce((sum, c) => sum + (c.previous_conversion_value || 0), 0);
+    const previousAvgRoas = previousSpend > 0 && previousConversions > 0 ? previousConversionValue / previousSpend : 0;
+    const previousAvgCpa = previousConversions > 0 ? previousSpend / previousConversions : 0;
 
     // Calculate trends
     const calculateTrend = (current: number, previous: number): number => {
@@ -163,16 +178,16 @@ export default function CampaignsPage() {
     return {
       totalSpend,
       avgRoas,
-      totalPurchases,
+      totalConversions,
       avgCpa,
       previousTotalSpend: previousSpend,
-      previousAvgRoas: previousRoas,
-      previousTotalPurchases: previousPurchases,
-      previousAvgCpa: previousCpa,
+      previousAvgRoas: previousAvgRoas,
+      previousTotalConversions: previousConversions,
+      previousAvgCpa: previousAvgCpa,
       spendTrend: calculateTrend(totalSpend, previousSpend),
-      roasTrend: calculateTrend(avgRoas, previousRoas),
-      purchasesTrend: calculateTrend(totalPurchases, previousPurchases),
-      cpaTrend: calculateTrend(avgCpa, previousCpa),
+      roasTrend: calculateTrend(avgRoas, previousAvgRoas),
+      conversionsTrend: calculateTrend(totalConversions, previousConversions),
+      cpaTrend: -calculateTrend(avgCpa, previousAvgCpa), // Inverse for CPA
     };
   }, [campaigns]);
 
@@ -183,9 +198,9 @@ export default function CampaignsPage() {
       total_spend: point.spend || 0,
       total_impressions: point.impressions || 0,
       total_clicks: point.clicks || 0,
-      total_purchases: point.purchases || 0,
+      total_conversions: point.conversions || 0,
       total_leads: 0,
-      purchase_value: 0,
+      conversion_value: 0,
     }));
   }, [trendData]);
 
@@ -200,23 +215,58 @@ export default function CampaignsPage() {
       title={t('extracted_campaign_performance_analysis')}
       description={t('extracted_detailed_performance_metrics_and_breakdowns_for_all_active_campaigns')}
     >
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <DateFilter
-          startDate={startDate}
-          endDate={endDate}
-          onDateRangeChange={handleDateRangeChange}
-          lang={locale as any}
-          t={t}
-          isRTL={isRTL}
-        />
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <DateFilter
+            startDate={startDate}
+            endDate={endDate}
+            onDateRangeChange={handleDateRangeChange}
+            lang={locale as any}
+            t={t}
+            isRTL={isRTL}
+          />
 
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Search Box */}
+            <div className="relative flex-1 md:w-64">
+              <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
+              <input
+                type="text"
+                placeholder={t('search_campaigns') || 'Search campaigns...'}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className={`w-full bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all placeholder:text-gray-600`}
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+              <select
+                value={statusFilter[0] || ''}
+                onChange={(e) => setStatusFilter(e.target.value ? [e.target.value] : [])}
+                className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
+              >
+                <option value="" className="bg-gray-900 text-white">{t('all_statuses') || 'All Statuses'}</option>
+                <option value="ACTIVE" className="bg-gray-900 text-white">ACTIVE</option>
+                <option value="PAUSED" className="bg-gray-900 text-white">PAUSED</option>
+                <option value="ARCHIVED" className="bg-gray-900 text-white">ARCHIVED</option>
+              </select>
+              <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <ExportButton
             dateRange={{ startDate, endDate }}
             onExportSuccess={(msg) => setExportMessage({ type: 'success', text: msg })}
             onExportError={(msg) => setExportMessage({ type: 'error', text: msg })}
           />
-          <LanguageSwitcher />
         </div>
       </div>
 
@@ -258,19 +308,21 @@ export default function CampaignsPage() {
               currency={currency}
             />
 
-            <MetricCard
-              title={t('extracted_average_roas')}
-              value={aggregatedMetrics.avgRoas}
-              trend={aggregatedMetrics.roasTrend}
-              icon={TrendingUp}
-              format="decimal"
-              isLoading={isLoading}
-            />
+            {aggregatedMetrics.totalConversions > 0 && (
+              <MetricCard
+                title={t('extracted_average_roas')}
+                value={aggregatedMetrics.avgRoas}
+                trend={aggregatedMetrics.roasTrend}
+                icon={TrendingUp}
+                format="decimal"
+                isLoading={isLoading}
+              />
+            )}
 
             <MetricCard
-              title={t('extracted_total_purchases')}
-              value={aggregatedMetrics.totalPurchases}
-              trend={aggregatedMetrics.purchasesTrend}
+              title={t('extracted_total_conversions')}
+              value={aggregatedMetrics.totalConversions}
+              trend={aggregatedMetrics.conversionsTrend}
               icon={ShoppingCart}
               format="number"
               isLoading={isLoading}
@@ -287,6 +339,15 @@ export default function CampaignsPage() {
             />
           </>
         )}
+      </div>
+
+      {/* Quick Insights */}
+      <div className="mb-8">
+        <InsightCard
+          insights={insights}
+          isLoading={isLoading}
+          isRTL={isRTL}
+        />
       </div>
 
       {/* Performance Chart */}
@@ -327,6 +388,8 @@ export default function CampaignsPage() {
           dateRange={{ startDate, endDate }}
           currency={currency}
           isRTL={isRTL}
+          statusFilter={statusFilter}
+          searchQuery={searchQuery}
         />
       </div>
     </MainLayout>

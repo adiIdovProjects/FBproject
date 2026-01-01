@@ -6,7 +6,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, Palette } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Palette, Search, Lightbulb } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 export const Navigation: React.FC = () => {
@@ -19,6 +19,8 @@ export const Navigation: React.FC = () => {
         { name: t('dashboard') || 'Dashboard', href: `/${locale}`, icon: LayoutDashboard },
         { name: t('extracted_campaigns') || 'Campaigns', href: `/${locale}/campaigns`, icon: BarChart3 },
         { name: t('creatives') || 'Creatives', href: `/${locale}/creatives`, icon: Palette },
+        { name: t('insights') || 'Insights', href: `/${locale}/insights`, icon: Lightbulb },
+        { name: t('ai_investigator') || 'AI Investigator', href: `/${locale}/ai-investigator`, icon: Search },
     ];
 
     return (

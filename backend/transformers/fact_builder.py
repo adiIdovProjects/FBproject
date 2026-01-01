@@ -91,9 +91,10 @@ class FactBuilder:
         # Metric columns
         metric_cols = [
             'spend', 'impressions', 'clicks',
-            'purchases', 'purchase_value', 'leads', 'lead_website', 'lead_form', 'add_to_cart',
+            'purchases', 'purchase_value', 'leads', 'add_to_cart',
+            'lead_website', 'lead_form',
             'video_plays', 'video_p25_watched', 'video_p50_watched',
-            'video_p75_watched', 'video_p100_watched'
+            'video_p75_watched', 'video_p100_watched', 'video_avg_time_watched'
         ]
         
         # Select columns that exist in the dataframe
@@ -106,10 +107,18 @@ class FactBuilder:
         # Fill missing metrics with 0 (ensures aggregation doesn't fail)
         for col in metric_cols:
             if col not in df_fact.columns:
-                if col in ['spend', 'purchase_value']:
+                if col in ['spend', 'purchase_value', 'video_avg_time_watched']:
                     df_fact[col] = 0.0
                 else:
                     df_fact[col] = 0
+        
+        # Ensure no NaN values reach the database (Postgres NOT NULL constraint)
+        for col in metric_cols:
+            if col in df_fact.columns:
+                if col in ['spend', 'purchase_value', 'video_avg_time_watched']:
+                    df_fact[col] = df_fact[col].fillna(0.0)
+                else:
+                    df_fact[col] = df_fact[col].fillna(0).astype(np.int64)
         
         # Group and aggregate
         # We define the aggregation map explicitly to ensure all metrics are summed

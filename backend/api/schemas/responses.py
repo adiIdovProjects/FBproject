@@ -18,10 +18,12 @@ class MetricsPeriod(BaseModel):
     ctr: float = Field(..., description="Click-through rate (%)")
     cpc: float = Field(..., description="Cost per click")
     cpm: float = Field(..., description="Cost per 1000 impressions")
-    purchases: int = Field(0, description="Total purchases")
+    conversions: int = Field(0, description="Total conversions (all types)")
+    conversion_value: float = Field(0.0, description="Total conversion value (all types)")
+    purchases: int = Field(0, description="Total purchase events")
     purchase_value: float = Field(0.0, description="Total purchase value")
-    roas: float = Field(0.0, description="Return on ad spend")
-    cpa: float = Field(0.0, description="Cost per acquisition")
+    roas: Optional[float] = Field(None, description="Return on ad spend (Purchase Value / Spend)")
+    cpa: float = Field(0.0, description="Cost per acquisition (Spend / Purchases)")
 
 
 class ChangePercentage(BaseModel):
@@ -32,8 +34,8 @@ class ChangePercentage(BaseModel):
     ctr: Optional[float] = None
     cpc: Optional[float] = None
     cpm: Optional[float] = None
-    purchases: Optional[float] = None
-    purchase_value: Optional[float] = None
+    conversions: Optional[float] = None
+    conversion_value: Optional[float] = None
     roas: Optional[float] = None
     cpa: Optional[float] = None
 
@@ -57,9 +59,11 @@ class CampaignMetrics(BaseModel):
     ctr: float
     cpc: float
     cpm: float
+    conversions: int = 0
+    conversion_value: float = 0.0
     purchases: int = 0
     purchase_value: float = 0.0
-    roas: float = 0.0
+    roas: Optional[float] = None
     cpa: float = 0.0
 
 
@@ -67,15 +71,14 @@ class CampaignComparisonMetrics(CampaignMetrics):
     """Campaign metrics with side-by-side period comparison"""
     # Previous period values
     previous_spend: Optional[float] = None
-    previous_purchases: Optional[int] = None
+    previous_conversions: Optional[int] = None
+    previous_conversion_value: Optional[float] = None
     previous_roas: Optional[float] = None
     previous_cpa: Optional[float] = None
 
     # Percentage changes
     spend_change_pct: Optional[float] = None
-    purchases_change_pct: Optional[float] = None
-    roas_change_pct: Optional[float] = None
-    cpa_change_pct: Optional[float] = None
+    conversions_change_pct: Optional[float] = None
 
 
 class TimeSeriesDataPoint(BaseModel):
@@ -87,7 +90,7 @@ class TimeSeriesDataPoint(BaseModel):
     ctr: Optional[float] = None
     cpc: Optional[float] = None
     cpm: Optional[float] = None
-    purchases: Optional[int] = None
+    conversions: Optional[int] = None
     roas: Optional[float] = None
 
 
@@ -100,8 +103,8 @@ class AgeGenderBreakdown(BaseModel):
     impressions: int
     ctr: float
     cpc: float
-    purchases: int = 0
-    roas: float = 0.0
+    conversions: int = 0
+    roas: Optional[float] = None
 
 
 class PlacementBreakdown(BaseModel):
@@ -112,7 +115,7 @@ class PlacementBreakdown(BaseModel):
     impressions: int
     ctr: float
     cpc: float
-    purchases: int = 0
+    conversions: int = 0
     roas: float = 0.0
 class AdsetBreakdown(BaseModel):
     """Adset breakdown metrics with targeting info"""
@@ -125,8 +128,11 @@ class AdsetBreakdown(BaseModel):
     impressions: int
     ctr: float
     cpc: float
+    conversions: int = 0
+    conversion_value: float = 0.0
     purchases: int = 0
-    roas: float = 0.0
+    purchase_value: float = 0.0
+    roas: Optional[float] = None
     cpa: float = 0.0
 
 
@@ -137,7 +143,7 @@ class CountryBreakdown(BaseModel):
     clicks: int
     impressions: int
     ctr: float
-    purchases: int = 0
+    conversions: int = 0
     roas: float = 0.0
 
 
@@ -159,8 +165,11 @@ class CreativeMetrics(BaseModel):
     completion_rate: Optional[float] = None
     hold_rate: Optional[float] = None
     avg_watch_time: Optional[float] = None
+    conversions: int = 0
+    conversion_value: float = 0.0
     purchases: int = 0
-    roas: float = 0.0
+    purchase_value: float = 0.0
+    roas: Optional[float] = None
     cpa: float = 0.0
 
 
@@ -203,6 +212,7 @@ class VideoInsightsResponse(BaseModel):
     average_hook_rate: float
     average_completion_rate: float
     average_hold_rate: float
+    average_video_time: float
     best_performing_length: str
     insights: List[VideoInsight]
     top_videos: List[CreativeMetrics]
@@ -264,3 +274,50 @@ class ErrorResponse(BaseModel):
     detail: str
     error_code: Optional[str] = None
     status_code: int
+
+
+# Insights Models
+class InsightItem(BaseModel):
+    """Single insight item"""
+    type: str = Field(..., description="Insight type: opportunity, alert, trend, suggestion")
+    icon: str = Field(..., description="Emoji icon for the insight")
+    text: str = Field(..., description="Insight text content")
+    priority: Optional[str] = Field(None, description="Priority level: high, medium, low")
+
+
+class InsightsSummaryResponse(BaseModel):
+    """Response for summary insights (mini cards)"""
+    insights: List[InsightItem] = Field(..., description="List of 2-3 quick insights")
+    generated_at: str = Field(..., description="ISO timestamp of when insights were generated")
+
+
+class DeepInsightsResponse(BaseModel):
+    """Response for deep analysis insights page"""
+    executive_summary: str = Field(..., description="2-3 sentence executive summary")
+    key_findings: List[InsightItem] = Field(..., description="3-5 key findings with metrics")
+    performance_trends: List[InsightItem] = Field(..., description="3-5 performance trend insights")
+    recommendations: List[InsightItem] = Field(..., description="Prioritized strategic recommendations")
+    opportunities: List[InsightItem] = Field(..., description="2-3 opportunity detections with fixes")
+    generated_at: str = Field(..., description="ISO timestamp of when analysis was generated")
+
+
+class ComparisonItem(BaseModel):
+    """Single item in comparison report (campaign or ad)"""
+    id: str = Field(..., description="Campaign or Ad ID")
+    name: str = Field(..., description="Campaign or Ad name")
+    period1: MetricsPeriod = Field(..., description="Period 1 metrics")
+    period2: MetricsPeriod = Field(..., description="Period 2 metrics")
+    change_pct: ChangePercentage = Field(..., description="Percentage changes")
+    change_abs: Dict[str, float] = Field(..., description="Absolute changes")
+
+
+class ReportsComparisonResponse(BaseModel):
+    """Response for reports comparison endpoint"""
+    dimension: str = Field(..., description="Dimension level: overview, campaign, or ad")
+    period1_start: str = Field(..., description="Period 1 start date (YYYY-MM-DD)")
+    period1_end: str = Field(..., description="Period 1 end date (YYYY-MM-DD)")
+    period2_start: Optional[str] = Field(None, description="Period 2 start date (YYYY-MM-DD) - optional if comparison disabled")
+    period2_end: Optional[str] = Field(None, description="Period 2 end date (YYYY-MM-DD) - optional if comparison disabled")
+    overview: Optional[ComparisonItem] = Field(None, description="Overview-level comparison (if dimension=overview)")
+    items: List[ComparisonItem] = Field(default_factory=list, description="List of campaigns or ads (if dimension=campaign/ad)")
+    currency: str = Field(default="USD", description="Account currency")

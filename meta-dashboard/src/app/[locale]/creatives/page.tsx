@@ -29,9 +29,11 @@ import DateFilter from '../../../components/DateFilter';
 import CreativeCard from '../../../components/creatives/CreativeCard';
 import VideoInsightsSection from '../../../components/creatives/VideoInsightsSection';
 import SkeletonMetricCard from '../../../components/dashboard/SkeletonMetricCard';
+import InsightCard from '../../../components/insights/InsightCard';
 
 // Services & Types
 import { fetchCreatives, fetchVideoInsights } from '../../../services/creatives.service';
+import { fetchInsightsSummary, InsightItem } from '../../../services/insights.service';
 import { CreativeMetrics, VideoInsightsResponse, CreativeSortMetric } from '../../../types/creatives.types';
 import { DateRange } from '../../../types/dashboard.types';
 
@@ -48,26 +50,31 @@ export default function CreativesPage() {
 
     const [creatives, setCreatives] = useState<CreativeMetrics[]>([]);
     const [videoInsights, setVideoInsights] = useState<VideoInsightsResponse | null>(null);
+    const [insights, setInsights] = useState<InsightItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [sortBy, setSortBy] = useState<CreativeSortMetric>('spend');
     const [mediaFilter, setMediaFilter] = useState<'all' | 'video' | 'image'>('all');
+
+    // Check if any creative has conversion value
+    const hasConversionValue = creatives.some(creative => (creative.conversion_value || 0) > 0);
 
     // Load Data
     useEffect(() => {
         async function loadData() {
             setIsLoading(true);
             try {
-                const [creativesData, insightsData] = await Promise.all([
+                const [creativesData, videoInsightsData, insightsData] = await Promise.all([
                     fetchCreatives({
                         dateRange,
                         sort_by: sortBy,
-                        is_video: mediaFilter === 'all' ? undefined : mediaFilter === 'video'
                     }),
-                    fetchVideoInsights(dateRange)
+                    fetchVideoInsights(dateRange),
+                    fetchInsightsSummary(dateRange, 'creatives')
                 ]);
 
                 setCreatives(creativesData);
-                setVideoInsights(insightsData);
+                setVideoInsights(videoInsightsData);
+                setInsights(insightsData);
             } catch (error) {
                 console.error('[Creatives Page] Failed to load data:', error);
             } finally {
@@ -114,31 +121,32 @@ export default function CreativesPage() {
                         <Text className="text-xs text-gray-400 font-medium">Video Only</Text>
                     </div>
 
-                    {/* Min Spend Slider Placeholder (as seen in image) */}
-                    <div className="flex items-center gap-4 border-l border-gray-800 pl-6">
-                        <Text className="text-xs text-gray-400 font-medium whitespace-nowrap">Min. Spend</Text>
-                        <div className="w-32 h-1.5 bg-gray-800 rounded-full relative">
-                            <div className="absolute left-0 top-0 h-full w-2/3 bg-indigo-600 rounded-full" />
-                            <div className="absolute left-2/3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full border-2 border-indigo-600 shadow-lg" />
-                        </div>
-                        <Text className="text-xs text-gray-200 font-bold">$500</Text>
-                    </div>
-
                     {/* Sort Dropdown */}
                     <div className="flex items-center gap-3 border-l border-gray-800 pl-6">
                         <SortAsc className="w-4 h-4 text-gray-500" />
                         <Select
                             value={sortBy}
                             onValueChange={(val: any) => setSortBy(val)}
-                            className="w-48 border-none bg-transparent"
+                            className="w-48 border-none bg-gray-900 shadow-xl"
                         >
                             <SelectItem value="spend">Sort by: Spend (High to Low)</SelectItem>
-                            <SelectItem value="roas">Sort by: ROAS (High to Low)</SelectItem>
+                            {hasConversionValue && (
+                                <SelectItem value="roas">Sort by: ROAS (High to Low)</SelectItem>
+                            )}
                             <SelectItem value="hook_rate">Sort by: Thumbstop (High to Low)</SelectItem>
-                            <SelectItem value="purchases">Sort by: Purchases (High to Low)</SelectItem>
+                            <SelectItem value="conversions">Sort by: Conversions (High to Low)</SelectItem>
                         </Select>
                     </div>
                 </div>
+            </div>
+
+            {/* Quick Insights */}
+            <div className="mb-8">
+                <InsightCard
+                    insights={insights}
+                    isLoading={isLoading}
+                    isRTL={isRTL}
+                />
             </div>
 
             <TabGroup>

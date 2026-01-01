@@ -27,6 +27,11 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     direction: 'desc',
   });
 
+  // Check if any campaign has conversion value
+  const hasConversionValue = useMemo(() => {
+    return campaigns.some(campaign => (campaign.conversion_value || 0) > 0);
+  }, [campaigns]);
+
   // Sort campaigns
   const sortedCampaigns = useMemo(() => {
     const sorted = [...campaigns];
@@ -65,8 +70,8 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
@@ -107,7 +112,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     const isNegative = changePercent < 0;
 
     // For cost metrics (CPA, Spend), down is good
-    // For performance metrics (ROAS, Purchases), up is good
+    // For performance metrics (ROAS, Conversions), up is good
     let isGood = false;
 
     if (metricType === 'cost') {
@@ -185,28 +190,36 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 VS PREV
               </th>
 
+              {hasConversionValue && (
+                <>
+                  <th
+                    className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                    onClick={() => handleSort('roas')}
+                  >
+                    <div className="flex items-center justify-end gap-2">
+                      <span>{t('extracted_roas')}</span>
+                      <ArrowUpDown className="w-3 h-3 opacity-50" />
+                    </div>
+                  </th>
+
+                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                    VS PREV
+                  </th>
+                </>
+              )}
+
               <th
                 className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
-                onClick={() => handleSort('roas')}
+                onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
-                  <span>{t('extracted_roas')}</span>
+                  <span>{t('extracted_conversions')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
 
               <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                VS PREV
-              </th>
-
-              <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
-                onClick={() => handleSort('purchases')}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  <span>{t('extracted_purchases')}</span>
-                  <ArrowUpDown className="w-3 h-3 opacity-50" />
-                </div>
+                {t('leads') || 'Leads'}
               </th>
 
               <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
@@ -250,21 +263,36 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   {renderTrendBadge(campaign.spend_change_pct, 'cost')}
                 </td>
 
+                {hasConversionValue && (
+                  <>
+                    <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                      {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 ? (
+                        <>
+                          <span className="text-gray-400 text-[10px] mr-1">x</span>
+                          {campaign.roas.toFixed(2)}
+                        </>
+                      ) : (
+                        <span className="text-gray-500 italic text-[10px]">N/A</span>
+                      )}
+                    </td>
+
+                    <td className="px-6 py-5 text-right">
+                      {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 &&
+                        renderTrendBadge(campaign.roas_change_pct, 'performance')}
+                    </td>
+                  </>
+                )}
+
                 <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                  <span className="text-gray-400 text-[10px] mr-1">x</span>
-                  {campaign.roas.toFixed(2)}
-                </td>
-
-                <td className="px-6 py-5 text-right">
-                  {renderTrendBadge(campaign.roas_change_pct, 'performance')}
+                  {formatNumber(campaign.conversions)}
                 </td>
 
                 <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                  {formatNumber(campaign.purchases)}
+                  {formatNumber((campaign.lead_website || 0) + (campaign.lead_form || 0))}
                 </td>
 
-                <td className="px-6 py-5 text-right">
-                  {renderTrendBadge(campaign.purchases_change_pct, 'performance')}
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  {renderTrendBadge(campaign.conversions_change_pct, 'performance')}
                 </td>
 
                 <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
@@ -275,7 +303,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
           </tbody>
         </table>
       </div>
-    </div>
+    </div >
   );
 };
 

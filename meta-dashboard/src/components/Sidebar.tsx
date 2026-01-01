@@ -13,7 +13,8 @@ import {
     Sparkles,
     Zap,
     BarChart,
-    User
+    User,
+    Lightbulb
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -27,13 +28,12 @@ export const Sidebar: React.FC = () => {
         { name: t('dashboard'), href: `/${locale}`, icon: LayoutDashboard },
         { name: t('extracted_campaigns'), href: `/${locale}/campaigns`, icon: BarChart3 },
         { name: t('creatives'), href: `/${locale}/creatives`, icon: Palette },
+        { name: t('insights'), href: `/${locale}/insights`, icon: Lightbulb },
+        { name: t('reports'), href: `/${locale}/reports`, icon: BarChart },
+        { name: t('ai_investigator') || 'AI Investigator', href: `/${locale}/ai-investigator`, icon: Sparkles },
     ];
 
-    const secondaryItems = [
-        { name: 'Optimization', href: '#', icon: Zap },
-        { name: 'AI Investigator', href: '#', icon: Sparkles },
-        { name: 'Reports', href: '#', icon: BarChart },
-    ];
+    const secondaryItems: any[] = [];
 
     return (
         <aside
@@ -96,22 +96,25 @@ export const Sidebar: React.FC = () => {
             <div className="p-4 border-t border-border-subtle space-y-2">
                 <Link
                     href={`/${locale}/settings`}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes('/settings') ? 'bg-white/5 text-white' : ''}`}
                 >
                     <Settings className="w-5 h-5" />
-                    <span>Settings</span>
+                    <span>{t('settings')}</span>
                 </Link>
 
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 group-hover:border-accent/20 transition-all">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-black shadow-lg">
+                <Link
+                    href={`/${locale}/settings`}
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-accent/40 hover:bg-white/10 transition-all group"
+                >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-black shadow-lg group-hover:scale-110 transition-transform">
                         <User className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-black truncate tracking-tight text-white">Alex Morgen</p>
-                        <p className="text-[10px] text-gray-500 font-bold truncate tracking-widest uppercase">Pro Account</p>
+                        <p className="text-[10px] text-gray-500 font-bold truncate tracking-widest uppercase">{t('manage_account')}</p>
                     </div>
                     {isRTL ? <ChevronLeft className="w-4 h-4 text-gray-600 group-hover:text-accent transition-colors" /> : <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-accent transition-colors" />}
-                </div>
+                </Link>
             </div>
         </aside>
     );

@@ -14,30 +14,17 @@ from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
+from config.base_config import settings
 
 # Global lookup cache
 LOOKUP_CACHE: Dict[str, Dict[str, int]] = {}
 
-
 def get_db_engine():
     """Create and return SQLAlchemy engine"""
     
-    DB_USER = os.getenv("POSTGRES_USER")
-    DB_PASS = os.getenv("DB_PASSWORD")
-    DB_HOST = os.getenv("POSTGRES_HOST")
-    DB_PORT = os.getenv("POSTGRES_PORT")
-    DB_NAME = os.getenv("POSTGRES_DB")
-    
-    if not all([DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME]):
-        raise EnvironmentError("Missing database environment variables")
-    
-    DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    
     try:
         engine = create_engine(
-            DATABASE_URL,
+            settings.DATABASE_URL,
             pool_recycle=3600,
             pool_pre_ping=True
         )

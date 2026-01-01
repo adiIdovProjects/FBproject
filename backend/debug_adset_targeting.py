@@ -44,7 +44,8 @@ def debug_adset_targeting():
             
             if targeting:
                 # Pretty print targeting for analysis
-                # logger.info(f"  Targeting JSON: {json.dumps(targeting, indent=2)}")
+                adset_data = adset.export_all_data()
+                logger.info(f"  Targeting JSON: {json.dumps(adset_data.get('targeting', {}), indent=2)}")
                 
                 if 'custom_audiences' in targeting:
                     for ca in targeting['custom_audiences']:

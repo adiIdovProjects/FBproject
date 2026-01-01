@@ -17,6 +17,9 @@ class UserRepository:
     def get_user_by_google_id(self, google_id: str) -> Optional[User]:
         return self.db.query(User).filter(User.google_id == google_id).first()
 
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        return self.db.query(User).filter(User.id == user_id).first()
+
     def create_user(self, email: str, fb_user_id: str, full_name: str, access_token: str, expires_at: datetime) -> User:
         user = User(
             email=email,
@@ -30,11 +33,29 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
+    def create_user_with_password(self, email: str, password_hash: str, full_name: str) -> User:
+        user = User(
+            email=email,
+            password_hash=password_hash,
+            full_name=full_name
+        )
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
     def update_fb_token(self, user_id: int, access_token: str, expires_at: datetime):
         user = self.db.query(User).filter(User.id == user_id).first()
         if user:
             user.fb_access_token = access_token
             user.fb_token_expires_at = expires_at
+            self.db.commit()
+        return user
+
+    def update_password(self, user_id: int, password_hash: str):
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.password_hash = password_hash
             self.db.commit()
         return user
 

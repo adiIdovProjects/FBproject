@@ -13,17 +13,19 @@ export interface CampaignRow {
   ctr: number;
   cpc: number;
   cpm: number;
-  purchases: number;
+  conversions: number;
+  conversion_value: number;
   roas: number;
   cpa: number;
 
   // Comparison to previous period
   previous_spend?: number;
-  previous_purchases?: number;
+  previous_conversions?: number;
+  previous_conversion_value?: number;
   previous_roas?: number;
   previous_cpa?: number;
   spend_change_pct?: number;
-  purchases_change_pct?: number;
+  conversions_change_pct?: number;
   roas_change_pct?: number;
   cpa_change_pct?: number;
 }
@@ -36,7 +38,8 @@ export interface BreakdownRow {
   impressions: number;
   ctr: number;
   cpc: number;
-  purchases: number;
+  conversions: number;
+  conversion_value: number;
   roas: number;
   cpa: number;
   adset_id?: number;
@@ -54,19 +57,19 @@ export type BreakdownType = 'placement' | 'age-gender' | 'country' | 'platform' 
 export interface CampaignMetrics {
   totalSpend: number;
   avgRoas: number;
-  totalPurchases: number;
+  totalConversions: number;
   avgCpa: number;
 
   // Previous period
   previousTotalSpend?: number;
   previousAvgRoas?: number;
-  previousTotalPurchases?: number;
+  previousTotalConversions?: number;
   previousAvgCpa?: number;
 
   // Trends
   spendTrend?: number;
   roasTrend?: number;
-  purchasesTrend?: number;
+  conversionsTrend?: number;
   cpaTrend?: number;
 }
 

@@ -18,7 +18,7 @@ interface ActionsMetricsChartProps {
 }
 
 const METRIC_OPTIONS: MetricOption[] = [
-  { value: 'actions', label: 'Actions (Purchases + Leads)', format: 'number' },
+  { value: 'actions', label: 'Conversions', format: 'number' },
   { value: 'spend', label: 'Spend', format: 'currency' },
   { value: 'clicks', label: 'Clicks', format: 'number' },
   { value: 'ctr', label: 'CTR', format: 'percentage' },
@@ -45,7 +45,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
   const calculateMetricValue = (day: DailyMetric, metric: MetricType): number => {
     switch (metric) {
       case 'actions':
-        return (day.total_purchases || 0) + (day.total_leads || 0);
+        return day.total_conversions || 0;
       case 'spend':
         return day.total_spend || 0;
       case 'clicks':

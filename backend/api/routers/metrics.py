@@ -14,7 +14,7 @@ import os
 # Add paths for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db
+from api.dependencies import get_db, get_current_user
 from api.services.metrics_service import MetricsService
 from api.schemas.requests import CampaignStatus, Granularity
 from api.schemas.responses import (
@@ -26,10 +26,15 @@ from api.schemas.responses import (
     PlacementBreakdown,
     CountryBreakdown,
     CreativeMetrics,
-    ErrorResponse
+    ErrorResponse,
+    AdsetBreakdown
 )
 
-router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
+router = APIRouter(
+    prefix="/api/v1/metrics", 
+    tags=["metrics"],
+    dependencies=[Depends(get_current_user)]
+)
 
 
 @router.get(
@@ -176,6 +181,8 @@ def get_age_gender_breakdown(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     group_by: str = Query('both', regex="^(age|gender|both)$", description="Group by age, gender, or both"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by campaign name"),
     db: Session = Depends(get_db)
 ):
     """
@@ -189,7 +196,9 @@ def get_age_gender_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
-            group_by=group_by
+            group_by=group_by,
+            campaign_status=status,
+            search_query=search
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get age/gender breakdown: {str(e)}")
@@ -205,6 +214,8 @@ def get_placement_breakdown(
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by campaign name"),
     db: Session = Depends(get_db)
 ):
     """
@@ -217,7 +228,9 @@ def get_placement_breakdown(
         return service.get_placement_breakdown(
             start_date=start_date,
             end_date=end_date,
-            campaign_id=campaign_id
+            campaign_id=campaign_id,
+            campaign_status=status,
+            search_query=search
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get placement breakdown: {str(e)}")
@@ -233,6 +246,8 @@ def get_platform_breakdown(
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by campaign name"),
     db: Session = Depends(get_db)
 ):
     """
@@ -245,7 +260,9 @@ def get_platform_breakdown(
         return service.get_platform_breakdown(
             start_date=start_date,
             end_date=end_date,
-            campaign_id=campaign_id
+            campaign_id=campaign_id,
+            campaign_status=status,
+            search_query=search
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get platform breakdown: {str(e)}")
@@ -262,6 +279,8 @@ def get_country_breakdown(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     top_n: int = Query(10, ge=1, le=100, description="Number of top countries to return"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by campaign name"),
     db: Session = Depends(get_db)
 ):
     """
@@ -275,10 +294,44 @@ def get_country_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
-            top_n=top_n
+            top_n=top_n,
+            campaign_status=status,
+            search_query=search
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get country breakdown: {str(e)}")
+
+
+@router.get(
+    "/breakdowns/adset",
+    response_model=List[AdsetBreakdown],
+    summary="Get adset breakdown",
+    description="Returns metrics broken down by adset"
+)
+def get_adset_breakdown(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by campaign name"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get adset performance breakdown.
+
+    Returns metrics aggregated by adset.
+    """
+    try:
+        service = MetricsService(db)
+        return service.get_adset_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            campaign_id=campaign_id,
+            campaign_status=status,
+            search_query=search
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get adset breakdown: {str(e)}")
 
 
 @router.get(
