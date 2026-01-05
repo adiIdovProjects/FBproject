@@ -2,7 +2,7 @@
 Test budget optimizer with sample data
 """
 
-from api.services.budget_optimizer import BudgetOptimizer
+from backend.api.services.budget_optimizer import BudgetOptimizer
 
 # Sample campaign data
 sample_campaigns = [

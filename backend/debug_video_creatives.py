@@ -14,7 +14,7 @@ load_dotenv()
 
 # Add backend to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from extractors.fb_api import FacebookExtractor
+from backend.extractors.fb_api import FacebookExtractor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("DebugVideoCreatives")

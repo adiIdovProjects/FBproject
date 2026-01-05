@@ -84,7 +84,6 @@ class DimAd(Base):
     __table_args__ = (
         Index('idx_dim_ad_adset', 'adset_id'),
         Index('idx_dim_ad_creative', 'creative_id'),
-        Index('idx_fact_core_ad', 'ad_id'), # Index originally from fact_core? No, this is dim_ad.
         Index('idx_dim_ad_status', 'ad_status'),
     )
 
@@ -133,10 +132,36 @@ class DimGender(Base):
 
 class DimActionType(Base):
     __tablename__ = 'dim_action_type'
-    
+
     action_type_id = Column(Integer, primary_key=True, autoincrement=True)
     action_type = Column(String(100), nullable=False, unique=True)
     is_conversion = Column(Boolean, default=False)
+
+
+class DimInsightHistory(Base):
+    """
+    Stores auto-generated AI insights for proactive analysis.
+    Used by the Big Brain AI Agent to track daily/weekly insights automatically.
+    """
+    __tablename__ = 'dim_insight_history'
+
+    insight_id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), nullable=True)
+    generated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    insight_type = Column(String(50), nullable=False)  # 'daily', 'weekly', 'alert'
+    priority = Column(String(20), nullable=False)  # 'critical', 'warning', 'opportunity', 'info'
+    category = Column(String(50), nullable=False)  # 'performance', 'creative', 'targeting', 'budget'
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)  # Markdown formatted insight
+    data_json = Column(Text)  # JSON string with supporting data
+    is_read = Column(Boolean, default=False, nullable=False)
+
+    __table_args__ = (
+        Index('idx_insight_account_generated', 'account_id', 'generated_at'),
+        Index('idx_insight_priority', 'priority'),
+        Index('idx_insight_type', 'insight_type'),
+        Index('idx_insight_read', 'is_read'),
+    )
 
 
 # ==============================================================================

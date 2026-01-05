@@ -9,13 +9,9 @@ from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-try:
-    from config.settings import UNKNOWN_MEMBER_ID, MISSING_DIM_VALUE
-except ImportError:
-    UNKNOWN_MEMBER_ID = 0
-    MISSING_DIM_VALUE = 'N/A'
+from backend.config.settings import UNKNOWN_MEMBER_ID, MISSING_DIM_VALUE
     
-from utils.mapping_utils import map_country_code, get_country_code
+from backend.utils.mapping_utils import map_country_code, get_country_code
 
 
 def extract_dimensions(df_facts: pd.DataFrame, df_actions: Optional[pd.DataFrame] = None, df_creatives: Optional[pd.DataFrame] = None, account_info: Optional[Dict] = None) -> Dict[str, pd.DataFrame]:
@@ -88,12 +84,12 @@ def _extract_dim_action_type(df: pd.DataFrame) -> pd.DataFrame:
     
     # Determine if conversion
     # We import here to avoid circular dependencies if possible, or assume config availability
-    from config.settings import ACTION_TYPES_TO_TRACK
+    from backend.config.settings import ACTION_TYPES_TO_TRACK
     
     # Conversion types usually include purchase, lead, etc.
     # We can infer based on the name or use the config list
     conversion_keywords = [
-        'purchase', 'lead', 'add_to_cart', 'initiate_checkout', 
+        'purchase', 'lead_form', 'add_to_cart', 'initiate_checkout', 
         'complete_registration', 'schedule', 'appointment', 'contact', 
         'submit_application', 'start_trial'
     ]

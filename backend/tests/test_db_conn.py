@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 # Add backend to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config.base_config import settings
+from backend.config.base_config import settings
 
 def test_db():
     print(f"Testing connection to: {settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}")

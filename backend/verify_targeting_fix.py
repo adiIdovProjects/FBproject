@@ -14,8 +14,8 @@ logger = logging.getLogger("VerifyTargeting")
 import sys
 sys.path.append(os.path.join(os.getcwd(), 'backend'))
 
-from transformers.core_transformer import clean_and_transform
-from transformers.dimension_builder import extract_dimensions
+from backend.transformers.core_transformer import clean_and_transform
+from backend.transformers.dimension_builder import extract_dimensions
 
 def verify_fix():
     load_dotenv()

@@ -1,3 +1,4 @@
+"use client";
 // src/components/MainLayout.tsx
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -45,7 +46,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
                     <footer className="mt-24 pb-12 text-center">
                         <div className="h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent mb-8"></div>
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-gray-400 transition-colors cursor-default">
-                            {t('extracted__nextjs_fastapi')}
+                            {t('footer.system_info')}
                         </p>
                     </footer>
                 </div>

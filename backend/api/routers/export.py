@@ -9,18 +9,14 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-import sys
-import os
+
+
 import logging
-
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
-from api.dependencies import get_db, get_current_user
-from api.services.metrics_service import MetricsService
-from api.services.export_service import ExportService
-from api.schemas.requests import GoogleSheetsExportRequest, ExcelExportRequest, DataType
-from api.schemas.responses import GoogleSheetsExportResponse, ExcelExportResponse
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.metrics_service import MetricsService
+from backend.api.services.export_service import ExportService
+from backend.api.schemas.requests import GoogleSheetsExportRequest, ExcelExportRequest, DataType
+from backend.api.schemas.responses import GoogleSheetsExportResponse, ExcelExportResponse
 
 logger = logging.getLogger(__name__)
 

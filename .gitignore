@@ -29,6 +29,7 @@ dist/
 build/
 .DS_Store
 *.log
+
 .eslintcache
 
 # Misc

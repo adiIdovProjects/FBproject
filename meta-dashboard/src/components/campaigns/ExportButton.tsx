@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * ExportButton Component
  * Dropdown button for exporting to Google Sheets or Excel
@@ -79,7 +81,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         ) : (
           <Download className="w-4 h-4" />
         )}
-        <span>{isLoading ? 'Exporting...' : 'Export'}</span>
+        <span>{isLoading ? t('actions.exporting') : t('actions.export')}</span>
       </button>
 
       {/* Dropdown Menu */}
@@ -92,7 +94,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors duration-150"
             >
               <FileSpreadsheet className="w-4 h-4 text-green-400" />
-              <span>{t('extracted_export_to_google_sheets')}</span>
+              <span>{t('reports.export_to_google_sheets')}</span>
             </button>
 
             {/* Excel Option */}
@@ -101,7 +103,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors duration-150"
             >
               <Download className="w-4 h-4 text-blue-400" />
-              <span>{t('extracted_download_as_excel')}</span>
+              <span>{t('reports.export_to_excel')}</span>
             </button>
           </div>
         </div>

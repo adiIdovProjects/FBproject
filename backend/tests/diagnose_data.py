@@ -8,7 +8,7 @@ Run this to see:
 """
 
 import pandas as pd
-from utils.db_utils import get_db_engine
+from backend.utils.db_utils import get_db_engine
 
 engine = get_db_engine()
 

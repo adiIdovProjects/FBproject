@@ -96,8 +96,8 @@ export default function CreativesPage() {
 
     return (
         <MainLayout
-            title={t('extracted_creative_insights')}
-            description={t('extracted_analyze_creative_performance_patterns_and_video_engagement_metrics')}
+            title={t('creatives.title')}
+            description={t('creatives.subtitle')}
         >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
                 <DateFilter
@@ -118,7 +118,7 @@ export default function CreativesPage() {
                         >
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 ${mediaFilter === 'video' ? 'left-7' : 'left-1'}`} />
                         </div>
-                        <Text className="text-xs text-gray-400 font-medium">Video Only</Text>
+                        <Text className="text-xs text-gray-400 font-medium">{t('creatives.videos_only')}</Text>
                     </div>
 
                     {/* Sort Dropdown */}
@@ -129,12 +129,12 @@ export default function CreativesPage() {
                             onValueChange={(val: any) => setSortBy(val)}
                             className="w-48 border-none bg-gray-900 shadow-xl"
                         >
-                            <SelectItem value="spend">Sort by: Spend (High to Low)</SelectItem>
+                            <SelectItem value="spend">{t('actions.sort_by')}: {t('metrics.spend')}</SelectItem>
                             {hasConversionValue && (
-                                <SelectItem value="roas">Sort by: ROAS (High to Low)</SelectItem>
+                                <SelectItem value="roas">{t('actions.sort_by')}: {t('metrics.roas')}</SelectItem>
                             )}
-                            <SelectItem value="hook_rate">Sort by: Thumbstop (High to Low)</SelectItem>
-                            <SelectItem value="conversions">Sort by: Conversions (High to Low)</SelectItem>
+                            <SelectItem value="hook_rate">{t('actions.sort_by')}: {t('creatives.hook_rate')}</SelectItem>
+                            <SelectItem value="conversions">{t('actions.sort_by')}: {t('metrics.conversions')}</SelectItem>
                         </Select>
                     </div>
                 </div>
@@ -151,8 +151,8 @@ export default function CreativesPage() {
 
             <TabGroup>
                 <TabList className="mb-6">
-                    <Tab icon={LayoutGrid}>{t('extracted_all_creatives')}</Tab>
-                    <Tab icon={Play}>{t('extracted_video_deep_dive')}</Tab>
+                    <Tab icon={LayoutGrid}>{t('creatives.all_creatives')}</Tab>
+                    <Tab icon={Play}>{t('creatives.video_deep_dive')}</Tab>
                 </TabList>
 
                 <TabPanels>
@@ -175,8 +175,8 @@ export default function CreativesPage() {
                                 ) : (
                                     <div className="bg-gray-800 border border-dashed border-gray-700 rounded-xl p-12 text-center">
                                         <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                                        <Title className="text-gray-400">{t('extracted_no_creatives_found')}</Title>
-                                        <Text className="text-gray-500 mt-2">{t('extracted_try_adjusting_your_filters_or_date_range')}</Text>
+                                        <Title className="text-gray-400">{t('common.error_loading')}</Title>
+                                        <Text className="text-gray-500 mt-2">{t('common.no_data_available')}</Text>
                                     </div>
                                 )}
                             </>
@@ -190,8 +190,8 @@ export default function CreativesPage() {
                         ) : (
                             <div className="bg-gray-800 border border-dashed border-gray-700 rounded-xl p-12 text-center">
                                 <Play className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                                <Title className="text-gray-400">{t('extracted_video_insights_unavailable')}</Title>
-                                <Text className="text-gray-500 mt-2">{t('extracted_ensure_you_have_active_video_creatives_in_this_period')}</Text>
+                                <Title className="text-gray-400">{t('common.no_data_available')}</Title>
+                                <Text className="text-gray-500 mt-2">{t('common.error_loading')}</Text>
                             </div>
                         )}
                     </TabPanel>

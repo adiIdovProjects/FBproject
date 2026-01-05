@@ -9,10 +9,10 @@ from sqlalchemy import text
 sys.path.append(os.getcwd())
 
 try:
-    from utils.db_utils import get_db_engine
+    from backend.utils.db_utils import get_db_engine
 except ImportError:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from utils.db_utils import get_db_engine
+    from backend.utils.db_utils import get_db_engine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CheckActions")

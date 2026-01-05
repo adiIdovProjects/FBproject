@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(env_path)
 
-from utils.db_utils import get_db_engine
+from backend.utils.db_utils import get_db_engine
 engine = get_db_engine()
 
 print("--- dim_country ---")

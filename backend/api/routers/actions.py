@@ -8,14 +8,10 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from pydantic import BaseModel
 
-import sys
-import os
 
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db, get_current_user
-from api.services.audit_service import AuditService
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.audit_service import AuditService
 from sqlalchemy import text
 
 router = APIRouter(

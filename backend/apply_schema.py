@@ -1,4 +1,4 @@
-from utils.db_utils import get_db_engine
+from backend.utils.db_utils import get_db_engine
 from models.schema import create_schema
 import sys
 import os

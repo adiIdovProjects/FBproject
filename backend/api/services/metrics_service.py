@@ -8,15 +8,17 @@ calculations, and business logic for metrics endpoints.
 from datetime import date, timedelta
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-import sys
-import os
 
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.repositories.metrics_repository import MetricsRepository
-from api.utils.calculations import MetricCalculator
-from api.schemas.responses import (
+from backend.api.repositories.metrics_repository import MetricsRepository
+from backend.api.repositories.campaign_repository import CampaignRepository
+from backend.api.repositories.adset_repository import AdSetRepository
+from backend.api.repositories.ad_repository import AdRepository
+from backend.api.repositories.creative_repository import CreativeRepository
+from backend.api.repositories.breakdown_repository import BreakdownRepository
+from backend.api.repositories.timeseries_repository import TimeSeriesRepository
+from backend.api.utils.calculations import MetricCalculator
+from backend.api.schemas.responses import (
     MetricsOverviewResponse,
     MetricsPeriod,
     ChangePercentage,
@@ -40,6 +42,12 @@ class MetricsService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = MetricsRepository(db)
+        self.campaign_repo = CampaignRepository(db)
+        self.adset_repo = AdSetRepository(db)
+        self.ad_repo = AdRepository(db)
+        self.creative_repo = CreativeRepository(db)
+        self.breakdown_repo = BreakdownRepository(db)
+        self.timeseries_repo = TimeSeriesRepository(db)
         self.calculator = MetricCalculator()
 
     def get_overview_metrics(
@@ -104,7 +112,8 @@ class MetricsService:
         search_query: Optional[str] = None,
         sort_by: str = "spend",
         sort_direction: str = "desc",
-        limit: int = 100
+        limit: int = 100,
+        account_ids: Optional[List[int]] = None
     ) -> List[CampaignMetrics]:
         """
         Get campaign-level performance with calculated metrics.
@@ -116,18 +125,20 @@ class MetricsService:
             sort_by: Metric to sort by
             sort_direction: asc or desc
             limit: Maximum number of results
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             List of CampaignMetrics
         """
-        campaigns = self.repository.get_campaign_breakdown(
+        campaigns = self.campaign_repo.get_campaign_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_status=campaign_status,
             search_query=search_query,
             sort_by=sort_by,
             sort_direction=sort_direction,
-            limit=limit
+            limit=limit,
+            account_ids=account_ids
         )
 
         # Calculate derived metrics for each campaign
@@ -162,14 +173,18 @@ class MetricsService:
         search_query: Optional[str] = None,
         sort_by: str = "spend",
         sort_direction: str = "desc",
-        limit: int = 100
+        limit: int = 100,
+        account_ids: Optional[List[int]] = None
     ) -> List[CampaignComparisonMetrics]:
         """
         Get campaign-level performance with period comparison.
+
+        Args:
+            account_ids: Optional list of account IDs to filter by
         """
         # Get current period campaigns (as objects)
         current_campaigns = self.get_campaign_breakdown(
-            start_date, end_date, campaign_status, search_query, sort_by, sort_direction, limit
+            start_date, end_date, campaign_status, search_query, sort_by, sort_direction, limit, account_ids
         )
 
         # Calculate previous period
@@ -183,14 +198,15 @@ class MetricsService:
                 raise OverflowError("Date underflow")
 
             # Get previous period campaigns (as dicts for lookup)
-            previous_campaigns_raw = self.repository.get_campaign_breakdown(
+            previous_campaigns_raw = self.campaign_repo.get_campaign_breakdown(
                 start_date=previous_start,
                 end_date=previous_end,
                 campaign_status=campaign_status,
                 search_query=search_query,
                 sort_by=sort_by,
                 sort_direction=sort_direction,
-                limit=1000
+                limit=1000,
+                account_ids=account_ids
             )
         except (OverflowError, ValueError):
             logger.warning(f"Could not calculate previous period for {start_date} to {end_date}")
@@ -239,7 +255,8 @@ class MetricsService:
         end_date: date,
         granularity: str = "day",
         metrics: List[str] = None,
-        campaign_id: Optional[int] = None
+        campaign_id: Optional[int] = None,
+        account_ids: Optional[List[int]] = None
     ) -> List[TimeSeriesDataPoint]:
         """
         Get time series data with calculated metrics.
@@ -250,19 +267,20 @@ class MetricsService:
             granularity: day, week, or month
             metrics: List of metrics to include (optional, returns all)
             campaign_id: Optional campaign filter
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             List of TimeSeriesDataPoint
         """
-        time_series = self.repository.get_time_series(
-            start_date, end_date, granularity, campaign_id
+        time_series = self.timeseries_repo.get_time_series(
+            start_date, end_date, granularity, campaign_id, account_ids
         )
 
         # Calculate derived metrics for each data point
         data_points = []
         for point in time_series:
             data_point = TimeSeriesDataPoint(
-                date=point['date'],
+                date=str(point['date']),
                 spend=point['spend'],
                 clicks=point['clicks'],
                 impressions=point['impressions'],
@@ -297,7 +315,7 @@ class MetricsService:
         Returns:
             List of AgeGenderBreakdown
         """
-        breakdowns = self.repository.get_age_gender_breakdown(
+        breakdowns = self.breakdown_repo.get_age_gender_breakdown(
             start_date, end_date, campaign_id, group_by, campaign_status, search_query
         )
 
@@ -308,12 +326,17 @@ class MetricsService:
                 age_group=breakdown['age_group'],
                 gender=breakdown['gender'],
                 spend=breakdown['spend'],
-                clicks=breakdown['clicks'],
                 impressions=breakdown['impressions'],
+                clicks=breakdown['clicks'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
                 cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
-                conversions=0,  # Not in fact_age_gender_metrics table
-                roas=0.0      # Would need to join with fact_action_metrics
+                cpm=self.calculator.cpm(breakdown['spend'], breakdown['impressions']),
+                conversions=0,
+                conversion_value=0.0,
+                purchases=0,
+                purchase_value=0.0,
+                roas=None,
+                cpa=0.0
             )
             age_gender_metrics.append(metrics)
 
@@ -338,7 +361,7 @@ class MetricsService:
         Returns:
             List of PlacementBreakdown
         """
-        breakdowns = self.repository.get_placement_breakdown(
+        breakdowns = self.breakdown_repo.get_placement_breakdown(
             start_date, end_date, campaign_id, campaign_status, search_query
         )
 
@@ -348,12 +371,17 @@ class MetricsService:
             metrics = PlacementBreakdown(
                 placement_name=breakdown['placement_name'],
                 spend=breakdown['spend'],
-                clicks=breakdown['clicks'],
                 impressions=breakdown['impressions'],
+                clicks=breakdown['clicks'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
                 cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
-                conversions=0,  # Not in fact_placement_metrics table
-                roas=0.0      # Would need to join with fact_action_metrics
+                cpm=self.calculator.cpm(breakdown['spend'], breakdown['impressions']),
+                conversions=0,
+                conversion_value=0.0,
+                purchases=0,
+                purchase_value=0.0,
+                roas=None,
+                cpa=0.0
             )
             placement_metrics.append(metrics)
 
@@ -378,7 +406,7 @@ class MetricsService:
         Returns:
             List of PlacementBreakdown (reusing structure as it fits)
         """
-        breakdowns = self.repository.get_platform_breakdown(
+        breakdowns = self.breakdown_repo.get_platform_breakdown(
             start_date, end_date, campaign_id, campaign_status, search_query
         )
 
@@ -388,12 +416,17 @@ class MetricsService:
             metrics = PlacementBreakdown(
                 placement_name=breakdown['platform'],
                 spend=breakdown['spend'],
-                clicks=breakdown['clicks'],
                 impressions=breakdown['impressions'],
+                clicks=breakdown['clicks'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
                 cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
+                cpm=self.calculator.cpm(breakdown['spend'], breakdown['impressions']),
                 conversions=0,
-                roas=0.0
+                conversion_value=0.0,
+                purchases=0,
+                purchase_value=0.0,
+                roas=None,
+                cpa=0.0
             )
             platform_metrics.append(metrics)
 
@@ -420,7 +453,7 @@ class MetricsService:
         Returns:
             List of CreativeMetrics
         """
-        creatives = self.repository.get_creative_metrics(
+        creatives = self.creative_repo.get_creative_metrics(
             start_date, end_date, is_video, min_spend
         )
 
@@ -515,7 +548,7 @@ class MetricsService:
         """
         Get adset-level breakdown with calculated metrics.
         """
-        adsets = self.repository.get_adset_breakdown(
+        adsets = self.adset_repo.get_adset_breakdown(
             start_date, end_date, campaign_id, campaign_status, search_query
         )
 
@@ -563,7 +596,7 @@ class MetricsService:
         Returns:
             List of CountryBreakdown
         """
-        breakdowns = self.repository.get_country_breakdown(
+        breakdowns = self.breakdown_repo.get_country_breakdown(
             start_date, end_date, campaign_id, top_n, campaign_status, search_query
         )
 
@@ -573,11 +606,17 @@ class MetricsService:
             metrics = CountryBreakdown(
                 country=breakdown['country'],
                 spend=breakdown['spend'],
-                clicks=breakdown['clicks'],
                 impressions=breakdown['impressions'],
+                clicks=breakdown['clicks'],
                 ctr=self.calculator.ctr(breakdown['clicks'], breakdown['impressions']),
-                conversions=0,  # Not in fact_country_metrics table
-                roas=0.0      # Would need to join with fact_action_metrics
+                cpc=self.calculator.cpc(breakdown['spend'], breakdown['clicks']),
+                cpm=self.calculator.cpm(breakdown['spend'], breakdown['impressions']),
+                conversions=0,
+                conversion_value=0.0,
+                purchases=0,
+                purchase_value=0.0,
+                roas=None,
+                cpa=0.0
             )
             country_metrics.append(metrics)
 
@@ -600,7 +639,7 @@ class MetricsService:
         Returns:
             CreativeDetailResponse or None
         """
-        detail = self.repository.get_creative_detail(creative_id, start_date, end_date)
+        detail = self.creative_repo.get_creative_detail(creative_id, start_date, end_date)
 
         if not detail:
             return None
@@ -664,7 +703,7 @@ class MetricsService:
             )
             trend.append(trend_point)
 
-        from api.schemas.responses import CreativeDetailResponse
+        from backend.api.schemas.responses import CreativeDetailResponse
         return CreativeDetailResponse(
             creative_id=detail['creative_id'],
             title=detail['title'],
@@ -697,7 +736,7 @@ class MetricsService:
         Returns:
             CreativeComparisonResponse
         """
-        creatives = self.repository.get_creative_comparison(
+        creatives = self.creative_repo.get_creative_comparison(
             creative_ids, start_date, end_date
         )
 
@@ -735,7 +774,7 @@ class MetricsService:
             }
 
         # Build comparison metrics
-        from api.schemas.responses import CreativeComparisonMetric, CreativeComparisonResponse
+        from backend.api.schemas.responses import CreativeComparisonMetric, CreativeComparisonResponse
 
         # Determine which metrics to compare
         if not metrics:
@@ -794,10 +833,10 @@ class MetricsService:
         Returns:
             VideoInsightsResponse
         """
-        insights_data = self.repository.get_video_insights(start_date, end_date)
+        insights_data = self.creative_repo.get_video_insights(start_date, end_date)
 
         # Build top videos list with calculated metrics
-        from api.schemas.responses import VideoInsightsResponse, VideoInsight
+        from backend.api.schemas.responses import VideoInsightsResponse, VideoInsight
 
         top_videos = []
         for video in insights_data['top_videos']:

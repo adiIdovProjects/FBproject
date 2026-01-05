@@ -6,15 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Request
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-import sys
-import os
 
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db, get_current_user
-from api.services.ai_service import AIService
-from api.schemas.responses import AIQueryResponse
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.ai_service import AIService
+from backend.api.schemas.responses import AIQueryResponse
 
 router = APIRouter(
     prefix="/api/v1/ai", 

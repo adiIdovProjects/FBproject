@@ -25,11 +25,8 @@ from facebook_business.adobjects.ad import Ad
 from facebook_business.exceptions import FacebookRequestError
 
 # Import config
-try:
-    from config.settings import BASE_FIELDS_TO_PULL, CHUNK_DAYS
-except ImportError:
-    BASE_FIELDS_TO_PULL = []
-    CHUNK_DAYS = 7
+from backend.config.settings import BASE_FIELDS_TO_PULL, CHUNK_DAYS
+from backend.config.base_config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +41,10 @@ class FacebookExtractor:
     """Facebook Marketing API data extractor"""
     
     def __init__(self):
-        self.account_id = os.getenv("FACEBOOK_AD_ACCOUNT_ID")
-        self.access_token = os.getenv("FACEBOOK_ACCESS_TOKEN")
-        self.app_id = os.getenv("FACEBOOK_APP_ID")
-        self.app_secret = os.getenv("FACEBOOK_APP_SECRET")
+        self.account_id = settings.FACEBOOK_AD_ACCOUNT_ID
+        self.access_token = settings.FACEBOOK_ACCESS_TOKEN
+        self.app_id = settings.FACEBOOK_APP_ID
+        self.app_secret = settings.FACEBOOK_APP_SECRET
         self.initialized = False
         self.logger = logging.getLogger(self.__class__.__name__)
         self._video_cache = {}  # Cache for AdVideo data

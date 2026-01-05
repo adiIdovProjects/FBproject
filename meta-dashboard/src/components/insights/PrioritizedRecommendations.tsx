@@ -27,7 +27,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
   return (
     <div className="mb-8">
       <h2 className={`text-xl font-bold text-gray-100 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-        {t('strategic_recommendations')}
+        {t('insights.strategic_recommendations')}
       </h2>
 
       <div className="grid gap-6">
@@ -36,7 +36,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
           <div className="bg-gradient-to-br from-red-900/30 to-orange-900/30 border border-red-500/30 rounded-xl p-6">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
               <span className="text-2xl">🚀</span>
-              <h3 className="text-lg font-semibold text-red-200">{t('high_priority')}</h3>
+              <h3 className="text-lg font-semibold text-red-200">{t('insights.high_priority')}</h3>
             </div>
             <div className="space-y-3">
               {highPriority.map((item, idx) => (
@@ -54,7 +54,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
           <div className="bg-gradient-to-br from-yellow-900/30 to-amber-900/30 border border-yellow-500/30 rounded-xl p-6">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
               <span className="text-2xl">🎯</span>
-              <h3 className="text-lg font-semibold text-yellow-200">{t('medium_priority')}</h3>
+              <h3 className="text-lg font-semibold text-yellow-200">{t('insights.medium_priority')}</h3>
             </div>
             <div className="space-y-3">
               {mediumPriority.map((item, idx) => (
@@ -72,7 +72,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
           <div className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-xl p-6">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
               <span className="text-2xl">💡</span>
-              <h3 className="text-lg font-semibold text-blue-200">{t('test_and_learn')}</h3>
+              <h3 className="text-lg font-semibold text-blue-200">{t('insights.test_and_learn')}</h3>
             </div>
             <div className="space-y-3">
               {lowPriority.map((item, idx) => (

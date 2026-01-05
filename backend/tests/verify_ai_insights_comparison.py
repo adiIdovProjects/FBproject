@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from api.services.insights_service import InsightsService
+from backend.api.services.insights_service import InsightsService
 
 def test_prepare_data_summary_with_comparison():
     # Mock DB session

@@ -36,19 +36,19 @@ export const VideoInsightsSection: React.FC<VideoInsightsSectionProps> = ({
             {/* Overview Stats */}
             <Grid numItemsSm={2} numItemsLg={4} className="gap-6">
                 <Card className="bg-gray-800 border-gray-700" decoration="left" decorationColor="indigo">
-                    <Text className="text-gray-400">{t('extracted_avg_hook_rate')}</Text>
+                    <Text className="text-gray-400">{t('creatives.hook_rate')}</Text>
                     <Metric className="text-indigo-400">{data.average_hook_rate.toFixed(1)}%</Metric>
                 </Card>
                 <Card className="bg-gray-800 border-gray-700" decoration="left" decorationColor="green">
-                    <Text className="text-gray-400">{t('extracted_avg_completion')}</Text>
+                    <Text className="text-gray-400">{t('creatives.avg_completion')}</Text>
                     <Metric className="text-green-400">{data.average_completion_rate.toFixed(1)}%</Metric>
                 </Card>
                 <Card className="bg-gray-800 border-gray-700" decoration="left" decorationColor="blue">
-                    <Text className="text-gray-400">{t('extracted_avg_hold_rate')}</Text>
+                    <Text className="text-gray-400">{t('creatives.hold_rate')}</Text>
                     <Metric className="text-blue-400">{data.average_hold_rate.toFixed(1)}%</Metric>
                 </Card>
                 <Card className="bg-gray-800 border-gray-700" decoration="left" decorationColor="purple">
-                    <Text className="text-gray-400">{t('extracted_avg_video_time')}</Text>
+                    <Text className="text-gray-400">{t('creatives.avg_watch_time')}</Text>
                     <Metric className="text-purple-400">{data.average_video_time.toFixed(1)}s</Metric>
                 </Card>
             </Grid>
@@ -57,7 +57,7 @@ export const VideoInsightsSection: React.FC<VideoInsightsSectionProps> = ({
             <Card className="bg-gray-800 border-gray-700">
                 <div className="flex items-center gap-2 mb-4">
                     <Lightbulb className="w-5 h-5 text-amber-400" />
-                    <h3 className="text-xl font-bold text-gray-100">{t('extracted_video_patterns_discovered')}</h3>
+                    <h3 className="text-xl font-bold text-gray-100">{t('creatives.video_deep_dive')}</h3>
                 </div>
 
                 <div className="space-y-4">
@@ -74,7 +74,7 @@ export const VideoInsightsSection: React.FC<VideoInsightsSectionProps> = ({
                     ))}
 
                     {data.insights.length === 0 && (
-                        <Text className="text-gray-500 italic">{t('extracted_no_significant_video_patterns_detected_for_this_period')}</Text>
+                        <Text className="text-gray-500 italic">{t('common.no_data_available')}</Text>
                     )}
                 </div>
             </Card>

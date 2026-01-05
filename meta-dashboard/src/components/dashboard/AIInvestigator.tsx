@@ -7,15 +7,15 @@ import ReactMarkdown from 'react-markdown';
 import { useTranslations } from 'next-intl';
 
 const DEFAULT_QUESTIONS = [
-    "How this week compare to last week?",
-    "What is the best ad?",
-    "How this ad works this week?",
-    "Which country has the best CPC?",
-    "What is the spend distribution by age?",
-    "How do Instagram Stories perform vs Feed?",
-    "What is our average ROAS this month?",
-    "Which creative title is most effective?",
-    "Show me an overview of leads this week."
+    "ai_investigator.questions.compare_weeks",
+    "ai_investigator.questions.best_ad",
+    "ai_investigator.questions.ad_performance",
+    "ai_investigator.questions.best_country_cpc",
+    "ai_investigator.questions.spend_by_age",
+    "ai_investigator.questions.ig_vs_feed",
+    "ai_investigator.questions.avg_roas",
+    "ai_investigator.questions.creative_effectiveness",
+    "ai_investigator.questions.leads_overview"
 ];
 
 export const AIInvestigator: React.FC = () => {
@@ -44,7 +44,7 @@ export const AIInvestigator: React.FC = () => {
             const result = await queryAIInvestigator(text);
             setResponse(result.answer);
         } catch (err: any) {
-            setError(err.message || 'Something went wrong. Please try again.');
+            setError(err.message || t('common.error_loading'));
         } finally {
             setLoading(false);
         }
@@ -56,10 +56,10 @@ export const AIInvestigator: React.FC = () => {
             <div className="text-center space-y-4 py-4">
                 <h1 className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-3">
                     <Sparkles className="w-8 h-8 text-accent animate-pulse" />
-                    {t('ai_investigator') || 'AI Investigator'}
+                    {t('ai_investigator.title')}
                 </h1>
                 <p className="text-gray-400 text-lg max-w-lg mx-auto font-medium">
-                    {t('ai_investigator_description') || 'Ask anything about your performance, trends, or creative insights.'}
+                    {t('ai_investigator.subtitle')}
                 </p>
             </div>
 
@@ -75,7 +75,7 @@ export const AIInvestigator: React.FC = () => {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleQuery(query)}
-                            placeholder="Ask a question about your ads..."
+                            placeholder={t('ai_investigator.placeholder')}
                             className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 px-4 py-3 text-lg font-medium"
                             disabled={loading}
                         />
@@ -101,7 +101,7 @@ export const AIInvestigator: React.FC = () => {
                                 <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin"></div>
                                 <Sparkles className="w-4 h-4 text-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
                             </div>
-                            <p className="text-gray-400 animate-pulse font-bold tracking-tight uppercase text-xs">Investigating your data...</p>
+                            <p className="text-gray-400 animate-pulse font-bold tracking-tight uppercase text-xs">{t('ai_investigator.investigating')}</p>
                         </div>
                     </div>
                 )}
@@ -111,13 +111,13 @@ export const AIInvestigator: React.FC = () => {
                     <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 flex items-start space-x-4">
                         <AlertCircle className="w-6 h-6 text-red-400 mt-1 flex-shrink-0" />
                         <div className="space-y-1">
-                            <h3 className="text-red-400 font-bold text-lg">Investigation Failed</h3>
+                            <h3 className="text-red-400 font-bold text-lg">{t('ai_investigator.failed')}</h3>
                             <p className="text-red-400/80 font-medium">{error}</p>
                             <button
                                 onClick={() => handleQuery(query)}
                                 className="text-white bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg mt-4 text-sm font-bold transition-colors"
                             >
-                                Try Again
+                                {t('common.try_again')}
                             </button>
                         </div>
                     </div>
@@ -126,7 +126,7 @@ export const AIInvestigator: React.FC = () => {
                 {/* Default Questions Grid - Shown below if no response yet */}
                 {!response && !loading && !error && (
                     <div className="space-y-4">
-                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] px-2 text-center">Suggested Questions</p>
+                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] px-2 text-center">{t('ai_investigator.suggested_questions')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {DEFAULT_QUESTIONS.map((q, idx) => (
                                 <button
@@ -135,7 +135,7 @@ export const AIInvestigator: React.FC = () => {
                                     className="p-6 bg-white/5 border border-white/5 rounded-2xl text-left hover:border-accent/40 hover:bg-white/10 transition-all group relative overflow-hidden active:scale-95"
                                 >
                                     <p className="text-gray-400 group-hover:text-white transition-colors leading-relaxed font-bold text-sm">
-                                        {q}
+                                        {t(q as any)}
                                     </p>
                                     <div className="mt-4 flex items-center text-accent text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
                                         Ask Gemini <ChevronRight className="w-3 h-3 ml-1" />
@@ -152,13 +152,13 @@ export const AIInvestigator: React.FC = () => {
                         <div className="bg-white/5 px-6 py-4 border-b border-white/5 flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                                 <Sparkles className="w-4 h-4 text-accent" />
-                                <span className="text-xs font-black uppercase tracking-widest text-gray-400">Gemini Analysis</span>
+                                <span className="text-xs font-black uppercase tracking-widest text-gray-400">{t('ai_investigator.gemini_analysis')}</span>
                             </div>
                             <button
                                 onClick={() => { setResponse(null); setQuery(''); }}
                                 className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
                             >
-                                Clear
+                                {t('common.clear')}
                             </button>
                         </div>
                         <div className="p-8 prose prose-invert max-w-none prose-p:text-gray-300 prose-headings:text-white prose-strong:text-accent prose-blockquote:border-accent prose-li:text-gray-300">

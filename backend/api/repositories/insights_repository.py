@@ -8,6 +8,9 @@ from datetime import date
 from typing import Dict, Any, List, Optional
 
 from .metrics_repository import MetricsRepository
+from .campaign_repository import CampaignRepository
+from .timeseries_repository import TimeSeriesRepository
+from .breakdown_repository import BreakdownRepository
 
 
 class InsightsRepository:
@@ -16,6 +19,9 @@ class InsightsRepository:
     def __init__(self, db: Session):
         self.db = db
         self.metrics_repo = MetricsRepository(db)
+        self.campaign_repo = CampaignRepository(db)
+        self.timeseries_repo = TimeSeriesRepository(db)
+        self.breakdown_repo = BreakdownRepository(db)
 
     def get_insights_data(
         self,
@@ -56,7 +62,7 @@ class InsightsRepository:
             prev_overview = self.metrics_repo.get_aggregated_metrics(prev_start_date, prev_end_date, account_ids=account_ids)
 
         # Get campaign breakdown (filtered if campaign_filter provided)
-        campaigns = self.metrics_repo.get_campaign_breakdown(
+        campaigns = self.campaign_repo.get_campaign_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_status=None,
@@ -68,7 +74,7 @@ class InsightsRepository:
         )
 
         # Get daily trends for week-over-week comparisons
-        daily_trends = self.metrics_repo.get_time_series(
+        daily_trends = self.timeseries_repo.get_time_series(
             start_date=start_date,
             end_date=end_date,
             granularity='day',
@@ -129,14 +135,22 @@ class InsightsRepository:
         """
         # Map breakdown_type to repository methods
         breakdown_methods = {
-            'adset': lambda sd, ed, cf, acc_ids: self.metrics_repo.get_campaign_breakdown(
+            'adset': lambda sd, ed, cf, acc_ids: self.campaign_repo.get_campaign_breakdown(
                 start_date=sd, end_date=ed, search_query=cf,
                 sort_by='spend', sort_direction='desc', limit=50, account_ids=acc_ids
             ),
-            'platform': lambda sd, ed, cf, acc_ids: [],  # TODO: Need platform breakdown method
-            'placement': lambda sd, ed, cf, acc_ids: [],  # TODO: Need placement breakdown method
-            'age-gender': lambda sd, ed, cf, acc_ids: [],  # TODO: Need demographic breakdown method
-            'country': lambda sd, ed, cf, acc_ids: []  # TODO: Need country breakdown method
+            'platform': lambda sd, ed, cf, acc_ids: self.breakdown_repo.get_platform_breakdown(
+                start_date=sd, end_date=ed, search_query=cf
+            ),
+            'placement': lambda sd, ed, cf, acc_ids: self.breakdown_repo.get_placement_breakdown(
+                start_date=sd, end_date=ed, search_query=cf
+            ),
+            'age-gender': lambda sd, ed, cf, acc_ids: self.breakdown_repo.get_age_gender_breakdown(
+                start_date=sd, end_date=ed, search_query=cf
+            ),
+            'country': lambda sd, ed, cf, acc_ids: self.breakdown_repo.get_country_breakdown(
+                start_date=sd, end_date=ed, search_query=cf
+            )
         }
 
         # For now, return campaigns for adset, empty for others

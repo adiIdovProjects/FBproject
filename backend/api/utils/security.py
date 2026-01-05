@@ -2,12 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Union
 from jose import jwt
 from passlib.context import CryptContext
-import sys
-import os
-
-# Add backend directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from config.base_config import settings
+from backend.config.base_config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

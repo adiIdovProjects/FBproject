@@ -87,8 +87,8 @@ export default function ConnectPage() {
                 {status === 'verifying' && (
                     <div className="flex flex-col items-center gap-4">
                         <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-                        <h2 className="text-xl font-bold text-white">Verifying Connection...</h2>
-                        <p className="text-gray-400 text-sm">Securing your session</p>
+                        <h2 className="text-xl font-bold text-white">{t('auth.verifying_connection')}</h2>
+                        <p className="text-gray-400 text-sm">{t('auth.securing_session')}</p>
                     </div>
                 )}
 
@@ -99,9 +99,9 @@ export default function ConnectPage() {
                         </div>
 
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Connect Facebook Ads</h2>
+                            <h2 className="text-2xl font-bold text-white mb-2">{t('auth.connect_facebook_title')}</h2>
                             <p className="text-gray-400 text-sm">
-                                Link your Facebook account to import your ad data and start analyzing.
+                                {t('auth.connect_facebook_desc')}
                             </p>
                         </div>
 
@@ -110,14 +110,14 @@ export default function ConnectPage() {
                             className="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#1864D2] text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl group"
                         >
                             <Facebook className="w-5 h-5 fill-current" />
-                            <span>Connect Facebook Account</span>
+                            <span>{t('auth.connect_facebook_button')}</span>
                         </button>
 
                         <button
                             onClick={() => router.push('/en')}
                             className="text-gray-500 text-xs hover:text-gray-300 transition-colors"
                         >
-                            Skip for now (Demo Mode)
+                            {t('auth.skip_for_now')}
                         </button>
                     </div>
                 )}
@@ -127,8 +127,8 @@ export default function ConnectPage() {
                         <div className="w-12 h-12 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center">
                             <CheckCircle className="w-6 h-6" />
                         </div>
-                        <h2 className="text-xl font-bold text-white">All Set!</h2>
-                        <p className="text-gray-400 text-sm">Redirecting to dashboard...</p>
+                        <h2 className="text-xl font-bold text-white">{t('auth.all_set')}</h2>
+                        <p className="text-gray-400 text-sm">{t('auth.redirecting')}</p>
                     </div>
                 )}
 
@@ -137,13 +137,13 @@ export default function ConnectPage() {
                         <div className="w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center">
                             <ShieldAlert className="w-6 h-6" />
                         </div>
-                        <h2 className="text-xl font-bold text-white">Connection Failed</h2>
+                        <h2 className="text-xl font-bold text-white">{t('auth.connection_failed')}</h2>
                         <p className="text-red-400 text-sm px-4">{errorMessage}</p>
                         <button
                             onClick={() => router.push('/en/login')}
                             className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-bold"
                         >
-                            Return to Login
+                            {t('auth.return_to_login')}
                         </button>
                     </div>
                 )}

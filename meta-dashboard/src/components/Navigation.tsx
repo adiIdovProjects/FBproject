@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Navigation Component
  * Shared navigation for switching between dashboard pages
@@ -16,11 +18,11 @@ export const Navigation: React.FC = () => {
     const isRTL = locale === 'ar' || locale === 'he';
 
     const navItems = [
-        { name: t('dashboard') || 'Dashboard', href: `/${locale}`, icon: LayoutDashboard },
-        { name: t('extracted_campaigns') || 'Campaigns', href: `/${locale}/campaigns`, icon: BarChart3 },
-        { name: t('creatives') || 'Creatives', href: `/${locale}/creatives`, icon: Palette },
-        { name: t('insights') || 'Insights', href: `/${locale}/insights`, icon: Lightbulb },
-        { name: t('ai_investigator') || 'AI Investigator', href: `/${locale}/ai-investigator`, icon: Search },
+        { name: t('nav.dashboard'), href: `/${locale}`, icon: LayoutDashboard },
+        { name: t('nav.campaigns'), href: `/${locale}/campaigns`, icon: BarChart3 },
+        { name: t('nav.creatives'), href: `/${locale}/creatives`, icon: Palette },
+        { name: t('nav.insights'), href: `/${locale}/insights`, icon: Lightbulb },
+        { name: t('nav.ai_investigator'), href: `/${locale}/ai-investigator`, icon: Search },
     ];
 
     return (

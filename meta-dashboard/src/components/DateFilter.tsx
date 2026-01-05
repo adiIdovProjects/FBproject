@@ -65,11 +65,11 @@ const DateFilter: React.FC<DateFilterProps> = ({
         const option = QUICK_SELECT_OPTIONS.find(opt => opt.key === selectedKey);
 
         if (selectedKey === 'custom') {
-            currentLabel = tSafe('custom');
+            currentLabel = t('date.custom');
             return { finalStartDate: customStartDate, finalEndDate: customEndDate, label: currentLabel };
         }
 
-        currentLabel = option ? tSafe(option.labelKey) : tSafe(DEFAULT_DATE_RANGE_KEY);
+        currentLabel = option ? t(`date.${option.key}`) : t(`date.${DEFAULT_DATE_RANGE_KEY}`);
 
         const calculated = calculateDateRange(selectedKey);
         start = calculated.start;
@@ -110,7 +110,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
      * פונקציית עזר לעיצוב התאריך המוצג על הכפתור: DD-MM
      */
     const formatDisplayDate = (dateString: string | null): string => {
-        if (!dateString) return tSafe('select_date');
+        if (!dateString) return t('date.select_range');
         try {
             const parts = dateString.split('-');
             if (parts.length === 3) {
@@ -162,7 +162,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                         <div className="flex justify-between items-center">
                             <p className={`text-accent font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} text-[10px]`}>
                                 <Clock className="w-3 h-3" />
-                                <span>{tSafe('selected_range')}</span>
+                                <span>{t('date.selected_range')}</span>
                             </p>
                             <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
                                 <X className="w-4 h-4" />
@@ -181,7 +181,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                                 onClick={() => handleQuickSelect(opt.key)}
                                 className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all duration-200 ${selectedKey === opt.key ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
                             >
-                                {tSafe(opt.labelKey)}
+                                {t(`date.${opt.key}`)}
                             </button>
                         ))}
                     </div>
@@ -190,11 +190,11 @@ const DateFilter: React.FC<DateFilterProps> = ({
                     <div className="p-4 border-t border-white/[0.05] bg-black/20">
                         <h4 className={`text-gray-400 text-[10px] font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} mb-3`}>
                             <SlidersHorizontal className="w-3 h-3" />
-                            <span>{tSafe('custom_selection')}</span>
+                            <span>{t('date.custom')}</span>
                         </h4>
                         <div className="flex flex-col space-y-3">
                             <label className="flex flex-col text-[10px] font-bold text-gray-500 uppercase tracking-widest gap-1.5">
-                                {tSafe('start_date')}
+                                {t('date.start')}
                                 <input
                                     type="date"
                                     value={customStartDate || ''}
@@ -207,7 +207,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                                 />
                             </label>
                             <label className="flex flex-col text-[10px] font-bold text-gray-500 uppercase tracking-widest gap-1.5">
-                                {tSafe('end_date')}
+                                {t('date.end')}
                                 <input
                                     type="date"
                                     value={customEndDate || ''}
@@ -228,7 +228,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                             onClick={handleClear}
                             className="w-full py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
                         >
-                            {tSafe('reset_default')}
+                            {t('date.reset_default')}
                         </button>
                     </div>
                 </div>

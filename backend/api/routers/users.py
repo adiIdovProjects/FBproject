@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from api.dependencies import get_db, get_current_user
+from backend.api.dependencies import get_db, get_current_user
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime

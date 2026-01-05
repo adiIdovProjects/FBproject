@@ -9,6 +9,18 @@ class Settings(BaseSettings):
     APP_NAME: str = "Facebook Ads Analytics API"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+    DEV_BYPASS_AUTH: bool = False
+
+    @field_validator("DEV_BYPASS_AUTH", mode="before")
+    @classmethod
+    def strip_and_parse_bool(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v_clean = v.strip().lower()
+            if v_clean in ("true", "1", "yes", "on"):
+                return True
+            if v_clean in ("false", "0", "no", "off", ""):
+                return False
+        return v
     
     # Database Settings
     POSTGRES_USER: str = "postgres"
@@ -22,8 +34,10 @@ class Settings(BaseSettings):
         return f"postgresql://{self.POSTGRES_USER}:{self.DB_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # Facebook API Settings
-    FB_APP_ID: Optional[str] = None
-    FB_APP_SECRET: Optional[str] = None
+    FACEBOOK_APP_ID: Optional[str] = None
+    FACEBOOK_APP_SECRET: Optional[str] = None
+    FACEBOOK_ACCESS_TOKEN: Optional[str] = None
+    FACEBOOK_AD_ACCOUNT_ID: Optional[str] = None
     FB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/facebook/callback"
     
     # Security Settings

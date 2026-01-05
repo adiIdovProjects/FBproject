@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 from etl.main import ETLPipeline
-from config.settings import FIRST_PULL_DAYS
+from backend.config.settings import FIRST_PULL_DAYS
 import logging
 
 # Setup logging

@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.getcwd())
 sys.path.insert(0, os.path.join(os.getcwd(), 'api'))
 
-from api.dependencies import SessionLocal
+from backend.api.dependencies import SessionLocal
 from sqlalchemy import text
 
 db = SessionLocal()

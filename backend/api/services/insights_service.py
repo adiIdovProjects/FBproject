@@ -13,9 +13,9 @@ from typing import Dict, Any, List, Optional
 import google.generativeai as genai
 from sqlalchemy.orm import Session
 
-from ..repositories.insights_repository import InsightsRepository
-from .comparison_service import ComparisonService
-from config.settings import GEMINI_MODEL
+from backend.api.repositories.insights_repository import InsightsRepository
+from backend.api.services.comparison_service import ComparisonService
+from backend.config.settings import GEMINI_MODEL
 
 logger = logging.getLogger(__name__)
 

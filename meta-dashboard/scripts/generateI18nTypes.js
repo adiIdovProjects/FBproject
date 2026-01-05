@@ -25,8 +25,21 @@ function generateTranslationKeys() {
     try {
         const messages = JSON.parse(fs.readFileSync(enPath, 'utf8'));
 
-        // חילוץ המפתחות
-        const keys = Object.keys(messages);
+        // פונקציה רקורסיבית לחילוץ מפתחות עם נקודות
+        function getKeys(obj, prefix = '') {
+            let keys = [];
+            for (const key in obj) {
+                const fullKey = prefix ? `${prefix}.${key}` : key;
+                if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                    keys = keys.concat(getKeys(obj[key], fullKey));
+                } else {
+                    keys.push(fullKey);
+                }
+            }
+            return keys;
+        }
+
+        const keys = getKeys(messages);
 
         // יצירת ה-Literal Union Type
         const unionType = keys.map(key => `'${key}'`).join(' | ');

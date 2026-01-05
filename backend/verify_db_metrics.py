@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 # Add backend to path
 sys.path.append(os.path.join(os.getcwd(), 'backend'))
 
-from utils.db_utils import get_db_engine
-from api.services.metrics_service import MetricsService
+from backend.utils.db_utils import get_db_engine
+from backend.api.services.metrics_service import MetricsService
 
 load_dotenv()
 

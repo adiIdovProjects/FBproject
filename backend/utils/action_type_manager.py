@@ -11,7 +11,7 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 try:
-    from config.settings import ACTION_TYPES_TO_TRACK
+    from backend.config.settings import ACTION_TYPES_TO_TRACK
 except ImportError:
     ACTION_TYPES_TO_TRACK = ['purchase', 'lead', 'add_to_cart']
 
@@ -47,7 +47,7 @@ def ensure_action_types_loaded(engine, df_actions: pd.DataFrame) -> None:
         df_actions: DataFrame with 'action_type' column
     """
     
-    from utils.db_utils import save_dataframe
+    from backend.utils.db_utils import save_dataframe
     
     if df_actions.empty or 'action_type' not in df_actions.columns:
         logger.warning("No action types to load")

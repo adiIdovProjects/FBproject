@@ -9,11 +9,7 @@ from typing import Dict
 
 logger = logging.getLogger(__name__)
 
-try:
-    from config.settings import UNKNOWN_MEMBER_ID, MISSING_DIM_VALUE
-except ImportError:
-    UNKNOWN_MEMBER_ID = 0
-    MISSING_DIM_VALUE = 'Unknown'
+from backend.config.settings import UNKNOWN_MEMBER_ID, MISSING_DIM_VALUE
 
 
 class FactBuilder:

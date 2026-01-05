@@ -71,6 +71,7 @@ export async function fetchMetricsWithTrends(dateRange: DateRange) {
       actions: overviewData.current_period.conversions,
       cpa: overviewData.current_period.cpa,
       roas: overviewData.current_period.roas,
+      conversion_value: overviewData.current_period.conversion_value,
       impressions: overviewData.current_period.impressions,
       cpm: overviewData.current_period.cpm,
     };
@@ -84,6 +85,7 @@ export async function fetchMetricsWithTrends(dateRange: DateRange) {
         actions: overviewData.previous_period.conversions,
         cpa: overviewData.previous_period.cpa,
         roas: overviewData.previous_period.roas,
+        conversion_value: overviewData.previous_period.conversion_value,
         impressions: overviewData.previous_period.impressions,
         cpm: overviewData.previous_period.cpm,
       }

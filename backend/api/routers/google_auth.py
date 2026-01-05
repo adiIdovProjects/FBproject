@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from api.dependencies import get_db
-from api.services.google_auth import GoogleAuthService
-from api.repositories.user_repository import UserRepository
-from api.utils.security import create_access_token
+from backend.api.dependencies import get_db
+from backend.api.services.google_auth import GoogleAuthService
+from backend.api.repositories.user_repository import UserRepository
+from backend.api.utils.security import create_access_token
 import os
 
 router = APIRouter(prefix="/api/v1/auth/google", tags=["google_auth"])
@@ -32,7 +32,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         
         # 3. Save to DB
         repo = UserRepository(db)
-        from models.user_schema import User
+        from backend.models.user_schema import User
         
         # Check if user exists by google_id
         user = db.query(User).filter(User.google_id == g_user["sub"]).first()

@@ -7,7 +7,7 @@ import os
 # Add backend to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from transformers.core_transformer import CoreTransformer
+from backend.transformers.core_transformer import CoreTransformer
 
 def test_placement_naming():
     transformer = CoreTransformer()

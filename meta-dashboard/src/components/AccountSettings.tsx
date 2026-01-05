@@ -26,12 +26,12 @@ export const AccountSettings: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>('profile');
 
     const tabs = [
-        { id: 'profile', label: t('profile'), icon: User },
-        { id: 'billing', label: t('billing'), icon: CreditCard },
-        { id: 'team', label: t('team'), icon: Users },
-        { id: 'security', label: t('security'), icon: Shield },
-        { id: 'conversions', label: t('conversions'), icon: Target },
-        { id: 'integrations', label: t('integrations'), icon: Settings },
+        { id: 'profile', label: t('settings.profile'), icon: User },
+        { id: 'billing', label: t('settings.billing'), icon: CreditCard },
+        { id: 'team', label: t('settings.team'), icon: Users },
+        { id: 'security', label: t('settings.security'), icon: Shield },
+        { id: 'conversions', label: t('settings.conversions'), icon: Target },
+        { id: 'integrations', label: t('settings.integrations'), icon: Settings },
     ];
 
     const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
@@ -81,19 +81,19 @@ export const AccountSettings: React.FC = () => {
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('personal_info')}</label>
+                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.personal_info')}</label>
                                 <input
                                     type="text"
-                                    placeholder="Full Name"
+                                    placeholder={t('settings.full_name')}
                                     defaultValue="Alex Morgen"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.email_address')}</label>
                                 <input
                                     type="email"
-                                    placeholder="Email"
+                                    placeholder={t('settings.email_address')}
                                     defaultValue="alex@example.com"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all"
                                 />
@@ -101,7 +101,7 @@ export const AccountSettings: React.FC = () => {
                         </div>
                         <div className="pt-6 border-t border-white/10 space-y-4">
                             <div className="flex flex-col gap-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('language') || 'Language'}</label>
+                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.language')}</label>
                                 <div className="w-fit">
                                     <LanguageSwitcher />
                                 </div>
@@ -110,7 +110,7 @@ export const AccountSettings: React.FC = () => {
 
                         <button className="flex items-center gap-2 bg-accent hover:bg-accent-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-accent/20">
                             <Save className="w-4 h-4" />
-                            {t('save_changes')}
+                            {t('common.save_changes')}
                         </button>
                     </div>
                 );
@@ -122,15 +122,15 @@ export const AccountSettings: React.FC = () => {
                                 <Crown className="w-12 h-12 text-accent/20" />
                             </div>
                             <div className="relative z-10">
-                                <h3 className="text-xl font-black text-white mb-1">{t('current_plan')}</h3>
+                                <h3 className="text-xl font-black text-white mb-1">{t('settings.current_plan')}</h3>
                                 <p className="text-accent font-bold text-sm uppercase tracking-widest mb-4">Pro Plan - $49/mo</p>
                                 <button className="bg-white text-black font-black py-2 px-6 rounded-lg text-sm hover:bg-gray-200 transition-all">
-                                    {t('upgrade_plan')}
+                                    {t('settings.upgrade_plan')}
                                 </button>
                             </div>
                         </div>
                         <div className="space-y-4">
-                            <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Payment Method</h4>
+                            <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.payment_method')}</h4>
                             <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="w-12 h-8 bg-gray-800 rounded border border-white/5 flex items-center justify-center">
                                     <span className="text-[10px] font-bold text-white">VISA</span>
@@ -148,10 +148,10 @@ export const AccountSettings: React.FC = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-white">Manage Team</h3>
+                            <h3 className="text-lg font-bold text-white">{t('settings.manage_team')}</h3>
                             <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-xl transition-all text-sm border border-white/10">
                                 <Plus className="w-4 h-4" />
-                                {t('invite_member')}
+                                {t('settings.invite_member')}
                             </button>
                         </div>
                         <div className="space-y-2">
@@ -183,8 +183,8 @@ export const AccountSettings: React.FC = () => {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-bold text-white">Two-Factor Authentication</p>
-                                    <p className="text-xs text-gray-500">Add an extra layer of security to your account.</p>
+                                    <p className="text-sm font-bold text-white">{t('settings.two_factor')}</p>
+                                    <p className="text-xs text-gray-500">{t('settings.two_factor_desc')}</p>
                                 </div>
                                 <div className="w-12 h-6 bg-accent rounded-full relative cursor-pointer">
                                     <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
@@ -192,10 +192,10 @@ export const AccountSettings: React.FC = () => {
                             </div>
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-bold text-white">Change Password</p>
-                                    <p className="text-xs text-gray-500">Last changed 3 months ago.</p>
+                                    <p className="text-sm font-bold text-white">{t('settings.change_password')}</p>
+                                    <p className="text-xs text-gray-500">{t('settings.change_password_desc')} 3 months ago.</p>
                                 </div>
-                                <button className="text-xs font-bold text-accent hover:underline">Update</button>
+                                <button className="text-xs font-bold text-accent hover:underline">{t('settings.update')}</button>
                             </div>
                         </div>
                     </div>
@@ -210,7 +210,7 @@ export const AccountSettings: React.FC = () => {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white">Facebook Ads</p>
-                                    <p className="text-[10px] text-green-500 font-bold uppercase">Connected</p>
+                                    <p className="text-[10px] text-green-500 font-bold uppercase">{t('settings.connected')}</p>
                                 </div>
                                 <ExternalLink className="w-4 h-4 text-gray-600" />
                             </div>
@@ -220,7 +220,7 @@ export const AccountSettings: React.FC = () => {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white">Google Ads</p>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase">Not Connected</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase">{t('settings.not_connected')}</p>
                                 </div>
                             </div>
                         </div>
@@ -230,9 +230,9 @@ export const AccountSettings: React.FC = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-2">{t('conversion_settings')}</h3>
+                            <h3 className="text-lg font-bold text-white mb-2">{t('settings.conversion_settings')}</h3>
                             <p className="text-sm text-gray-400 mb-6">
-                                {t('conversion_settings_description')}
+                                {t('settings.conversion_settings_description')}
                             </p>
 
                             {isLoadingActions ? (
@@ -255,7 +255,7 @@ export const AccountSettings: React.FC = () => {
                                                     {t.has(action.action_type) ? t(action.action_type) : action.action_type.replace(/_/g, ' ')}
                                                 </span>
                                                 <span className="text-[10px] uppercase tracking-wider opacity-50">
-                                                    {action.is_conversion ? t('tracking_as_conversion') : t('ignored')}
+                                                    {action.is_conversion ? t('settings.tracking_as_conversion') : t('settings.ignored')}
                                                 </span>
                                             </div>
                                             <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${action.is_conversion
@@ -308,7 +308,7 @@ export const AccountSettings: React.FC = () => {
                             {tabs.find(t => t.id === activeTab)?.label}
                         </h2>
                         <p className="text-gray-500 text-sm font-medium mt-1">
-                            Manage your {activeTab} settings and preferences.
+                            {t('settings.manage_settings_desc')}
                         </p>
                     </div>
                     {renderContent()}

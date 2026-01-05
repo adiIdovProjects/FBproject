@@ -14,7 +14,7 @@ from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
-from config.base_config import settings
+from backend.config.base_config import settings
 
 # Global lookup cache
 LOOKUP_CACHE: Dict[str, Dict[str, int]] = {}

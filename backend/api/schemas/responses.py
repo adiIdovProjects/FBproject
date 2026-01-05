@@ -79,6 +79,8 @@ class CampaignComparisonMetrics(CampaignMetrics):
     # Percentage changes
     spend_change_pct: Optional[float] = None
     conversions_change_pct: Optional[float] = None
+    roas_change_pct: Optional[float] = None
+    cpa_change_pct: Optional[float] = None
 
 
 class TimeSeriesDataPoint(BaseModel):
@@ -99,24 +101,34 @@ class AgeGenderBreakdown(BaseModel):
     age_group: str
     gender: str
     spend: float
-    clicks: int
     impressions: int
+    clicks: int
     ctr: float
     cpc: float
+    cpm: float = 0.0
     conversions: int = 0
+    conversion_value: float = 0.0
+    purchases: int = 0
+    purchase_value: float = 0.0
     roas: Optional[float] = None
+    cpa: float = 0.0
 
 
 class PlacementBreakdown(BaseModel):
     """Placement breakdown metrics"""
     placement_name: str
     spend: float
-    clicks: int
     impressions: int
+    clicks: int
     ctr: float
     cpc: float
+    cpm: float = 0.0
     conversions: int = 0
-    roas: float = 0.0
+    conversion_value: float = 0.0
+    purchases: int = 0
+    purchase_value: float = 0.0
+    roas: Optional[float] = None
+    cpa: float = 0.0
 class AdsetBreakdown(BaseModel):
     """Adset breakdown metrics with targeting info"""
     adset_id: int
@@ -140,11 +152,17 @@ class CountryBreakdown(BaseModel):
     """Country breakdown metrics"""
     country: str
     spend: float
-    clicks: int
     impressions: int
+    clicks: int
     ctr: float
+    cpc: float = 0.0
+    cpm: float = 0.0
     conversions: int = 0
-    roas: float = 0.0
+    conversion_value: float = 0.0
+    purchases: int = 0
+    purchase_value: float = 0.0
+    roas: Optional[float] = None
+    cpa: float = 0.0
 
 
 class CreativeMetrics(BaseModel):

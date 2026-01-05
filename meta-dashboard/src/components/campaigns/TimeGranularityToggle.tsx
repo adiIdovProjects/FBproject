@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * TimeGranularityToggle Component
  * Toggle between Day, Week, and Month time granularity
@@ -20,9 +22,9 @@ export const TimeGranularityToggle: React.FC<TimeGranularityToggleProps> = ({
 }) => {
   const t = useTranslations();
   const options: { value: TimeGranularity; label: string }[] = [
-    { value: 'day', label: t('day') || 'Day' },
-    { value: 'week', label: t('week') || 'Week' },
-    { value: 'month', label: t('month') || 'Month' },
+    { value: 'day', label: t('time.day') || 'Day' },
+    { value: 'week', label: t('time.week') || 'Week' },
+    { value: 'month', label: t('time.month') || 'Month' },
   ];
 
   return (

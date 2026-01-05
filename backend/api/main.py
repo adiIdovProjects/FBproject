@@ -6,9 +6,9 @@ This module initializes the FastAPI application with all routers and middleware.
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+# from slowapi import Limiter, _rate_limit_exceeded_handler
+# from slowapi.util import get_remote_address
+# from slowapi.errors import RateLimitExceeded
 import sys
 import os
 import logging
@@ -19,23 +19,26 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Add backend directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from api.dependencies import get_db
+
+from backend.api.dependencies import get_db
 from sqlalchemy.orm import Session
-from api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users
-from models import create_schema
-from utils.db_utils import get_db_engine
-from utils.logging_utils import setup_logging, get_logger
-from config.base_config import settings
+from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users
+from backend.models import create_schema
+from backend.utils.db_utils import get_db_engine
+from backend.utils.logging_utils import setup_logging, get_logger
+from backend.config.base_config import settings
 
 # Initialize structured logging
 setup_logging(level="DEBUG" if settings.DEBUG else "INFO")
 logger = get_logger(__name__)
 
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# Initialize rate limiter with in-memory storage (no Redis required)
+# DISABLED - causing backend to hang
+# limiter = Limiter(
+#     key_func=get_remote_address,
+#     storage_uri="memory://"  # Use in-memory storage instead of Redis
+# )
 
 # Create FastAPI application
 app = FastAPI(
@@ -46,51 +49,29 @@ app = FastAPI(
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None
 )
 
-# Request Logging Middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     request_id = str(uuid.uuid4())
-    print(f"DEBUG: log_requests starting for {request.method} {request.url.path}")
     start_time = time.time()
     
-    # Try to get user_id if token is present
-    user_id = "anonymous"
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        try:
-            token = auth_header.split(" ")[1]
-            from api.utils.security import ALGORITHM
-            from jose import jwt
-            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[ALGORITHM])
-            user_id = payload.get("sub", "anonymous")
-        except Exception as e:
-            # print(f"DEBUG: Token decode failed: {e}")
-            pass
-
     # Log request start
-    print(f"DEBUG: Processing request {request.method} {request.url.path}")
     logger.info(
         f"Request started: {request.method} {request.url.path}",
         extra={
             "request_id": request_id, 
-            "user_id": user_id,
             "method": request.method,
             "path": request.url.path,
             "ip": request.client.host if request.client else "unknown"
         }
     )
 
-    print(f"DEBUG: calling next for {request.url.path}")
     response = await call_next(request)
-    print(f"DEBUG: response status for {request.url.path} is {response.status_code}")
     
     process_time = time.time() - start_time
-    print(f"DEBUG: Finished request {request.method} {request.url.path} - Status: {response.status_code}")
     logger.info(
         f"Request finished: {request.method} {request.url.path} - {response.status_code}",
         extra={
             "request_id": request_id,
-            "user_id": user_id,
             "status_code": response.status_code,
             "duration_ms": round(process_time * 1000, 2)
         }
@@ -100,8 +81,9 @@ async def log_requests(request: Request, call_next):
     return response
 
 # Add rate limiter to app state
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# DISABLED - causing backend to hang
+# app.state.limiter = limiter
+# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS
 app.add_middleware(
@@ -124,6 +106,12 @@ app.include_router(actions.router)
 app.include_router(insights.router)
 app.include_router(reports.router)
 app.include_router(users.router)
+
+@app.get("/ping", tags=["health"])
+def ping():
+    """Simple ping endpoint without DB dependency."""
+    logger.debug("Ping endpoint reached")
+    return {"status": "ok", "timestamp": time.time()}
 
 @app.get("/health", tags=["health"])
 def health(db: Session = Depends(get_db)):
@@ -157,6 +145,7 @@ async def startup_event():
     logger.info("=" * 60)
     logger.info(f"🚀 {settings.APP_NAME} Starting Up")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info(f"DEV_BYPASS_AUTH: {settings.DEV_BYPASS_AUTH}")
     logger.info("=" * 60)
     
     # Ensure schema exists
@@ -181,9 +170,9 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "api.main:app",
+        "backend.api.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=int(os.getenv("PORT", 8000)),
         reload=settings.DEBUG,
         log_level="info"
     )

@@ -8,15 +8,11 @@ from datetime import date
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-import sys
-import os
 
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db, get_current_user
-from api.services.metrics_service import MetricsService
-from api.schemas.responses import (
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.metrics_service import MetricsService
+from backend.api.schemas.responses import (
     AgeGenderBreakdown,
     PlacementBreakdown,
     CountryBreakdown,

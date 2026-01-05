@@ -25,7 +25,7 @@ print(f"Env file exists: {os.path.exists(env_path)}")
 # Add parent directory to path
 sys.path.insert(0, backend_dir)
 
-from extractors.fb_api import FacebookExtractor
+from backend.extractors.fb_api import FacebookExtractor
 
 print("=" * 80)
 print("FACEBOOK API RESPONSE TEST")

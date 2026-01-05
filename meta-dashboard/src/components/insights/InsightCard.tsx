@@ -4,13 +4,14 @@
  */
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import Link from 'next/link';
 
 export interface InsightItem {
   type: string; // "opportunity", "alert", "trend", "suggestion"
   icon: string; // Emoji
   text: string;
-  priority?: string | null;
+  priority?: string | null; // "critical", "warning", "opportunity", "info"
 }
 
 interface InsightCardProps {
@@ -21,6 +22,7 @@ interface InsightCardProps {
 
 export default function InsightCard({ insights, isLoading, isRTL = false }: InsightCardProps) {
   const t = useTranslations();
+  const locale = useLocale();
 
   if (isLoading) {
     return (
@@ -42,11 +44,36 @@ export default function InsightCard({ insights, isLoading, isRTL = false }: Insi
     return null;
   }
 
+  // Determine border color based on highest priority insight
+  const getHighestPriority = () => {
+    const priorities = insights.map(i => i.priority).filter(Boolean);
+    if (priorities.includes('critical')) return 'critical';
+    if (priorities.includes('warning')) return 'warning';
+    if (priorities.includes('opportunity')) return 'opportunity';
+    return 'info';
+  };
+
+  const highestPriority = getHighestPriority();
+
+  const borderColorClass = {
+    critical: 'border-red-500/50',
+    warning: 'border-orange-500/50',
+    opportunity: 'border-green-500/50',
+    info: 'border-indigo-500/20'
+  }[highestPriority];
+
+  const gradientClass = {
+    critical: 'from-red-900/30 to-red-800/20',
+    warning: 'from-orange-900/30 to-yellow-900/20',
+    opportunity: 'from-green-900/30 to-emerald-900/20',
+    info: 'from-indigo-900/30 to-purple-900/30'
+  }[highestPriority];
+
   return (
-    <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border border-indigo-500/20 rounded-xl p-5 shadow-lg">
+    <div className={`bg-gradient-to-br ${gradientClass} border ${borderColorClass} rounded-xl p-5 shadow-lg`}>
       <div className={`flex items-center gap-2 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
         <h3 className="text-sm font-semibold text-indigo-200">
-          {t('quick_insights')}
+          {t('dashboard.quick_insights')}
         </h3>
         <span className="text-indigo-400/60 text-xs">✨ AI-Powered</span>
       </div>
@@ -61,6 +88,19 @@ export default function InsightCard({ insights, isLoading, isRTL = false }: Insi
             <p className="text-sm text-gray-200 leading-relaxed flex-1">{insight.text}</p>
           </div>
         ))}
+      </div>
+
+      {/* View Full Analysis Button */}
+      <div className={`mt-4 pt-4 border-t border-white/10 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <Link
+          href={`/${locale}/insights`}
+          className="inline-flex items-center gap-2 text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
+        >
+          <span>{t('dashboard.view_full_analysis') || 'View Full Analysis'}</span>
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       </div>
     </div>
   );

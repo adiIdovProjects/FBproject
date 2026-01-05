@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * CampaignsTable Component
  * Sortable table showing campaigns with metrics and period comparison
@@ -136,7 +138,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     return (
       <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
-        <p className="text-gray-500 font-medium animate-pulse">{t('loading_campaigns')}</p>
+        <p className="text-gray-500 font-medium animate-pulse">{t('campaigns.loading_campaigns')}</p>
       </div>
     );
   }
@@ -144,8 +146,8 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
   if (campaigns.length === 0) {
     return (
       <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px] text-gray-500">
-        <p className="text-lg font-bold">{t('no_campaigns_found')}</p>
-        <p className="text-sm">Try adjusting your filters or date range</p>
+        <p className="text-lg font-bold">{t('campaigns.no_data')}</p>
+        <p className="text-sm">{t('common.no_data_available')}</p>
       </div>
     );
   }
@@ -162,7 +164,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 onClick={() => handleSort('campaign_name')}
               >
                 <div className="flex items-center gap-2">
-                  <span>{t('extracted_campaign')}</span>
+                  <span>{t('campaigns.campaign_name')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
@@ -172,7 +174,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 onClick={() => handleSort('campaign_status')}
               >
                 <div className="flex items-center gap-2">
-                  <span>{t('extracted_status')}</span>
+                  <span>{t('common.status')}</span>
                 </div>
               </th>
 
@@ -181,13 +183,13 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
-                  <span>{t('extracted_spend')}</span>
+                  <span>{t('metrics.spend')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
 
               <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                VS PREV
+                {t('common.vs_previous')}
               </th>
 
               {hasConversionValue && (
@@ -197,13 +199,13 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                     onClick={() => handleSort('roas')}
                   >
                     <div className="flex items-center justify-end gap-2">
-                      <span>{t('extracted_roas')}</span>
+                      <span>{t('metrics.roas')}</span>
                       <ArrowUpDown className="w-3 h-3 opacity-50" />
                     </div>
                   </th>
 
                   <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                    VS PREV
+                    {t('common.vs_previous')}
                   </th>
                 </>
               )}
@@ -213,13 +215,13 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
-                  <span>{t('extracted_conversions')}</span>
+                  <span>{t('metrics.conversions')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
 
               <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                {t('leads') || 'Leads'}
+                {t('campaigns.leads') || 'Leads'}
               </th>
 
               <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
@@ -231,7 +233,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
-                  <span>{t('extracted_cpa')}</span>
+                  <span>{t('metrics.cpa')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>

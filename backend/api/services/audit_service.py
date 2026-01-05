@@ -1,8 +1,8 @@
 import json
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from models.schema import AuditLog
-from utils.logging_utils import get_logger
+from backend.models.schema import AuditLog
+from backend.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
 

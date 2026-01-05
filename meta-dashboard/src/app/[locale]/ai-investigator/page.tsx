@@ -8,8 +8,8 @@ export default function AIInvestigatorPage() {
 
     return (
         <MainLayout
-            title={t('ai_investigator') || 'AI Investigator'}
-            description="Deep dive into your performance data with natural language queries."
+            title={t('ai_investigator.title')}
+            description={t('ai_investigator.subtitle')}
         >
             <AIInvestigator />
         </MainLayout>

@@ -16,11 +16,11 @@ from google.generativeai import types
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from api.repositories.metrics_repository import MetricsRepository
-from api.schemas.responses import AIQueryResponse, ChartConfig
-from api.services.budget_optimizer import SmartBudgetOptimizer
-from api.services.comparison_service import ComparisonService
-from config.settings import GEMINI_MODEL
+from backend.api.repositories.metrics_repository import MetricsRepository
+from backend.api.schemas.responses import AIQueryResponse, ChartConfig
+from backend.api.services.budget_optimizer import SmartBudgetOptimizer
+from backend.api.services.comparison_service import ComparisonService
+from backend.config.settings import GEMINI_MODEL
 
 logger = logging.getLogger(__name__)
 

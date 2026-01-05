@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * BreakdownTabs Component
  * Tabbed interface for Placement, Demographics, Country, and Adset breakdowns
@@ -25,11 +27,11 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { id: 'adset', labelKey: 'adsets' },
-  { id: 'platform', labelKey: 'platform' },
-  { id: 'placement', labelKey: 'placement' },
-  { id: 'age-gender', labelKey: 'demographics' },
-  { id: 'country', labelKey: 'country' },
+  { id: 'adset', labelKey: 'campaigns.adsets' },
+  { id: 'platform', labelKey: 'campaigns.platform' },
+  { id: 'placement', labelKey: 'campaigns.placement' },
+  { id: 'age-gender', labelKey: 'campaigns.demographics' },
+  { id: 'country', labelKey: 'campaigns.country' },
 ];
 
 export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
@@ -189,7 +191,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
         {hasLoadedOnce && breakdownInsights.length > 0 && (
           <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             {breakdownInsights.map((insight, idx) => (
-              <InsightCard key={idx} insight={insight} />
+              <InsightCard key={idx} insights={[insight]} isLoading={isInsightsLoading} />
             ))}
           </div>
         )}
@@ -197,8 +199,8 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
         {!hasLoadedOnce && !isLoading && (
           <div className="flex items-center justify-center h-64 text-gray-400">
             <div className="text-center">
-              <p className="text-lg font-medium mb-2">{t('click_tab_to_load') || 'Click a tab to load breakdown data'}</p>
-              <p className="text-sm text-gray-500">{t('breakdown_lazy_load') || 'Data will load when you select a breakdown type'}</p>
+              <p className="text-lg font-medium mb-2">{t('campaigns.click_tab_to_load') || 'Click a tab to load breakdown data'}</p>
+              <p className="text-sm text-gray-500">{t('campaigns.breakdown_lazy_load') || 'Data will load when you select a breakdown type'}</p>
             </div>
           </div>
         )}
@@ -228,10 +230,10 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
                     {activeTab === 'adset' && t('ad_set_name')}
-                    {activeTab === 'platform' && t('platform')}
-                    {activeTab === 'placement' && t('placement')}
-                    {activeTab === 'age-gender' && t('demographics')}
-                    {activeTab === 'country' && t('country')}
+                    {activeTab === 'platform' && t('campaigns.platform')}
+                    {activeTab === 'placement' && t('campaigns.placement')}
+                    {activeTab === 'age-gender' && t('campaigns.demographics')}
+                    {activeTab === 'country' && t('campaigns.country')}
                   </th>
                   {activeTab === 'adset' && (
                     <>
@@ -262,7 +264,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     {t('conversions')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('leads') || 'Leads'}
+                    {t('campaigns.leads') || 'Leads'}
                   </th>
                   {hasConversionValue && (
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">

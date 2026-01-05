@@ -4,10 +4,7 @@ import sys
 from datetime import date, timedelta
 from dotenv import load_dotenv
 
-# Add backend to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from etl.main import ETLPipeline
+from backend.etl.main import ETLPipeline
 
 load_dotenv()
 

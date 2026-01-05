@@ -8,9 +8,9 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 import logging
 
-from ..repositories.metrics_repository import MetricsRepository
-from ..services.comparison_service import ComparisonService
-from ..schemas.responses import (
+from backend.api.repositories.metrics_repository import MetricsRepository
+from backend.api.services.comparison_service import ComparisonService
+from backend.api.schemas.responses import (
     ReportsComparisonResponse,
     ComparisonItem,
     MetricsPeriod,

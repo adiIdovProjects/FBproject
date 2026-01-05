@@ -1,0 +1,130 @@
+from datetime import date
+from typing import List, Dict, Any, Optional
+from sqlalchemy import text
+from backend.api.repositories.base_repository import BaseRepository
+
+class CampaignRepository(BaseRepository):
+    """Repository for campaign metrics."""
+
+    def get_campaign_breakdown(
+        self,
+        start_date: date,
+        end_date: date,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None,
+        sort_by: str = "spend",
+        sort_direction: str = "desc",
+        limit: int = 100,
+        account_ids: Optional[List[int]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get campaign-level metrics breakdown.
+        """
+        # Build status filter
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+            
+        # Build search filter
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
+
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
+        # Validate sort column
+        valid_sort_cols = ['spend', 'impressions', 'clicks', 'purchases', 'purchase_value']
+        if sort_by not in valid_sort_cols:
+            sort_by = 'spend'
+
+        # Validate sort direction
+        sort_direction = sort_direction.upper()
+        if sort_direction not in ['ASC', 'DESC']:
+            sort_direction = 'DESC'
+
+        query = text(f"""
+            SELECT
+                c.campaign_id,
+                c.campaign_name,
+                c.campaign_status,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value,
+                SUM(f.purchases) as purchases,
+                SUM(f.purchase_value) as purchase_value,
+                SUM(f.leads) as leads,
+                SUM(f.lead_website) as lead_website,
+                SUM(f.lead_form) as lead_form
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count,
+                       SUM(action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id 
+                  AND f.account_id = conv.account_id 
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {status_filter}
+                {search_filter}
+                {account_filter}
+            GROUP BY c.campaign_id, c.campaign_name, c.campaign_status
+            ORDER BY {sort_by} {sort_direction}
+            LIMIT :limit
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date,
+            'limit': limit,
+            **param_account_ids
+        }
+        
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        # Add status params
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
+
+        results = self.db.execute(query, params).fetchall()
+
+        campaigns = []
+        for row in results:
+            campaigns.append({
+                'campaign_id': int(row.campaign_id),
+                'campaign_name': str(row.campaign_name),
+                'campaign_status': str(row.campaign_status),
+                'spend': float(row.spend or 0),
+                'impressions': int(row.impressions or 0),
+                'clicks': int(row.clicks or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0),
+                'purchases': int(row.purchases or 0),
+                'purchase_value': float(row.purchase_value or 0),
+                'leads': int(row.leads or 0),
+                'lead_website': int(row.lead_website or 0),
+                'lead_form': int(row.lead_form or 0)
+            })
+
+        return campaigns

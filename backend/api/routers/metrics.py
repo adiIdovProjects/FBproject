@@ -8,16 +8,12 @@ from datetime import date
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-import sys
-import os
 
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db, get_current_user
-from api.services.metrics_service import MetricsService
-from api.schemas.requests import CampaignStatus, Granularity
-from api.schemas.responses import (
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.metrics_service import MetricsService
+from backend.api.schemas.requests import CampaignStatus, Granularity
+from backend.api.schemas.responses import (
     MetricsOverviewResponse,
     CampaignMetrics,
     CampaignComparisonMetrics,
@@ -29,6 +25,7 @@ from api.schemas.responses import (
     ErrorResponse,
     AdsetBreakdown
 )
+from backend.api.utils.exceptions import DatabaseError
 
 router = APIRouter(
     prefix="/api/v1/metrics", 
@@ -65,7 +62,7 @@ def get_overview(
             campaign_status=campaign_status.value if campaign_status != CampaignStatus.ALL else None
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get overview metrics: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get overview metrics: {str(e)}")
 
 
 @router.get(
@@ -99,7 +96,7 @@ def get_campaigns(
             limit=limit
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get campaign breakdown: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get campaign breakdown: {str(e)}")
 
 
 @router.get(
@@ -116,6 +113,7 @@ def get_campaigns_comparison(
     sort_by: str = Query("spend", description="Metric to sort by (spend, roas, ctr, etc.)"),
     sort_direction: str = Query("desc", description="Sort direction (asc or desc)"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -124,6 +122,10 @@ def get_campaigns_comparison(
     Returns a breakdown of metrics by campaign, including comparison with the previous period.
     """
     try:
+        # Temporarily disable account filtering - show all accounts
+        # TODO: Enable account filtering when user links ad accounts
+        account_ids = None
+
         service = MetricsService(db)
         return service.get_campaign_comparison(
             start_date=start_date,
@@ -132,10 +134,11 @@ def get_campaigns_comparison(
             search_query=search,
             sort_by=sort_by,
             sort_direction=sort_direction,
-            limit=limit
+            limit=limit,
+            account_ids=account_ids
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get campaign comparison: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get campaign comparison: {str(e)}")
 
 
 @router.get(
@@ -150,6 +153,7 @@ def get_trend(
     granularity: Granularity = Query(Granularity.DAY, description="Time aggregation level"),
     metrics: Optional[List[str]] = Query(None, description="Metrics to include (optional, returns all)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -158,16 +162,21 @@ def get_trend(
     Returns metrics aggregated by day, week, or month for the specified date range.
     """
     try:
+        # Temporarily disable account filtering - show all accounts
+        # TODO: Enable account filtering when user links ad accounts
+        account_ids = None
+
         service = MetricsService(db)
         return service.get_time_series(
             start_date=start_date,
             end_date=end_date,
             granularity=granularity.value,
             metrics=metrics,
-            campaign_id=campaign_id
+            campaign_id=campaign_id,
+            account_ids=account_ids
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get time series: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get time series: {str(e)}")
 
 
 @router.get(
@@ -201,7 +210,7 @@ def get_age_gender_breakdown(
             search_query=search
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get age/gender breakdown: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get age/gender breakdown: {str(e)}")
 
 
 @router.get(
@@ -233,7 +242,7 @@ def get_placement_breakdown(
             search_query=search
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get placement breakdown: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get placement breakdown: {str(e)}")
 
 
 @router.get(
@@ -265,7 +274,7 @@ def get_platform_breakdown(
             search_query=search
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get platform breakdown: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get platform breakdown: {str(e)}")
 
 
 @router.get(
@@ -299,7 +308,7 @@ def get_country_breakdown(
             search_query=search
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get country breakdown: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get country breakdown: {str(e)}")
 
 
 @router.get(
@@ -331,7 +340,7 @@ def get_adset_breakdown(
             search_query=search
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get adset breakdown: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get adset breakdown: {str(e)}")
 
 
 @router.get(
@@ -364,4 +373,4 @@ def get_creatives(
             sort_by=sort_by
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get creative metrics: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get creative metrics: {str(e)}")

@@ -6,9 +6,9 @@ import os
 # Mock the environment or add paths
 sys.path.append(os.path.join(os.getcwd(), 'backend'))
 
-from transformers.core_transformer import clean_and_transform
-from transformers.fact_builder import build_fact_tables
-from config.settings import MISSING_DIM_VALUE
+from backend.transformers.core_transformer import clean_and_transform
+from backend.transformers.fact_builder import build_fact_tables
+from backend.config.settings import MISSING_DIM_VALUE
 
 def reproduce():
     print(f"MISSING_DIM_VALUE is: {MISSING_DIM_VALUE}")

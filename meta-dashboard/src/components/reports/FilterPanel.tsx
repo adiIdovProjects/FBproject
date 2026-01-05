@@ -17,7 +17,7 @@ interface FilterPanelProps {
   // Date range
   period1Start: string;
   period1End: string;
-  onPeriod1Change: (start: string, end: string) => void;
+  onPeriod1Change?: (start: string, end: string) => void;
 
   // Dimension
   dimension: DimensionType;
@@ -99,7 +99,7 @@ export default function FilterPanel({
       <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <Filter className="w-5 h-5 text-blue-400" />
-          <h2 className="text-lg font-bold text-gray-100">{t('filters_panel')}</h2>
+          <h2 className="text-lg font-bold text-gray-100">{t('reports.filters_panel')}</h2>
         </div>
         {onToggle && (
           <button
@@ -111,49 +111,27 @@ export default function FilterPanel({
         )}
       </div>
 
-      {/* Date Range */}
-      <div className="space-y-2">
-        <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-          {t('date')}
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            type="date"
-            value={period1Start}
-            onChange={(e) => onPeriod1Change(e.target.value, period1End)}
-            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="date"
-            value={period1End}
-            onChange={(e) => onPeriod1Change(period1Start, e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      {/* Divider */}
+      {/* Breakdown Selector */}
       <div className="border-t border-gray-700"></div>
 
       {/* Breakdown Selector */}
       <div className="space-y-2">
         <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-          {t('breakdown')}
+          {t('reports.breakdown')}
         </label>
         <select
           value={breakdown}
           onChange={(e) => onBreakdownChange(e.target.value as BreakdownType)}
-          className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            isRTL ? 'text-right' : 'text-left'
-          }`}
+          className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'
+            }`}
         >
-          <option value="none">{t('overview')}</option>
-          <option value="campaign_name">{t('by_campaign_name')}</option>
-          <option value="ad_set_name">{t('by_ad_set_name')}</option>
-          <option value="ad_name">{t('by_ad_name')}</option>
-          <option value="date">{t('by_date')}</option>
-          <option value="week">{t('by_week')}</option>
-          <option value="month">{t('by_month')}</option>
+          <option value="none">{t('reports.overview')}</option>
+          <option value="campaign_name">{t('reports.by_campaign_name')}</option>
+          <option value="ad_set_name">{t('reports.by_ad_set_name')}</option>
+          <option value="ad_name">{t('reports.by_ad_name')}</option>
+          <option value="date">{t('reports.by_date')}</option>
+          <option value="week">{t('reports.by_week')}</option>
+          <option value="month">{t('reports.by_month')}</option>
         </select>
       </div>
 
@@ -167,10 +145,9 @@ export default function FilterPanel({
             type="text"
             value={campaignFilter}
             onChange={(e) => onCampaignFilterChange(e.target.value)}
-            placeholder={t('campaign_filter')}
-            className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isRTL ? 'text-right' : 'text-left'
-            }`}
+            placeholder={t('reports.campaign_filter')}
+            className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'
+              }`}
           />
         </div>
       )}
@@ -185,10 +162,9 @@ export default function FilterPanel({
             type="text"
             value={adSetFilter}
             onChange={(e) => onAdSetFilterChange(e.target.value)}
-            placeholder={t('ad_set_filter')}
-            className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isRTL ? 'text-right' : 'text-left'
-            }`}
+            placeholder={t('reports.ad_set_filter')}
+            className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'
+              }`}
           />
         </div>
       )}
@@ -197,16 +173,15 @@ export default function FilterPanel({
       {breakdown === 'ad_name' && (
         <div className="space-y-2">
           <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('ad_filter')}
+            {t('filters.ad.label')}
           </label>
           <input
             type="text"
             value={adFilter}
             onChange={(e) => onAdFilterChange(e.target.value)}
-            placeholder={t('ad_filter')}
-            className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isRTL ? 'text-right' : 'text-left'
-            }`}
+            placeholder={t('reports.ad_filter')}
+            className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'
+              }`}
           />
         </div>
       )}
@@ -236,13 +211,13 @@ export default function FilterPanel({
             transition-colors
           `}
         >
-          {t('apply_filters')}
+          {t('reports.apply_filters')}
         </button>
         <button
           onClick={onReset}
           className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded transition-colors"
         >
-          {t('reset_filters')}
+          {t('reports.reset_filters')}
         </button>
       </div>
     </div>

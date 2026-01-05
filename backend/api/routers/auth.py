@@ -2,11 +2,11 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from api.dependencies import get_db, get_current_user
-from api.services.facebook_auth import FacebookAuthService
-from api.repositories.user_repository import UserRepository
-from api.services.audit_service import AuditService
-from api.utils.security import create_access_token, verify_password, get_password_hash
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.facebook_auth import FacebookAuthService
+from backend.api.repositories.user_repository import UserRepository
+from backend.api.services.audit_service import AuditService
+from backend.api.utils.security import create_access_token, verify_password, get_password_hash
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
@@ -92,7 +92,7 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         
         # Redirect back to frontend with token AND state for verification
         # Use configured redirect URL (website vs dashboard)
-        from config.base_config import settings
+        from backend.config.base_config import settings
         frontend_url = settings.FACEBOOK_OAUTH_REDIRECT_URL
         return RedirectResponse(f"{frontend_url}?token={app_token}&state={state}&step=facebook_connected")
         

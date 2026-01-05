@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DatabaseTester:
     def __init__(self, engine=None):
         if engine is None:
-            from utils.db_utils import get_db_engine
+            from backend.utils.db_utils import get_db_engine
             self.engine = get_db_engine()
         else:
             self.engine = engine
@@ -110,6 +110,6 @@ class DatabaseTester:
                 session.rollback()
 
 if __name__ == "__main__":
-    from utils.db_utils import get_db_engine
+    from backend.utils.db_utils import get_db_engine
     tester = DatabaseTester(get_db_engine())
     tester.run_all_tests()

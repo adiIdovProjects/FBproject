@@ -6,7 +6,7 @@ from sqlalchemy import text
 # Add backend to path
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-from utils.db_utils import get_db_engine
+from backend.utils.db_utils import get_db_engine
 
 def purge_creatives():
     engine = get_db_engine()

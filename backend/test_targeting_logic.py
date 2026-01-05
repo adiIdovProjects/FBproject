@@ -6,7 +6,7 @@ import os
 # Add background to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from transformers.dimension_builder import _extract_dim_adset
+from backend.transformers.dimension_builder import _extract_dim_adset
 
 def test_logic():
     test_data = [

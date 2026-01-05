@@ -8,9 +8,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_db, get_current_user
-from api.services.reports_service import ReportsService
-from api.schemas.responses import ReportsComparisonResponse
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.reports_service import ReportsService
+from backend.api.schemas.responses import ReportsComparisonResponse
+from backend.api.utils.exceptions import DatabaseError, ValidationError, AppException
 
 router = APIRouter(
     prefix="/api/v1/reports",
@@ -50,31 +51,35 @@ def get_comparison_report(
     # Validate breakdown parameter
     valid_breakdowns = ['none', 'campaign_name', 'ad_set_name', 'ad_name', 'date', 'week', 'month']
     if breakdown not in valid_breakdowns:
-        raise HTTPException(
-            status_code=400,
+        raise ValidationError(
             detail=f"Invalid breakdown '{breakdown}'. Must be one of: {', '.join(valid_breakdowns)}"
         )
 
     # Validate date ranges
     if period1_start > period1_end:
-        raise HTTPException(status_code=400, detail="Period 1 start date must be before end date")
+        raise ValidationError(detail="Period 1 start date must be before end date")
     if period2_start and period2_end and period2_start > period2_end:
-        raise HTTPException(status_code=400, detail="Period 2 start date must be before end date")
+        raise ValidationError(detail="Period 2 start date must be before end date")
 
-    # Initialize service
-    service = ReportsService(db)
+    try:
+        # Initialize service
+        service = ReportsService(db)
 
-    # Get comparison data
-    comparison_data = service.get_comparison_data(
-        period1_start=period1_start,
-        period1_end=period1_end,
-        period2_start=period2_start,
-        period2_end=period2_end,
-        dimension=dimension,
-        breakdown=breakdown,
-        campaign_filter=campaign_filter,
-        ad_set_filter=ad_set_filter,
-        ad_filter=ad_filter
-    )
+        # Get comparison data
+        comparison_data = service.get_comparison_data(
+            period1_start=period1_start,
+            period1_end=period1_end,
+            period2_start=period2_start,
+            period2_end=period2_end,
+            dimension=dimension,
+            breakdown=breakdown,
+            campaign_filter=campaign_filter,
+            ad_set_filter=ad_set_filter,
+            ad_filter=ad_filter
+        )
 
-    return comparison_data
+        return comparison_data
+    except ValidationError:
+        raise
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to generate comparison report: {str(e)}")

@@ -18,6 +18,10 @@ export interface CampaignRow {
   roas: number;
   cpa: number;
 
+  // Lead metrics
+  lead_website?: number;
+  lead_form?: number;
+
   // Comparison to previous period
   previous_spend?: number;
   previous_conversions?: number;
@@ -42,6 +46,8 @@ export interface BreakdownRow {
   conversion_value: number;
   roas: number;
   cpa: number;
+  lead_website?: number;
+  lead_form?: number;
   adset_id?: number;
   targeting_type?: string;
   targeting_summary?: string;

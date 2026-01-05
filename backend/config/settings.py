@@ -178,7 +178,7 @@ UNKNOWN_MEMBER_DEFAULTS = {
     'dim_account': {
         'account_id': 0,
         'account_name': 'Unknown Account',
-        'currency': 'BRL',
+        'currency': 'USD',
     },
     'dim_campaign': {
         'campaign_id': 0,

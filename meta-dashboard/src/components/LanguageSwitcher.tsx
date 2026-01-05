@@ -58,7 +58,7 @@ export default function LanguageSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
         className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-border-subtle bg-card-bg/50 backdrop-blur-xl text-white hover:border-accent/50 transition-all duration-300 disabled:opacity-50 shadow-2xl group"
-        aria-label={t('extracted_switch_language')}
+        aria-label={t('common.switch_language')}
       >
         <span className="text-xl group-hover:scale-110 transition-transform">{currentLanguage?.flag}</span>
         <span className="text-xs font-black uppercase tracking-widest">{currentLanguage?.name}</span>

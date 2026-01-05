@@ -16,33 +16,33 @@ from datetime import date, timedelta, datetime
 from typing import Dict
 
 # Configuration
-from config.settings import (
+from backend.config.settings import (
     FIRST_PULL_DAYS, DAILY_PULL_DAYS, ACTIVE_BREAKDOWN_GROUPS,
     STATIC_AGE_GROUPS, STATIC_GENDER_GROUPS, UNKNOWN_MEMBER_DEFAULTS,
     FACT_TABLE_PKS, DIMENSION_PKS
 )
 
 # Database
-from models.schema import create_schema
-from utils.db_utils import (
+from backend.models.schema import create_schema
+from backend.utils.db_utils import (
     get_db_engine, get_latest_date_in_db, ensure_unknown_members,
-    save_dataframe, load_lookup_cache, clear_fact_data
+    save_dataframe, load_lookup_cache, clear_fact_data, LOOKUP_CACHE
 )
 
 # Extractors
-from extractors.fb_api import FacebookExtractor
+from backend.extractors.fb_api import FacebookExtractor
 
 # Transformers
-from transformers.core_transformer import clean_and_transform
-from transformers.action_parser import (
+from backend.transformers.core_transformer import clean_and_transform
+from backend.transformers.action_parser import (
     parse_actions_dataframe, extract_top_conversions_for_fact_core,
     parse_video_actions
 )
-from transformers.fact_builder import build_fact_tables
-from transformers.dimension_builder import extract_dimensions, prepare_dimension_for_load
+from backend.transformers.fact_builder import build_fact_tables
+from backend.transformers.dimension_builder import extract_dimensions, prepare_dimension_for_load
 
 # Set up logging
-from utils.logging_utils import setup_logging, get_logger
+from backend.utils.logging_utils import setup_logging, get_logger
 setup_logging()
 logger = get_logger(__name__)
 
@@ -523,7 +523,7 @@ class ETLPipeline:
         df_prep = df.copy()
         
         # Get lookup cache
-        from utils.db_utils import LOOKUP_CACHE
+        # Use global cache
         
         # Perform lookups based on fact table
         if 'placement_name' in df_prep.columns:
@@ -626,7 +626,7 @@ class ETLPipeline:
         df_prep = df.copy()
 
         # Lookup action_type → action_type_id
-        from utils.db_utils import LOOKUP_CACHE
+        # Use global cache
 
         df_prep['action_type_id'] = df_prep['action_type'].map(
             LOOKUP_CACHE.get('dim_action_type', {})

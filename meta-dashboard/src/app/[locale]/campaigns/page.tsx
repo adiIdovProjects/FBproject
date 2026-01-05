@@ -212,8 +212,8 @@ export default function CampaignsPage() {
 
   return (
     <MainLayout
-      title={t('extracted_campaign_performance_analysis')}
-      description={t('extracted_detailed_performance_metrics_and_breakdowns_for_all_active_campaigns')}
+      title={t('campaigns.title')}
+      description={t('campaigns.subtitle')}
     >
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -232,7 +232,7 @@ export default function CampaignsPage() {
               <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
               <input
                 type="text"
-                placeholder={t('search_campaigns') || 'Search campaigns...'}
+                placeholder={t('campaigns.search_placeholder')}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className={`w-full bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all placeholder:text-gray-600`}
@@ -247,7 +247,7 @@ export default function CampaignsPage() {
                 onChange={(e) => setStatusFilter(e.target.value ? [e.target.value] : [])}
                 className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
               >
-                <option value="" className="bg-gray-900 text-white">{t('all_statuses') || 'All Statuses'}</option>
+                <option value="" className="bg-gray-900 text-white">{t('common.all_statuses')}</option>
                 <option value="ACTIVE" className="bg-gray-900 text-white">ACTIVE</option>
                 <option value="PAUSED" className="bg-gray-900 text-white">PAUSED</option>
                 <option value="ARCHIVED" className="bg-gray-900 text-white">ARCHIVED</option>
@@ -283,7 +283,7 @@ export default function CampaignsPage() {
       {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-900/50 border border-red-400 text-red-300 rounded-xl">
-          <p className="font-bold">{t('extracted_error_loading_data')}</p>
+          <p className="font-bold">{t('common.error_loading')}</p>
           <p className="text-sm mt-1">{error}</p>
         </div>
       )}
@@ -299,7 +299,7 @@ export default function CampaignsPage() {
         ) : (
           <>
             <MetricCard
-              title={t('extracted_total_spend')}
+              title={t('metrics.total_spend')}
               value={aggregatedMetrics.totalSpend}
               trend={aggregatedMetrics.spendTrend}
               icon={DollarSign}
@@ -310,7 +310,7 @@ export default function CampaignsPage() {
 
             {aggregatedMetrics.totalConversions > 0 && (
               <MetricCard
-                title={t('extracted_average_roas')}
+                title={t('metrics.average_roas')}
                 value={aggregatedMetrics.avgRoas}
                 trend={aggregatedMetrics.roasTrend}
                 icon={TrendingUp}
@@ -320,7 +320,7 @@ export default function CampaignsPage() {
             )}
 
             <MetricCard
-              title={t('extracted_total_conversions')}
+              title={t('metrics.total_conversions')}
               value={aggregatedMetrics.totalConversions}
               trend={aggregatedMetrics.conversionsTrend}
               icon={ShoppingCart}
@@ -329,7 +329,7 @@ export default function CampaignsPage() {
             />
 
             <MetricCard
-              title={t('extracted_average_cpa')}
+              title={t('metrics.average_cpa')}
               value={aggregatedMetrics.avgCpa}
               trend={aggregatedMetrics.cpaTrend}
               icon={DollarSign}
@@ -353,7 +353,7 @@ export default function CampaignsPage() {
       {/* Performance Chart */}
       <div className="mb-8">
         <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-          <h2 className="text-2xl font-bold text-gray-100">{t('extracted_performance_over_time')}</h2>
+          <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.chart_title')}</h2>
           <TimeGranularityToggle
             selected={granularity}
             onChange={setGranularity}
@@ -370,9 +370,8 @@ export default function CampaignsPage() {
         />
       </div>
 
-      {/* Campaigns Table */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('extracted_campaigns')}</h2>
+        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('campaigns.table_title')}</h2>
         <CampaignsTable
           campaigns={campaigns}
           isLoading={isLoading}
@@ -383,7 +382,7 @@ export default function CampaignsPage() {
 
       {/* Breakdown Analysis */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('extracted_breakdown_analysis')}</h2>
+        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('campaigns.breakdown_title')}</h2>
         <BreakdownTabs
           dateRange={{ startDate, endDate }}
           currency={currency}

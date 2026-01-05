@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from models.user_schema import User, UserAdAccount
-from models.schema import DimAccount
+from backend.models.user_schema import User, UserAdAccount
+from backend.models.schema import DimAccount
 from datetime import datetime
 
 class UserRepository:

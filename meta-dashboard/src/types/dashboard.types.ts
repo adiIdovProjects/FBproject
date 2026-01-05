@@ -34,6 +34,7 @@ export interface CalculatedMetrics {
   actions: number;  // Dynamic Conversions (sum of selected actions)
   cpa: number;  // Cost per action
   roas: number;  // Return on ad spend
+  conversion_value: number;  // Total conversion value
   impressions: number;
   cpm: number;  // Cost per mille (1000 impressions)
 }

@@ -14,16 +14,7 @@ import json
 logger = logging.getLogger(__name__)
 
 # Import config
-try:
-    from config.settings import ACTION_TYPES_TO_TRACK, UNKNOWN_MEMBER_ID
-except ImportError:
-    # Default list if settings is missing
-    ACTION_TYPES_TO_TRACK = [
-        'purchase', 'lead', 'add_to_cart', 'initiate_checkout', 
-        'complete_registration', 'view_content', 'appointment', 'schedule', 
-        'contact', 'submit_application', 'start_trial'
-    ]
-    UNKNOWN_MEMBER_ID = 0
+from backend.config.settings import ACTION_TYPES_TO_TRACK, UNKNOWN_MEMBER_ID
 
 
 def normalize_action_type(raw_type: str) -> str:

@@ -1,5 +1,5 @@
-from api.dependencies import SessionLocal
-from models.schema import AuditLog
+from backend.api.dependencies import SessionLocal
+from backend.models.schema import AuditLog
 import json
 import sys
 import os

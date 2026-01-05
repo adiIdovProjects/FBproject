@@ -11,16 +11,11 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # טעינת הגדרות
-try:
-    from config.settings import (
-        COLUMN_RENAME_MAP, MISSING_DIM_VALUE, UNKNOWN_MEMBER_ID
-    )
-except ImportError:
-    COLUMN_RENAME_MAP = {}
-    MISSING_DIM_VALUE = 'N/A'
-    UNKNOWN_MEMBER_ID = 0
+from backend.config.settings import (
+    COLUMN_RENAME_MAP, MISSING_DIM_VALUE, UNKNOWN_MEMBER_ID
+)
 
-from utils.mapping_utils import map_country_code
+from backend.utils.mapping_utils import map_country_code
 
 
 class CoreTransformer:

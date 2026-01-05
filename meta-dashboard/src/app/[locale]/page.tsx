@@ -89,8 +89,8 @@ export default function PerformanceDashboard() {
 
   return (
     <MainLayout
-      title={t('dynamic_dashboard_title') || t('dashboard_title')}
-      description={t('dashboard_subtitle') || t('dashboard_description')}
+      title={t('dashboard.title')}
+      description={t('dashboard.subtitle')}
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <DateFilter
@@ -106,7 +106,7 @@ export default function PerformanceDashboard() {
       {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-900/50 border border-red-400 text-red-300 rounded-xl">
-          <p className="font-bold">{t('extracted_error_loading_data')}</p>
+          <p className="font-bold">{t('common.error_loading')}</p>
           <p className="text-sm mt-1">{error}</p>
         </div>
       )}
@@ -122,7 +122,7 @@ export default function PerformanceDashboard() {
         ) : (
           <>
             <MetricCard
-              title={t('total_spend')}
+              title={t('metrics.total_spend')}
               value={metricsData?.current.spend || 0}
               trend={metricsData?.trends.spend}
               icon={DollarSign}
@@ -132,7 +132,7 @@ export default function PerformanceDashboard() {
             />
 
             <MetricCard
-              title={t('total_ctr')}
+              title={t('metrics.total_ctr')}
               value={metricsData?.current.ctr || 0}
               trend={metricsData?.trends.ctr}
               icon={Repeat}
@@ -141,7 +141,7 @@ export default function PerformanceDashboard() {
             />
 
             <MetricCard
-              title={t('total_cpc')}
+              title={t('metrics.total_cpc')}
               value={metricsData?.current.cpc || 0}
               trend={metricsData?.trends.cpc}
               icon={DollarSign}
@@ -151,7 +151,7 @@ export default function PerformanceDashboard() {
             />
 
             <MetricCard
-              title={t('total_clicks')}
+              title={t('metrics.total_clicks')}
               value={metricsData?.current.clicks || 0}
               trend={metricsData?.trends.clicks}
               icon={MousePointer}
@@ -160,7 +160,7 @@ export default function PerformanceDashboard() {
             />
 
             <MetricCard
-              title={t('total_conversions')}
+              title={t('metrics.total_conversions')}
               value={metricsData?.current.actions || 0}
               trend={metricsData?.trends.actions}
               icon={ShoppingCart}
@@ -169,7 +169,7 @@ export default function PerformanceDashboard() {
             />
 
             <MetricCard
-              title={t('total_cpa')}
+              title={t('metrics.total_cpa')}
               value={metricsData?.current.cpa || 0}
               trend={metricsData?.trends.cpa}
               icon={DollarSign}
@@ -180,7 +180,7 @@ export default function PerformanceDashboard() {
 
             {(metricsData?.current.conversion_value || 0) > 0 && (
               <MetricCard
-                title={t('extracted_roas')}
+                title={t('metrics.roas')}
                 value={metricsData?.current.roas || 0}
                 trend={metricsData?.trends.roas}
                 icon={TrendingUp}

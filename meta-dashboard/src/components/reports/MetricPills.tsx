@@ -70,39 +70,27 @@ export default function MetricPills({
   };
 
   const getMetricLabel = (metric: MetricKey): string => {
-    const labels: Record<MetricKey, string> = {
-      spend: t('spend'),
-      impressions: t('impressions'),
-      clicks: t('clicks'),
-      ctr: t('ctr'),
-      cpc: t('cpc'),
-      cpm: t('cpm'),
-      conversions: t('conversions'),
-      conversion_value: t('conversion_value'),
-      roas: t('roas'),
-      cpa: t('cpa'),
-    };
-    return labels[metric];
+    return t(`metrics.${metric}`);
   };
 
   return (
     <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
       {/* Header with Select/Clear buttons */}
       <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-        <h3 className="text-sm font-semibold text-gray-300">{t('select_metrics')}</h3>
+        <h3 className="text-sm font-semibold text-gray-300">{t('reports.metric_select')}</h3>
         <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <button
             onClick={selectAll}
             className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
           >
-            {t('select_all')}
+            {t('actions.select_all')}
           </button>
           <span className="text-gray-600">|</span>
           <button
             onClick={clearAll}
             className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
           >
-            {t('clear_all')}
+            {t('actions.clear_all')}
           </button>
         </div>
       </div>
@@ -117,10 +105,9 @@ export default function MetricPills({
               onClick={() => toggleMetric(metric)}
               className={`
                 px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                ${
-                  isSelected
-                    ? 'bg-blue-600 text-white border-2 border-blue-500 shadow-md'
-                    : 'bg-gray-800 text-gray-400 border-2 border-gray-700 hover:border-gray-600 hover:text-gray-300'
+                ${isSelected
+                  ? 'bg-blue-600 text-white border-2 border-blue-500 shadow-md'
+                  : 'bg-gray-800 text-gray-400 border-2 border-gray-700 hover:border-gray-600 hover:text-gray-300'
                 }
               `}
             >
@@ -134,13 +121,13 @@ export default function MetricPills({
       {/* Warning if no metrics selected */}
       {selectedMetrics.length === 0 && (
         <p className="text-xs text-yellow-500 mt-2">
-          ⚠️ {t('no_metrics_selected')}
+          ⚠️ {t('reports.no_metrics_selected')}
         </p>
       )}
 
       {/* Counter */}
       <p className="text-xs text-gray-500">
-        {selectedMetrics.length} / {availableMetrics.length} {t('select_metrics').toLowerCase()}
+        {selectedMetrics.length} / {availableMetrics.length} {t('reports.metric_select').toLowerCase()}
       </p>
     </div>
   );

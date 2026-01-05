@@ -18,13 +18,13 @@ interface ActionsMetricsChartProps {
 }
 
 const METRIC_OPTIONS: MetricOption[] = [
-  { value: 'actions', label: 'Conversions', format: 'number' },
-  { value: 'spend', label: 'Spend', format: 'currency' },
-  { value: 'clicks', label: 'Clicks', format: 'number' },
-  { value: 'ctr', label: 'CTR', format: 'percentage' },
-  { value: 'cpc', label: 'CPC', format: 'currency' },
-  { value: 'cpm', label: 'CPM', format: 'currency' },
-  { value: 'impressions', label: 'Impressions', format: 'number' },
+  { value: 'actions', label: 'metrics.conversions', format: 'number' },
+  { value: 'spend', label: 'metrics.spend', format: 'currency' },
+  { value: 'clicks', label: 'metrics.clicks', format: 'number' },
+  { value: 'ctr', label: 'metrics.ctr', format: 'percentage' },
+  { value: 'cpc', label: 'metrics.cpc', format: 'currency' },
+  { value: 'cpm', label: 'metrics.cpm', format: 'currency' },
+  { value: 'impressions', label: 'metrics.impressions', format: 'number' },
 ];
 
 export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
@@ -115,7 +115,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
     return (
       <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
         <div className="flex items-center justify-center h-96 text-gray-400">
-          No data available
+          {t('common.no_data_available')}
         </div>
       </div>
     );
@@ -126,14 +126,14 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
       {/* Header with Metric Selectors */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-6">
         <div>
-          <h3 className="text-2xl font-black text-white tracking-tight">{t('extracted_performance_trend')}</h3>
-          <p className="text-gray-500 text-sm">{t('dashboard_subtitle')}</p>
+          <h3 className="text-2xl font-black text-white tracking-tight">{t('common.daily_trend')}</h3>
+          <p className="text-gray-500 text-sm">{t('dashboard.subtitle')}</p>
         </div>
 
         <div className="flex gap-4 flex-wrap">
           {/* Primary Metric Selector */}
           <div className="flex flex-col">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">{t('extracted_primary_metric')}</label>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">{t('reports.primary_metric')}</label>
             <select
               value={selectedMetric}
               onChange={(e) => onMetricChange(e.target.value as MetricType)}
@@ -149,13 +149,13 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
 
           {/* Secondary Metric Selector */}
           <div className="flex flex-col">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">{t('extracted_compare_with_optional')}</label>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">{t('reports.compare_with_optional')}</label>
             <select
               value={secondMetric || ''}
               onChange={(e) => setSecondMetric(e.target.value ? e.target.value as MetricType : null)}
               className="bg-gray-900/50 text-white text-sm px-4 py-2.5 rounded-xl border border-green-500/50 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all cursor-pointer"
             >
-              <option value="" className="bg-gray-900">{t('extracted_none')}</option>
+              <option value="" className="bg-gray-900">{t('common.none')}</option>
               {METRIC_OPTIONS.filter(opt => opt.value !== selectedMetric).map((option) => (
                 <option key={option.value} value={option.value} className="bg-gray-900">
                   {option.label}
@@ -227,10 +227,10 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
               labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}
               formatter={(value: number, name: string) => {
                 if (name === 'primaryValue') {
-                  return [formatValue(value, currentMetricOption), currentMetricOption?.label];
+                  return [formatValue(value, currentMetricOption), t(currentMetricOption?.label || '')];
                 }
                 if (name === 'secondaryValue' && secondMetricOption) {
-                  return [formatValue(value, secondMetricOption), secondMetricOption.label];
+                  return [formatValue(value, secondMetricOption), t(secondMetricOption.label)];
                 }
                 return [value, name];
               }}
@@ -243,7 +243,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
               wrapperStyle={{ paddingBottom: '30px', paddingRight: '10px' }}
               formatter={(value) => {
                 const label = value === 'primaryValue' ? currentMetricOption?.label : secondMetricOption?.label;
-                return <span className="text-xs font-bold text-gray-400 capitalize">{label}</span>;
+                return <span className="text-xs font-bold text-gray-400 capitalize">{t(label || '')}</span>;
               }}
             />
 

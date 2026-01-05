@@ -8,8 +8,8 @@ export default function SettingsPage() {
 
     return (
         <MainLayout
-            title={t('settings')}
-            description={t('account_settings')}
+            title={t('nav.settings')}
+            description={t('settings.account_settings')}
         >
             <AccountSettings />
         </MainLayout>

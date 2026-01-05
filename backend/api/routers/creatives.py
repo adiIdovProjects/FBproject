@@ -9,20 +9,17 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
-import sys
-import os
 
-# Add paths for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from api.dependencies import get_db, get_current_user
-from api.services.metrics_service import MetricsService
-from api.schemas.responses import (
+from backend.api.dependencies import get_db, get_current_user
+from backend.api.services.metrics_service import MetricsService
+from backend.api.schemas.responses import (
     CreativeMetrics,
     CreativeDetailResponse,
     CreativeComparisonResponse,
     VideoInsightsResponse
 )
+from backend.api.utils.exceptions import DatabaseError
 
 
 router = APIRouter(
@@ -70,7 +67,7 @@ def get_creatives(
             sort_by=sort_by
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get creative metrics: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get creative metrics: {str(e)}")
 
 
 @router.get(
@@ -105,7 +102,7 @@ def get_creative_detail(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get creative detail: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get creative detail: {str(e)}")
 
 
 @router.post(
@@ -145,7 +142,7 @@ def compare_creatives(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to compare creatives: {str(e)}")
+        raise DatabaseError(detail=f"Failed to compare creatives: {str(e)}")
 
 
 @router.get(
@@ -172,4 +169,4 @@ def get_video_insights(
             end_date=end_date
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get video insights: {str(e)}")
+        raise DatabaseError(detail=f"Failed to get video insights: {str(e)}")
