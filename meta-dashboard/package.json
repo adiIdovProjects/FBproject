@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "i18n:generate-types": "node scripts/generateI18nTypes.js",
+    "i18n:sync": "node scripts/sync-translations.mjs",
+    "i18n:watch": "node scripts/watch-translations.mjs",
+    "i18n:translate": "node scripts/sync-translations.mjs",
+    "i18n:audit": "node scripts/auditTranslations.js",
+    "i18n:extract": "node scripts/extract-strings.mjs",
     "dev": "npm run i18n:generate-types && next dev",
     "build": "npm run i18n:generate-types && next build",
     "start": "next start",
-    "lint": "eslint",
-    "i18n:translate": "node scripts/translate-messages.mjs",
-    "i18n:extract": "node scripts/extract-strings.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.14",
@@ -26,11 +29,15 @@
     "recharts": "^3.5.1"
   },
   "devDependencies": {
+    "@google-cloud/translate": "^8.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "chalk": "^5.0.0",
+    "chokidar": "^4.0.0",
+    "dotenv": "^16.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",

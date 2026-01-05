@@ -14,8 +14,8 @@
     "all_statuses": "Tous les statuts",
     "currency": "Devise",
     "daily_trend": "Tendance Quotidienne",
-    "status": "(MISSING: common.status)",
-    "vs_previous": "(MISSING: common.vs_previous)"
+    "status": "Statut",
+    "vs_previous": "par rapport à la version précédente"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -34,7 +34,6 @@
     "total_impressions": "Impressions totales",
     "clicks": "Clics",
     "total_clicks": "Clics totaux",
-    "total_leads": "Prospects totaux",
     "total_conversions": "Conversions totales",
     "ctr": "CTR",
     "total_ctr": "CTR total",
@@ -69,8 +68,18 @@
     "table_title": "Campagnes",
     "breakdown_title": "Analyse de répartition",
     "all_statuses": "Tous les statuts",
-    "no_data": "(MISSING: campaigns.no_data)",
-    "campaign_name": "(MISSING: campaigns.campaign_name)"
+    "no_data": "Aucune campagne trouvée",
+    "campaign_name": "Nom de la campagne",
+    "loading_campaigns": "Chargement des campagnes...",
+    "campaign_status": "État de la campagne",
+    "adsets": "Ensembles d'annonces",
+    "platform": "Plate-forme",
+    "placement": "Placement",
+    "demographics": "Données démographiques",
+    "country": "Pays",
+    "click_tab_to_load": "Cliquez sur un onglet pour charger les données détaillées",
+    "breakdown_lazy_load": "Les données se chargeront lorsque vous sélectionnerez un type de ventilation.",
+    "leads": "Conduit"
   },
   "reports": {
     "title": "Rapports avancés",
@@ -88,29 +97,29 @@
     "reset_filters": "Réinitialiser",
     "performance_overview": "Aperçu des performances",
     "detailed_breakdown": "Répartition détaillée",
-    "export_to_google_sheets": "(MISSING: reports.export_to_google_sheets)",
-    "export_to_excel": "(MISSING: reports.export_to_excel)",
-    "primary_metric": "(MISSING: reports.primary_metric)",
-    "compare_with_optional": "(MISSING: reports.compare_with_optional)",
-    "overview": "(MISSING: reports.overview)",
-    "by_campaign_name": "(MISSING: reports.by_campaign_name)",
-    "by_ad_set_name": "(MISSING: reports.by_ad_set_name)",
-    "by_ad_name": "(MISSING: reports.by_ad_name)",
-    "by_date": "(MISSING: reports.by_date)",
-    "by_week": "(MISSING: reports.by_week)",
-    "by_month": "(MISSING: reports.by_month)",
-    "no_metrics_selected": "(MISSING: reports.no_metrics_selected)"
+    "export_to_google_sheets": "Exporter vers Google Sheets",
+    "export_to_excel": "Exporter vers Excel",
+    "primary_metric": "Métrique primaire",
+    "compare_with_optional": "Comparer avec (facultatif)",
+    "overview": "Aperçu",
+    "by_campaign_name": "Par nom de campagne",
+    "by_ad_set_name": "Par nom de l'ensemble d'annonces",
+    "by_ad_name": "Par nom d'annonce",
+    "by_date": "Par date",
+    "by_week": "Par semaine",
+    "by_month": "Par mois",
+    "no_metrics_selected": "Aucune métrique sélectionnée. Veuillez choisir au moins une métrique."
   },
   "creatives": {
-    "title": "Creative Insights",
+    "title": "Idées créatives",
     "subtitle": "Analyser les modèles de performance créative et l'engagement vidéo",
     "video_deep_dive": "Analyse vidéo approfondie",
     "all_creatives": "Tous les contenus",
     "all_media": "Tous les médias",
     "images_only": "Images uniquement",
     "videos_only": "Vidéos uniquement",
-    "hook_rate": "Hook Rate",
-    "hold_rate": "Hold Rate",
+    "hook_rate": "Taux d'accrochage",
+    "hold_rate": "Taux de maintien",
     "avg_watch_time": "Temps de visionnage moyen",
     "avg_completion": "Complétion moyenne"
   },
@@ -123,11 +132,11 @@
     "sort_spend": "Trier par dépenses",
     "sort_conversions": "Trier par conversions",
     "sort_roas": "Trier par ROAS",
-    "export_to_excel": "(MISSING: actions.export_to_excel)",
-    "export_to_google_sheets": "(MISSING: actions.export_to_google_sheets)",
-    "exporting": "(MISSING: actions.exporting)",
-    "select_all": "(MISSING: actions.select_all)",
-    "clear_all": "(MISSING: actions.clear_all)"
+    "export_to_excel": "Exporter vers Excel",
+    "export_to_google_sheets": "Exporter vers Google Sheets",
+    "exporting": "Exportation...",
+    "select_all": "Tout sélectionner",
+    "clear_all": "Effacer tout"
   },
   "date": {
     "label": "Date",
@@ -186,9 +195,9 @@
     "no_insights": "Aucune analyse disponible pour cette période",
     "error_loading": "Erreur lors du chargement des analyses",
     "generated_at": "Généré à",
-    "high_priority": "(MISSING: insights.high_priority)",
-    "medium_priority": "(MISSING: insights.medium_priority)",
-    "test_and_learn": "(MISSING: insights.test_and_learn)"
+    "high_priority": "Haute priorité",
+    "medium_priority": "Priorité moyenne",
+    "test_and_learn": "Tester et apprendre"
   },
   "auth": {
     "login_title": "Connectez-vous à votre compte",
@@ -240,56 +249,34 @@
     "not_connected": "Non connecté",
     "manage_settings_desc": "Gérez vos paramètres et préférences."
   },
-  "token": "(MISSING: token)",
-  "state": "(MISSING: state)",
-  "step": "(MISSING: step)",
-  "T": "(MISSING: T)",
-  "both": "(MISSING: both)",
-  "age": "(MISSING: age)",
-  "gender": "(MISSING: gender)",
-  "click_tab_to_load": "(MISSING: click_tab_to_load)",
-  "breakdown_lazy_load": "(MISSING: breakdown_lazy_load)",
-  "no_data_available": "(MISSING: no_data_available)",
-  "ad_set_name": "(MISSING: ad_set_name)",
-  "platform": "(MISSING: platform)",
-  "placement": "(MISSING: placement)",
-  "demographics": "(MISSING: demographics)",
-  "country": "(MISSING: country)",
-  "targeting_type": "(MISSING: targeting_type)",
-  "targeting_summary": "(MISSING: targeting_summary)",
-  "spend": "(MISSING: spend)",
-  "impressions": "(MISSING: impressions)",
-  "clicks": "(MISSING: clicks)",
-  "ctr": "(MISSING: ctr)",
-  "cpc": "(MISSING: cpc)",
-  "conversions": "(MISSING: conversions)",
-  "leads": "(MISSING: leads)",
-  "roas": "(MISSING: roas)",
-  "cpa": "(MISSING: cpa)",
-  "broad": "(MISSING: broad)",
-  "loading_campaigns": "(MISSING: loading_campaigns)",
-  "campaign_name": "(MISSING: campaign_name)",
-  "campaign_status": "(MISSING: campaign_status)",
-  "a": "(MISSING: a)",
-  "day": "(MISSING: day)",
-  "week": "(MISSING: week)",
-  "month": "(MISSING: month)",
-  "-": "(MISSING: -)",
-  "": {
-    "language-switcher": "(MISSING: .language-switcher)"
-  },
-  "cpm": "(MISSING: cpm)",
-  "conversion_value": "(MISSING: conversion_value)",
-  "no_metrics_selected": "(MISSING: no_metrics_selected)",
-  "period_1": "(MISSING: period_1)",
-  "period_2": "(MISSING: period_2)",
-  "ad_name": "(MISSING: ad_name)",
-  "name": "(MISSING: name)",
-  "campaign_filter": "(MISSING: campaign_filter)",
-  "ad_set_filter": "(MISSING: ad_set_filter)",
   "filters": {
     "ad": {
-      "label": "(MISSING: filters.ad.label)"
+      "label": "Filtre publicitaire"
     }
+  },
+  "breakdown": {
+    "platform": "Plate-forme",
+    "placement": "Placement",
+    "demographics": "Données démographiques",
+    "country": "Pays",
+    "age": "Âge",
+    "gender": "Genre",
+    "both": "Les deux",
+    "click_tab_to_load": "Cliquez sur un onglet pour charger les données détaillées",
+    "lazy_load": "Les données détaillées se chargent lorsque vous sélectionnez un onglet.",
+    "ad_set_name": "Nom du groupe d'annonces",
+    "ad_name": "Nom de l'annonce",
+    "targeting_type": "Type de ciblage",
+    "targeting_summary": "Résumé du ciblage",
+    "broad": "Large"
+  },
+  "time": {
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois"
+  },
+  "period": {
+    "period_1": "Période 1",
+    "period_2": "Période 2"
   }
 }
