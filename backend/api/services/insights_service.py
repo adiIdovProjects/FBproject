@@ -91,17 +91,18 @@ class InsightsService:
         self.db = db
         self.repository = InsightsRepository(db)
 
-        # Initialize Gemini Client
+        # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             logger.error("GEMINI_API_KEY not found in environment")
             self.client = None
         else:
             try:
-                self.client = genai.Client(api_key=api_key)
+                genai.configure(api_key=api_key)
+                self.client = genai.GenerativeModel(GEMINI_MODEL)
                 self.model = GEMINI_MODEL
             except Exception as e:
-                logger.error(f"Failed to initialize Gemini Client: {e}")
+                logger.error(f"Failed to initialize Gemini: {e}")
                 self.client = None
 
     def _get_cache_key(
@@ -328,9 +329,11 @@ class InsightsService:
             )
 
             try:
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=prompt
+                response = self.client.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.3
+                    )
                 )
                 ai_text = response.text
                 insights = self._parse_summary_insights(ai_text, page_context)
@@ -396,9 +399,11 @@ class InsightsService:
             prompt = DEEP_ANALYSIS_PROMPT.format(data=data_summary)
 
             try:
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=prompt
+                response = self.client.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.2
+                    )
                 )
                 ai_text = response.text
                 parsed = self._parse_deep_insights(ai_text)

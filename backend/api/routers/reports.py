@@ -29,6 +29,7 @@ def get_comparison_report(
     period2_end: Optional[date] = Query(None, description="Period 2 end date (optional for comparison)"),
     dimension: str = Query("overview", description="Dimension level: overview, campaign, or ad"),
     breakdown: str = Query("none", description="Breakdown type: none, campaign_name, ad_set_name, ad_name, date, week, month"),
+    secondary_breakdown: str = Query("none", description="Secondary breakdown dimension (optional): none, campaign_name, ad_set_name, ad_name, date, week, month"),
     campaign_filter: Optional[str] = Query(None, description="Filter by campaign name (partial match)"),
     ad_set_filter: Optional[str] = Query(None, description="Filter by ad set name (partial match)"),
     ad_filter: Optional[str] = Query(None, description="Filter by ad name (partial match)"),
@@ -48,11 +49,15 @@ def get_comparison_report(
 
     Filters can be applied to narrow results by campaign, ad set, or ad name.
     """
-    # Validate breakdown parameter
+    # Validate breakdown parameters
     valid_breakdowns = ['none', 'campaign_name', 'ad_set_name', 'ad_name', 'date', 'week', 'month']
     if breakdown not in valid_breakdowns:
         raise ValidationError(
             detail=f"Invalid breakdown '{breakdown}'. Must be one of: {', '.join(valid_breakdowns)}"
+        )
+    if secondary_breakdown not in valid_breakdowns:
+        raise ValidationError(
+            detail=f"Invalid secondary_breakdown '{secondary_breakdown}'. Must be one of: {', '.join(valid_breakdowns)}"
         )
 
     # Validate date ranges
@@ -73,6 +78,7 @@ def get_comparison_report(
             period2_end=period2_end,
             dimension=dimension,
             breakdown=breakdown,
+            secondary_breakdown=secondary_breakdown,
             campaign_filter=campaign_filter,
             ad_set_filter=ad_set_filter,
             ad_filter=ad_filter

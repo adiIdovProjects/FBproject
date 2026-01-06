@@ -58,6 +58,7 @@ export interface ComparisonParams {
   period2End?: string;
   dimension?: 'overview' | 'campaign' | 'ad';
   breakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month';
+  secondaryBreakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month';
   campaignFilter?: string;
   adSetFilter?: string;
   adFilter?: string;
@@ -74,6 +75,7 @@ export async function fetchComparisonData(
     period1_end: params.period1End,
     dimension: params.dimension || 'overview',
     breakdown: params.breakdown || 'none',
+    secondary_breakdown: params.secondaryBreakdown || 'none',
   };
 
   if (params.period2Start) {

@@ -15,7 +15,8 @@
     "currency": "מטבע",
     "daily_trend": "מגמה יומית",
     "status": "סטָטוּס",
-    "vs_previous": "לעומת הקודם"
+    "vs_previous": "לעומת הקודם",
+    "name": "שם"
   },
   "nav": {
     "dashboard": "לוח בקרה",
@@ -88,6 +89,10 @@
     "metric_select": "בחר מדדים",
     "dimension": "ממד",
     "breakdown": "פילוח",
+    "primary_breakdown": "פילוח ראשי",
+    "secondary_breakdown": "פילוח משני (אופציונלי)",
+    "none_optional": "ללא",
+    "multi_dimension_hint": "הצגת פילוח רב-ממדי",
     "campaign_filter": "סנן לפי שם קמפיין",
     "ad_set_filter": "סנן לפי שם קבוצת מודעות",
     "ad_filter": "סנן לפי שם מודעה",
@@ -151,7 +156,9 @@
     "last_30_days": "30 ימים אחרונים",
     "last_month": "חודש שעבר",
     "this_month": "החודש",
-    "today_yesterday": "היום ואתמול"
+    "today_yesterday": "היום ואתמול",
+    "yesterday": "אתמול",
+    "maximum": "כל הזמנים"
   },
   "footer": {
     "system_info": "מערכת אנליטיקה Next.js & FastAPI"

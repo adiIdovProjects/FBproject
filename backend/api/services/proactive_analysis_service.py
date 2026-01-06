@@ -73,17 +73,18 @@ class ProactiveAnalysisService:
     def __init__(self, db: Session):
         self.db = db
 
-        # Initialize Gemini Client
+        # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             logger.error("GEMINI_API_KEY not found in environment")
             self.client = None
         else:
             try:
-                self.client = genai.Client(api_key=api_key)
+                genai.configure(api_key=api_key)
+                self.client = genai.GenerativeModel(GEMINI_MODEL)
                 self.model = GEMINI_MODEL
             except Exception as e:
-                logger.error(f"Failed to initialize Gemini Client: {e}")
+                logger.error(f"Failed to initialize Gemini: {e}")
                 self.client = None
 
     def generate_daily_insights(
@@ -131,15 +132,11 @@ class ProactiveAnalysisService:
             context_json = json.dumps(context, indent=2, default=str)
 
             # Call Gemini
-            config = types.GenerateContentConfig(
-                system_instruction=DAILY_INSIGHT_PROMPT,
-                temperature=0.3
-            )
-
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[context_json],
-                config=config
+            response = self.client.generate_content(
+                context_json,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.3
+                )
             )
 
             analysis_text = response.text.strip()
@@ -224,15 +221,11 @@ class ProactiveAnalysisService:
             context_json = json.dumps(context, indent=2, default=str)
 
             # Call Gemini
-            config = types.GenerateContentConfig(
-                system_instruction=WEEKLY_INSIGHT_PROMPT,
-                temperature=0.3
-            )
-
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[context_json],
-                config=config
+            response = self.client.generate_content(
+                context_json,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.3
+                )
             )
 
             analysis_text = response.text.strip()

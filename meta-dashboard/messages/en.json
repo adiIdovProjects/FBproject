@@ -15,7 +15,8 @@
     "currency": "Currency",
     "daily_trend": "Daily Trend",
     "status": "Status",
-    "vs_previous": "vs Previous"
+    "vs_previous": "vs Previous",
+    "name": "Name"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -88,6 +89,10 @@
     "metric_select": "Select Metrics",
     "dimension": "Dimension",
     "breakdown": "Breakdown",
+    "primary_breakdown": "Primary Breakdown",
+    "secondary_breakdown": "Secondary Breakdown (Optional)",
+    "none_optional": "None",
+    "multi_dimension_hint": "Showing multi-dimensional breakdown",
     "campaign_filter": "Filter by campaign name",
     "ad_set_filter": "Filter by ad set name",
     "ad_filter": "Filter by ad name",
@@ -151,7 +156,9 @@
     "last_30_days": "Last 30 Days",
     "last_month": "Last Month",
     "this_month": "This Month",
-    "today_yesterday": "Today & Yesterday"
+    "today_yesterday": "Today & Yesterday",
+    "yesterday": "Yesterday",
+    "maximum": "All Time"
   },
   "footer": {
     "system_info": "Next.js & FastAPI Analytics System"

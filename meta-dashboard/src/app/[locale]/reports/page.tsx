@@ -44,6 +44,7 @@ export default function ReportsPage() {
   // Filter state
   const [dimension, setDimension] = useState<DimensionType>('overview');
   const [breakdown, setBreakdown] = useState<BreakdownType>('none');
+  const [secondaryBreakdown, setSecondaryBreakdown] = useState<BreakdownType>('none');
   const [campaignFilter, setCampaignFilter] = useState<string>('');
   const [adSetFilter, setAdSetFilter] = useState<string>('');
   const [adFilter, setAdFilter] = useState<string>('');
@@ -85,6 +86,7 @@ export default function ReportsPage() {
         period1End,
         dimension,
         breakdown,
+        secondaryBreakdown,
         campaignFilter: campaignFilter || undefined,
         adSetFilter: adSetFilter || undefined,
         adFilter: adFilter || undefined,
@@ -114,10 +116,10 @@ export default function ReportsPage() {
 
   // Auto-fetch when breakdown changes
   useEffect(() => {
-    if (breakdown !== 'none') {
+    if (breakdown !== 'none' || secondaryBreakdown !== 'none') {
       fetchData();
     }
-  }, [breakdown]);
+  }, [breakdown, secondaryBreakdown]);
 
   // Handle apply filters
   const handleApplyFilters = () => {
@@ -132,6 +134,7 @@ export default function ReportsPage() {
 
     setDimension('overview');
     setBreakdown('none');
+    setSecondaryBreakdown('none');
     setCampaignFilter('');
     setAdSetFilter('');
     setAdFilter('');
@@ -179,13 +182,15 @@ export default function ReportsPage() {
           period1Start={period1Start}
           period1End={period1End}
           onPeriod1Change={(start, end) => {
-            // This is now handled by DateFilter in the main area, 
+            // This is now handled by DateFilter in the main area,
             // but we keep the prop for internal state sync if needed or remove if possible.
           }}
           dimension={dimension}
           onDimensionChange={setDimension}
           breakdown={breakdown}
           onBreakdownChange={setBreakdown}
+          secondaryBreakdown={secondaryBreakdown}
+          onSecondaryBreakdownChange={setSecondaryBreakdown}
           campaignFilter={campaignFilter}
           adSetFilter={adSetFilter}
           adFilter={adFilter}

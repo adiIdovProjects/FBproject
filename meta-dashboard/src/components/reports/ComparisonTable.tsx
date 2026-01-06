@@ -34,17 +34,17 @@ export default function ComparisonTable({
   const getNameColumnLabel = (): string => {
     switch (breakdown) {
       case 'campaign_name':
-        return t('campaign_name');
+        return t('campaigns.campaign_name');
       case 'ad_set_name':
-        return t('ad_set_name');
+        return t('breakdown.ad_set_name');
       case 'ad_name':
-        return t('ad_name');
+        return t('breakdown.ad_name');
       case 'date':
       case 'week':
       case 'month':
-        return t('date');
+        return t('date.label');
       default:
-        return t('name');
+        return t('common.name');
     }
   };
   const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -121,16 +121,16 @@ export default function ComparisonTable({
 
   const getMetricLabel = (metric: MetricKey): string => {
     const labels: Record<MetricKey, string> = {
-      spend: t('spend'),
-      impressions: t('impressions'),
-      clicks: t('clicks'),
-      ctr: t('ctr'),
-      cpc: t('cpc'),
-      cpm: t('cpm'),
-      conversions: t('conversions'),
-      conversion_value: t('conversion_value'),
-      roas: t('roas'),
-      cpa: t('cpa'),
+      spend: t('metrics.spend'),
+      impressions: t('metrics.impressions'),
+      clicks: t('metrics.clicks'),
+      ctr: t('metrics.ctr'),
+      cpc: t('metrics.cpc'),
+      cpm: t('metrics.cpm'),
+      conversions: t('metrics.conversions'),
+      conversion_value: t('metrics.conversion_value'),
+      roas: t('metrics.roas'),
+      cpa: t('metrics.cpa'),
     };
     return labels[metric];
   };
@@ -138,7 +138,7 @@ export default function ComparisonTable({
   if (selectedMetrics.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-500">
-        <p>{t('no_metrics_selected')}</p>
+        <p>{t('reports.no_metrics_selected')}</p>
       </div>
     );
   }

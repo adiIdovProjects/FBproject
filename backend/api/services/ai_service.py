@@ -110,17 +110,18 @@ class AIService:
         self.repository = MetricsRepository(db)
         self.budget_optimizer = SmartBudgetOptimizer(db)
 
-        # Initialize Gemini Client
+        # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             logger.error("GEMINI_API_KEY not found in environment")
             self.client = None
         else:
             try:
-                self.client = genai.Client(api_key=api_key)
+                genai.configure(api_key=api_key)
+                self.client = genai.GenerativeModel(GEMINI_MODEL)
                 self.model = GEMINI_MODEL
             except Exception as e:
-                logger.error(f"Failed to initialize Gemini Client: {e}")
+                logger.error(f"Failed to initialize Gemini: {e}")
                 self.client = None
 
     def _get_cache_key(self, question: str, start_date: date, end_date: date) -> str:
@@ -325,15 +326,11 @@ class AIService:
             )
 
             # 3. Call Gemini
-            config = types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
-                temperature=0.2
-            )
-
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[prompt],
-                config=config,
+            response = self.client.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2
+                )
             )
 
             answer = response.text.strip()

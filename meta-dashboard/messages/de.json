@@ -88,6 +88,10 @@
     "metric_select": "Metriken auswählen",
     "dimension": "Dimension",
     "breakdown": "Aufschlüsselung",
+    "primary_breakdown": "Primäre Aufschlüsselung",
+    "secondary_breakdown": "Sekundäre Aufschlüsselung (optional)",
+    "none_optional": "Keine",
+    "multi_dimension_hint": "Mehrdimensionale Aufschlüsselung anzeigen",
     "campaign_filter": "Nach Kampagnenname filtern",
     "ad_set_filter": "Nach Anzeigengruppenname filtern",
     "ad_filter": "Nach Anzeigenname filtern",
@@ -151,7 +155,8 @@
     "last_30_days": "Letzte 30 Tage",
     "last_month": "Letzter Monat",
     "this_month": "Dieser Monat",
-    "today_yesterday": "Heute & Gestern"
+    "today_yesterday": "Heute & Gestern",
+    "maximum": "Alle Zeiten"
   },
   "footer": {
     "system_info": "Next.js & FastAPI Analysesystem"

@@ -88,6 +88,10 @@
     "metric_select": "اختر المقاييس",
     "dimension": "البعد",
     "breakdown": "التوزيع",
+    "primary_breakdown": "التوزيع الأساسي",
+    "secondary_breakdown": "التوزيع الثانوي (اختياري)",
+    "none_optional": "لا شيء",
+    "multi_dimension_hint": "عرض توزيع متعدد الأبعاد",
     "campaign_filter": "تصفية حسب اسم الحملة",
     "ad_set_filter": "تصفية حسب اسم مجموعة الإعلانات",
     "ad_filter": "تصفية حسب اسم الإعلان",
@@ -151,7 +155,8 @@
     "last_30_days": "آخر 30 يومًا",
     "last_month": "الشهر الماضي",
     "this_month": "هذا الشهر",
-    "today_yesterday": "اليوم والأمس"
+    "today_yesterday": "اليوم والأمس",
+    "maximum": "على مر العصور"
   },
   "footer": {
     "system_info": "نظام تحليلات Next.js & FastAPI"

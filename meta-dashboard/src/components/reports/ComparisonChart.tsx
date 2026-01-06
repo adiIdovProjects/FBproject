@@ -28,16 +28,16 @@ export default function ComparisonChart({
 
   const getMetricLabel = (metric: MetricKey): string => {
     const labels: Record<MetricKey, string> = {
-      spend: t('spend'),
-      impressions: t('impressions'),
-      clicks: t('clicks'),
-      ctr: t('ctr'),
-      cpc: t('cpc'),
-      cpm: t('cpm'),
-      conversions: t('conversions'),
-      conversion_value: t('conversion_value'),
-      roas: t('roas'),
-      cpa: t('cpa'),
+      spend: t('metrics.spend'),
+      impressions: t('metrics.impressions'),
+      clicks: t('metrics.clicks'),
+      ctr: t('metrics.ctr'),
+      cpc: t('metrics.cpc'),
+      cpm: t('metrics.cpm'),
+      conversions: t('metrics.conversions'),
+      conversion_value: t('metrics.conversion_value'),
+      roas: t('metrics.roas'),
+      cpa: t('metrics.cpa'),
     };
     return labels[metric];
   };
@@ -68,7 +68,7 @@ export default function ComparisonChart({
   if (selectedMetrics.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-500">
-        <p>{t('no_metrics_selected')}</p>
+        <p>{t('reports.no_metrics_selected')}</p>
       </div>
     );
   }
@@ -97,7 +97,7 @@ export default function ComparisonChart({
         <div className="space-y-1">
           {payload.map((entry: any, index: number) => {
             const metricKey = entry.dataKey.replace('_period1', '').replace('_period2', '') as MetricKey;
-            const period = entry.dataKey.includes('period1') ? t('period_1') : t('period_2');
+            const period = entry.dataKey.includes('period1') ? t('period.period_1') : t('period.period_2');
             return (
               <div key={index} className="flex items-center gap-2 text-xs">
                 <div

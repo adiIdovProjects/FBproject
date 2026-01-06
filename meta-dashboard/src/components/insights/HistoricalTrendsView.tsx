@@ -165,18 +165,18 @@ export default function HistoricalTrendsView({
                       {new Date(week.week_start).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4 text-sm text-right">
-                      ${week.spend.toFixed(2)}
+                      ${(week.spend ?? 0).toFixed(2)}
                     </td>
                     <td className="py-3 px-4 text-sm text-right">
-                      {week.conversions}
+                      {week.conversions ?? 0}
                     </td>
                     <td className="py-3 px-4 text-sm text-right">
-                      {week.roas.toFixed(2)}x
+                      {(week.roas ?? 0).toFixed(2)}x
                     </td>
                     <td className={`py-3 px-4 text-sm text-right font-semibold ${
-                      week.wow_change_pct > 0 ? 'text-green-400' : week.wow_change_pct < 0 ? 'text-red-400' : 'text-gray-400'
+                      (week.wow_change_pct ?? 0) > 0 ? 'text-green-400' : (week.wow_change_pct ?? 0) < 0 ? 'text-red-400' : 'text-gray-400'
                     }`}>
-                      {week.wow_change_pct > 0 ? '+' : ''}{week.wow_change_pct.toFixed(1)}%
+                      {(week.wow_change_pct ?? 0) > 0 ? '+' : ''}{(week.wow_change_pct ?? 0).toFixed(1)}%
                     </td>
                   </tr>
                 ))}
@@ -199,11 +199,11 @@ export default function HistoricalTrendsView({
                 <div className="text-sm font-semibold mb-2">{day.day_name}</div>
                 <div className="text-xs text-gray-400 mb-1">CTR</div>
                 <div className="text-sm font-bold text-blue-400 mb-2">
-                  {day.avg_ctr.toFixed(2)}%
+                  {(day.avg_ctr ?? 0).toFixed(2)}%
                 </div>
                 <div className="text-xs text-gray-400 mb-1">ROAS</div>
                 <div className="text-sm font-bold text-green-400">
-                  {day.avg_roas.toFixed(2)}x
+                  {(day.avg_roas ?? 0).toFixed(2)}x
                 </div>
               </div>
             ))}

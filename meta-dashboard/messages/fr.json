@@ -88,6 +88,10 @@
     "metric_select": "Sélectionner les métriques",
     "dimension": "Dimension",
     "breakdown": "Répartition",
+    "primary_breakdown": "Répartition primaire",
+    "secondary_breakdown": "Répartition secondaire (facultatif)",
+    "none_optional": "Aucun",
+    "multi_dimension_hint": "Affichage d'une répartition multidimensionnelle",
     "campaign_filter": "Filtrer par nom de campagne",
     "ad_set_filter": "Filtrer par nom d'ensemble de publicités",
     "ad_filter": "Filtrer par nom de publicité",
@@ -151,7 +155,8 @@
     "last_30_days": "30 derniers jours",
     "last_month": "Le mois dernier",
     "this_month": "Ce mois-ci",
-    "today_yesterday": "Aujourd'hui & Hier"
+    "today_yesterday": "Aujourd'hui & Hier",
+    "maximum": "Tout le temps"
   },
   "footer": {
     "system_info": "Système d'analyse Next.js & FastAPI"

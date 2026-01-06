@@ -1,5 +1,75 @@
 # Project Tasks & Progress
 
+## 🔨 CURRENT TASK: Fix Insights and Translation Issues
+
+### Issues Identified
+1. ❌ Missing translation key: `date.maximum` is referenced but not defined in en.json
+2. ❌ Historical Trends insights not working (Network Error at `/api/v1/insights/historical-analysis`)
+3. ❌ Creative Analysis insights not working
+
+### Tasks
+
+#### Phase 1: Fix Missing Translation Key
+- [ ] Add `maximum` key to the `date` section in en.json
+- [ ] Sync translations to all language files (ar, de, fr, he)
+
+#### Phase 2: Debug Historical Analysis API
+- [ ] Check backend service for historical-analysis endpoint
+- [ ] Verify database queries and data availability
+- [ ] Test endpoint manually to identify root cause
+- [ ] Fix any issues found in the backend
+
+#### Phase 3: Debug Creative Analysis API
+- [ ] Check backend service for creative-analysis endpoint
+- [ ] Verify database queries and data availability
+- [ ] Test endpoint manually to identify root cause
+- [ ] Fix any issues found in the backend
+
+#### Phase 4: Testing
+- [ ] Test all insights views in the frontend
+- [ ] Verify translations display correctly
+- [ ] Ensure no network errors occur
+
+### Review Section
+
+**Completion Date**: January 5, 2026
+
+**Issues Fixed:**
+
+1. **Missing Translation Key** ✅
+   - Added `"maximum": "All Time"` to the `date` section in `messages/en.json`
+   - Synced translation to all languages (ar, de, fr, he) using `npm run i18n:sync`
+
+2. **Historical Trends & Creative Analysis Not Working** ✅
+   - **Root Cause**: Gemini API initialization using deprecated `genai.Client()` API
+   - **Fix**: Updated `historical_insights_service.py` and `creative_insights_service.py` to use correct API:
+     - Changed from `genai.Client(api_key)` to `genai.configure(api_key)` + `genai.GenerativeModel()`
+     - Updated API calls from `self.client.models.generate_content()` to `self.client.generate_content()`
+   - Backend restarted successfully and both endpoints now return AI-powered analysis
+
+**Files Changed:**
+- `meta-dashboard/messages/en.json` - Added missing `maximum` translation key
+- `meta-dashboard/src/components/insights/HistoricalTrendsView.tsx` - Fixed null safety for `.toFixed()` calls
+- `backend/api/services/historical_insights_service.py` - Fixed Gemini API initialization (3 locations)
+- `backend/api/services/creative_insights_service.py` - Fixed Gemini API initialization (2 locations)
+- `backend/api/services/insights_service.py` - Fixed Gemini API initialization (3 locations)
+- `backend/api/services/ai_service.py` - Fixed Gemini API initialization (2 locations)
+- `backend/api/services/proactive_analysis_service.py` - Fixed Gemini API initialization (3 locations)
+
+**Test Results:**
+- ✅ `/api/v1/insights/historical-analysis?lookback_days=90` - Returns full AI analysis with weekly trends and seasonality data
+- ✅ `/api/v1/insights/creative-analysis?start_date=X&end_date=Y` - Returns creative theme analysis and CTA performance
+- ✅ Translation key no longer missing - frontend will display "All Time" for maximum date range
+
+**Impact:**
+- Insights page now fully functional with Historical Trends and Creative Analysis tabs
+- Users can view AI-powered analysis of their Facebook Ads performance
+- No more "MISSING_MESSAGE" errors for date.maximum
+
+---
+
+# Previous Work
+
 ## ✅ COMPLETED: Big Brain AI Agent - Phases 1 & 2
 
 ### Overview

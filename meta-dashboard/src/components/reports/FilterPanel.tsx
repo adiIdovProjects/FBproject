@@ -27,6 +27,10 @@ interface FilterPanelProps {
   breakdown: BreakdownType;
   onBreakdownChange: (breakdown: BreakdownType) => void;
 
+  // Secondary Breakdown
+  secondaryBreakdown: BreakdownType;
+  onSecondaryBreakdownChange: (breakdown: BreakdownType) => void;
+
   // Filters
   campaignFilter: string;
   adSetFilter: string;
@@ -58,6 +62,8 @@ export default function FilterPanel({
   onDimensionChange,
   breakdown,
   onBreakdownChange,
+  secondaryBreakdown,
+  onSecondaryBreakdownChange,
   campaignFilter,
   adSetFilter,
   adFilter,
@@ -74,6 +80,27 @@ export default function FilterPanel({
   hasConversionValue = true,
 }: FilterPanelProps) {
   const t = useTranslations();
+
+  // Define dimension categories for smart filtering
+  const ENTITY_BREAKDOWNS: BreakdownType[] = ['campaign_name', 'ad_set_name', 'ad_name'];
+  const TIME_BREAKDOWNS: BreakdownType[] = ['date', 'week', 'month'];
+
+  // Smart filtering: Get available secondary options based on primary breakdown
+  const getSecondaryOptions = (primary: BreakdownType): BreakdownType[] => {
+    if (primary === 'none') return [];
+
+    // If primary is entity, allow time dimensions
+    if (ENTITY_BREAKDOWNS.includes(primary)) {
+      return TIME_BREAKDOWNS;
+    }
+
+    // If primary is time, allow entity dimensions
+    if (TIME_BREAKDOWNS.includes(primary)) {
+      return ENTITY_BREAKDOWNS;
+    }
+
+    return [];
+  };
 
   if (!isOpen) {
     return (
@@ -114,10 +141,10 @@ export default function FilterPanel({
       {/* Breakdown Selector */}
       <div className="border-t border-gray-700"></div>
 
-      {/* Breakdown Selector */}
+      {/* Primary Breakdown Selector */}
       <div className="space-y-2">
         <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-          {t('reports.breakdown')}
+          {t('reports.primary_breakdown')}
         </label>
         <select
           value={breakdown}
@@ -135,11 +162,35 @@ export default function FilterPanel({
         </select>
       </div>
 
+      {/* Secondary Breakdown Selector */}
+      <div className="space-y-2">
+        <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t('reports.secondary_breakdown')}
+        </label>
+        <select
+          value={secondaryBreakdown}
+          onChange={(e) => onSecondaryBreakdownChange(e.target.value as BreakdownType)}
+          disabled={breakdown === 'none'}
+          className={`w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${isRTL ? 'text-right' : 'text-left'
+            }`}
+        >
+          <option value="none">{t('reports.none_optional')}</option>
+          {getSecondaryOptions(breakdown).map(option => (
+            <option key={option} value={option}>{t(`reports.by_${option}`)}</option>
+          ))}
+        </select>
+        {breakdown !== 'none' && secondaryBreakdown !== 'none' && (
+          <div className={`text-xs text-gray-400 italic ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('reports.multi_dimension_hint')}
+          </div>
+        )}
+      </div>
+
       {/* Campaign Filter */}
       {(breakdown === 'campaign_name' || breakdown === 'ad_set_name' || breakdown === 'ad_name') && (
         <div className="space-y-2">
           <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('campaign_filter')}
+            {t('reports.campaign_filter')}
           </label>
           <input
             type="text"
@@ -156,7 +207,7 @@ export default function FilterPanel({
       {(breakdown === 'ad_set_name' || breakdown === 'ad_name') && (
         <div className="space-y-2">
           <label className={`block text-sm font-semibold text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('ad_set_filter')}
+            {t('reports.ad_set_filter')}
           </label>
           <input
             type="text"
