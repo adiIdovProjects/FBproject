@@ -9,6 +9,9 @@ import pandas as pd
 import logging
 from dotenv import load_dotenv
 
+# Import sync status updater
+from backend.api.routers.sync import update_sync_status
+
 # Load environment variables
 load_dotenv()
 import time
@@ -63,13 +66,14 @@ class ETLPipeline:
             "durations": {}
         }
     
-    def run(self, start_date: date, end_date: date):
+    def run(self, start_date: date, end_date: date, user_id: int = None):
         """
         Run the complete ETL pipeline
         
         Args:
             start_date: Start date for data pull
             end_date: End date for data pull
+            user_id: Optional user_id for progress updates
         """
         
         start_time_total = time.time()
@@ -84,22 +88,31 @@ class ETLPipeline:
             
             # Step 2: Extract data from Facebook
             start_extract = time.time()
+            if user_id: update_sync_status(user_id, "in_progress", 20) # 20%: Starting Extraction
+            
             raw_data = self._extract_data(start_date, end_date)
             self.stats["durations"]["extract"] = round(time.time() - start_extract, 2)
             
             if not raw_data:
                 self.logger.warning("No data extracted. Exiting.")
+                if user_id: update_sync_status(user_id, "completed", 100) # Nothing to do
                 return
+            
+            if user_id: update_sync_status(user_id, "in_progress", 60) # 60%: Extraction Done, Starting Transform
             
             # Step 3: Transform data
             start_transform = time.time()
             transformed_data = self._transform_data(raw_data)
             self.stats["durations"]["transform"] = round(time.time() - start_transform, 2)
             
+            if user_id: update_sync_status(user_id, "in_progress", 80) # 80%: Transform Done, Starting Load
+            
             # Step 4: Load dimensions
             start_load_dim = time.time()
             self._load_dimensions(transformed_data)
             self.stats["durations"]["load_dimensions"] = round(time.time() - start_load_dim, 2)
+            
+            if user_id: update_sync_status(user_id, "in_progress", 90) # 90%: Dimensions Loaded, Loading Facts
             
             # Step 5: Load facts
             start_load_fact = time.time()
@@ -108,6 +121,8 @@ class ETLPipeline:
 
             # Step 6: Validate data quality
             self._validate_loaded_data()
+            
+            if user_id: update_sync_status(user_id, "completed", 100) # 100%: Done
 
             total_duration = round(time.time() - start_time_total, 2)
             self.logger.info(
@@ -126,7 +141,88 @@ class ETLPipeline:
                 exc_info=True
             )
             raise
-    
+
+    def run_for_user(self, user_id: int, account_ids: List[int]):
+        """
+        Run ETL pipeline for a specific user with their own access token
+
+        Args:
+            user_id: Database user ID
+            account_ids: List of Facebook ad account IDs to sync
+        """
+        from sqlalchemy.orm import Session
+        from backend.api.repositories.user_repository import UserRepository
+
+        self.logger.info(f"Starting ETL for user {user_id} with {len(account_ids)} accounts")
+
+        # Get user from database
+        with Session(self.engine) as session:
+            repo = UserRepository(session)
+            user = repo.get_user_by_id(user_id)
+
+            if not user:
+                self.logger.error(f"User {user_id} not found")
+                return
+
+            if not user.fb_access_token:
+                self.logger.error(f"User {user_id} has no Facebook access token")
+                return
+
+            # Check if token is expired
+            if user.fb_token_expires_at:
+                from datetime import datetime
+                if datetime.utcnow() > user.fb_token_expires_at:
+                    self.logger.error(f"User {user_id} Facebook token expired at {user.fb_token_expires_at}")
+                    return
+
+            # Run ETL for each ad account
+            for account_id in account_ids:
+                self.logger.info(f"Running ETL for user {user_id}, account {account_id}")
+                update_sync_status(user_id, "in_progress", 10) # 10%: Started
+
+                # Create extractor with user's token
+                self.extractor = FacebookExtractor(
+                    access_token=user.fb_access_token,
+                    account_id=str(account_id),
+                    user_id=user_id
+                )
+
+                # Determine date range
+                # Check if this is the first pull for this account (no existing data)
+                from sqlalchemy import text
+                result = session.execute(
+                    text("SELECT COUNT(*) FROM fact_core_metrics WHERE account_id = :account_id"),
+                    {"account_id": account_id}
+                ).scalar()
+
+                is_first_pull = result == 0
+
+                end_date = date.today() - timedelta(days=1)
+                if is_first_pull:
+                    # First pull: Get last 90 days of data
+                    start_date = end_date - timedelta(days=FIRST_PULL_DAYS)
+                    self.logger.info(f"First-time pull for account {account_id}: pulling {FIRST_PULL_DAYS} days")
+                else:
+                    # Incremental pull: Just last 2 days
+                    start_date = end_date - timedelta(days=DAILY_PULL_DAYS)
+                    self.logger.info(f"Incremental pull for account {account_id}: pulling {DAILY_PULL_DAYS} days")
+
+                try:
+                    # Run standard ETL pipeline with progress callbacks (simple approach)
+                    # For now we update manually around the main stages since run() doesn't know about user_id
+                    
+                    # 1. Extraction (Done internally, but we can update before transform)
+                    # We can't easily hook into run() without passing user_id everywhere.
+                    # Instead, we will wrap the steps manually or trust run() to be fast enough between stages?
+                    # Better: Pass user_id to run() optionally.
+                    self.run(start_date, end_date, user_id=user_id)
+                    self.logger.info(f"✅ ETL completed for user {user_id}, account {account_id}")
+                except Exception as e:
+                    self.logger.error(f"❌ ETL failed for user {user_id}, account {account_id}: {e}")
+                    update_sync_status(user_id, "failed", 0, str(e))
+                    # Continue with next account even if one fails
+                    continue
+
     def _ensure_schema(self):
         """Create database schema if it doesn't exist"""
         self.logger.info("STEP 1: Ensuring database schema exists...")

@@ -14,8 +14,10 @@ import {
     Zap,
     BarChart,
     User,
-    Lightbulb
+    Lightbulb,
+    ChevronDown
 } from 'lucide-react';
+import { useAccount } from '@/context/AccountContext';
 import { useLocale, useTranslations } from 'next-intl';
 
 export const Sidebar: React.FC = () => {
@@ -23,6 +25,12 @@ export const Sidebar: React.FC = () => {
     const pathname = usePathname();
     const locale = useLocale();
     const isRTL = locale === 'ar' || locale === 'he';
+
+    // Account Context
+    const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
+
+    const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
     const navItems = [
         { name: t('nav.dashboard'), href: `/${locale}`, icon: LayoutDashboard },
@@ -39,14 +47,84 @@ export const Sidebar: React.FC = () => {
         <aside
             className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} w-64 bg-sidebar border-border-subtle flex flex-col z-50 transition-all duration-300`}
         >
-            {/* Brand Logo */}
-            <div className="p-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
-                    <BarChart3 className="text-white w-6 h-6" />
+            {/* Brand Logo & Account Selector */}
+            <div className="p-6 pb-2">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
+                        <BarChart3 className="text-white w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-lg tracking-tight">AdManager</h2>
+                        <Link href={`/${locale}/settings`} className="text-[10px] text-gray-500 font-medium uppercase tracking-widest hover:text-accent transition-colors">
+                            Settings
+                        </Link>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="font-bold text-lg tracking-tight">AdManager</h2>
-                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Pro Plan</p>
+
+                {/* Account Selector */}
+                <div className="relative mb-2">
+                    <button
+                        onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                        className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group"
+                    >
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                {selectedAccount ? selectedAccount.name[0].toUpperCase() : 'A'}
+                            </div>
+                            <div className="text-left min-w-0">
+                                <p className="text-xs font-bold text-white truncate w-32">
+                                    {selectedAccount ? selectedAccount.name : 'Select Account'}
+                                </p>
+                                <p className="text-[10px] text-gray-400 font-mono truncate">
+                                    ID: {selectedAccount ? selectedAccount.account_id : '---'}
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isAccountMenuOpen ? 'rotate-90' : ''}`} />
+                    </button>
+
+                    {/* Dropdown */}
+                    {isAccountMenuOpen && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-10"
+                                onClick={() => setIsAccountMenuOpen(false)}
+                            />
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-20 max-h-60 overflow-y-auto">
+                                <div className="p-1 space-y-0.5">
+                                    {linkedAccounts.length > 0 ? (
+                                        linkedAccounts.map((account) => (
+                                            <button
+                                                key={account.account_id}
+                                                onClick={() => {
+                                                    setSelectedAccountId(account.account_id);
+                                                    setIsAccountMenuOpen(false);
+                                                }}
+                                                className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${selectedAccountId === account.account_id ? 'bg-accent/20 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+                                            >
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${selectedAccountId === account.account_id ? 'bg-accent text-white' : 'bg-gray-800'}`}>
+                                                    {account.name[0]}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-bold truncate">{account.name}</p>
+                                                    <p className="text-[9px] opacity-70 truncate">{account.account_id}</p>
+                                                </div>
+                                                {selectedAccountId === account.account_id && (
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                                )}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="p-3 text-center text-xs text-gray-500">
+                                            No accounts found.
+                                            <br />
+                                            <Link href={`/${locale}/settings`} className="text-accent hover:underline">Connect an account</Link>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 

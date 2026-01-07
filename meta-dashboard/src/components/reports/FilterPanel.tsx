@@ -43,9 +43,6 @@ interface FilterPanelProps {
   selectedMetrics: MetricKey[];
   onMetricsChange: (metrics: MetricKey[]) => void;
 
-  // Actions
-  onApply: () => void;
-  onReset: () => void;
 
   // UI
   isOpen?: boolean;
@@ -72,8 +69,6 @@ export default function FilterPanel({
   onAdFilterChange,
   selectedMetrics,
   onMetricsChange,
-  onApply,
-  onReset,
   isOpen = true,
   onToggle,
   isRTL = false,
@@ -248,29 +243,6 @@ export default function FilterPanel({
         hasConversionValue={hasConversionValue}
       />
 
-      {/* Divider */}
-      <div className="border-t border-gray-700"></div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={onApply}
-          disabled={selectedMetrics.length === 0}
-          className={`
-            flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed
-            text-white font-semibold py-2 px-4 rounded
-            transition-colors
-          `}
-        >
-          {t('reports.apply_filters')}
-        </button>
-        <button
-          onClick={onReset}
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded transition-colors"
-        >
-          {t('reports.reset_filters')}
-        </button>
-      </div>
     </div>
   );
 }

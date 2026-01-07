@@ -13,23 +13,38 @@ from backend.api.repositories.base_repository import BaseRepository
 class MetricsRepository(BaseRepository):
     """Repository for core metrics data access"""
 
-    def get_account_currency(self) -> str:
+    def get_account_currency(self, account_ids: Optional[List[int]] = None) -> str:
         """
         Get the currency from dim_account table.
+        If account_ids is provided, returns the currency of the first matching account.
         Prioritizes real accounts over the 'Unknown Account' (ID 0).
         
+        Args:
+            account_ids: Optional list of account IDs to filter by
+            
         Returns:
             Currency code (e.g., 'USD', 'EUR', 'ILS')
         """
+        # Build account filter
+        account_filter = ""
+        params = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                params[f'acc_id_{i}'] = acc_id
+
         # Exclude ID 0 and sort to prioritize real names if possible
-        query = text("""
+        query = text(f"""
             SELECT currency 
             FROM dim_account 
             WHERE account_id != 0 
+            {account_filter}
             ORDER BY (CASE WHEN account_name = 'Unknown Account' THEN 1 ELSE 0 END) ASC
             LIMIT 1
         """)
-        result = self.db.execute(query).scalar()
+        
+        result = self.db.execute(query, params).scalar()
         
         # Fallback to ID 0 or default to USD
         if not result:
@@ -96,12 +111,15 @@ class MetricsRepository(BaseRepository):
             JOIN dim_date d ON f.date_id = d.date_id
             LEFT JOIN dim_campaign c ON f.campaign_id = c.campaign_id
             LEFT JOIN (
-                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
-                       SUM(action_count) as action_count,
-                       SUM(action_value) as action_value
+                SELECT fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id,
+                       SUM(fam.action_count) as action_count,
+                       SUM(fam.action_value) as action_value
                 FROM fact_action_metrics fam
                 JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                JOIN dim_date d2 ON fam.date_id = d2.date_id
                 WHERE dat.is_conversion = TRUE
+                    AND d2.date >= :start_date
+                    AND d2.date <= :end_date
                 GROUP BY 1, 2, 3, 4, 5, 6
             ) conv ON f.date_id = conv.date_id 
                   AND f.account_id = conv.account_id 

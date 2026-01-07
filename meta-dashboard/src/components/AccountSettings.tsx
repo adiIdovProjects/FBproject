@@ -1,32 +1,103 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
     User,
     CreditCard,
     Users,
     Shield,
     Save,
-    Plus,
-    ExternalLink,
     CheckCircle2,
     Crown,
     Settings,
     Target,
-    Globe
+    Globe,
+    Trash2,
+    RefreshCw,
+    Plus,
+    ExternalLink,
+    ShieldAlert
 } from 'lucide-react';
 import { fetchActionTypes, toggleActionConversion, ActionType } from '@/services/actions.service';
+import { unlinkAccount } from '@/services/accounts.service'; // Import unlink service
+
+import { useAccount } from '@/context/AccountContext'; // Import context
+import { apiClient } from '@/services/apiClient'; // Import API client
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-type TabType = 'profile' | 'billing' | 'team' | 'security' | 'integrations' | 'conversions';
+type TabType = 'profile' | 'billing' | 'team' | 'security' | 'integrations' | 'conversions' | 'accounts';
 
 export const AccountSettings: React.FC = () => {
     const t = useTranslations();
-    const [activeTab, setActiveTab] = useState<TabType>('profile');
+    const router = useRouter(); // Initialize router if needed for programmatic navigation
+    const searchParams = useSearchParams();
+    const { linkedAccounts, refreshAccounts, isLoading: isAccountsLoading } = useAccount(); // Use context
+
+    // Initialize tab from URL or default to 'profile'
+    const tabParam = searchParams.get('tab') as TabType;
+    const initialTab = (tabParam && ['profile', 'accounts', 'billing', 'team', 'security', 'integrations', 'conversions'].includes(tabParam)) ? tabParam : 'profile';
+
+    const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+
+    // Delete Modal State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedAccountForDeletion, setSelectedAccountForDeletion] = useState<string | null>(null);
+    const [deleteDataChecked, setDeleteDataChecked] = useState(false);
+
+    const openDeleteModal = (accountId: string) => {
+        setSelectedAccountForDeletion(accountId);
+        setDeleteDataChecked(false); // Reset checkbox
+        setShowDeleteModal(true);
+    };
+
+    const confirmUnlink = async () => {
+        if (!selectedAccountForDeletion) return;
+
+        try {
+            await unlinkAccount(selectedAccountForDeletion, deleteDataChecked);
+            // Refresh accounts
+            await refreshAccounts();
+            setShowDeleteModal(false);
+            setSelectedAccountForDeletion(null);
+        } catch (error) {
+            console.error('Failed to unlink account:', error);
+            alert(t('common.error_occurred'));
+        }
+    };
+
+
+    // Handle connection success/error params
+    useEffect(() => {
+        if (searchParams.get('connect_success') === 'true') {
+            // Refresh accounts list to show the new one
+            refreshAccounts();
+            // Clear the param
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('connect_success');
+            window.history.replaceState({}, '', newUrl.toString());
+            // Optional: Success toast here
+        }
+        if (searchParams.get('error')) {
+            alert(searchParams.get('error'));
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('error');
+            window.history.replaceState({}, '', newUrl.toString());
+        }
+    }, [searchParams, refreshAccounts]);
+
+    // Update URL when tab changes
+    const handleTabChange = (tab: TabType) => {
+        setActiveTab(tab);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('tab', tab);
+        window.history.pushState({}, '', newUrl.toString());
+    };
 
     const tabs = [
         { id: 'profile', label: t('settings.profile'), icon: User },
+        { id: 'accounts', label: t('settings.accounts'), icon: Globe }, // New Accounts Tab
         { id: 'billing', label: t('settings.billing'), icon: CreditCard },
         { id: 'team', label: t('settings.team'), icon: Users },
         { id: 'security', label: t('settings.security'), icon: Shield },
@@ -55,6 +126,32 @@ export const AccountSettings: React.FC = () => {
         }
     };
 
+
+
+    const handleUnlink = async (accountId: string) => {
+        if (confirm(t('settings.confirm_unlink'))) {
+            try {
+                await unlinkAccount(accountId);
+                // Refresh accounts
+                await refreshAccounts();
+            } catch (error) {
+                console.error('Failed to unlink account:', error);
+            }
+        }
+    };
+
+    const handleConnectFacebook = async () => {
+        try {
+            const response = await apiClient.get<{ url: string }>('/api/v1/auth/facebook/connect');
+            if (response.data.url) {
+                window.location.href = response.data.url;
+            }
+        } catch (error) {
+            console.error('Failed to initiate Facebook connection:', error);
+            alert(t('common.error_occurred'));
+        }
+    };
+
     const handleToggleConversion = async (actionType: string) => {
         const currentAction = actionTypes.find(a => a.action_type === actionType);
         if (!currentAction) return;
@@ -76,6 +173,62 @@ export const AccountSettings: React.FC = () => {
 
     const renderContent = () => {
         switch (activeTab) {
+            case 'accounts':
+                return (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-white mb-2">{t('settings.connected_accounts')}</h3>
+                            <p className="text-sm text-gray-400 mb-6">
+                                {t('settings.connected_accounts_desc')}
+                            </p>
+
+                            {isAccountsLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {linkedAccounts.length > 0 ? (
+                                        linkedAccounts.map((account) => (
+                                            <div key={account.account_id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-[#1877F2]/20 flex items-center justify-center text-[#1877F2]">
+                                                        <Globe className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-white">{account.name}</p>
+                                                        <p className="text-xs text-gray-500">ID: {account.account_id} • {account.currency}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => openDeleteModal(account.account_id)}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold transition-all"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    {t('settings.remove')}
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500">
+                                            {t('settings.no_accounts')}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="mt-8 pt-6 border-t border-white/10">
+                                <button
+                                    onClick={handleConnectFacebook}
+                                    className="flex items-center gap-2 bg-[#1877F2] hover:bg-[#1877F2]/90 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-900/20"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    {t('settings.add_account')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'profile':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -286,7 +439,7 @@ export const AccountSettings: React.FC = () => {
                     return (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id as TabType)}
+                            onClick={() => handleTabChange(tab.id as TabType)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
                                 ? 'bg-accent/15 text-accent border border-accent/20 shadow-sm'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
@@ -314,6 +467,58 @@ export const AccountSettings: React.FC = () => {
                     {renderContent()}
                 </div>
             </div>
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#1C1F26] border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-4 text-red-500 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                                <ShieldAlert className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">{t('settings.confirm_unlink')}</h3>
+                                <p className="text-sm text-gray-400">{t('settings.unlink_warning')}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4 mb-6">
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <div className="mt-1 relative">
+                                    <input
+                                        type="checkbox"
+                                        checked={deleteDataChecked}
+                                        onChange={(e) => setDeleteDataChecked(e.target.checked)}
+                                        className="w-5 h-5 rounded border-gray-600 bg-black/20 text-red-500 focus:ring-red-500 cursor-pointer"
+                                    />
+                                </div>
+                                <div>
+                                    <span className="text-sm font-bold text-white group-hover:text-red-400 transition-colors">
+                                        {t('settings.delete_data_checkbox')}
+                                    </span>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {t('settings.delete_data_desc')}
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all"
+                            >
+                                {t('common.cancel')}
+                            </button>
+                            <button
+                                onClick={confirmUnlink}
+                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-900/20"
+                            >
+                                {deleteDataChecked ? t('common.delete_permanently') : t('common.unlink_only')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

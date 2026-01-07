@@ -5,6 +5,8 @@ import { useState } from 'react';
 
 import DevAuth from './DevAuth';
 
+import { AccountProvider } from '@/context/AccountContext';
+
 export default function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
@@ -20,8 +22,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <DevAuth />
-            {children}
+            <AccountProvider>
+                <DevAuth />
+                {children}
+            </AccountProvider>
         </QueryClientProvider>
     );
 }

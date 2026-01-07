@@ -28,6 +28,7 @@ import { fetchInsightsSummary, InsightItem } from '../../../services/insights.se
 import { CampaignRow, TimeGranularity, CampaignMetrics, DateRange } from '../../../types/campaigns.types';
 import { MetricType } from '../../../types/dashboard.types';
 import { useCallback } from 'react';
+import { useAccount } from '../../../context/AccountContext'; // Import context
 
 // Utilities
 import { formatDate, calculateDateRange } from '../../../utils/date';
@@ -40,6 +41,7 @@ export default function CampaignsPage() {
   const locale = useLocale();
   const isRTL = locale === 'ar' || locale === 'he';
   const dir = isRTL ? 'rtl' : 'ltr';
+  const { selectedAccountId } = useAccount(); // Use context
 
   // Initialize date range
   const initialDates = useMemo(() => calculateDateRange(DEFAULT_DATE_RANGE_KEY), []);
@@ -92,13 +94,13 @@ export default function CampaignsPage() {
 
         // Fetch campaigns with comparison, overview, and insights in parallel
         const [campaignsData, overviewData, insightsData] = await Promise.all([
-          fetchCampaignsWithComparison(dateRange, statusFilter, searchQuery),
-          fetch(`${API_BASE_URL}/api/v1/metrics/overview?start_date=${startDate}&end_date=${endDate}`)
+          fetchCampaignsWithComparison(dateRange, statusFilter, searchQuery, undefined, undefined, selectedAccountId),
+          fetch(`${API_BASE_URL}/api/v1/metrics/overview?start_date=${startDate}&end_date=${endDate}${selectedAccountId ? `&account_id=${selectedAccountId}` : ''}`)
             .then(res => res.ok ? res.json() : null)
             .catch(() => null),
           fetchInsightsSummary(dateRange, 'campaigns', {
             campaignFilter: searchQuery || undefined
-          })
+          }, selectedAccountId)
         ]);
 
         setCampaigns(campaignsData);
@@ -116,7 +118,7 @@ export default function CampaignsPage() {
     };
 
     fetchData();
-  }, [startDate, endDate, statusFilter, searchQuery]);
+  }, [startDate, endDate, statusFilter, searchQuery, selectedAccountId]);
 
   // Fetch trend data when granularity changes
   useEffect(() => {
@@ -126,7 +128,7 @@ export default function CampaignsPage() {
       setIsTrendLoading(true);
       try {
         const dateRange: DateRange = { startDate, endDate };
-        const data = await fetchTrendData(dateRange, granularity);
+        const data = await fetchTrendData(dateRange, granularity, selectedAccountId);
         setTrendData(data || []);
       } catch (err: any) {
         console.error('[Campaigns Page] Error fetching trend data:', err);
@@ -136,7 +138,7 @@ export default function CampaignsPage() {
     };
 
     fetchTrend();
-  }, [startDate, endDate, granularity]);
+  }, [startDate, endDate, granularity, selectedAccountId]);
 
   // Calculate aggregated metrics from campaigns
   const aggregatedMetrics: CampaignMetrics = useMemo(() => {

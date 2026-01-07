@@ -7,26 +7,33 @@ import { apiClient } from './apiClient';
 import {
   CalculatedMetrics,
   DateRange,
-  BackendOverviewResponse,
-  BackendTimeSeriesPoint,
+  OverviewMetrics,
+  MetricTrend,
 } from '../types/dashboard.types';
 
 /**
  * Fetch overview metrics from the backend (KPIs with trends)
  */
-export async function fetchOverviewMetrics(dateRange: DateRange): Promise<BackendOverviewResponse> {
-  const { startDate, endDate } = dateRange;
+export async function fetchOverviewMetrics(
+  period: string,
+  previous_period?: string,
+  accountId?: string | null
+): Promise<OverviewMetrics> {
   try {
-    const response = await apiClient.get<BackendOverviewResponse>('/api/v1/metrics/overview', {
-      params: {
-        start_date: startDate,
-        end_date: endDate,
-        compare_to_previous: true,
-      },
+    const [startDate, endDate] = period.split(':');
+    const params: any = {
+      start_date: startDate,
+      end_date: endDate
+    };
+    if (previous_period) params.compare_to_previous = true; // Backend expects boolean, not string
+    if (accountId) params.account_id = accountId;
+
+    const response = await apiClient.get<OverviewMetrics>('/api/v1/metrics/overview', {
+      params
     });
     return response.data;
   } catch (error) {
-    console.error('[Dashboard Service] Error fetching overview metrics:', error);
+    console.error('Error fetching overview metrics:', error);
     throw error;
   }
 }
@@ -34,19 +41,28 @@ export async function fetchOverviewMetrics(dateRange: DateRange): Promise<Backen
 /**
  * Fetch time series data from the backend (for charts)
  */
-export async function fetchTrendData(dateRange: DateRange): Promise<BackendTimeSeriesPoint[]> {
-  const { startDate, endDate } = dateRange;
+export async function fetchMetricTrends(
+  period: string,
+  time_grain: 'day' | 'week' | 'month' = 'day',
+  accountId?: string | null
+): Promise<MetricTrend[]> {
   try {
-    const response = await apiClient.get<BackendTimeSeriesPoint[]>('/api/v1/metrics/trend', {
-      params: {
-        start_date: startDate,
-        end_date: endDate,
-        granularity: 'day',
-      },
+    const [startDate, endDate] = period.split(':');
+    const params: any = {
+      start_date: startDate,
+      end_date: endDate,
+      time_grain: time_grain
+    };
+    if (accountId) {
+      params.account_id = accountId;
+    }
+
+    const response = await apiClient.get<MetricTrend[]>('/api/v1/metrics/trend', {
+      params
     });
     return response.data;
   } catch (error) {
-    console.error('[Dashboard Service] Error fetching trend data:', error);
+    console.error('Error fetching metric trends:', error);
     throw error;
   }
 }
@@ -54,13 +70,16 @@ export async function fetchTrendData(dateRange: DateRange): Promise<BackendTimeS
 /**
  * Fetch metrics with trends for the dashboard
  */
-export async function fetchMetricsWithTrends(dateRange: DateRange) {
+export async function fetchMetricsWithTrends(dateRange: DateRange, accountId?: string | null) {
   try {
+    const period = `${dateRange.startDate}:${dateRange.endDate}`;
+
     // Fetch overview data (includes trends already calculated by backend)
-    const overviewData = await fetchOverviewMetrics(dateRange);
+    // Pass 'auto' to enable backend comparison with previous period
+    const overviewData = await fetchOverviewMetrics(period, 'auto', accountId);
 
     // Fetch daily time series data for charts
-    const trendData = await fetchTrendData(dateRange);
+    const trendData = await fetchMetricTrends(period, 'day', accountId);
 
     // Map backend data to frontend format
     const current: CalculatedMetrics = {

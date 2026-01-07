@@ -366,7 +366,7 @@ class ExportService:
         # Write data
         for row_idx, row_data in enumerate(data, 2):
             for col_idx, header in enumerate(headers, 1):
-                value = row_data.get(header, "")
+                value = self._format_cell_value(row_data.get(header, ""))
                 ws.cell(row=row_idx, column=col_idx, value=value)
 
         # Auto-adjust column widths
@@ -399,4 +399,7 @@ class ExportService:
             return value
         if isinstance(value, date):
             return value.strftime('%Y-%m-%d')
+        if isinstance(value, (dict, list)):
+            import json
+            return json.dumps(value)
         return str(value)

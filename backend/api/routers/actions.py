@@ -49,7 +49,7 @@ def get_action_types(db: Session = Depends(get_db)):
     return final_results
 
 @router.post("/types/toggle")
-def toggle_action_type(data: ActionTypeToggle, db: Session = Depends(get_db)):
+def toggle_action_type(data: ActionTypeToggle, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Toggle the is_conversion flag for an action type"""
     
     if data.action_type == "leads":

@@ -33,6 +33,7 @@ def get_comparison_report(
     campaign_filter: Optional[str] = Query(None, description="Filter by campaign name (partial match)"),
     ad_set_filter: Optional[str] = Query(None, description="Filter by ad set name (partial match)"),
     ad_filter: Optional[str] = Query(None, description="Filter by ad name (partial match)"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -68,7 +69,7 @@ def get_comparison_report(
 
     try:
         # Initialize service
-        service = ReportsService(db)
+        service = ReportsService(db, current_user.id)
 
         # Get comparison data
         comparison_data = service.get_comparison_data(

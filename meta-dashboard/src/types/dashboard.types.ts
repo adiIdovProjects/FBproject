@@ -137,6 +137,10 @@ export interface BackendTimeSeriesPoint {
   roas?: number;
 }
 
+// Type Aliases for Service compatibility
+export type OverviewMetrics = BackendOverviewResponse;
+export type MetricTrend = BackendTimeSeriesPoint;
+
 // AI Investigator Types
 export interface AIQueryResponse {
   answer: string;

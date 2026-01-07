@@ -15,15 +15,17 @@ import logging
 import uuid
 import time
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 
 
 from backend.api.dependencies import get_db
 from sqlalchemy.orm import Session
-from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users
+from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync
 from backend.models import create_schema
 from backend.utils.db_utils import get_db_engine
 from backend.utils.logging_utils import setup_logging, get_logger
@@ -106,6 +108,7 @@ app.include_router(actions.router)
 app.include_router(insights.router)
 app.include_router(reports.router)
 app.include_router(users.router)
+app.include_router(sync.router)
 
 @app.get("/ping", tags=["health"])
 def ping():

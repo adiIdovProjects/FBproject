@@ -104,7 +104,7 @@ ACTION_TYPES_TO_TRACK = [
 
 FIRST_PULL_DAYS = 450  # 3 years initially
 DAILY_PULL_DAYS = 2  # Yesterday + today
-CHUNK_DAYS = 20  # API call chunking
+CHUNK_DAYS = 90  # API call chunking
 
 # ==============================================================================
 # DATABASE CONSTANTS

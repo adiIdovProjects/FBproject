@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { generateState } from '@/utils/csrf';
-import { getGoogleLoginUrl, loginWithEmail } from '@/services/auth.service';
-import { BarChart3, ShieldCheck, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { getGoogleLoginUrl, getFacebookLoginUrl, loginWithEmail } from '@/services/auth.service';
+import { BarChart3, ShieldCheck, Mail, Lock, Loader2, AlertCircle, Facebook } from 'lucide-react';
 
 export default function LoginPage() {
     const t = useTranslations();
@@ -21,6 +21,17 @@ export default function LoginPage() {
 
         // 2. Get login URL with state
         const loginUrl = getGoogleLoginUrl(state);
+
+        // 3. Redirect user
+        window.location.href = loginUrl;
+    };
+
+    const handleFacebookLogin = () => {
+        // 1. Generate secure random state
+        const state = generateState();
+
+        // 2. Get login URL with state
+        const loginUrl = getFacebookLoginUrl(state);
 
         // 3. Redirect user
         window.location.href = loginUrl;
@@ -141,16 +152,28 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    {/* Google Login Button */}
-                    <button
-                        onClick={handleGoogleLogin}
-                        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-bold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl group"
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24">
-                            {/* ... SVG paths ... */}
-                        </svg>
-                        <span>{t('auth.continue_with_google')}</span>
-                    </button>
+                    {/* Social Login Buttons */}
+                    <div className="space-y-3">
+                        {/* Facebook Login Button */}
+                        <button
+                            onClick={handleFacebookLogin}
+                            className="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#1864D2] text-white font-bold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl group"
+                        >
+                            <Facebook className="w-5 h-5 fill-current" />
+                            <span>{t('auth.continue_with_facebook')}</span>
+                        </button>
+
+                        {/* Google Login Button */}
+                        <button
+                            onClick={handleGoogleLogin}
+                            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-bold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl group"
+                        >
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                {/* ... SVG paths ... */}
+                            </svg>
+                            <span>{t('auth.continue_with_google')}</span>
+                        </button>
+                    </div>
 
                     <p className="mt-8 text-center text-xs text-gray-500">
                         {t('auth.secure_connection')}

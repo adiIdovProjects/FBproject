@@ -44,7 +44,8 @@ export interface InsightsFilters {
 export async function fetchInsightsSummary(
   dateRange: DateRange,
   pageContext: 'dashboard' | 'campaigns' | 'creatives' = 'dashboard',
-  filters?: InsightsFilters
+  filters?: InsightsFilters,
+  accountId?: string | null
 ): Promise<InsightItem[]> {
   try {
     const params: any = {
@@ -60,6 +61,11 @@ export async function fetchInsightsSummary(
     if (filters?.breakdownType) {
       params.breakdown_type = filters.breakdownType;
       params.breakdown_group_by = filters.breakdownGroupBy || 'both';
+    }
+
+    // Add account filter
+    if (accountId) {
+      params.account_id = accountId;
     }
 
     const response = await apiClient.get<InsightsSummaryResponse>('/api/v1/insights/summary', {
@@ -78,13 +84,15 @@ export async function fetchInsightsSummary(
  * Fetch deep analysis insights for dedicated insights page
  */
 export async function fetchDeepInsights(
-  dateRange: DateRange
+  dateRange: DateRange,
+  accountId?: string | null
 ): Promise<DeepInsightsResponse | null> {
   try {
     const response = await apiClient.get<DeepInsightsResponse>('/api/v1/insights/deep-analysis', {
       params: {
         start_date: dateRange.startDate,
-        end_date: dateRange.endDate
+        end_date: dateRange.endDate,
+        account_id: accountId
       }
     });
     return response.data;

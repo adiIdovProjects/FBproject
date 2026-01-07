@@ -13,8 +13,8 @@ from typing import Dict, List, Any, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
 
-import google.generativeai as genai
-from google.generativeai import types
+import google.genai as genai
+from google.genai import types
 
 try:
     from backend.models.schema import DimInsightHistory
@@ -70,8 +70,9 @@ Be strategic and forward-looking.
 class ProactiveAnalysisService:
     """Service for auto-generating daily/weekly insights"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: Optional[int] = None):
         self.db = db
+        self.user_id = user_id
 
         # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
@@ -80,12 +81,19 @@ class ProactiveAnalysisService:
             self.client = None
         else:
             try:
-                genai.configure(api_key=api_key)
-                self.client = genai.GenerativeModel(GEMINI_MODEL)
+                self.client = genai.Client(api_key=api_key)
                 self.model = GEMINI_MODEL
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini: {e}")
                 self.client = None
+
+    def _get_user_account_ids(self) -> Optional[List[int]]:
+        """Get account IDs for current user (for data filtering)"""
+        if not self.user_id:
+            return None
+        from backend.api.repositories.user_repository import UserRepository
+        user_repo = UserRepository(self.db)
+        return user_repo.get_user_account_ids(self.user_id)
 
     def generate_daily_insights(
         self,
@@ -221,9 +229,10 @@ class ProactiveAnalysisService:
             context_json = json.dumps(context, indent=2, default=str)
 
             # Call Gemini
-            response = self.client.generate_content(
-                context_json,
-                generation_config=genai.types.GenerationConfig(
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=context_json,
+                config=types.GenerateContentConfig(
                     temperature=0.3
                 )
             )

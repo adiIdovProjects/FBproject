@@ -130,3 +130,18 @@ class ExcelExportRequest(BaseModel):
     filename: str = Field("facebook_ads_export.xlsx", description="Excel filename")
     sheet_name: str = Field("Data", description="Name of the Excel sheet")
     filters: Optional[dict] = Field(None, description="Additional filters (campaign_id, status, etc.)")
+
+
+# ============================================================================
+# USER PROFILE QUIZ SCHEMAS
+# ============================================================================
+
+class UserProfileUpdateRequest(BaseModel):
+    """Request parameters for updating user profile from quiz"""
+    full_name: str = Field(..., min_length=1, max_length=255, description="User's name")
+    job_title: str = Field(..., min_length=1, max_length=100, description="User's job title")
+    years_experience: str = Field(..., min_length=1, max_length=50, description="Years of advertising experience")
+    referral_source: str = Field(..., min_length=1, max_length=100, description="How user heard about us")
+
+
+

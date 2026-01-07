@@ -10,7 +10,7 @@ import { DateRange } from '../types/dashboard.types';
 /**
  * Fetch performance metrics for all creatives
  */
-export async function fetchCreatives(filter: CreativesFilter): Promise<CreativeMetrics[]> {
+export async function fetchCreatives(filter: CreativesFilter, accountId?: string | null): Promise<CreativeMetrics[]> {
     const { dateRange, is_video, min_spend, sort_by } = filter;
     const { startDate, endDate } = dateRange;
 
@@ -19,6 +19,10 @@ export async function fetchCreatives(filter: CreativesFilter): Promise<CreativeM
         end_date: endDate,
         sort_by: sort_by
     };
+
+    if (accountId) {
+        params.account_id = accountId;
+    }
 
     if (is_video !== undefined) {
         params.is_video = is_video;
@@ -40,14 +44,15 @@ export async function fetchCreatives(filter: CreativesFilter): Promise<CreativeM
 /**
  * Fetch video insights and patterns
  */
-export async function fetchVideoInsights(dateRange: DateRange): Promise<VideoInsightsResponse> {
+export async function fetchVideoInsights(dateRange: DateRange, accountId?: string | null): Promise<VideoInsightsResponse> {
     const { startDate, endDate } = dateRange;
 
     try {
         const response = await apiClient.get<VideoInsightsResponse>('/api/v1/creatives/insights/video', {
             params: {
                 start_date: startDate,
-                end_date: endDate
+                end_date: endDate,
+                account_id: accountId
             }
         });
         return response.data;
@@ -60,14 +65,15 @@ export async function fetchVideoInsights(dateRange: DateRange): Promise<VideoIns
 /**
  * Fetch detailed metrics for a single creative
  */
-export async function fetchCreativeDetail(creativeId: number, dateRange: DateRange): Promise<any> {
+export async function fetchCreativeDetail(creativeId: number, dateRange: DateRange, accountId?: string | null): Promise<any> {
     const { startDate, endDate } = dateRange;
 
     try {
         const response = await apiClient.get<any>(`/api/v1/creatives/${creativeId}`, {
             params: {
                 start_date: startDate,
-                end_date: endDate
+                end_date: endDate,
+                account_id: accountId
             }
         });
         return response.data;

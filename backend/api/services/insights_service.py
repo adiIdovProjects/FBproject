@@ -10,10 +10,12 @@ import hashlib
 import time
 from datetime import date, timedelta, datetime
 from typing import Dict, Any, List, Optional
-import google.generativeai as genai
+import google.genai as genai
+from google.genai import types
 from sqlalchemy.orm import Session
 
 from backend.api.repositories.insights_repository import InsightsRepository
+from backend.api.repositories.user_repository import UserRepository
 from backend.api.services.comparison_service import ComparisonService
 from backend.config.settings import GEMINI_MODEL
 
@@ -87,8 +89,9 @@ class InsightsService:
     """Service for generating AI-powered insights"""
 
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: Optional[int] = None):
         self.db = db
+        self.user_id = user_id
         self.repository = InsightsRepository(db)
 
         # Initialize Gemini
@@ -98,8 +101,7 @@ class InsightsService:
             self.client = None
         else:
             try:
-                genai.configure(api_key=api_key)
-                self.client = genai.GenerativeModel(GEMINI_MODEL)
+                self.client = genai.Client(api_key=api_key)
                 self.model = GEMINI_MODEL
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini: {e}")
@@ -113,12 +115,13 @@ class InsightsService:
         campaign_filter: Optional[str] = None,
         breakdown_type: Optional[str] = None,
         breakdown_group_by: Optional[str] = None,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        account_id: Optional[str] = None
     ) -> str:
         """Generate cache key from parameters including filters"""
         # Version 5: Structured 4-line insights with distinct metric layers
         cache_version = "v5"
-        filters_str = f":{campaign_filter or ''}:{breakdown_type or ''}:{breakdown_group_by or ''}:{user_id or ''}"
+        filters_str = f":{campaign_filter or ''}:{breakdown_type or ''}:{breakdown_group_by or ''}:{user_id or ''}:{account_id or ''}"
         key_str = f"insights:{cache_version}:{context}:{start_date}:{end_date}{filters_str}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
@@ -260,7 +263,8 @@ class InsightsService:
         campaign_filter: Optional[str] = None,
         breakdown_type: Optional[str] = None,
         breakdown_group_by: Optional[str] = None,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        account_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generate 2-3 quick insights for mini cards.
@@ -275,7 +279,7 @@ class InsightsService:
         # Check cache with filter-aware key
         cache_key = self._get_cache_key(
             start_date, end_date, f"summary_{page_context}",
-            campaign_filter, breakdown_type, breakdown_group_by, user_id
+            campaign_filter, breakdown_type, breakdown_group_by, user_id, account_id
         )
         if cache_key in INSIGHTS_CACHE:
             cached = INSIGHTS_CACHE[cache_key]
@@ -288,7 +292,15 @@ class InsightsService:
         prev_start, prev_end = ComparisonService.calculate_previous_period(start_date, end_date)
 
         # Get linked accounts if user_id provided
-        account_ids = self._get_user_account_ids(user_id) if user_id else None
+        if user_id:
+            user_accounts = self._get_user_account_ids(user_id)
+            if account_id:
+                # If specific account requested, verify it belongs to user
+                account_ids = [account_id] if account_id in user_accounts else []
+            else:
+                account_ids = user_accounts
+        else:
+            account_ids = None
 
         # Fetch data with filters
         data = self.repository.get_insights_data(
@@ -302,6 +314,20 @@ class InsightsService:
             breakdown_group_by=breakdown_group_by,
             account_ids=account_ids
         )
+
+        # Check if we have any data (for new users with no synced data yet)
+        overview = data.get('overview', {})
+        if not overview or (overview.get('spend', 0) == 0 and overview.get('impressions', 0) == 0):
+            # No data available yet - return empty insights
+            logger.info(f"No data available for insights (user may be new or data is still syncing)")
+            result = {
+                "insights": [],
+                "context": page_context,
+                "period": f"{start_date} to {end_date}",
+                "message": "Your data is being synced. Insights will appear once your Facebook ad data is loaded."
+            }
+            INSIGHTS_CACHE[cache_key] = {'data': result, 'timestamp': time.time()}
+            return result
 
         # Prepare data summary for AI with filter context
         data_summary = self._prepare_data_summary(
@@ -329,9 +355,10 @@ class InsightsService:
             )
 
             try:
-                response = self.client.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
                         temperature=0.3
                     )
                 )
@@ -358,14 +385,15 @@ class InsightsService:
         self,
         start_date: date,
         end_date: date,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        account_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generate comprehensive deep analysis for insights page.
         Returns cached results if available.
         """
         # Check cache
-        cache_key = self._get_cache_key(start_date, end_date, "deep_analysis", user_id=user_id)
+        cache_key = self._get_cache_key(start_date, end_date, "deep_analysis", user_id=user_id, account_id=account_id)
         if cache_key in INSIGHTS_CACHE:
             cached = INSIGHTS_CACHE[cache_key]
             if time.time() - cached['timestamp'] < CACHE_TTL:
@@ -376,17 +404,40 @@ class InsightsService:
         prev_start, prev_end = ComparisonService.calculate_previous_period(start_date, end_date)
 
         # Get linked accounts if user_id provided
-        account_ids = self._get_user_account_ids(user_id) if user_id else None
+        if user_id:
+            user_accounts = self._get_user_account_ids(user_id)
+            if account_id:
+                # If specific account requested, verify it belongs to user
+                account_ids = [account_id] if account_id in user_accounts else []
+            else:
+                account_ids = user_accounts
+        else:
+            account_ids = None
 
         # Fetch data
         data = self.repository.get_insights_data(
-            start_date=start_date, 
-            end_date=end_date, 
+            start_date=start_date,
+            end_date=end_date,
             page_context="all",
             prev_start_date=prev_start,
             prev_end_date=prev_end,
             account_ids=account_ids
         )
+
+        # Check if we have any data
+        overview = data.get('overview', {})
+        if not overview or (overview.get('spend', 0) == 0 and overview.get('impressions', 0) == 0):
+            logger.info(f"No data available for deep analysis (user may be new or data is still syncing)")
+            result = {
+                "executive_summary": "Your Facebook ad data is currently being synced. Analysis will be available once the sync is complete.",
+                "key_findings": [],
+                "performance_trends": [],
+                "recommendations": [],
+                "opportunities": [],
+                "period": f"{start_date} to {end_date}"
+            }
+            INSIGHTS_CACHE[cache_key] = {'data': result, 'timestamp': time.time()}
+            return result
 
         # Prepare comprehensive data for AI
         data_summary = self._prepare_data_summary(data, detailed=True)
@@ -399,9 +450,10 @@ class InsightsService:
             prompt = DEEP_ANALYSIS_PROMPT.format(data=data_summary)
 
             try:
-                response = self.client.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
                         temperature=0.2
                     )
                 )

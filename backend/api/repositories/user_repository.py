@@ -81,3 +81,34 @@ class UserRepository:
 
     def get_user_ad_accounts(self, user_id: int) -> List[DimAccount]:
         return self.db.query(DimAccount).join(UserAdAccount).filter(UserAdAccount.user_id == user_id).all()
+
+    def get_user_account_ids(self, user_id: int) -> List[int]:
+        """Get list of account IDs that user has access to (for filtering queries)"""
+        result = self.db.query(UserAdAccount.account_id).filter(UserAdAccount.user_id == user_id).all()
+        return [row[0] for row in result]
+
+    def update_user_profile(
+        self,
+        user_id: int,
+        full_name: Optional[str] = None,
+        job_title: Optional[str] = None,
+        years_experience: Optional[str] = None,
+        referral_source: Optional[str] = None
+    ) -> Optional[User]:
+        """Update user profile fields from quiz"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+
+        if full_name is not None:
+            user.full_name = full_name
+        if job_title is not None:
+            user.job_title = job_title
+        if years_experience is not None:
+            user.years_experience = years_experience
+        if referral_source is not None:
+            user.referral_source = referral_source
+
+        self.db.commit()
+        self.db.refresh(user)
+        return user

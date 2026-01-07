@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from backend.api.dependencies import get_db, get_current_user
@@ -7,8 +7,12 @@ from backend.api.services.facebook_auth import FacebookAuthService
 from backend.api.repositories.user_repository import UserRepository
 from backend.api.services.audit_service import AuditService
 from backend.api.utils.security import create_access_token, verify_password, get_password_hash
+from backend.api.routers.sync import init_sync_status, update_sync_status, mark_sync_completed, mark_sync_failed
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from backend.utils.logging_utils import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 fb_service = FacebookAuthService()
@@ -32,16 +36,55 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.get("/facebook/login")
-def login_facebook(state: str = "random_state"):
-    """Step 1: Redirect to Facebook Login"""
-    # Accept state from frontend (preferred) or default
+def login_facebook(state: str):
+    """Initiate Facebook Login flow (Unauthenticated)"""
     login_url = fb_service.get_login_url(state)
     return RedirectResponse(login_url)
+
+@router.get("/facebook/connect")
+def connect_facebook(current_user=Depends(get_current_user)):
+    """Step 1 (Connect): Redirect to Facebook Login to link account"""
+    # Create a signed state containing the user ID and intent
+    state_payload = {
+        "user_id": current_user.id,
+        "type": "connect",
+        "nonce": str(uuid.uuid4())
+    }
+    from backend.config.base_config import settings
+    from jose import jwt
+    state = jwt.encode(state_payload, settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM)
+    
+    login_url = fb_service.get_login_url(state)
+    return {"url": login_url}
 
 @router.get("/facebook/callback")
 async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)):
     """Step 2: Handle Facebook callback and create/update user"""
     try:
+        # Check if state is a "connect" state
+        connect_user_id = None
+        is_connect_flow = False
+        frontend_redirect_path = ""
+        
+        logger.info(f"DEBUG: Processing callback with state: {state}")
+
+        
+        try:
+            from backend.config.base_config import settings
+            from jose import jwt
+            # Attempt to decode state as JWT
+            decoded_state = jwt.decode(state, settings.JWT_SECRET_KEY, algorithms=[settings.ALGORITHM])
+            logger.info(f"DEBUG: Decoded state: {decoded_state}")
+            if decoded_state.get("type") == "connect":
+                connect_user_id = decoded_state.get("user_id")
+                is_connect_flow = True
+                frontend_redirect_path = "/select-accounts"
+                logger.info("DEBUG: Detected CONNECT flow")
+        except Exception as e:
+            logger.error(f"DEBUG: State decoding failed: {e}")
+            # Not a JWT or invalid signature, treat as normal login flow
+            pass
+
         # 1. Exchange code for short-lived token
         token_data = await fb_service.get_access_token(code)
         short_token = token_data["access_token"]
@@ -54,49 +97,83 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         # 3. Get user info from FB
         fb_user = fb_service.get_user_info(access_token)
         
-        # 4. Save to DB
         repo = UserRepository(db)
-        user = repo.get_user_by_fb_id(fb_user["id"])
-        
-        if not user:
-            # Check if user exists by email
-            user = repo.get_user_by_email(fb_user.get("email"))
+        user = None
+
+        if is_connect_flow and connect_user_id:
+            # CONNECT FLOW: Update the specific user
+            user = repo.get_user_by_id(connect_user_id)
             if user:
-                # Update existing user with FB ID
+                # Link this FB account to the existing user
                 user.fb_user_id = fb_user["id"]
                 user.fb_access_token = access_token
                 user.fb_token_expires_at = expires_at
                 db.commit()
-            else:
-                user = repo.create_user(
-                    email=fb_user.get("email", f"{fb_user['id']}@facebook.com"),
-                    fb_user_id=fb_user["id"],
-                    full_name=fb_user["name"],
-                    access_token=access_token,
-                    expires_at=expires_at
+                
+                # Audit log
+                AuditService.log_event(
+                    db=db,
+                    user_id=str(user.id),
+                    event_type="ACCOUNT_LINKED",
+                    description=f"User {user.email} connected Facebook Account {fb_user.get('name')}",
+                    metadata={"fb_user_id": fb_user["id"]}
                 )
         else:
-            repo.update_fb_token(user.id, access_token, expires_at)
-        
-        # 5. Create app JWT
+            # LOGIN FLOW: Create or Get User
+            user = repo.get_user_by_fb_id(fb_user["id"])
+            
+            if not user:
+                # Check if user exists by email
+                user = repo.get_user_by_email(fb_user.get("email"))
+                if user:
+                    # Update existing user with FB ID
+                    user.fb_user_id = fb_user["id"]
+                    user.fb_access_token = access_token
+                    user.fb_token_expires_at = expires_at
+                    db.commit()
+                else:
+                    user = repo.create_user(
+                        email=fb_user.get("email", f"{fb_user['id']}@facebook.com"),
+                        fb_user_id=fb_user["id"],
+                        full_name=fb_user["name"],
+                        access_token=access_token,
+                        expires_at=expires_at
+                    )
+            else:
+                repo.update_fb_token(user.id, access_token, expires_at)
+            
+            # Audit log successful login
+            AuditService.log_event(
+                db=db,
+                user_id=str(user.id),
+                event_type="LOGIN_SUCCESS",
+                description=f"User {user.email} logged in via Facebook",
+                metadata={"email": user.email, "fb_user_id": user.fb_user_id}
+            )
+
+        # 5. Create app JWT (always needed for redirect)
         app_token = create_access_token(subject=user.id)
         
-        # Audit log successful login
-        AuditService.log_event(
-            db=db,
-            user_id=str(user.id),
-            event_type="LOGIN_SUCCESS",
-            description=f"User {user.email} logged in via Facebook",
-            metadata={"email": user.email, "fb_user_id": user.fb_user_id}
-        )
-        
-        # Redirect back to frontend with token AND state for verification
-        # Use configured redirect URL (website vs dashboard)
+        # Redirect back to frontend
         from backend.config.base_config import settings
-        frontend_url = settings.FACEBOOK_OAUTH_REDIRECT_URL
-        return RedirectResponse(f"{frontend_url}?token={app_token}&state={state}&step=facebook_connected")
+        frontend_base = settings.FACEBOOK_OAUTH_REDIRECT_URL.split('?')[0] # Remove any query params if present in config
+        # If FACEBOOK_OAUTH_REDIRECT_URL is http://localhost:3000, we append
+        
+        if is_connect_flow:
+            # Redirect to settings with success flag
+            separator = "&" if "?" in frontend_redirect_path else "?"
+            return RedirectResponse(f"{settings.FRONTEND_URL}{frontend_redirect_path}{separator}connect_success=true")
+        else:
+             # Normal login redirect
+            return RedirectResponse(f"{settings.FACEBOOK_OAUTH_REDIRECT_URL}?token={app_token}&state={state}")
         
     except Exception as e:
+        logger.error(f"Facebook Auth failed: {str(e)}", exc_info=True)
+        error_msg = str(e)
+        from backend.config.base_config import settings
+        logger.error(f"DEBUG: Exception caught. Redirecting to settings. Msg: {error_msg}")
+        if "connect" in state:
+             return RedirectResponse(f"{settings.FRONTEND_URL}/settings?tab=accounts&error={error_msg}")
         raise HTTPException(status_code=400, detail=f"Facebook Auth failed: {str(e)}")
 
 @router.get("/facebook/accounts", response_model=List[AdAccountSchema])
@@ -111,12 +188,39 @@ async def get_facebook_accounts(current_user=Depends(get_current_user), db: Sess
 class LinkAccountsRequest(BaseModel):
     accounts: List[AdAccountSchema]
 
+def run_etl_for_user(user_id: int, account_ids: List[int]):
+    """
+    Background task to run ETL for user's linked accounts.
+    Uses user's Facebook access token to pull their ad data.
+    """
+    try:
+        logger.info(f"Starting ETL sync for user {user_id}, accounts: {account_ids}")
+        update_sync_status(user_id, "in_progress", progress_percent=10)
+
+        # Run actual ETL with user tokens
+        from backend.etl.main import ETLPipeline
+        pipeline = ETLPipeline()
+        pipeline.run_for_user(user_id, account_ids)
+
+        mark_sync_completed(user_id)
+        logger.info(f"ETL sync completed for user {user_id}")
+
+    except Exception as e:
+        logger.error(f"ETL sync failed for user {user_id}: {str(e)}", exc_info=True)
+        mark_sync_failed(user_id, str(e))
+
 @router.post("/facebook/accounts/link")
-async def link_accounts(request: LinkAccountsRequest, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    """Link selected ad accounts to the current user"""
+async def link_accounts(
+    request: LinkAccountsRequest,
+    background_tasks: BackgroundTasks,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Link selected ad accounts to the current user and start background sync"""
     repo = UserRepository(db)
     linked_accounts = []
-    
+    account_ids = []
+
     for account in request.accounts:
         # Convert string ID to int if needed (assuming DB uses BigInteger)
         try:
@@ -133,8 +237,22 @@ async def link_accounts(request: LinkAccountsRequest, current_user=Depends(get_c
                 currency=account.currency
             )
             linked_accounts.append(link)
-    
-    return {"message": f"Successfully linked {len(linked_accounts)} accounts"}
+            account_ids.append(acc_id)
+
+    # Initialize sync status
+    init_sync_status(current_user.id)
+
+    # Trigger background ETL sync
+    background_tasks.add_task(run_etl_for_user, current_user.id, account_ids)
+
+    logger.info(f"User {current_user.id} linked {len(linked_accounts)} accounts, ETL sync started in background")
+
+    return {
+        "message": f"Successfully linked {len(linked_accounts)} accounts",
+        "linked_count": len(linked_accounts),
+        "sync_status": "in_progress",
+        "estimated_time_seconds": 30
+    }
 @router.post("/register", response_model=TokenResponse)
 async def register(request: RegisterRequest, db: Session = Depends(get_db)):
     """Register a new user with email and password"""

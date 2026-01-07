@@ -27,14 +27,23 @@ logger = logging.getLogger(__name__)
 class ReportsService:
     """Service for generating comparison reports"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: Optional[int] = None):
         self.db = db
+        self.user_id = user_id
         self.repository = MetricsRepository(db)
         self.campaign_repo = CampaignRepository(db)
         self.adset_repo = AdSetRepository(db)
         self.ad_repo = AdRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
         self.comparison_service = ComparisonService()
+
+    def _get_user_account_ids(self) -> Optional[List[int]]:
+        """Get account IDs for current user (for data filtering)"""
+        if not self.user_id:
+            return None
+        from backend.api.repositories.user_repository import UserRepository
+        user_repo = UserRepository(self.db)
+        return user_repo.get_user_account_ids(self.user_id)
 
     def _calculate_metrics(self, raw_data: Dict[str, Any]) -> MetricsPeriod:
         """
@@ -46,18 +55,23 @@ class ReportsService:
         Returns:
             MetricsPeriod with all calculated metrics
         """
-        spend = float(raw_data.get('spend', 0))
-        impressions = int(raw_data.get('impressions', 0))
-        clicks = int(raw_data.get('clicks', 0))
-        conversions = int(raw_data.get('conversions', 0))
-        conversion_value = float(raw_data.get('conversion_value', 0))
+        spend = float(raw_data.get('spend') or 0.0)
+        impressions = int(raw_data.get('impressions') or 0)
+        clicks = int(raw_data.get('clicks') or 0)
+        conversions = int(raw_data.get('conversions') or 0)
+        conversion_value = float(raw_data.get('conversion_value') or 0.0)
+        purchases = int(raw_data.get('purchases') or 0)
+        purchase_value = float(raw_data.get('purchase_value') or 0.0)
 
-        # Calculate derived metrics
-        ctr = (clicks / impressions * 100) if impressions > 0 else 0
-        cpc = (spend / clicks) if clicks > 0 else 0
-        cpm = (spend / impressions * 1000) if impressions > 0 else 0
-        roas = (conversion_value / spend) if spend > 0 else 0
-        cpa = (spend / conversions) if conversions > 0 else 0
+        # Calculate derived metrics using MetricCalculator
+        from backend.api.utils.calculations import MetricCalculator
+        calc = MetricCalculator()
+
+        ctr = calc.ctr(clicks, impressions)
+        cpc = calc.cpc(spend, clicks)
+        cpm = calc.cpm(spend, impressions)
+        roas = calc.roas(conversion_value, spend, conversions)
+        cpa = calc.cpa(spend, conversions)
 
         return MetricsPeriod(
             spend=spend,
@@ -68,7 +82,9 @@ class ReportsService:
             cpm=round(cpm, 2),
             conversions=conversions,
             conversion_value=conversion_value,
-            roas=round(roas, 2) if roas > 0 else None,
+            purchases=purchases,
+            purchase_value=purchase_value,
+            roas=round(roas, 2) if roas is not None else None,
             cpa=round(cpa, 2)
         )
 
@@ -216,13 +232,16 @@ class ReportsService:
         currency: str
     ) -> ReportsComparisonResponse:
         """Get overview-level comparison"""
+        # Get user's account IDs for filtering
+        account_ids = self._get_user_account_ids()
+
         # Fetch data for period 1
-        period1_raw = self.repository.get_aggregated_metrics(period1_start, period1_end)
+        period1_raw = self.repository.get_aggregated_metrics(period1_start, period1_end, account_ids=account_ids)
         period1_metrics = self._calculate_metrics(period1_raw)
 
         # Fetch period 2 data only if comparison is enabled
         if period2_start and period2_end:
-            period2_raw = self.repository.get_aggregated_metrics(period2_start, period2_end)
+            period2_raw = self.repository.get_aggregated_metrics(period2_start, period2_end, account_ids=account_ids)
             period2_metrics = self._calculate_metrics(period2_raw)
             change_pct, change_abs = self._calculate_changes(period1_metrics, period2_metrics)
         else:
@@ -264,15 +283,18 @@ class ReportsService:
         currency: str
     ) -> ReportsComparisonResponse:
         """Get campaign-level comparison"""
+        # Get user's account IDs for filtering
+        account_ids = self._get_user_account_ids()
+
         # Fetch campaign breakdowns for both periods
         period1_campaigns = self.campaign_repo.get_campaign_breakdown(
-            period1_start, period1_end, search_query=campaign_filter
+            period1_start, period1_end, search_query=campaign_filter, account_ids=account_ids
         )
 
         # Only fetch period2 if comparison is enabled
         if period2_start and period2_end:
             period2_campaigns = self.campaign_repo.get_campaign_breakdown(
-                period2_start, period2_end, search_query=campaign_filter
+                period2_start, period2_end, search_query=campaign_filter, account_ids=account_ids
             )
         else:
             period2_campaigns = []
@@ -333,17 +355,22 @@ class ReportsService:
         currency: str
     ) -> ReportsComparisonResponse:
         """Get ad set-level comparison"""
+        # Get user's account IDs for filtering
+        account_ids = self._get_user_account_ids()
+
         # Fetch adset breakdowns for both periods
         period1_adsets = self.adset_repo.get_adset_breakdown(
             period1_start, period1_end,
-            search_query=adset_filter
+            search_query=adset_filter,
+            account_ids=account_ids
         )
 
         # Only fetch period2 if comparison is enabled
         if period2_start and period2_end:
             period2_adsets = self.adset_repo.get_adset_breakdown(
                 period2_start, period2_end,
-                search_query=adset_filter
+                search_query=adset_filter,
+                account_ids=account_ids
             )
         else:
             period2_adsets = []
@@ -405,17 +432,22 @@ class ReportsService:
         currency: str
     ) -> ReportsComparisonResponse:
         """Get ad-level comparison"""
+        # Get user's account IDs for filtering
+        account_ids = self._get_user_account_ids()
+
         # Fetch ad breakdowns for both periods
         period1_ads = self.ad_repo.get_ad_breakdown(
             period1_start, period1_end,
-            search_query=ad_filter
+            search_query=ad_filter,
+            account_ids=account_ids
         )
 
         # Only fetch period2 if comparison is enabled
         if period2_start and period2_end:
             period2_ads = self.ad_repo.get_ad_breakdown(
                 period2_start, period2_end,
-                search_query=ad_filter
+                search_query=ad_filter,
+                account_ids=account_ids
             )
         else:
             period2_ads = []
@@ -478,6 +510,9 @@ class ReportsService:
         currency: str
     ) -> ReportsComparisonResponse:
         """Get time-based breakdown (date/week/month)"""
+        # Get user's account IDs for filtering
+        account_ids = self._get_user_account_ids()
+
         # Map breakdown_type to granularity
         granularity_map = {
             'date': 'day',
@@ -490,7 +525,8 @@ class ReportsService:
         period1_timeseries = self.timeseries_repo.get_time_series(
             start_date=period1_start,
             end_date=period1_end,
-            granularity=granularity
+            granularity=granularity,
+            account_ids=account_ids
         )
 
         # Only fetch period2 if comparison is enabled
@@ -498,7 +534,8 @@ class ReportsService:
             period2_timeseries = self.timeseries_repo.get_time_series(
                 start_date=period2_start,
                 end_date=period2_end,
-                granularity=granularity
+                granularity=granularity,
+                account_ids=account_ids
             )
         else:
             period2_timeseries = []
@@ -652,7 +689,10 @@ class ReportsService:
                     SUM(fam.action_value) as action_value
                 FROM fact_action_metrics fam
                 JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                JOIN dim_date d2 ON fam.date_id = d2.date_id
                 WHERE dat.is_conversion = TRUE
+                    AND d2.date >= :start_date
+                    AND d2.date <= :end_date
                 GROUP BY fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id
             ) conv ON f.date_id = conv.date_id
                 AND f.account_id = conv.account_id

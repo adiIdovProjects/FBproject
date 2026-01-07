@@ -114,12 +114,14 @@ export default function ReportsPage() {
     fetchData();
   }, [period1Start, period1End]);
 
-  // Auto-fetch when breakdown changes
+  // Auto-fetch when breakdown or text filters change
   useEffect(() => {
-    if (breakdown !== 'none' || secondaryBreakdown !== 'none') {
+    const timer = setTimeout(() => {
       fetchData();
-    }
-  }, [breakdown, secondaryBreakdown]);
+    }, 500); // 500ms debounce for text filters
+
+    return () => clearTimeout(timer);
+  }, [breakdown, secondaryBreakdown, campaignFilter, adSetFilter, adFilter]);
 
   // Handle apply filters
   const handleApplyFilters = () => {
@@ -199,8 +201,6 @@ export default function ReportsPage() {
           onAdFilterChange={setAdFilter}
           selectedMetrics={selectedMetrics}
           onMetricsChange={setSelectedMetrics}
-          onApply={handleApplyFilters}
-          onReset={handleResetFilters}
           isOpen={filterPanelOpen}
           onToggle={() => setFilterPanelOpen(!filterPanelOpen)}
           isRTL={isRTL}

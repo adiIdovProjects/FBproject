@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from .schema import Base
+from .schema import Base, DimAccount
 
 class User(Base):
     """
@@ -25,7 +25,12 @@ class User(Base):
     google_access_token = Column(String(2048))
     google_refresh_token = Column(String(2048))
     google_token_expires_at = Column(DateTime)
-    
+
+    # User Profile Fields (from quiz)
+    job_title = Column(String(100), nullable=True)
+    years_experience = Column(String(50), nullable=True)
+    referral_source = Column(String(100), nullable=True)
+
     # Metadata
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
@@ -48,5 +53,4 @@ class UserAdAccount(Base):
     
     # Relationships
     user = relationship("User", back_populates="ad_accounts")
-    # Note: account relationship can be added if needed, 
-    # but DimAccount is usually managed by the ETL
+    account = relationship("DimAccount")

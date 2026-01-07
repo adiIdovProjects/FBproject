@@ -30,7 +30,8 @@ export async function fetchCampaignsWithComparison(
   status: string[] = [],
   searchQuery: string = '',
   sortBy: string = 'spend',
-  sortDirection: 'asc' | 'desc' = 'desc'
+  sortDirection: 'asc' | 'desc' = 'desc',
+  accountId?: string | null
 ): Promise<CampaignRow[]> {
   const { startDate, endDate } = dateRange;
 
@@ -41,6 +42,10 @@ export async function fetchCampaignsWithComparison(
     sort_direction: sortDirection,
     limit: '100',
   };
+
+  if (accountId) {
+    params.account_id = accountId;
+  }
 
   if (status.length > 0) {
     // Axios handles array params correctly if configured, but let's be explicit if needed
@@ -79,7 +84,8 @@ export async function fetchCampaignsWithComparison(
  */
 export async function fetchTrendData(
   dateRange: DateRange,
-  granularity: TimeGranularity = 'day'
+  granularity: TimeGranularity = 'day',
+  accountId?: string | null
 ): Promise<any[]> {
   const { startDate, endDate } = dateRange;
   try {
@@ -88,6 +94,7 @@ export async function fetchTrendData(
         start_date: startDate,
         end_date: endDate,
         granularity,
+        account_id: accountId
       },
     });
     return response.data;
@@ -105,7 +112,8 @@ export async function fetchBreakdown(
   breakdownType: BreakdownType,
   groupBy: 'age' | 'gender' | 'both' = 'both',
   status: string[] = [],
-  searchQuery: string = ''
+  searchQuery: string = '',
+  accountId?: string | null
 ): Promise<BreakdownRow[]> {
   const { startDate, endDate } = dateRange;
 
@@ -135,6 +143,10 @@ export async function fetchBreakdown(
 
   if (searchQuery) {
     params.search = searchQuery;
+  }
+
+  if (accountId) {
+    params.account_id = accountId;
   }
 
   try {

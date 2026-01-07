@@ -125,7 +125,7 @@ export async function exportToExcel(
   };
 
   try {
-    const response = await apiClient.post('/api/v1/export/excel', exportData, {
+    const response = await apiClient.post('/api/v1/export/excel-generic', exportData, {
       responseType: 'blob'
     });
 
@@ -164,7 +164,7 @@ export async function exportToGoogleSheets(
   };
 
   try {
-    const response = await apiClient.post<{ spreadsheet_url: string }>('/api/v1/export/google-sheets', exportData);
+    const response = await apiClient.post<{ spreadsheet_url: string }>('/api/v1/export/google-sheets-generic', exportData);
     return response.data.spreadsheet_url;
   } catch (error) {
     console.error('[Reports Service] Error exporting to Google Sheets:', error);

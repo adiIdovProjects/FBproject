@@ -69,12 +69,15 @@ class CampaignRepository(BaseRepository):
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_campaign c ON f.campaign_id = c.campaign_id
             LEFT JOIN (
-                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
-                       SUM(action_count) as action_count,
-                       SUM(action_value) as action_value
+                SELECT fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id,
+                       SUM(fam.action_count) as action_count,
+                       SUM(fam.action_value) as action_value
                 FROM fact_action_metrics fam
                 JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                JOIN dim_date d2 ON fam.date_id = d2.date_id
                 WHERE dat.is_conversion = TRUE
+                    AND d2.date >= :start_date
+                    AND d2.date <= :end_date
                 GROUP BY 1, 2, 3, 4, 5, 6
             ) conv ON f.date_id = conv.date_id 
                   AND f.account_id = conv.account_id 

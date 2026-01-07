@@ -11,8 +11,8 @@ import time
 import pandas as pd
 from datetime import date, timedelta
 from typing import Dict, Any, List, Optional
-import google.generativeai as genai
-from google.generativeai import types
+import google.genai as genai
+from google.genai import types
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -117,8 +117,7 @@ class AIService:
             self.client = None
         else:
             try:
-                genai.configure(api_key=api_key)
-                self.client = genai.GenerativeModel(GEMINI_MODEL)
+                self.client = genai.Client(api_key=api_key)
                 self.model = GEMINI_MODEL
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini: {e}")
@@ -326,9 +325,10 @@ class AIService:
             )
 
             # 3. Call Gemini
-            response = self.client.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.2
                 )
             )

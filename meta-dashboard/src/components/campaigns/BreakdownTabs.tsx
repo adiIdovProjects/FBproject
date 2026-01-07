@@ -19,6 +19,7 @@ interface BreakdownTabsProps {
   isRTL?: boolean;
   statusFilter?: string[];
   searchQuery?: string;
+  accountId?: string | null;
 }
 
 type Tab = {
@@ -40,6 +41,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   isRTL = false,
   statusFilter = [],
   searchQuery = '',
+  accountId = null,
 }) => {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState<BreakdownType>('adset');
@@ -67,7 +69,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
       setError(null);
 
       try {
-        const data = await fetchBreakdown(dateRange, activeTab, demographicSubTab, statusFilter, searchQuery);
+        const data = await fetchBreakdown(dateRange, activeTab, demographicSubTab, statusFilter, searchQuery, accountId);
         setBreakdownData(data);
       } catch (err: any) {
         console.error('[BreakdownTabs] Error fetching breakdown:', err);
@@ -78,7 +80,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
     };
 
     loadBreakdownData();
-  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, statusFilter, searchQuery]);
+  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, statusFilter, searchQuery, accountId]);
 
   // Fetch insights when breakdown tab changes
   useEffect(() => {
@@ -93,7 +95,8 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
           {
             breakdownType: activeTab,
             breakdownGroupBy: activeTab === 'age-gender' ? demographicSubTab : undefined
-          }
+          },
+          accountId
         );
         setBreakdownInsights(insights);
       } catch (err: any) {
@@ -105,7 +108,8 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
     };
 
     loadBreakdownInsights();
-  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce]);
+    loadBreakdownInsights();
+  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, accountId]);
 
   // Load data on first tab click
   const handleTabClick = (tabId: BreakdownType) => {

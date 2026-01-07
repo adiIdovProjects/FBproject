@@ -61,8 +61,9 @@ class Settings(BaseSettings):
         return v
 
     # OAuth Redirect URLs (different for dashboard vs website)
-    GOOGLE_OAUTH_REDIRECT_URL: str = "http://localhost:3001/connect"  # Website front
-    FACEBOOK_OAUTH_REDIRECT_URL: str = "http://localhost:3001/connect"  # Dashboard -> Website (Unified for now)
+    FRONTEND_URL: str = "http://localhost:3000"
+    GOOGLE_OAUTH_REDIRECT_URL: str = "http://localhost:3000/en/connect"  # Website front with locale
+    FACEBOOK_OAUTH_REDIRECT_URL: str = "http://localhost:3000/en/select-accounts"  # Direct to account selection
 
     # AI Settings
     GEMINI_API_KEY: Optional[str] = None

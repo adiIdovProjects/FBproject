@@ -12,8 +12,8 @@ import hashlib
 import time
 from datetime import date, timedelta
 from typing import Dict, Any, List, Optional
-import google.generativeai as genai
-from google.generativeai import types
+import google.genai as genai
+from google.genai import types
 from sqlalchemy.orm import Session
 
 from backend.api.repositories.historical_repository import HistoricalRepository
@@ -114,8 +114,9 @@ etc.
 class HistoricalInsightsService:
     """Service for historical trend analysis with AI insights"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: Optional[int] = None):
         self.db = db
+        self.user_id = user_id
         self.repository = HistoricalRepository(db)
 
         # Initialize Gemini
@@ -125,12 +126,19 @@ class HistoricalInsightsService:
             self.client = None
         else:
             try:
-                genai.configure(api_key=api_key)
-                self.client = genai.GenerativeModel(GEMINI_MODEL)
+                self.client = genai.Client(api_key=api_key)
                 self.model = GEMINI_MODEL
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini: {e}")
                 self.client = None
+
+    def _get_user_account_ids(self) -> Optional[List[int]]:
+        """Get account IDs for current user (for data filtering)"""
+        if not self.user_id:
+            return None
+        from backend.api.repositories.user_repository import UserRepository
+        user_repo = UserRepository(self.db)
+        return user_repo.get_user_account_ids(self.user_id)
 
     def _get_cache_key(
         self,
@@ -285,9 +293,10 @@ class HistoricalInsightsService:
             )
 
             # Call Gemini
-            response = self.client.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.2
                 )
             )
@@ -384,9 +393,10 @@ class HistoricalInsightsService:
                 "3) Daily volatility patterns, 4) Specific recommendations for this campaign."
             )
 
-            response = self.client.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.2
                 )
             )

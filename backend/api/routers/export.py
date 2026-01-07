@@ -29,6 +29,7 @@ router = APIRouter(
 
 def _get_data_for_export(
     db: Session,
+    user_id: int,
     data_type: DataType,
     start_date: date,
     end_date: date,
@@ -39,6 +40,7 @@ def _get_data_for_export(
 
     Args:
         db: Database session
+        user_id: Current user ID for filtering
         data_type: Type of data to export
         start_date: Start date
         end_date: End date
@@ -47,7 +49,7 @@ def _get_data_for_export(
     Returns:
         List of dictionaries containing the data
     """
-    service = MetricsService(db)
+    service = MetricsService(db, user_id)
     filters = filters or {}
 
     if data_type == DataType.CORE_METRICS:
@@ -132,6 +134,7 @@ def _get_data_for_export(
 )
 def export_to_google_sheets(
     request: GoogleSheetsExportRequest = Body(...),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -146,6 +149,7 @@ def export_to_google_sheets(
         # Get data
         data = _get_data_for_export(
             db=db,
+            user_id=current_user.id,
             data_type=request.data_type,
             start_date=request.start_date,
             end_date=request.end_date,
@@ -197,6 +201,7 @@ def export_to_google_sheets(
 )
 def export_to_excel(
     request: ExcelExportRequest = Body(...),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -209,6 +214,7 @@ def export_to_excel(
         # Get data
         data = _get_data_for_export(
             db=db,
+            user_id=current_user.id,
             data_type=request.data_type,
             start_date=request.start_date,
             end_date=request.end_date,
@@ -249,3 +255,96 @@ def export_to_excel(
     except Exception as e:
         logger.error(f"Failed to export to Excel: {e}")
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+@router.post(
+    "/excel-generic",
+    summary="Generic Excel Export",
+    description="Exports raw data directly to an Excel file (.xlsx)"
+)
+def export_to_excel_generic(
+    request_data: Dict[str, Any] = Body(...),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Export raw data to Excel file.
+    Accepted nested data structures and converts them to Excel rows.
+    """
+    try:
+        import traceback
+        data = request_data.get("data")
+        filename = request_data.get("filename", "export.xlsx")
+        sheet_name = request_data.get("sheet_name", "Data")
+
+        if not data:
+            raise HTTPException(status_code=400, detail="No data provided for export")
+
+        # Initialize export service
+        export_service = ExportService()
+
+        # Export to Excel (returns BytesIO)
+        excel_file = export_service.export_to_excel(
+            data=data,
+            filename=filename,
+            sheet_name=sheet_name
+        )
+
+        logger.info(f"Successfully exported {len(data)} rows to generic Excel: {filename}")
+
+        # Return as downloadable file
+        return StreamingResponse(
+            excel_file,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        logger.error(f"Failed to export generic data to Excel: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}\n{error_detail}")
+@router.post(
+    "/google-sheets-generic",
+    response_model=GoogleSheetsExportResponse,
+    summary="Generic Google Sheets Export",
+    description="Exports raw data directly to a Google Sheet"
+)
+def export_to_google_sheets_generic(
+    request_data: Dict[str, Any] = Body(...),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Export raw data to Google Sheets.
+    Accepted nested data structures and converts them to sheet rows.
+    """
+    try:
+        import traceback
+        data = request_data.get("data")
+        title = request_data.get("title", "Export")
+        sheet_name = request_data.get("sheet_name", "Data")
+
+        if not data:
+            raise HTTPException(status_code=400, detail="No data provided for export")
+
+        # Initialize export service
+        export_service = ExportService()
+
+        # Export to Google Sheets
+        spreadsheet_url = export_service.export_to_google_sheets(
+            data=data,
+            title=title,
+            sheet_name=sheet_name
+        )
+
+        return GoogleSheetsExportResponse(
+            spreadsheet_url=spreadsheet_url,
+            message=f"Successfully exported {len(data)} rows to Google Sheets"
+        )
+
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        logger.error(f"Failed to export generic data to Google Sheets: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}\n{error_detail}")

@@ -7,6 +7,9 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from datetime import date
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 from backend.api.dependencies import get_db, get_current_user
 from backend.api.services.insights_service import InsightsService
@@ -29,6 +32,7 @@ def get_insights_summary(
     campaign_filter: Optional[str] = Query(None, description="Filter to specific campaign name"),
     breakdown_type: Optional[str] = Query(None, description="Breakdown type: adset, platform, placement, age-gender, country"),
     breakdown_group_by: Optional[str] = Query(None, description="For age-gender breakdown: age, gender, or both"),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -40,9 +44,7 @@ def get_insights_summary(
     User-specific: Only analyzes accounts linked to the current user.
     """
     try:
-        # Temporarily disable user account filtering - show all accounts
-        # TODO: Enable when user links ad accounts
-        service = InsightsService(db)
+        service = InsightsService(db, current_user.id)
         return service.get_summary_insights(
             start_date,
             end_date,
@@ -50,9 +52,14 @@ def get_insights_summary(
             campaign_filter=campaign_filter,
             breakdown_type=breakdown_type,
             breakdown_group_by=breakdown_group_by,
-            user_id=None  # Temporarily set to None to skip account filtering
+            user_id=current_user.id,
+            account_id=account_id
         )
     except Exception as e:
+        import traceback
+        print(f"DEBUG ERROR IN INSIGHTS: {e}")
+        print(traceback.format_exc())
+        logger.error(f"Failed to generate insights: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to generate insights: {str(e)}")
 
 
@@ -60,6 +67,7 @@ def get_insights_summary(
 def get_deep_insights(
     start_date: date = Query(..., description="Start date for analysis"),
     end_date: date = Query(..., description="End date for analysis"),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -69,10 +77,8 @@ def get_deep_insights(
     User-specific: Only analyzes accounts linked to the current user.
     """
     try:
-        # Temporarily disable user account filtering - show all accounts
-        # TODO: Enable when user links ad accounts
-        service = InsightsService(db)
-        return service.get_deep_analysis(start_date, end_date, user_id=None)
+        service = InsightsService(db, current_user.id)
+        return service.get_deep_analysis(start_date, end_date, user_id=current_user.id, account_id=account_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate deep analysis: {str(e)}")
 
@@ -97,13 +103,12 @@ async def get_historical_analysis(
     - AI-generated strategic recommendations
     """
     try:
-        # Temporarily disable user account filtering - show all accounts
-        # TODO: Enable when user links ad accounts
-        service = HistoricalInsightsService(db)
+        service = HistoricalInsightsService(db, current_user.id)
+        account_ids = service._get_user_account_ids()
         result = await service.analyze_historical_trends(
             lookback_days=lookback_days,
             campaign_id=campaign_id,
-            account_ids=None  # Will be user's linked accounts in future
+            account_ids=account_ids
         )
         return result
     except Exception as e:
@@ -124,7 +129,7 @@ async def get_campaign_deep_dive(
     Returns daily metrics with moving averages and AI analysis focused on this campaign.
     """
     try:
-        service = HistoricalInsightsService(db)
+        service = HistoricalInsightsService(db, current_user.id)
         result = await service.get_campaign_deep_dive(
             campaign_id=campaign_id,
             lookback_days=lookback_days
@@ -153,14 +158,13 @@ async def get_creative_analysis(
     - AI-generated creative strategy recommendations
     """
     try:
-        # Temporarily disable user account filtering - show all accounts
-        # TODO: Enable when user links ad accounts
-        service = CreativeInsightsService(db)
+        service = CreativeInsightsService(db, current_user.id)
+        account_ids = service._get_user_account_ids()
         result = await service.analyze_creative_patterns(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
-            account_ids=None  # Will be user's linked accounts in future
+            account_ids=account_ids
         )
         return result
     except Exception as e:
@@ -184,7 +188,7 @@ async def get_creative_fatigue_report(
     Returns actionable refresh recommendations prioritized by business impact.
     """
     try:
-        service = CreativeInsightsService(db)
+        service = CreativeInsightsService(db, current_user.id)
         result = await service.get_creative_fatigue_report(lookback_days=lookback_days)
         return result
     except Exception as e:
@@ -214,14 +218,12 @@ def get_latest_insights(
     Returns stored insights ordered by generation time (newest first).
     """
     try:
-        # Temporarily disable user account filtering - show all accounts
-        # TODO: Enable when user links ad accounts
-        service = ProactiveAnalysisService(db)
+        service = ProactiveAnalysisService(db, current_user.id)
         insights = service.get_latest_insights(
             priority=priority,
             limit=limit,
             unread_only=unread_only,
-            account_id=None  # Will be user's linked accounts in future
+            account_id=None
         )
         return {
             'insights': insights,
@@ -243,7 +245,7 @@ def mark_insight_as_read(
     This helps track which insights the user has already reviewed.
     """
     try:
-        service = ProactiveAnalysisService(db)
+        service = ProactiveAnalysisService(db, current_user.id)
         success = service.mark_as_read(insight_id)
 
         if not success:
@@ -270,7 +272,7 @@ def generate_insights_now(
     Note: Normally insights are auto-generated by the scheduler.
     """
     try:
-        service = ProactiveAnalysisService(db)
+        service = ProactiveAnalysisService(db, current_user.id)
 
         if insight_type == 'daily':
             insights = service.generate_daily_insights(account_id=None)

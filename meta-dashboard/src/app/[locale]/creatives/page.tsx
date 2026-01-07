@@ -36,11 +36,13 @@ import { fetchCreatives, fetchVideoInsights } from '../../../services/creatives.
 import { fetchInsightsSummary, InsightItem } from '../../../services/insights.service';
 import { CreativeMetrics, VideoInsightsResponse, CreativeSortMetric } from '../../../types/creatives.types';
 import { DateRange } from '../../../types/dashboard.types';
+import { useAccount } from '../../../context/AccountContext'; // Import context
 
 export default function CreativesPage() {
     const t = useTranslations();
     const locale = useLocale();
     const isRTL = locale === 'ar' || locale === 'he';
+    const { selectedAccountId } = useAccount(); // Use context
 
     // State
     const [dateRange, setDateRange] = useState<DateRange>({
@@ -67,9 +69,9 @@ export default function CreativesPage() {
                     fetchCreatives({
                         dateRange,
                         sort_by: sortBy,
-                    }),
-                    fetchVideoInsights(dateRange),
-                    fetchInsightsSummary(dateRange, 'creatives')
+                    }, selectedAccountId),
+                    fetchVideoInsights(dateRange, selectedAccountId),
+                    fetchInsightsSummary(dateRange, 'creatives', undefined, selectedAccountId)
                 ]);
 
                 setCreatives(creativesData);
@@ -83,7 +85,7 @@ export default function CreativesPage() {
         }
 
         loadData();
-    }, [dateRange, sortBy, mediaFilter]);
+    }, [dateRange, sortBy, mediaFilter, selectedAccountId]);
 
     // Handle date range change safely to avoid infinite loops
     const handleDateRangeChange = React.useCallback((start: string | null, end: string | null) => {

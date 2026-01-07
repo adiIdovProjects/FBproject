@@ -45,6 +45,8 @@ def get_overview(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     compare_to_previous: bool = Query(False, description="Include previous period comparison"),
     campaign_status: CampaignStatus = Query(CampaignStatus.ALL, description="Filter by campaign status"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -54,12 +56,16 @@ def get_overview(
     Optionally includes comparison with the previous period of equal length.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        # Convert account_id to list of ints if present
+        account_ids = [int(account_id)] if account_id else None
+        
         return service.get_overview_metrics(
             start_date=start_date,
             end_date=end_date,
             compare_to_previous=compare_to_previous,
-            campaign_status=campaign_status.value if campaign_status != CampaignStatus.ALL else None
+            campaign_status=campaign_status.value if campaign_status != CampaignStatus.ALL else None,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get overview metrics: {str(e)}")
@@ -78,6 +84,8 @@ def get_campaigns(
     sort_by: str = Query("spend", description="Metric to sort by (spend, roas, ctr, etc.)"),
     sort_direction: str = Query("desc", description="Sort direction (asc or desc)"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -86,14 +94,17 @@ def get_campaigns(
     Returns a breakdown of metrics by campaign, sorted by the specified metric.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_campaign_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_status=status,
             sort_by=sort_by,
             sort_direction=sort_direction,
-            limit=limit
+            limit=limit,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get campaign breakdown: {str(e)}")
@@ -113,7 +124,8 @@ def get_campaigns_comparison(
     sort_by: str = Query("spend", description="Metric to sort by (spend, roas, ctr, etc.)"),
     sort_direction: str = Query("desc", description="Sort direction (asc or desc)"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
-    current_user = Depends(get_current_user),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -122,11 +134,9 @@ def get_campaigns_comparison(
     Returns a breakdown of metrics by campaign, including comparison with the previous period.
     """
     try:
-        # Temporarily disable account filtering - show all accounts
-        # TODO: Enable account filtering when user links ad accounts
-        account_ids = None
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
 
-        service = MetricsService(db)
         return service.get_campaign_comparison(
             start_date=start_date,
             end_date=end_date,
@@ -153,7 +163,8 @@ def get_trend(
     granularity: Granularity = Query(Granularity.DAY, description="Time aggregation level"),
     metrics: Optional[List[str]] = Query(None, description="Metrics to include (optional, returns all)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
-    current_user = Depends(get_current_user),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -162,11 +173,9 @@ def get_trend(
     Returns metrics aggregated by day, week, or month for the specified date range.
     """
     try:
-        # Temporarily disable account filtering - show all accounts
-        # TODO: Enable account filtering when user links ad accounts
-        account_ids = None
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
 
-        service = MetricsService(db)
         return service.get_time_series(
             start_date=start_date,
             end_date=end_date,
@@ -190,8 +199,10 @@ def get_age_gender_breakdown(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     group_by: str = Query('both', regex="^(age|gender|both)$", description="Group by age, gender, or both"),
-    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    campaign_status: CampaignStatus = Query(CampaignStatus.ALL, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -200,14 +211,17 @@ def get_age_gender_breakdown(
     Returns metrics aggregated by age group and gender combinations.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_age_gender_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             group_by=group_by,
             campaign_status=status,
-            search_query=search
+            search_query=search,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get age/gender breakdown: {str(e)}")
@@ -225,6 +239,8 @@ def get_placement_breakdown(
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -233,13 +249,16 @@ def get_placement_breakdown(
     Returns metrics aggregated by placement (Facebook Feed, Instagram Stories, etc.).
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_placement_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             campaign_status=status,
-            search_query=search
+            search_query=search,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get placement breakdown: {str(e)}")
@@ -257,6 +276,8 @@ def get_platform_breakdown(
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -265,13 +286,16 @@ def get_platform_breakdown(
     Returns metrics aggregated by platform.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_platform_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             campaign_status=status,
-            search_query=search
+            search_query=search,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get platform breakdown: {str(e)}")
@@ -290,6 +314,8 @@ def get_country_breakdown(
     top_n: int = Query(10, ge=1, le=100, description="Number of top countries to return"),
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -298,14 +324,17 @@ def get_country_breakdown(
     Returns metrics aggregated by country.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_country_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             top_n=top_n,
             campaign_status=status,
-            search_query=search
+            search_query=search,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get country breakdown: {str(e)}")
@@ -323,6 +352,8 @@ def get_adset_breakdown(
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -331,13 +362,16 @@ def get_adset_breakdown(
     Returns metrics aggregated by adset.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_adset_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             campaign_status=status,
-            search_query=search
+            search_query=search,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get adset breakdown: {str(e)}")
@@ -355,6 +389,8 @@ def get_creatives(
     is_video: Optional[bool] = Query(None, description="Filter by video/image creatives"),
     min_spend: float = Query(100, ge=0, description="Minimum spend threshold"),
     sort_by: str = Query("spend", description="Metric to sort by"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -364,13 +400,16 @@ def get_creatives(
     (hook rate, completion rate) for video creatives.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
         return service.get_creative_metrics(
             start_date=start_date,
             end_date=end_date,
             is_video=is_video,
             min_spend=min_spend,
-            sort_by=sort_by
+            sort_by=sort_by,
+            account_ids=account_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get creative metrics: {str(e)}")

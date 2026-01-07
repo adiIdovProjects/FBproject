@@ -2,7 +2,7 @@
 
 import os
 from google import genai
-from google.genai import types
+from google.generativeai import types
 from dotenv import load_dotenv
 import pandas as pd
 from backend.config.settings import GEMINI_MODEL # <-- ייבוא חדש
