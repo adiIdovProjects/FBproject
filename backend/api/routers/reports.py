@@ -33,6 +33,7 @@ def get_comparison_report(
     campaign_filter: Optional[str] = Query(None, description="Filter by campaign name (partial match)"),
     ad_set_filter: Optional[str] = Query(None, description="Filter by ad set name (partial match)"),
     ad_filter: Optional[str] = Query(None, description="Filter by ad name (partial match)"),
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -82,7 +83,8 @@ def get_comparison_report(
             secondary_breakdown=secondary_breakdown,
             campaign_filter=campaign_filter,
             ad_set_filter=ad_set_filter,
-            ad_filter=ad_filter
+            ad_filter=ad_filter,
+            account_id=account_id
         )
 
         return comparison_data

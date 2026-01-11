@@ -4,14 +4,14 @@
  */
 
 import { apiClient } from './apiClient';
-import { CreativeMetrics, VideoInsightsResponse, CreativesFilter } from '../types/creatives.types';
+import { CreativeMetrics, VideoInsightsResponse, CreativesFilter, CreativeComparisonResponse } from '../types/creatives.types';
 import { DateRange } from '../types/dashboard.types';
 
 /**
  * Fetch performance metrics for all creatives
  */
 export async function fetchCreatives(filter: CreativesFilter, accountId?: string | null): Promise<CreativeMetrics[]> {
-    const { dateRange, is_video, min_spend, sort_by } = filter;
+    const { dateRange, is_video, min_spend, sort_by, search_query, ad_status } = filter;
     const { startDate, endDate } = dateRange;
 
     const params: any = {
@@ -30,6 +30,14 @@ export async function fetchCreatives(filter: CreativesFilter, accountId?: string
 
     if (min_spend !== undefined) {
         params.min_spend = min_spend;
+    }
+
+    if (search_query) {
+        params.search_query = search_query;
+    }
+
+    if (ad_status) {
+        params.ad_status = ad_status;
     }
 
     try {
@@ -79,6 +87,34 @@ export async function fetchCreativeDetail(creativeId: number, dateRange: DateRan
         return response.data;
     } catch (error) {
         console.error(`[Creatives Service] Error fetching creative ${creativeId} detail:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Compare multiple creatives side-by-side
+ */
+export async function fetchCreativeComparison(
+    creativeIds: number[],
+    dateRange: DateRange,
+    accountId?: string | null
+): Promise<CreativeComparisonResponse> {
+    const { startDate, endDate } = dateRange;
+
+    try {
+        const response = await apiClient.post<CreativeComparisonResponse>('/api/v1/creatives/compare', {
+            creative_ids: creativeIds,
+            start_date: startDate,
+            end_date: endDate,
+            metrics: ['spend', 'roas', 'ctr', 'cpc', 'conversions', 'cpa', 'hook_rate', 'completion_rate']
+        }, {
+            params: {
+                account_id: accountId
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('[Creatives Service] Error comparing creatives:', error);
         throw error;
     }
 }

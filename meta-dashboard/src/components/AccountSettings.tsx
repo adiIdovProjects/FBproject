@@ -20,7 +20,7 @@ import {
     ExternalLink,
     ShieldAlert
 } from 'lucide-react';
-import { fetchActionTypes, toggleActionConversion, ActionType } from '@/services/actions.service';
+import { fetchActionTypes, toggleActionConversion, fetchFunnel, saveFunnel, ActionType, FunnelStep } from '@/services/actions.service';
 import { unlinkAccount } from '@/services/accounts.service'; // Import unlink service
 
 import { useAccount } from '@/context/AccountContext'; // Import context
@@ -108,9 +108,15 @@ export const AccountSettings: React.FC = () => {
     const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
     const [isLoadingActions, setIsLoadingActions] = useState(false);
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState<'all' | 'active'>('all');
+    const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>([]);
+    const [isSavingFunnel, setIsSavingFunnel] = useState(false);
+
     React.useEffect(() => {
         if (activeTab === 'conversions') {
             loadActionTypes();
+            loadFunnel();
         }
     }, [activeTab]);
 
@@ -123,6 +129,68 @@ export const AccountSettings: React.FC = () => {
             console.error('Failed to load action types:', error);
         } finally {
             setIsLoadingActions(false);
+        }
+    };
+
+    const loadFunnel = async () => {
+        try {
+            const steps = await fetchFunnel();
+            setFunnelSteps(steps);
+        } catch (error) {
+            console.error('Failed to load funnel:', error);
+        }
+    };
+
+    const filteredActions = actionTypes.filter(action => {
+        const matchesSearch = action.action_type.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filterType === 'all' ? true : action.is_conversion;
+        return matchesSearch && matchesFilter;
+    });
+
+    // Funnel Handlers
+    const addFunnelStep = () => {
+        setFunnelSteps([...funnelSteps, { step_order: funnelSteps.length + 1, action_type: '' }]);
+    };
+
+    const updateFunnelStep = (index: number, actionType: string) => {
+        const newSteps = [...funnelSteps];
+        newSteps[index].action_type = actionType;
+        setFunnelSteps(newSteps);
+    };
+
+    const removeFunnelStep = (index: number) => {
+        const newSteps = funnelSteps.filter((_, i) => i !== index).map((step, i) => ({
+            ...step,
+            step_order: i + 1
+        }));
+        setFunnelSteps(newSteps);
+    };
+
+    const moveFunnelStep = (index: number, direction: number) => {
+        if (index + direction < 0 || index + direction >= funnelSteps.length) return;
+
+        const newSteps = [...funnelSteps];
+        const temp = newSteps[index];
+        newSteps[index] = newSteps[index + direction];
+        newSteps[index + direction] = temp;
+
+        // Re-index
+        const reindexed = newSteps.map((step, i) => ({ ...step, step_order: i + 1 }));
+        setFunnelSteps(reindexed);
+    };
+
+    const handleSaveFunnel = async () => {
+        setIsSavingFunnel(true);
+        try {
+            // Filter out empty steps
+            const validSteps = funnelSteps.filter(s => s.action_type);
+            await saveFunnel(validSteps);
+            // alert('Funnel saved successfully!'); // Use toast if available
+        } catch (error) {
+            console.error('Failed to save funnel:', error);
+            alert('Failed to save funnel');
+        } finally {
+            setIsSavingFunnel(false);
         }
     };
 
@@ -382,19 +450,52 @@ export const AccountSettings: React.FC = () => {
             case 'conversions':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {/* Conversion Toggles Section */}
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                             <h3 className="text-lg font-bold text-white mb-2">{t('settings.conversion_settings')}</h3>
                             <p className="text-sm text-gray-400 mb-6">
                                 {t('settings.conversion_settings_description')}
                             </p>
 
+                            {/* Search and Filter */}
+                            <div className="flex flex-col md:flex-row gap-4 mb-6">
+                                <div className="relative flex-1">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder={t('settings.search_actions') || "Search actions..."}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:border-accent/50 transition-all text-sm"
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setFilterType('all')}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterType === 'all' ? 'bg-white/10 text-white border border-white/20' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                        All
+                                    </button>
+                                    <button
+                                        onClick={() => setFilterType('active')}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterType === 'active' ? 'bg-accent/20 text-accent border border-accent/20' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                        Active
+                                    </button>
+                                </div>
+                            </div>
+
                             {isLoadingActions ? (
                                 <div className="flex justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {actionTypes.map((action) => (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {filteredActions.map((action) => (
                                         <div
                                             key={action.action_type}
                                             onClick={() => handleToggleConversion(action.action_type)}
@@ -419,8 +520,89 @@ export const AccountSettings: React.FC = () => {
                                             </div>
                                         </div>
                                     ))}
+                                    {filteredActions.length === 0 && (
+                                        <div className="col-span-2 text-center py-8 text-gray-500 text-sm">
+                                            No actions found matching "{searchTerm}"
+                                        </div>
+                                    )}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Funnel Builder Section */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white mb-2">Marketing Funnel</h3>
+                                    <p className="text-sm text-gray-400">
+                                        Define the steps of your customer journey. You can include any action, even if it's not tracked as a primary conversion.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleSaveFunnel}
+                                    disabled={isSavingFunnel}
+                                    className="flex items-center gap-2 bg-accent hover:bg-accent-light text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg shadow-accent/20 disabled:opacity-50 text-sm"
+                                >
+                                    {isSavingFunnel ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Save className="w-4 h-4" />}
+                                    Save Funnel
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {funnelSteps.map((step, index) => (
+                                    <div key={index} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-gray-400">
+                                            {index + 1}
+                                        </div>
+                                        <div className="flex-1">
+                                            <select
+                                                value={step.action_type}
+                                                onChange={(e) => updateFunnelStep(index, e.target.value)}
+                                                className="w-full bg-[#1C1F26] border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent text-sm capitalize"
+                                            >
+                                                <option value="" disabled>Select an action...</option>
+                                                {/* Show ALL action types, sorted alphabetically */}
+                                                {[...actionTypes].sort((a, b) => a.action_type.localeCompare(b.action_type)).map(action => (
+                                                    <option key={action.action_type} value={action.action_type}>
+                                                        {t.has(action.action_type) ? t(action.action_type) : action.action_type.replace(/_/g, ' ')}
+                                                        {!action.is_conversion && " (Not a Conversion)"}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => moveFunnelStep(index, -1)}
+                                                disabled={index === 0}
+                                                className="p-2 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                                            >
+                                                ↑
+                                            </button>
+                                            <button
+                                                onClick={() => moveFunnelStep(index, 1)}
+                                                disabled={index === funnelSteps.length - 1}
+                                                className="p-2 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                                            >
+                                                ↓
+                                            </button>
+                                            <button
+                                                onClick={() => removeFunnelStep(index)}
+                                                className="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <button
+                                    onClick={addFunnelStep}
+                                    className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add Funnel Step
+                                </button>
+                            </div>
                         </div>
                     </div>
                 );

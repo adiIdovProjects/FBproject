@@ -1,4 +1,4 @@
-# Facebook Ads Analytics Platform - Complete Refactored Codebase
+# FBWatson Analytics Platform - Complete Refactored Codebase
 
 ## 📁 Project Structure
 

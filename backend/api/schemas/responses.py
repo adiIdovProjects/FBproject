@@ -24,6 +24,7 @@ class MetricsPeriod(BaseModel):
     purchase_value: float = Field(0.0, description="Total purchase value")
     roas: Optional[float] = Field(None, description="Return on ad spend (Purchase Value / Spend)")
     cpa: float = Field(0.0, description="Cost per acquisition (Spend / Purchases)")
+    conversion_rate: float = Field(0.0, description="Conversion Rate (Conversions / Clicks * 100)")
 
 
 class ChangePercentage(BaseModel):
@@ -38,6 +39,7 @@ class ChangePercentage(BaseModel):
     conversion_value: Optional[float] = None
     roas: Optional[float] = None
     cpa: Optional[float] = None
+    conversion_rate: Optional[float] = None
 
 
 class MetricsOverviewResponse(BaseModel):
@@ -75,12 +77,18 @@ class CampaignComparisonMetrics(CampaignMetrics):
     previous_conversion_value: Optional[float] = None
     previous_roas: Optional[float] = None
     previous_cpa: Optional[float] = None
+    previous_clicks: Optional[int] = None
+    previous_impressions: Optional[int] = None
+    previous_ctr: Optional[float] = None
+    previous_cpc: Optional[float] = None
 
     # Percentage changes
     spend_change_pct: Optional[float] = None
     conversions_change_pct: Optional[float] = None
     roas_change_pct: Optional[float] = None
     cpa_change_pct: Optional[float] = None
+    ctr_change_pct: Optional[float] = None
+    cpc_change_pct: Optional[float] = None
 
 
 class TimeSeriesDataPoint(BaseModel):
@@ -189,6 +197,10 @@ class CreativeMetrics(BaseModel):
     purchase_value: float = 0.0
     roas: Optional[float] = None
     cpa: float = 0.0
+    # Fatigue detection fields
+    fatigue_severity: Optional[str] = None  # "none" | "low" | "medium" | "high"
+    ctr_decline_pct: Optional[float] = None
+    days_active: Optional[int] = None
 
 
 class CreativeDetailResponse(BaseModel):
@@ -339,3 +351,14 @@ class ReportsComparisonResponse(BaseModel):
     overview: Optional[ComparisonItem] = Field(None, description="Overview-level comparison (if dimension=overview)")
     items: List[ComparisonItem] = Field(default_factory=list, description="List of campaigns or ads (if dimension=campaign/ad)")
     currency: str = Field(default="USD", description="Account currency")
+
+
+class AccountCollaboratorResponse(BaseModel):
+    """Response for account collaborators list"""
+    user_id: int = Field(..., description="User ID")
+    full_name: Optional[str] = Field(None, description="User's full name")
+    email: str = Field(..., description="User's email address")
+    permission_level: str = Field(..., description="Permission level (admin or viewer)")
+
+    class Config:
+        from_attributes = True

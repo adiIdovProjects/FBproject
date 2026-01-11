@@ -26,6 +26,10 @@ export interface CreativeMetrics {
     conversion_value: number;
     roas: number;
     cpa: number;
+    // Fatigue detection fields
+    fatigue_severity?: string | null;  // "none" | "low" | "medium" | "high"
+    ctr_decline_pct?: number | null;
+    days_active?: number | null;
 }
 
 export interface VideoInsight {
@@ -51,4 +55,17 @@ export interface CreativesFilter {
     is_video?: boolean;
     min_spend?: number;
     sort_by: CreativeSortMetric;
+    search_query?: string;
+    ad_status?: string;
+}
+
+export interface CreativeComparisonMetric {
+    metric_name: string;
+    values: Record<number, number>;  // creative_id -> value
+    winner_id: number | null;
+}
+
+export interface CreativeComparisonResponse {
+    creative_ids: number[];
+    comparisons: CreativeComparisonMetric[];
 }

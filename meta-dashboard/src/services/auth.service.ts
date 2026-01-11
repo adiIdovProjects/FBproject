@@ -35,10 +35,40 @@ export function getGoogleLoginUrl(state: string): string {
 }
 
 /**
- * Login with Email and Password
+ * Request a magic link for passwordless authentication
+ * @param email User's email address
  */
-export async function loginWithEmail(data: any): Promise<{ access_token: string; token_type: string }> {
-    const response = await apiClient.post('/api/v1/auth/login', data);
+export async function requestMagicLink(email: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post('/api/v1/auth/magic-link/request', { email });
+    return response.data;
+}
+
+/**
+ * Verify a magic link token and log in
+ * @param token Magic link token from email
+ */
+export async function verifyMagicLink(token: string): Promise<{
+    access_token: string;
+    token_type: string;
+    onboarding_status: any;
+}> {
+    const response = await apiClient.get(`/api/v1/auth/magic-link/verify?token=${token}`);
+    return response.data;
+}
+
+/**
+ * Get current user's onboarding status
+ */
+export async function getOnboardingStatus(): Promise<any> {
+    const response = await apiClient.get('/api/v1/auth/onboarding/status');
+    return response.data;
+}
+
+/**
+ * Mark onboarding as complete (called after quiz)
+ */
+export async function completeOnboarding(): Promise<{ success: boolean }> {
+    const response = await apiClient.post('/api/v1/auth/onboarding/complete');
     return response.data;
 }
 

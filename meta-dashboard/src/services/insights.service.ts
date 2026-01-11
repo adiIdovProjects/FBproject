@@ -45,13 +45,15 @@ export async function fetchInsightsSummary(
   dateRange: DateRange,
   pageContext: 'dashboard' | 'campaigns' | 'creatives' = 'dashboard',
   filters?: InsightsFilters,
-  accountId?: string | null
+  accountId?: string | null,
+  locale?: string
 ): Promise<InsightItem[]> {
   try {
     const params: any = {
       start_date: dateRange.startDate,
       end_date: dateRange.endDate,
-      page_context: pageContext
+      page_context: pageContext,
+      locale: locale || 'en'
     };
 
     // Add optional filters
@@ -85,14 +87,16 @@ export async function fetchInsightsSummary(
  */
 export async function fetchDeepInsights(
   dateRange: DateRange,
-  accountId?: string | null
+  accountId?: string | null,
+  locale?: string
 ): Promise<DeepInsightsResponse | null> {
   try {
     const response = await apiClient.get<DeepInsightsResponse>('/api/v1/insights/deep-analysis', {
       params: {
         start_date: dateRange.startDate,
         end_date: dateRange.endDate,
-        account_id: accountId
+        account_id: accountId,
+        locale: locale || 'en'
       }
     });
     return response.data;
@@ -215,11 +219,13 @@ export interface CreativeFatigueResponse {
  */
 export async function fetchHistoricalAnalysis(
   lookbackDays: number = 90,
-  campaignId?: number
+  campaignId?: number,
+  locale?: string
 ): Promise<HistoricalAnalysisResponse> {
   try {
     const params: any = {
-      lookback_days: lookbackDays
+      lookback_days: lookbackDays,
+      locale: locale || 'en'
     };
     if (campaignId) {
       params.campaign_id = campaignId;
@@ -241,12 +247,14 @@ export async function fetchHistoricalAnalysis(
  */
 export async function fetchCreativeAnalysis(
   dateRange: DateRange,
-  campaignId?: number
+  campaignId?: number,
+  locale?: string
 ): Promise<CreativeAnalysisResponse> {
   try {
     const params: any = {
       start_date: dateRange.startDate,
-      end_date: dateRange.endDate
+      end_date: dateRange.endDate,
+      locale: locale || 'en'
     };
     if (campaignId) {
       params.campaign_id = campaignId;
@@ -267,12 +275,13 @@ export async function fetchCreativeAnalysis(
  * Fetch creative fatigue report
  */
 export async function fetchCreativeFatigue(
-  lookbackDays: number = 30
+  lookbackDays: number = 30,
+  locale?: string
 ): Promise<CreativeFatigueResponse> {
   try {
     const response = await apiClient.get<CreativeFatigueResponse>(
       '/api/v1/insights/creative-fatigue',
-      { params: { lookback_days: lookbackDays } }
+      { params: { lookback_days: lookbackDays, locale: locale || 'en' } }
     );
     return response.data;
   } catch (error) {

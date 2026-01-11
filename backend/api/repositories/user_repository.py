@@ -112,3 +112,120 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def share_account(self, account_id: int, target_user_id: int, permission_level: str = 'viewer'):
+        """Share an ad account with another user"""
+        # Check if already shared
+        existing = self.db.query(UserAdAccount).filter_by(
+            user_id=target_user_id,
+            account_id=account_id
+        ).first()
+
+        if existing:
+            raise ValueError("Account already shared with this user")
+
+        # Create new sharing record
+        share = UserAdAccount(
+            user_id=target_user_id,
+            account_id=account_id,
+            permission_level=permission_level
+        )
+        self.db.add(share)
+        self.db.commit()
+        return share
+
+    def unshare_account(self, account_id: int, target_user_id: int):
+        """Remove user access to an ad account"""
+        self.db.query(UserAdAccount).filter_by(
+            user_id=target_user_id,
+            account_id=account_id
+        ).delete()
+        self.db.commit()
+
+    def get_account_collaborators(self, account_id: int):
+        """Get all users who have access to this account"""
+        return (
+            self.db.query(User, UserAdAccount.permission_level)
+            .join(UserAdAccount, User.id == UserAdAccount.user_id)
+            .filter(UserAdAccount.account_id == account_id)
+            .all()
+        )
+
+    # Magic Link & Onboarding Methods
+
+    def create_user_with_email(self, email: str, full_name: Optional[str] = None) -> User:
+        """Create a new user with just email (passwordless)"""
+        user = User(
+            email=email,
+            full_name=full_name or email.split('@')[0],
+            email_verified=False,
+            onboarding_completed=False,
+            onboarding_step='connect_facebook'
+        )
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def mark_email_verified(self, user_id: int) -> Optional[User]:
+        """Mark user's email as verified after magic link confirmation"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.email_verified = True
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def mark_onboarding_completed(self, user_id: int) -> Optional[User]:
+        """Mark user's onboarding as complete"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.onboarding_completed = True
+            user.onboarding_step = 'completed'
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def update_onboarding_step(self, user_id: int, step: str) -> Optional[User]:
+        """Update user's current onboarding step"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.onboarding_step = step
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def get_onboarding_status(self, user_id: int) -> Optional[dict]:
+        """Get user's onboarding progress"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+
+        # Check if user has linked ad accounts
+        accounts_count = self.db.query(UserAdAccount).filter(UserAdAccount.user_id == user_id).count()
+
+        # Determine onboarding status
+        facebook_connected = user.fb_user_id is not None
+        accounts_selected = accounts_count > 0
+        profile_completed = all([user.job_title, user.years_experience, user.referral_source])
+
+        # Determine next step
+        next_step = None
+        if not facebook_connected:
+            next_step = 'connect_facebook'
+        elif not accounts_selected:
+            next_step = 'select_accounts'
+        elif not profile_completed:
+            next_step = 'complete_profile'
+        else:
+            next_step = 'completed'
+
+        return {
+            'email_verified': user.email_verified,
+            'facebook_connected': facebook_connected,
+            'accounts_selected': accounts_selected,
+            'profile_completed': profile_completed,
+            'onboarding_completed': user.onboarding_completed,
+            'current_step': user.onboarding_step,
+            'next_step': next_step
+        }

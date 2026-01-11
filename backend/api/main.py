@@ -25,7 +25,7 @@ load_dotenv(dotenv_path=env_path)
 
 from backend.api.dependencies import get_db
 from sqlalchemy.orm import Session
-from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync
+from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts
 from backend.models import create_schema
 from backend.utils.db_utils import get_db_engine
 from backend.utils.logging_utils import setup_logging, get_logger
@@ -109,6 +109,7 @@ app.include_router(insights.router)
 app.include_router(reports.router)
 app.include_router(users.router)
 app.include_router(sync.router)
+app.include_router(accounts.router)
 
 @app.get("/ping", tags=["health"])
 def ping():

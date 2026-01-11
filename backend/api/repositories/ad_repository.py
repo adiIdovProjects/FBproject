@@ -10,25 +10,37 @@ class AdRepository(BaseRepository):
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int] = None,
-        adset_id: Optional[int] = None,
-        search_query: Optional[str] = None
+        campaign_filter: Optional[str] = None,
+        adset_filter: Optional[str] = None,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get ad-level metrics breakdown.
         """
-        campaign_filter = ""
-        if campaign_id is not None:
-            campaign_filter = "AND f.campaign_id = :campaign_id"
+        # Build campaign filter
+        campaign_sql = ""
+        if campaign_filter:
+            campaign_sql = "AND c.campaign_name ILIKE :campaign_filter"
 
-        adset_filter = ""
-        if adset_id is not None:
-            adset_filter = "AND f.adset_id = :adset_id"
+        # Build adset filter
+        adset_sql = ""
+        if adset_filter:
+            adset_sql = "AND a.adset_name ILIKE :adset_filter"
 
         # Build search filter for ad name
         search_filter = ""
         if search_query:
-            search_filter = "AND LOWER(ad.ad_name) LIKE :search_query"
+            search_filter = "AND ad.ad_name ILIKE :search_query"
+
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
 
         query = text(f"""
             SELECT
@@ -45,6 +57,8 @@ class AdRepository(BaseRepository):
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            LEFT JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            LEFT JOIN dim_adset a ON f.adset_id = a.adset_id
             LEFT JOIN (
                 SELECT fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id,
                        SUM(fam.action_count) as action_count,
@@ -64,26 +78,28 @@ class AdRepository(BaseRepository):
                   AND f.creative_id = conv.creative_id
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
-                {campaign_filter}
-                {adset_filter}
+                {campaign_sql}
+                {adset_sql}
                 {search_filter}
+                {account_filter}
             GROUP BY ad.ad_id, ad.ad_name, ad.ad_status
             ORDER BY spend DESC
         """)
 
         params = {
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            **param_account_ids
         }
 
-        if campaign_id is not None:
-            params['campaign_id'] = campaign_id
+        if campaign_filter:
+            params['campaign_filter'] = f"%{campaign_filter}%"
 
-        if adset_id is not None:
-            params['adset_id'] = adset_id
+        if adset_filter:
+            params['adset_filter'] = f"%{adset_filter}%"
 
         if search_query:
-            params['search_query'] = f"%{search_query.lower()}%"
+            params['search_query'] = f"%{search_query}%"
 
         results = self.db.execute(query, params).fetchall()
 

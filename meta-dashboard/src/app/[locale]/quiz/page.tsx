@@ -40,8 +40,8 @@ const REFERRAL_SOURCES = [
     { value: 'google_search', label: 'Google Search' },
     { value: 'facebook_ad', label: 'Facebook Ad' },
     { value: 'friend_referral', label: 'Friend / Colleague Referral' },
-    { value: 'agency_recommendation', label: 'Agency Recommendation' },
-    { value: 'social_media', label: 'Social Media' },
+    { value: 'linkedin', label: 'Linkedin' },
+    { value: 'ai_tool', label: 'AI Recommendation' },
     { value: 'other', label: 'Other' }
 ];
 
@@ -57,6 +57,7 @@ export default function UserProfileQuizPage() {
     const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
     const [isCompleted, setIsCompleted] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [customReferralSource, setCustomReferralSource] = useState('');
 
     // Poll sync status every 2 seconds
     useEffect(() => {
@@ -83,6 +84,11 @@ export default function UserProfileQuizPage() {
     const handleSelectAnswer = (field: keyof QuizAnswers, value: string) => {
         setAnswers({ ...answers, [field]: value });
 
+        // Don't auto-advance if "Other" is selected for referral source
+        if (field === 'referral_source' && value === 'other') {
+            return;
+        }
+
         // Auto-advance to next question after selection
         setTimeout(() => {
             if (field === 'job_title') {
@@ -99,7 +105,12 @@ export default function UserProfileQuizPage() {
     const saveProfile = async (finalAnswers: QuizAnswers) => {
         setIsSaving(true);
         try {
+            // Save profile
             await apiClient.patch('/api/v1/users/me/profile', finalAnswers);
+
+            // Mark onboarding as complete
+            await apiClient.post('/api/v1/auth/onboarding/complete');
+
             setIsCompleted(true);
         } catch (error) {
             console.error('Error saving profile:', error);
@@ -109,11 +120,11 @@ export default function UserProfileQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push('/en/select-accounts');
+        router.push('/en/dashboard');
     };
 
     const handleSkip = () => {
-        router.push('/en/select-accounts');
+        router.push('/en/dashboard');
     };
 
     const progressPercent = ((currentQuestion + 1) / 4) * 100;
@@ -256,6 +267,26 @@ export default function UserProfileQuizPage() {
                                 );
                             })}
                         </div>
+
+                        {answers.referral_source === 'other' && (
+                            <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <input
+                                    type="text"
+                                    value={customReferralSource}
+                                    onChange={(e) => setCustomReferralSource(e.target.value)}
+                                    placeholder="Please specify..."
+                                    className="w-full p-4 rounded-xl bg-gray-800 border-2 border-gray-700 text-white text-lg focus:border-blue-500 focus:outline-none mb-4"
+                                    autoFocus
+                                />
+                                <button
+                                    onClick={() => saveProfile({ ...answers, referral_source: customReferralSource })}
+                                    disabled={!customReferralSource.trim() || isSaving}
+                                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSaving ? <Loader2 className="animate-spin" /> : 'Complete Profile'} <ArrowRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
                         {isSaving && (
                             <div className="mt-4 flex items-center justify-center gap-2 text-gray-400">
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -346,14 +377,14 @@ export default function UserProfileQuizPage() {
                             </div>
                             <h2 className="text-3xl font-bold text-white mb-4">Profile Complete!</h2>
                             <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                                Thanks for completing your profile. Let's connect your ad accounts next.
+                                Thanks for completing your profile. You're all set to explore your dashboard!
                             </p>
 
                             <button
                                 onClick={handleFinish}
                                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-xl flex items-center gap-2 mx-auto"
                             >
-                                Connect Ad Accounts
+                                Go to Dashboard
                                 <ArrowRight className="w-5 h-5" />
                             </button>
                         </div>

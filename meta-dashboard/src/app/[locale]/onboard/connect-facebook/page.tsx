@@ -1,0 +1,136 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { generateState } from '@/utils/csrf';
+import { Facebook, ArrowRight, Info } from 'lucide-react';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+
+export default function ConnectFacebookPage() {
+    const router = useRouter();
+    const [connecting, setConnecting] = useState(false);
+
+    const handleConnectFacebook = async () => {
+        setConnecting(true);
+
+        try {
+            // Get current token
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                router.push('/en/login');
+                return;
+            }
+
+            // Call the connect endpoint (requires auth)
+            const response = await fetch(`${API_BASE_URL}/api/v1/auth/facebook/connect`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.url) {
+                // Redirect to Facebook OAuth
+                window.location.href = data.url;
+            } else {
+                console.error('No URL returned from connect endpoint');
+                setConnecting(false);
+            }
+        } catch (error) {
+            console.error('Error connecting to Facebook:', error);
+            setConnecting(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-[#0F1115] relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px]"></div>
+            </div>
+
+            <div className="relative z-10 w-full max-w-2xl p-8">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center">
+                    {/* Step Indicator */}
+                    <div className="flex items-center justify-center gap-2 mb-8">
+                        <div className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-400 text-sm font-medium">
+                            Step 1 of 3
+                        </div>
+                    </div>
+
+                    {/* Facebook Icon */}
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#1877F2]/20 mb-6">
+                        <Facebook className="w-12 h-12 text-[#1877F2]" />
+                    </div>
+
+                    <h1 className="text-4xl font-black text-white mb-4">
+                        Connect Your Facebook Account
+                    </h1>
+
+                    <p className="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
+                        To analyze your ad campaigns, we need access to your Facebook ad accounts.
+                        This connection is secure and required to display your data.
+                    </p>
+
+                    {/* Info Box */}
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6 mb-8 max-w-lg mx-auto">
+                        <div className="flex items-start gap-3 text-left">
+                            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <h3 className="text-blue-400 font-semibold mb-2">What we'll access:</h3>
+                                <ul className="text-gray-300 text-sm space-y-1">
+                                    <li>• Your ad account information</li>
+                                    <li>• Campaign, ad set, and ad performance data</li>
+                                    <li>• Insights and analytics metrics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Connect Button */}
+                    <button
+                        onClick={handleConnectFacebook}
+                        disabled={connecting}
+                        className="inline-flex items-center gap-3 bg-[#1877F2] hover:bg-[#1864D2] text-white font-bold text-lg py-4 px-8 rounded-xl transition-all transform hover:scale-105 shadow-xl disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                        <Facebook className="w-6 h-6 fill-current" />
+                        <span>{connecting ? 'Connecting...' : 'Connect with Facebook'}</span>
+                        <ArrowRight className="w-5 h-5" />
+                    </button>
+
+                    <p className="mt-6 text-gray-500 text-sm">
+                        You'll be redirected to Facebook to authorize access
+                    </p>
+                </div>
+
+                {/* Progress Steps */}
+                <div className="mt-8 flex items-center justify-center gap-4">
+                    <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mb-2">
+                            1
+                        </div>
+                        <span className="text-blue-400 text-sm font-medium">Connect</span>
+                    </div>
+                    <div className="w-16 h-0.5 bg-white/10"></div>
+                    <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-500 font-bold mb-2">
+                            2
+                        </div>
+                        <span className="text-gray-500 text-sm">Select Accounts</span>
+                    </div>
+                    <div className="w-16 h-0.5 bg-white/10"></div>
+                    <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-500 font-bold mb-2">
+                            3
+                        </div>
+                        <span className="text-gray-500 text-sm">Complete Profile</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

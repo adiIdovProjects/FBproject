@@ -27,6 +27,9 @@ CACHE_TTL = 3600  # 1 hour
 
 # AI Prompts
 SUMMARY_PROMPT_TEMPLATE = """Analyze this Facebook Ads data and provide exactly 3 actionable insights for a {page_context} page.
+Respond in {target_lang}.
+
+{account_context}
 
 Context: This is for {page_context} view. Focus on insights most relevant to this context.
 
@@ -50,6 +53,9 @@ Data:
 Provide your 3 insights now:"""
 
 DEEP_ANALYSIS_PROMPT = """You are a Senior Performance Marketing Strategist analyzing Facebook Ads performance.
+Respond in {target_lang}.
+
+{account_context}
 
 Analyze the performance difference between the CURRENT period and the PREVIOUS period. Provide strategic insights based on what changed.
 
@@ -116,12 +122,13 @@ class InsightsService:
         breakdown_type: Optional[str] = None,
         breakdown_group_by: Optional[str] = None,
         user_id: Optional[int] = None,
-        account_id: Optional[str] = None
+        account_id: Optional[str] = None,
+        locale: str = "en"
     ) -> str:
         """Generate cache key from parameters including filters"""
-        # Version 5: Structured 4-line insights with distinct metric layers
-        cache_version = "v5"
-        filters_str = f":{campaign_filter or ''}:{breakdown_type or ''}:{breakdown_group_by or ''}:{user_id or ''}:{account_id or ''}"
+        # Version 6: Locale aware
+        cache_version = "v6"
+        filters_str = f":{campaign_filter or ''}:{breakdown_type or ''}:{breakdown_group_by or ''}:{user_id or ''}:{account_id or ''}:{locale}"
         key_str = f"insights:{cache_version}:{context}:{start_date}:{end_date}{filters_str}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
@@ -255,6 +262,26 @@ class InsightsService:
 
         return sections
 
+    def _format_account_context(self, context: Optional[Dict]) -> str:
+        """Format account context for prompt"""
+        if not context:
+            return ""
+        
+        parts = []
+        if context.get('name'):
+            parts.append(f"Account Name: {context['name']}")
+        if context.get('industry'):
+            parts.append(f"Industry: {context['industry']}")
+        if context.get('goal'):
+            parts.append(f"Primary Goal: {context['goal']}")
+        if context.get('priority'):
+            parts.append(f"Optimization Priority: {context['priority']}")
+            
+        if not parts:
+            return ""
+            
+        return "**ACCOUNT CONTEXT**:\n" + "\n".join(parts) + "\n\nIMPORTANT: Tailor all insights to this specific business context and goals.\n"
+
     def get_summary_insights(
         self,
         start_date: date,
@@ -264,7 +291,8 @@ class InsightsService:
         breakdown_type: Optional[str] = None,
         breakdown_group_by: Optional[str] = None,
         user_id: Optional[int] = None,
-        account_id: Optional[str] = None
+        account_id: Optional[str] = None,
+        locale: str = "en"
     ) -> Dict[str, Any]:
         """
         Generate 2-3 quick insights for mini cards.
@@ -279,7 +307,7 @@ class InsightsService:
         # Check cache with filter-aware key
         cache_key = self._get_cache_key(
             start_date, end_date, f"summary_{page_context}",
-            campaign_filter, breakdown_type, breakdown_group_by, user_id, account_id
+            campaign_filter, breakdown_type, breakdown_group_by, user_id, account_id, locale
         )
         if cache_key in INSIGHTS_CACHE:
             cached = INSIGHTS_CACHE[cache_key]
@@ -349,9 +377,25 @@ class InsightsService:
             if breakdown_type:
                 prompt_context += f" (breakdown: {breakdown_type})"
 
+            # Map locale to language name
+            lang_map = {
+                'en': 'English',
+                'he': 'Hebrew',
+                'fr': 'French',
+                'de': 'German',
+                'es': 'Spanish',
+                'ar': 'Arabic'
+            }
+            target_lang = lang_map.get(locale, 'English')
+
+            # Format account context
+            account_context_str = self._format_account_context(data.get('account_context'))
+
             prompt = SUMMARY_PROMPT_TEMPLATE.format(
                 page_context=prompt_context,
-                data=data_summary
+                data=data_summary,
+                target_lang=target_lang,
+                account_context=account_context_str
             )
 
             try:
@@ -386,14 +430,15 @@ class InsightsService:
         start_date: date,
         end_date: date,
         user_id: Optional[int] = None,
-        account_id: Optional[str] = None
+        account_id: Optional[str] = None,
+        locale: str = "en"
     ) -> Dict[str, Any]:
         """
         Generate comprehensive deep analysis for insights page.
         Returns cached results if available.
         """
         # Check cache
-        cache_key = self._get_cache_key(start_date, end_date, "deep_analysis", user_id=user_id, account_id=account_id)
+        cache_key = self._get_cache_key(start_date, end_date, "deep_analysis", user_id=user_id, account_id=account_id, locale=locale)
         if cache_key in INSIGHTS_CACHE:
             cached = INSIGHTS_CACHE[cache_key]
             if time.time() - cached['timestamp'] < CACHE_TTL:
@@ -447,7 +492,25 @@ class InsightsService:
             # Fallback analysis
             result = self._generate_fallback_deep_analysis(data)
         else:
-            prompt = DEEP_ANALYSIS_PROMPT.format(data=data_summary)
+            # Map locale to language name
+            lang_map = {
+                'en': 'English',
+                'he': 'Hebrew',
+                'fr': 'French',
+                'de': 'German',
+                'es': 'Spanish',
+                'ar': 'Arabic'
+            }
+            target_lang = lang_map.get(locale, 'English')
+
+            # Format account context
+            account_context_str = self._format_account_context(data.get('account_context'))
+
+            prompt = DEEP_ANALYSIS_PROMPT.format(
+                data=data_summary, 
+                target_lang=target_lang,
+                account_context=account_context_str
+            )
 
             try:
                 response = self.client.models.generate_content(

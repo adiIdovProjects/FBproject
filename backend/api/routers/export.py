@@ -4,6 +4,7 @@ Export API router.
 This module defines FastAPI endpoints for exporting data to Google Sheets and Excel.
 """
 
+import os
 from datetime import date
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Body
@@ -162,6 +163,15 @@ def export_to_google_sheets(
                 detail=f"No data found for {request.data_type} in the specified date range"
             )
 
+        # Check for Google credentials
+        google_token = current_user.google_access_token
+        google_refresh_token = current_user.google_refresh_token
+        if not google_token:
+            raise HTTPException(
+                status_code=401,
+                detail="Google account not connected. Please connect your Google account in settings."
+            )
+
         # Initialize export service
         export_service = ExportService()
 
@@ -170,7 +180,11 @@ def export_to_google_sheets(
             data=data,
             spreadsheet_id=request.spreadsheet_id,
             sheet_name=request.sheet_name,
-            title=request.title
+            title=request.title,
+            access_token=google_token,
+            refresh_token=google_refresh_token,
+            client_id=os.getenv("GOOGLE_CLIENT_ID"),
+            client_secret=os.getenv("GOOGLE_CLIENT_SECRET")
         )
 
         # Extract spreadsheet ID from URL
@@ -321,13 +335,30 @@ def export_to_google_sheets_generic(
     Accepted nested data structures and converts them to sheet rows.
     """
     try:
-        import traceback
         data = request_data.get("data")
-        title = request_data.get("title", "Export")
-        sheet_name = request_data.get("sheet_name", "Data")
-
+        logger.info(f"Received export request. Keys received: {list(request_data.keys())}")
+        if data:
+            logger.info(f"Data type: {type(data)}, Length: {len(data) if isinstance(data, list) else 'N/A'}")
+            if isinstance(data, list) and len(data) > 0:
+                logger.info(f"Sample row keys: {data[0].keys()}")
+        
         if not data:
-            raise HTTPException(status_code=400, detail="No data provided for export")
+            logger.error("No data provided in request")
+            raise HTTPException(status_code=400, detail="No data provided")
+        
+        title = request_data.get("title", "Facebook Ads Analytics Export")
+        sheet_name = request_data.get("sheet_name", "Facebook Ads Data")
+
+        # Check for Google credentials
+        google_token = current_user.google_access_token
+        google_refresh_token = current_user.google_refresh_token
+        
+        if not google_token:
+            logger.error("User missing Google access token")
+            raise HTTPException(
+                status_code=401,
+                detail="Google account not connected. Please connect your Google account in settings."
+            )
 
         # Initialize export service
         export_service = ExportService()
@@ -336,15 +367,29 @@ def export_to_google_sheets_generic(
         spreadsheet_url = export_service.export_to_google_sheets(
             data=data,
             title=title,
-            sheet_name=sheet_name
+            sheet_name=sheet_name,
+            access_token=google_token,
+            refresh_token=google_refresh_token,
+            client_id=os.getenv("GOOGLE_CLIENT_ID"),
+            client_secret=os.getenv("GOOGLE_CLIENT_SECRET")
         )
+
+        # Extract spreadsheet ID from URL if not available in service
+        ss_id = export_service.spreadsheet_id if hasattr(export_service, 'spreadsheet_id') else None
+        if not ss_id and "docs.google.com/spreadsheets/d/" in spreadsheet_url:
+            ss_id = spreadsheet_url.split("/d/")[1].split("/")[0]
 
         return GoogleSheetsExportResponse(
             spreadsheet_url=spreadsheet_url,
-            message=f"Successfully exported {len(data)} rows to Google Sheets"
+            spreadsheet_id=ss_id or "unknown",
+            sheet_name=sheet_name,
+            rows_exported=len(data)
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        error_detail = traceback.format_exc()
-        logger.error(f"Failed to export generic data to Google Sheets: {error_detail}")
-        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}\n{error_detail}")
+        import traceback
+        logger.error(f"❌ Generic Google Sheets Export Failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")

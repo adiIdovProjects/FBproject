@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect, useTransition } from 'react';
 
@@ -15,6 +15,7 @@ const languages = [
 export default function LanguageSwitcher() {
   const t = useTranslations();
   const router = useRouter();
+  const pathname = usePathname();
   const currentLocale = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -35,8 +36,18 @@ export default function LanguageSwitcher() {
     }
 
     startTransition(() => {
-      // Simply navigate to the new locale root
-      router.push(`/${newLocale}`);
+      // Remove current locale from pathname and add new locale
+      // pathname is like "/en/settings", we want to replace "en" with newLocale
+      const pathWithoutLocale = pathname.replace(new RegExp(`^/${currentLocale}`), '');
+      const newPath = `/${newLocale}${pathWithoutLocale}`;
+
+      console.log('[LanguageSwitcher] Switching from', currentLocale, 'to', newLocale);
+      console.log('[LanguageSwitcher] Current pathname:', pathname);
+      console.log('[LanguageSwitcher] Path without locale:', pathWithoutLocale);
+      console.log('[LanguageSwitcher] New path:', newPath);
+
+      // Use window.location for a full page reload to ensure locale changes properly
+      window.location.href = newPath;
     });
   };
 

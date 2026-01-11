@@ -11,9 +11,9 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 try:
-    from backend.config.settings import ACTION_TYPES_TO_TRACK
+    from backend.config.settings import DEFAULT_CONVERSION_TYPES
 except ImportError:
-    ACTION_TYPES_TO_TRACK = ['purchase', 'lead', 'add_to_cart']
+    DEFAULT_CONVERSION_TYPES = ['purchase', 'lead', 'add_to_cart']
 
 
 def get_action_types_dataframe() -> pd.DataFrame:
@@ -24,12 +24,12 @@ def get_action_types_dataframe() -> pd.DataFrame:
     """
     
     # Start with unknown member
-    action_types = ['unknown'] + ACTION_TYPES_TO_TRACK
+    action_types = ['unknown'] + DEFAULT_CONVERSION_TYPES
     
     # Create DataFrame
     df = pd.DataFrame({
         'action_type': action_types,
-        'is_conversion': [False] + [True] * len(ACTION_TYPES_TO_TRACK)  # Unknown is not a conversion
+        'is_conversion': [False] + [True] * len(DEFAULT_CONVERSION_TYPES)  # Unknown is not a conversion
     })
     
     # Remove duplicates
@@ -56,8 +56,9 @@ def ensure_action_types_loaded(engine, df_actions: pd.DataFrame) -> None:
     # Get unique action types from data
     action_types_in_data = df_actions['action_type'].unique().tolist()
     
-    # Get all action types (tracked + from data)
-    all_action_types = list(set(['unknown'] + ACTION_TYPES_TO_TRACK + action_types_in_data))
+    # Get all action types (default + from data)
+    # Important: New types found in data (that aren't in DEFAULT) will default to is_conversion=False
+    all_action_types = list(set(['unknown'] + DEFAULT_CONVERSION_TYPES + action_types_in_data))
     all_action_types.sort()  # Sort for consistency
     
     # Put 'unknown' first
@@ -68,10 +69,15 @@ def ensure_action_types_loaded(engine, df_actions: pd.DataFrame) -> None:
     # Create DataFrame
     df_action_types = pd.DataFrame({
         'action_type': all_action_types,
-        'is_conversion': [at != 'unknown' and at in ACTION_TYPES_TO_TRACK for at in all_action_types]
+        'is_conversion': [at != 'unknown' and at in DEFAULT_CONVERSION_TYPES for at in all_action_types]
     })
     
     # Save to database
+    # Note: save_dataframe usually does "INSERT IGNORE" or similar if configured, 
+    # but here we might need to be careful not to overwrite existing toggles.
+    # Ideally, we only insert NEW ones.
+    # Use is_fact=False which usually implies dimension handling (often upsert or ignore)
+    
     success = save_dataframe(
         engine,
         df_action_types,

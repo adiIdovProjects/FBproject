@@ -26,6 +26,7 @@ HISTORICAL_CACHE = {}
 CACHE_TTL = 3600  # 1 hour
 
 HISTORICAL_ANALYSIS_PROMPT = """You are a Senior Performance Marketing Analyst with expertise in trend forecasting and seasonality analysis.
+Respond in {target_lang}.
 
 Analyze the provided historical Facebook Ads data and provide deep, strategic insights.
 
@@ -144,10 +145,11 @@ class HistoricalInsightsService:
         self,
         lookback_days: int,
         campaign_id: Optional[int],
-        account_ids: Optional[List[int]]
+        account_ids: Optional[List[int]],
+        locale: str = "en"
     ) -> str:
         """Generate cache key from parameters"""
-        key_str = f"historical:{lookback_days}:{campaign_id}:{account_ids}"
+        key_str = f"historical:{lookback_days}:{campaign_id}:{account_ids}:{locale}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def _calculate_trend_metrics(self, weekly_data: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -225,7 +227,8 @@ class HistoricalInsightsService:
         self,
         lookback_days: int = 90,
         campaign_id: Optional[int] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        locale: str = "en"
     ) -> Dict[str, Any]:
         """
         Generate comprehensive historical trend analysis.
@@ -247,7 +250,7 @@ class HistoricalInsightsService:
 
         try:
             # Check cache
-            cache_key = self._get_cache_key(lookback_days, campaign_id, account_ids)
+            cache_key = self._get_cache_key(lookback_days, campaign_id, account_ids, locale)
             if cache_key in HISTORICAL_CACHE:
                 cached_time, cached_response = HISTORICAL_CACHE[cache_key]
                 if time.time() - cached_time < CACHE_TTL:
@@ -285,9 +288,21 @@ class HistoricalInsightsService:
 
             context_json = json.dumps(context, indent=2)
 
+            # Map locale to language name
+            lang_map = {
+                'en': 'English',
+                'he': 'Hebrew',
+                'fr': 'French',
+                'de': 'German',
+                'es': 'Spanish',
+                'ar': 'Arabic'
+            }
+            target_lang = lang_map.get(locale, 'English')
+
             prompt = (
                 f"Analyze this {lookback_days}-day historical Facebook Ads performance data.\n\n"
                 f"Historical Data:\n{context_json}\n\n"
+                f"Respond in {target_lang}.\n"
                 "Provide deep trend analysis, seasonality insights, early warning signals, "
                 "and forecast for next week. Follow the response format specified in your instructions."
             )

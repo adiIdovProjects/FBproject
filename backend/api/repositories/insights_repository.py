@@ -11,6 +11,8 @@ from .metrics_repository import MetricsRepository
 from .campaign_repository import CampaignRepository
 from .timeseries_repository import TimeSeriesRepository
 from .breakdown_repository import BreakdownRepository
+from backend.models.schema import DimAccount
+from backend.api.repositories.account_repository import AccountRepository
 
 
 class InsightsRepository:
@@ -22,6 +24,7 @@ class InsightsRepository:
         self.campaign_repo = CampaignRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
         self.breakdown_repo = BreakdownRepository(db)
+        self.account_repo = AccountRepository(db)
 
     def get_insights_data(
         self,
@@ -81,6 +84,9 @@ class InsightsRepository:
             account_ids=account_ids
         )
 
+        # Get account context
+        account_context = self._get_account_context(account_ids)
+
         result = {
             'overview': overview,
             'prev_overview': prev_overview,
@@ -88,7 +94,8 @@ class InsightsRepository:
             'daily_trends': daily_trends,
             'period': f"{start_date} to {end_date}",
             'prev_period': f"{prev_start_date} to {prev_end_date}" if prev_start_date else None,
-            'context': page_context
+            'context': page_context,
+            'account_context': account_context
         }
 
         # If breakdown_type is specified, fetch breakdown data
@@ -175,3 +182,35 @@ class InsightsRepository:
             'current': current_breakdown,
             'previous': prev_breakdown
         }
+
+    def _get_account_context(self, account_ids: Optional[List[int]]) -> Optional[Dict[str, Any]]:
+        """
+        Fetch account context (quiz responses, currency, name) to make insights smarter.
+        Only works if a single account is selected.
+        """
+        if not account_ids or len(account_ids) != 1:
+            return None
+        
+        account_id = account_ids[0]
+        
+        # Get basic account info
+        account = self.db.query(DimAccount).filter(DimAccount.account_id == account_id).first()
+        
+        # Get quiz responses
+        quiz = self.account_repo.get_account_quiz(account_id)
+        
+        if not account and not quiz:
+            return None
+            
+        context = {}
+        if account:
+            context['name'] = account.account_name
+            context['currency'] = account.currency
+            
+        if quiz:
+            context['goal'] = quiz.get('primary_goal')
+            context['industry'] = quiz.get('industry')
+            context['priority'] = quiz.get('optimization_priority')
+            context['main_conversions'] = quiz.get('primary_conversions')
+            
+        return context

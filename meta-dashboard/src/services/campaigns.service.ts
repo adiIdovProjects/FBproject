@@ -113,7 +113,8 @@ export async function fetchBreakdown(
   groupBy: 'age' | 'gender' | 'both' = 'both',
   status: string[] = [],
   searchQuery: string = '',
-  accountId?: string | null
+  accountId?: string | null,
+  creativeId?: number | null
 ): Promise<BreakdownRow[]> {
   const { startDate, endDate } = dateRange;
 
@@ -147,6 +148,10 @@ export async function fetchBreakdown(
 
   if (accountId) {
     params.account_id = accountId;
+  }
+
+  if (creativeId) {
+    params.creative_id = creativeId;
   }
 
   try {

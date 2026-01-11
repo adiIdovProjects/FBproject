@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { Palette, Target, TrendingUp, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -24,6 +25,7 @@ export default function CreativeAnalysisView({
   endDate,
   isRTL
 }: CreativeAnalysisViewProps) {
+  const locale = useLocale();
   const [data, setData] = useState<CreativeAnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function CreativeAnalysisView({
       setError(null);
 
       try {
-        const result = await fetchCreativeAnalysis({ startDate, endDate });
+        const result = await fetchCreativeAnalysis({ startDate, endDate }, undefined, locale);
         setData(result);
       } catch (err: any) {
         console.error('[Creative Analysis] Error:', err);
@@ -161,9 +163,8 @@ export default function CreativeAnalysisView({
                       <td className="py-3 px-4 text-sm text-right">
                         {stats.total_conversions}
                       </td>
-                      <td className={`py-3 px-4 text-sm text-right font-semibold ${
-                        stats.overall_roas >= 2 ? 'text-green-400' : stats.overall_roas >= 1 ? 'text-yellow-400' : 'text-red-400'
-                      }`}>
+                      <td className={`py-3 px-4 text-sm text-right font-semibold ${stats.overall_roas >= 2 ? 'text-green-400' : stats.overall_roas >= 1 ? 'text-yellow-400' : 'text-red-400'
+                        }`}>
                         {stats.overall_roas.toFixed(2)}x
                       </td>
                       <td className="py-3 px-4 text-sm text-right">
@@ -207,9 +208,8 @@ export default function CreativeAnalysisView({
                     <td className="py-3 px-4 text-sm text-right">
                       {cta.avg_ctr.toFixed(2)}%
                     </td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${
-                      cta.avg_roas >= 2 ? 'text-green-400' : cta.avg_roas >= 1 ? 'text-yellow-400' : 'text-red-400'
-                    }`}>
+                    <td className={`py-3 px-4 text-sm text-right font-semibold ${cta.avg_roas >= 2 ? 'text-green-400' : cta.avg_roas >= 1 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
                       {cta.avg_roas.toFixed(2)}x
                     </td>
                     <td className="py-3 px-4 text-sm text-right">

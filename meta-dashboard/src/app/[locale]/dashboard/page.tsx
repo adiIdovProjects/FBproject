@@ -34,6 +34,8 @@ import { useAccount } from '../../../context/AccountContext'; // Import context
 
 // Utilities
 import { formatDate, calculateDateRange } from '../../../utils/date';
+import { TimeGranularity } from '../../../types/campaigns.types';
+import TimeGranularityToggle from '../../../components/campaigns/TimeGranularityToggle';
 
 const DEFAULT_DATE_RANGE_KEY = 'last_30_days';
 
@@ -94,6 +96,7 @@ export default function PerformanceDashboard() {
 
   // Chart metric selection
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('actions');
+  const [granularity, setGranularity] = useState<TimeGranularity>('day');
 
   // React Query: Fetch Metrics
   const {
@@ -101,8 +104,8 @@ export default function PerformanceDashboard() {
     isLoading: isMetricsLoading,
     error: metricsError
   } = useQuery({
-    queryKey: ['dashboard-metrics', startDate, endDate, selectedAccountId],
-    queryFn: () => fetchMetricsWithTrends({ startDate, endDate }, selectedAccountId),
+    queryKey: ['dashboard-metrics', startDate, endDate, selectedAccountId, granularity],
+    queryFn: () => fetchMetricsWithTrends({ startDate, endDate }, selectedAccountId, granularity),
     enabled: !!startDate && !!endDate,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -113,7 +116,7 @@ export default function PerformanceDashboard() {
     isLoading: isInsightsLoading
   } = useQuery({
     queryKey: ['dashboard-insights', startDate, endDate, selectedAccountId],
-    queryFn: () => fetchInsightsSummary({ startDate, endDate }, 'dashboard', undefined, selectedAccountId),
+    queryFn: () => fetchInsightsSummary({ startDate, endDate }, 'dashboard', undefined, selectedAccountId, locale),
     enabled: !!startDate && !!endDate,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -285,12 +288,21 @@ export default function PerformanceDashboard() {
       </div>
 
       {/* Performance Chart */}
+      <div className="mb-4 flex items-center justify-end">
+        <TimeGranularityToggle
+          selected={granularity}
+          onChange={setGranularity}
+          isRTL={isRTL}
+        />
+      </div>
+
       <ActionsMetricsChart
         dailyData={metricsData?.dailyData || []}
         selectedMetric={selectedMetric}
         onMetricChange={setSelectedMetric}
         isLoading={isLoading}
         currency={currency}
+        granularity={granularity}
       />
     </MainLayout>
   );

@@ -70,7 +70,7 @@ export async function fetchMetricTrends(
 /**
  * Fetch metrics with trends for the dashboard
  */
-export async function fetchMetricsWithTrends(dateRange: DateRange, accountId?: string | null) {
+export async function fetchMetricsWithTrends(dateRange: DateRange, accountId?: string | null, timeGranularity: 'day' | 'week' | 'month' = 'day') {
   try {
     const period = `${dateRange.startDate}:${dateRange.endDate}`;
 
@@ -79,7 +79,7 @@ export async function fetchMetricsWithTrends(dateRange: DateRange, accountId?: s
     const overviewData = await fetchOverviewMetrics(period, 'auto', accountId);
 
     // Fetch daily time series data for charts
-    const trendData = await fetchMetricTrends(period, 'day', accountId);
+    const trendData = await fetchMetricTrends(period, timeGranularity, accountId);
 
     // Map backend data to frontend format
     const current: CalculatedMetrics = {

@@ -7,8 +7,8 @@ import Providers from '../../components/Providers';
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "Facebook Ads Analytics Dashboard",
-  description: "Multi-language analytics platform for Facebook Ads performance",
+  title: "FBWatson: Facebook Ads Insights",
+  description: "FBWatson - The AI Detective for your Facebook Ads performance",
 };
 
 const geistSans = Geist({

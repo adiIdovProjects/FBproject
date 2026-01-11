@@ -14,7 +14,7 @@ import json
 logger = logging.getLogger(__name__)
 
 # Import config
-from backend.config.settings import ACTION_TYPES_TO_TRACK, UNKNOWN_MEMBER_ID
+from backend.config.settings import DEFAULT_CONVERSION_TYPES, IGNORED_ACTION_TYPES, UNKNOWN_MEMBER_ID
 
 
 def normalize_action_type(raw_type: str) -> str:
@@ -106,8 +106,11 @@ def parse_actions_from_row(row: Dict[str, Any]) -> List[Dict[str, Any]]:
         raw_type = action.get('action_type', '')
         norm_type = normalize_action_type(raw_type)
         
-        if norm_type not in ACTION_TYPES_TO_TRACK:
+        if norm_type in IGNORED_ACTION_TYPES:
             continue
+            
+        # We now track EVERYTHING that is not explicitly ignored
+        # (Legacy check removed: if norm_type not in ACTION_TYPES_TO_TRACK)
             
         for key, val in action.items():
             if key == 'action_type': continue

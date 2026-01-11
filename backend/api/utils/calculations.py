@@ -91,6 +91,21 @@ class MetricCalculator:
         return (spend / conversions) if conversions > 0 else 0.0
 
     @staticmethod
+    def conversion_rate(conversions: int, clicks: int) -> float:
+        """
+        Calculate Conversion Rate (CVR).
+        Formula: Conversions / Clicks * 100
+
+        Args:
+            conversions: Number of conversions
+            clicks: Number of clicks
+
+        Returns:
+            Conversion rate as a percentage (e.g., 2.5 for 2.5%)
+        """
+        return (conversions / clicks * 100) if clicks > 0 else 0.0
+
+    @staticmethod
     def hook_rate(video_p25_watched: int, video_plays: int) -> float:
         """
         Calculate Hook Rate (25% video retention).

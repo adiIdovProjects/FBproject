@@ -17,7 +17,6 @@ import MetricCard from '../../../components/dashboard/MetricCard';
 import SkeletonMetricCard from '../../../components/dashboard/SkeletonMetricCard';
 import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsChart';
 import TimeGranularityToggle from '../../../components/campaigns/TimeGranularityToggle';
-import ExportButton from '../../../components/campaigns/ExportButton';
 import CampaignsTable from '../../../components/campaigns/CampaignsTable';
 import BreakdownTabs from '../../../components/campaigns/BreakdownTabs';
 import InsightCard from '../../../components/insights/InsightCard';
@@ -64,6 +63,7 @@ export default function CampaignsPage() {
   const [isTrendLoading, setIsTrendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
 
   // Filters
   const [searchValue, setSearchValue] = useState('');
@@ -264,11 +264,21 @@ export default function CampaignsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <ExportButton
-            dateRange={{ startDate, endDate }}
-            onExportSuccess={(msg) => setExportMessage({ type: 'success', text: msg })}
-            onExportError={(msg) => setExportMessage({ type: 'error', text: msg })}
-          />
+          {/* Comparison Toggle */}
+          <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5">
+            <span className="text-sm text-gray-400">{t('common.compare_periods') || 'Compare Periods'}</span>
+            <button
+              onClick={() => setShowComparison(!showComparison)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showComparison ? 'bg-accent' : 'bg-gray-700'
+                }`}
+            >
+              <span className="sr-only">Enable comparison</span>
+              <span
+                className={`${showComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+              />
+            </button>
+          </div>
+
         </div>
       </div>
 
@@ -290,65 +300,15 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {/* Core Metrics KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {isLoading ? (
-          <>
-            {[...Array(4)].map((_, i) => (
-              <SkeletonMetricCard key={i} />
-            ))}
-          </>
-        ) : (
-          <>
-            <MetricCard
-              title={t('metrics.total_spend')}
-              value={aggregatedMetrics.totalSpend}
-              trend={aggregatedMetrics.spendTrend}
-              icon={DollarSign}
-              format="currency"
-              isLoading={isLoading}
-              currency={currency}
-            />
-
-            {aggregatedMetrics.totalConversions > 0 && (
-              <MetricCard
-                title={t('metrics.average_roas')}
-                value={aggregatedMetrics.avgRoas}
-                trend={aggregatedMetrics.roasTrend}
-                icon={TrendingUp}
-                format="decimal"
-                isLoading={isLoading}
-              />
-            )}
-
-            <MetricCard
-              title={t('metrics.total_conversions')}
-              value={aggregatedMetrics.totalConversions}
-              trend={aggregatedMetrics.conversionsTrend}
-              icon={ShoppingCart}
-              format="number"
-              isLoading={isLoading}
-            />
-
-            <MetricCard
-              title={t('metrics.average_cpa')}
-              value={aggregatedMetrics.avgCpa}
-              trend={aggregatedMetrics.cpaTrend}
-              icon={DollarSign}
-              format="currency"
-              isLoading={isLoading}
-              currency={currency}
-            />
-          </>
-        )}
-      </div>
-
-      {/* Quick Insights */}
+      {/* Campaigns Table (Moved to Top) */}
       <div className="mb-8">
-        <InsightCard
-          insights={insights}
+        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('campaigns.table_title')}</h2>
+        <CampaignsTable
+          campaigns={campaigns}
           isLoading={isLoading}
+          currency={currency}
           isRTL={isRTL}
+          showComparison={showComparison}
         />
       </div>
 
@@ -369,16 +329,7 @@ export default function CampaignsPage() {
           onMetricChange={setSelectedMetric}
           isLoading={isTrendLoading}
           currency={currency}
-        />
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('campaigns.table_title')}</h2>
-        <CampaignsTable
-          campaigns={campaigns}
-          isLoading={isLoading}
-          currency={currency}
-          isRTL={isRTL}
+          granularity={granularity}
         />
       </div>
 
@@ -391,8 +342,19 @@ export default function CampaignsPage() {
           isRTL={isRTL}
           statusFilter={statusFilter}
           searchQuery={searchQuery}
+          accountId={selectedAccountId}
         />
       </div>
+
+      {/* Quick Insights (Moved to bottom) */}
+      <div className="mb-8">
+        <InsightCard
+          insights={insights}
+          isLoading={isLoading}
+          isRTL={isRTL}
+        />
+      </div>
+
     </MainLayout>
   );
 }

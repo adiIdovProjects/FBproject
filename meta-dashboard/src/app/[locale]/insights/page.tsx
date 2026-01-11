@@ -62,7 +62,7 @@ export default function InsightsPage() {
 
       try {
         const dateRange = { startDate, endDate };
-        const data = await fetchDeepInsights(dateRange);
+        const data = await fetchDeepInsights(dateRange, undefined, locale);
         setDeepInsights(data);
       } catch (err: any) {
         console.error('[Insights Page] Error fetching insights:', err);

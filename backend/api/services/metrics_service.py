@@ -15,6 +15,7 @@ from backend.api.repositories.campaign_repository import CampaignRepository
 from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.repositories.ad_repository import AdRepository
 from backend.api.repositories.creative_repository import CreativeRepository
+from backend.api.repositories.creative_analysis_repository import CreativeAnalysisRepository
 from backend.api.repositories.breakdown_repository import BreakdownRepository
 from backend.api.repositories.timeseries_repository import TimeSeriesRepository
 from backend.api.utils.calculations import MetricCalculator
@@ -47,6 +48,7 @@ class MetricsService:
         self.adset_repo = AdSetRepository(db)
         self.ad_repo = AdRepository(db)
         self.creative_repo = CreativeRepository(db)
+        self.creative_analysis_repo = CreativeAnalysisRepository(db)
         self.breakdown_repo = BreakdownRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
         self.calculator = MetricCalculator()
@@ -268,7 +270,11 @@ class MetricsService:
                     'purchases': prev['purchases'],
                     'purchase_value': prev['purchase_value'],
                     'roas': self.calculator.roas(prev['conversion_value'], prev['spend'], prev['conversions']),
-                    'cpa': self.calculator.cpa(prev['spend'], prev['conversions'])
+                    'cpa': self.calculator.cpa(prev['spend'], prev['conversions']),
+                    'clicks': prev['clicks'],
+                    'impressions': prev['impressions'],
+                    'ctr': self.calculator.ctr(prev['clicks'], prev['impressions']),
+                    'cpc': self.calculator.cpc(prev['spend'], prev['clicks'])
                 }
 
             # Build comparison object
@@ -279,10 +285,16 @@ class MetricsService:
                 previous_conversion_value=prev_metrics['conversion_value'] if prev_metrics else None,
                 previous_roas=prev_metrics['roas'] if prev_metrics else None,
                 previous_cpa=prev_metrics['cpa'] if prev_metrics else None,
+                previous_clicks=prev_metrics['clicks'] if prev_metrics else None,
+                previous_impressions=prev_metrics['impressions'] if prev_metrics else None,
+                previous_ctr=prev_metrics['ctr'] if prev_metrics else None,
+                previous_cpc=prev_metrics['cpc'] if prev_metrics else None,
                 spend_change_pct=self.calculator.change_percentage(current.spend, prev_metrics['spend']) if prev_metrics else None,
                 conversions_change_pct=self.calculator.change_percentage(current.conversions, prev_metrics['conversions']) if prev_metrics else None,
                 roas_change_pct=self.calculator.change_percentage(current.roas, prev_metrics['roas']) if prev_metrics else None,
-                cpa_change_pct=self.calculator.change_percentage(current.cpa, prev_metrics['cpa']) if prev_metrics else None
+                cpa_change_pct=self.calculator.change_percentage(current.cpa, prev_metrics['cpa']) if prev_metrics else None,
+                ctr_change_pct=self.calculator.change_percentage(current.ctr, prev_metrics['ctr']) if prev_metrics else None,
+                cpc_change_pct=self.calculator.change_percentage(current.cpc, prev_metrics['cpc']) if prev_metrics else None
             )
             comparison_results.append(comparison)
 
@@ -344,7 +356,8 @@ class MetricsService:
         group_by: str = 'both',
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        creative_id: Optional[int] = None
     ) -> List[AgeGenderBreakdown]:
         """
         Get demographic breakdown with calculated metrics.
@@ -355,6 +368,7 @@ class MetricsService:
             campaign_id: Optional campaign filter
             group_by: 'age', 'gender', or 'both'
             account_ids: Optional list of account IDs
+            creative_id: Optional creative filter
 
         Returns:
             List of AgeGenderBreakdown
@@ -363,7 +377,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_age_gender_breakdown(
-            start_date, end_date, campaign_id, group_by, campaign_status, search_query, filtered_account_ids
+            start_date, end_date, campaign_id, group_by, campaign_status, search_query, filtered_account_ids, creative_id
         )
 
         # Calculate derived metrics for each breakdown
@@ -396,7 +410,8 @@ class MetricsService:
         campaign_id: Optional[int] = None,
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        creative_id: Optional[int] = None
     ) -> List[PlacementBreakdown]:
         """
         Get placement breakdown with calculated metrics.
@@ -413,7 +428,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_placement_breakdown(
-            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids
+            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids, creative_id
         )
 
         # Calculate derived metrics for each breakdown
@@ -494,6 +509,8 @@ class MetricsService:
         is_video: Optional[bool] = None,
         min_spend: float = 0,
         sort_by: str = "spend",
+        search_query: Optional[str] = None,
+        ad_status: Optional[str] = None,
         account_ids: Optional[List[int]] = None
     ) -> List[CreativeMetrics]:
         """
@@ -505,6 +522,8 @@ class MetricsService:
             is_video: Filter by video/image creatives
             min_spend: Minimum spend threshold
             sort_by: Metric to sort by
+            search_query: Search by creative title
+            ad_status: Filter by ad status (ACTIVE, PAUSED, ARCHIVED)
             account_ids: Optional list of account IDs
 
         Returns:
@@ -514,7 +533,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         creatives = self.creative_repo.get_creative_metrics(
-            start_date, end_date, is_video, min_spend, filtered_account_ids
+            start_date, end_date, is_video, min_spend, search_query, ad_status, filtered_account_ids
         )
 
         # Calculate derived metrics for each creative
@@ -525,7 +544,7 @@ class MetricsService:
             completion_rate = None
             hold_rate = None
             avg_watch_time = None
-            
+
             if creative['is_video'] and creative['video_plays'] > 0:
                 avg_watch_time = float(creative.get('video_avg_time_watched') or 0.0)
                 hook_rate = self.calculator.hook_rate(
@@ -537,6 +556,34 @@ class MetricsService:
                 hold_rate = self.calculator.hold_rate(
                     creative['video_p50_watched'], creative['video_plays']
                 )
+
+            # Detect fatigue for creatives with sufficient impressions
+            fatigue_severity = None
+            ctr_decline_pct = None
+            days_active = None
+
+            if creative['impressions'] >= 5000:  # Only check fatigue if enough data
+                try:
+                    fatigue_data = self.creative_analysis_repo.detect_creative_fatigue(
+                        creative_id=creative['creative_id'],
+                        lookback_days=30
+                    )
+
+                    if fatigue_data['has_data']:
+                        ctr_decline_pct = fatigue_data['fatigue_pct']
+                        days_active = len(fatigue_data['daily_data'])
+
+                        # Classify severity
+                        if ctr_decline_pct <= -30:
+                            fatigue_severity = "high"
+                        elif ctr_decline_pct <= -20:
+                            fatigue_severity = "medium"
+                        elif ctr_decline_pct <= -10:
+                            fatigue_severity = "low"
+                        else:
+                            fatigue_severity = "none"
+                except Exception as e:
+                    logger.warning(f"Failed to detect fatigue for creative {creative['creative_id']}: {e}")
 
             metrics = CreativeMetrics(
                 creative_id=creative['creative_id'],
@@ -560,7 +607,10 @@ class MetricsService:
                 purchases=creative['purchases'],
                 purchase_value=creative['purchase_value'],
                 roas=self.calculator.roas(creative['conversion_value'], creative['spend'], creative['conversions']),
-                cpa=self.calculator.cpa(creative['spend'], creative['conversions'])
+                cpa=self.calculator.cpa(creative['spend'], creative['conversions']),
+                fatigue_severity=fatigue_severity,
+                ctr_decline_pct=ctr_decline_pct,
+                days_active=days_active
             )
             creative_metrics.append(metrics)
 
@@ -647,7 +697,8 @@ class MetricsService:
         top_n: int = 10,
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        creative_id: Optional[int] = None
     ) -> List[CountryBreakdown]:
         """
         Get country breakdown with calculated metrics.
@@ -665,7 +716,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_country_breakdown(
-            start_date, end_date, campaign_id, top_n, campaign_status, search_query, filtered_account_ids
+            start_date, end_date, campaign_id, top_n, campaign_status, search_query, filtered_account_ids, creative_id
         )
 
         # Calculate derived metrics for each breakdown
@@ -694,7 +745,8 @@ class MetricsService:
         self,
         creative_id: int,
         start_date: date,
-        end_date: date
+        end_date: date,
+        account_ids: Optional[List[int]] = None
     ) -> Optional[Any]:
         """
         Get detailed metrics for a single creative with trend.
@@ -707,7 +759,10 @@ class MetricsService:
         Returns:
             CreativeDetailResponse or None
         """
-        detail = self.creative_repo.get_creative_detail(creative_id, start_date, end_date)
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+        
+        detail = self.creative_repo.get_creative_detail(creative_id, start_date, end_date, filtered_account_ids)
 
         if not detail:
             return None
@@ -790,7 +845,8 @@ class MetricsService:
         creative_ids: List[int],
         start_date: date,
         end_date: date,
-        metrics: List[str] = None
+        metrics: List[str] = None,
+        account_ids: Optional[List[int]] = None
     ) -> Any:
         """
         Compare multiple creatives side-by-side.
@@ -798,14 +854,15 @@ class MetricsService:
         Args:
             creative_ids: List of creative IDs (2-5)
             start_date: Start date
-            end_date: End date
+            end_date: End date,
             metrics: List of metrics to compare
-
-        Returns:
-            CreativeComparisonResponse
+            account_ids: Optional list of account IDs
         """
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+        
         creatives = self.creative_repo.get_creative_comparison(
-            creative_ids, start_date, end_date
+            creative_ids, start_date, end_date, filtered_account_ids
         )
 
         if not creatives:
@@ -816,6 +873,7 @@ class MetricsService:
         for creative in creatives:
             ctr = self.calculator.ctr(creative['clicks'], creative['impressions'])
             cpc = self.calculator.cpc(creative['spend'], creative['clicks'])
+            cpa = self.calculator.cpa(creative['spend'], creative['conversions'])
             roas = self.calculator.roas(creative['conversion_value'], creative['spend'], creative['conversions'])
             hook_rate = None
             completion_rate = None
@@ -835,6 +893,7 @@ class MetricsService:
                 'clicks': creative['clicks'],
                 'ctr': ctr,
                 'cpc': cpc,
+                'cpa': cpa,
                 'roas': roas,
                 'conversions': creative['conversions'],
                 'hook_rate': hook_rate,
@@ -889,7 +948,8 @@ class MetricsService:
     def get_video_insights(
         self,
         start_date: date,
-        end_date: date
+        end_date: date,
+        account_ids: Optional[List[int]] = None
     ) -> Any:
         """
         Get AI-style video insights and patterns.
@@ -897,11 +957,15 @@ class MetricsService:
         Args:
             start_date: Start date
             end_date: End date
+            account_ids: Optional list of account IDs
 
         Returns:
             VideoInsightsResponse
         """
-        insights_data = self.creative_repo.get_video_insights(start_date, end_date)
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        insights_data = self.creative_repo.get_video_insights(start_date, end_date, filtered_account_ids)
 
         # Build top videos list with calculated metrics
         from backend.api.schemas.responses import VideoInsightsResponse, VideoInsight

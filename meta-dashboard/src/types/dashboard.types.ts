@@ -58,7 +58,7 @@ export interface ChartDataPoint {
 }
 
 // Metric Selector Options
-export type MetricType = 'actions' | 'spend' | 'clicks' | 'ctr' | 'cpc' | 'cpm' | 'impressions' | 'cpa' | 'roas';
+export type MetricType = 'actions' | 'spend' | 'clicks' | 'ctr' | 'cpc' | 'cpm' | 'impressions' | 'cpa' | 'roas' | 'conversion_rate';
 
 export interface MetricOption {
   value: MetricType;

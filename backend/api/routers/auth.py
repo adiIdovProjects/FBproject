@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 from backend.api.dependencies import get_db, get_current_user
 from backend.api.services.facebook_auth import FacebookAuthService
 from backend.api.repositories.user_repository import UserRepository
+from backend.api.repositories.magic_link_repository import MagicLinkRepository
 from backend.api.services.audit_service import AuditService
+from backend.api.services.email_service import send_magic_link
 from backend.api.utils.security import create_access_token, verify_password, get_password_hash
 from backend.api.routers.sync import init_sync_status, update_sync_status, mark_sync_completed, mark_sync_failed
 from pydantic import BaseModel, EmailStr
@@ -34,6 +36,14 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class MagicLinkRequest(BaseModel):
+    email: EmailStr
+
+class MagicLinkVerifyResponse(BaseModel):
+    access_token: str
+    token_type: str
+    onboarding_status: dict
 
 @router.get("/facebook/login")
 def login_facebook(state: str):
@@ -121,7 +131,8 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         else:
             # LOGIN FLOW: Create or Get User
             user = repo.get_user_by_fb_id(fb_user["id"])
-            
+            is_new_user = False
+
             if not user:
                 # Check if user exists by email
                 user = repo.get_user_by_email(fb_user.get("email"))
@@ -130,8 +141,11 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
                     user.fb_user_id = fb_user["id"]
                     user.fb_access_token = access_token
                     user.fb_token_expires_at = expires_at
+                    user.email_verified = True
+                    user.onboarding_step = 'select_accounts'
                     db.commit()
                 else:
+                    # New user via Facebook
                     user = repo.create_user(
                         email=fb_user.get("email", f"{fb_user['id']}@facebook.com"),
                         fb_user_id=fb_user["id"],
@@ -139,14 +153,18 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
                         access_token=access_token,
                         expires_at=expires_at
                     )
+                    user.email_verified = True
+                    user.onboarding_step = 'select_accounts'
+                    db.commit()
+                    is_new_user = True
             else:
                 repo.update_fb_token(user.id, access_token, expires_at)
-            
+
             # Audit log successful login
             AuditService.log_event(
                 db=db,
                 user_id=str(user.id),
-                event_type="LOGIN_SUCCESS",
+                event_type="LOGIN_SUCCESS" if not is_new_user else "USER_CREATED",
                 description=f"User {user.email} logged in via Facebook",
                 metadata={"email": user.email, "fb_user_id": user.fb_user_id}
             )
@@ -239,6 +257,9 @@ async def link_accounts(
             linked_accounts.append(link)
             account_ids.append(acc_id)
 
+    # Update onboarding step
+    repo.update_onboarding_step(current_user.id, 'complete_profile')
+
     # Initialize sync status
     init_sync_status(current_user.id)
 
@@ -251,67 +272,42 @@ async def link_accounts(
         "message": f"Successfully linked {len(linked_accounts)} accounts",
         "linked_count": len(linked_accounts),
         "sync_status": "in_progress",
-        "estimated_time_seconds": 30
+        "estimated_time_seconds": 30,
+        "next_step": "complete_profile"
     }
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register")
 async def register(request: RegisterRequest, db: Session = Depends(get_db)):
-    """Register a new user with email and password"""
-    repo = UserRepository(db)
-    
-    # Check if user already exists
-    existing_user = repo.get_user_by_email(request.email)
-    if existing_user:
-        if existing_user.password_hash is None:
-            # User exists via OAuth (FB/Google) but has no password.
-            # Allow "registering" a password for this account.
-            hashed_password = get_password_hash(request.password)
-            repo.update_password(existing_user.id, hashed_password)
-            existing_user.full_name = request.full_name or existing_user.full_name
-            db.commit()
-            
-            # Login the user
-            access_token = create_access_token(subject=existing_user.id)
-            return {"access_token": access_token, "token_type": "bearer"}
-        else:
-            # User already has a password
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    
-    # Create user
-    hashed_password = get_password_hash(request.password)
-    user = repo.create_user_with_password(
-        email=request.email,
-        password_hash=hashed_password,
-        full_name=request.full_name
+    """DEPRECATED: Password-based registration is no longer supported"""
+    raise HTTPException(
+        status_code=410,
+        detail="Password authentication is no longer supported. Please use magic link or OAuth (Facebook/Google) to sign in."
     )
-    
-    # Create token
-    access_token = create_access_token(subject=user.id)
-    return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):
-    """Login with email and password"""
-    repo = UserRepository(db)
-    user = repo.get_user_by_email(request.email)
-    
-    if not user or not user.password_hash or not verify_password(request.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Create token
-    access_token = create_access_token(subject=user.id)
-    return {"access_token": access_token, "token_type": "bearer"}
+    """DEPRECATED: Password-based login is no longer supported"""
+    raise HTTPException(
+        status_code=410,
+        detail="Password authentication is no longer supported. Please use magic link or OAuth (Facebook/Google) to sign in."
+    )
+
+class UnifiedLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+    confirm_create: bool = False
+
+@router.post("/unified-login")
+async def unified_login(request: UnifiedLoginRequest, db: Session = Depends(get_db)):
+    """DEPRECATED: Unified password login is no longer supported"""
+    raise HTTPException(
+        status_code=410,
+        detail="Password authentication is no longer supported. Please use magic link or OAuth (Facebook/Google) to sign in."
+    )
 
 @router.post("/dev-login")
 async def dev_login(db: Session = Depends(get_db)):
     """TEMPORARY: Mock login for development without Facebook"""
-    from models.user_schema import User
+    from backend.models.user_schema import User
     from datetime import datetime, timedelta
     # Try to find a dev user or create one
     user = db.query(User).filter(User.email == "dev@example.com").first()
@@ -334,4 +330,175 @@ async def dev_login(db: Session = Depends(get_db)):
 
     app_token = create_access_token(subject=user.id)
     return {"access_token": app_token, "token_type": "bearer"}
+
+# ========== Magic Link Endpoints (Passwordless Auth) ==========
+
+@router.post("/magic-link/request")
+async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(get_db)):
+    """
+    Request a magic link for passwordless authentication
+    Sends an email with a one-time login link
+    """
+    try:
+        from backend.config.base_config import settings
+
+        magic_link_repo = MagicLinkRepository(db)
+        user_repo = UserRepository(db)
+
+        # Check if user exists
+        user = user_repo.get_user_by_email(request.email)
+        is_new_user = user is None
+
+        # Generate magic link token
+        token = magic_link_repo.create_token(request.email)
+
+        # Build full magic link URL
+        magic_link_url = f"{settings.FRONTEND_URL}/en/auth/verify?token={token}"
+
+        # Send email
+        email_sent = send_magic_link(
+            email=request.email,
+            magic_link=magic_link_url,
+            is_new_user=is_new_user
+        )
+
+        if not email_sent:
+            logger.error(f"Failed to send magic link email to {request.email}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send email. Please try again."
+            )
+
+        logger.info(f"Magic link sent to {request.email} (new_user={is_new_user})")
+
+        # Always return success (don't reveal if email exists for security)
+        return {
+            "success": True,
+            "message": "Magic link sent! Check your email.",
+            "email": request.email
+        }
+
+    except Exception as e:
+        logger.error(f"Error sending magic link: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to send magic link. Please try again."
+        )
+
+@router.get("/magic-link/verify")
+async def verify_magic_link(token: str, db: Session = Depends(get_db)):
+    """
+    Verify a magic link token and log the user in
+    Creates a new user if they don't exist
+    Returns JWT token and onboarding status
+    """
+    try:
+        magic_link_repo = MagicLinkRepository(db)
+        user_repo = UserRepository(db)
+
+        # Verify token
+        email = magic_link_repo.verify_token(token)
+
+        if not email:
+            logger.warning(f"Invalid or expired magic link token")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid or expired magic link. Please request a new one."
+            )
+
+        # Get or create user
+        user = user_repo.get_user_by_email(email)
+
+        if not user:
+            # Create new user (passwordless)
+            user = user_repo.create_user_with_email(email=email)
+            logger.info(f"Created new user via magic link: {email}")
+
+            # Audit log
+            AuditService.log_event(
+                db=db,
+                user_id=str(user.id),
+                event_type="USER_CREATED",
+                description=f"User {email} created via magic link",
+                metadata={"email": email, "method": "magic_link"}
+            )
+        else:
+            logger.info(f"Existing user logged in via magic link: {email}")
+
+            # Audit log
+            AuditService.log_event(
+                db=db,
+                user_id=str(user.id),
+                event_type="LOGIN_SUCCESS",
+                description=f"User {email} logged in via magic link",
+                metadata={"email": email, "method": "magic_link"}
+            )
+
+        # Mark email as verified
+        user_repo.mark_email_verified(user.id)
+
+        # Get onboarding status
+        onboarding_status = user_repo.get_onboarding_status(user.id)
+
+        # Create JWT access token
+        access_token = create_access_token(subject=user.id)
+
+        # Return token and onboarding status
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "onboarding_status": onboarding_status
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying magic link: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to verify magic link. Please try again."
+        )
+
+@router.get("/onboarding/status")
+async def get_onboarding_status(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get the current user's onboarding progress"""
+    user_repo = UserRepository(db)
+    status = user_repo.get_onboarding_status(current_user.id)
+
+    if not status:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return status
+
+@router.post("/onboarding/complete")
+async def complete_onboarding(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mark the user's onboarding as complete (called after quiz)"""
+    user_repo = UserRepository(db)
+    user = user_repo.mark_onboarding_completed(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    logger.info(f"User {current_user.email} completed onboarding")
+
+    # Audit log
+    AuditService.log_event(
+        db=db,
+        user_id=str(current_user.id),
+        event_type="ONBOARDING_COMPLETED",
+        description=f"User {current_user.email} completed onboarding",
+        metadata={"email": current_user.email}
+    )
+
+    return {
+        "success": True,
+        "message": "Onboarding completed!",
+        "onboarding_completed": True
+    }
 

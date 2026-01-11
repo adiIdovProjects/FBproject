@@ -172,19 +172,19 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
             onClick={() => setDemographicSubTab('both')}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'both' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-300 bg-gray-700'}`}
           >
-            {t('both') || 'Both'}
+            {t('breakdown.both') || 'Both'}
           </button>
           <button
             onClick={() => setDemographicSubTab('age')}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'age' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-300 bg-gray-700'}`}
           >
-            {t('age') || 'Age'}
+            {t('breakdown.age') || 'Age'}
           </button>
           <button
             onClick={() => setDemographicSubTab('gender')}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'gender' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-300 bg-gray-700'}`}
           >
-            {t('gender') || 'Gender'}
+            {t('breakdown.gender') || 'Gender'}
           </button>
         </div>
       )}
@@ -233,7 +233,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
               <thead className="bg-gray-750 border-b border-gray-700">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                    {activeTab === 'adset' && t('ad_set_name')}
+                    {activeTab === 'adset' && t('breakdown.ad_set_name')}
                     {activeTab === 'platform' && t('campaigns.platform')}
                     {activeTab === 'placement' && t('campaigns.placement')}
                     {activeTab === 'age-gender' && t('campaigns.demographics')}
@@ -242,41 +242,41 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                   {activeTab === 'adset' && (
                     <>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        {t('targeting_type')}
+                        {t('breakdown.targeting_type')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        {t('targeting_summary')}
+                        {t('breakdown.targeting_summary')}
                       </th>
                     </>
                   )}
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase font-mono">
-                    {t('spend')}
+                    {t('metrics.spend')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('impressions')}
+                    {t('metrics.impressions')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('clicks')}
+                    {t('metrics.clicks')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('ctr')}
+                    {t('metrics.ctr')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('cpc')}
+                    {t('metrics.cpc')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('conversions')}
+                    {t('metrics.conversions')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('campaigns.leads') || 'Leads'}
+                    {t('metrics.leads') || 'Leads'}
                   </th>
                   {hasConversionValue && (
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                      {t('roas')}
+                      {t('metrics.roas')}
                     </th>
                   )}
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('cpa')}
+                    {t('metrics.cpa')}
                   </th>
                 </tr>
               </thead>
@@ -304,7 +304,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                                     row.targeting_type === 'Advantage+' ? 'bg-teal-900/40 text-teal-300' :
                                       'bg-gray-700 text-gray-300'
                             }`}>
-                            {row.targeting_type ? t(row.targeting_type.toLowerCase()) : t('broad')}
+                            {row.targeting_type ? t(row.targeting_type.toLowerCase()) : t('breakdown.broad')}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-400 max-w-[300px] truncate">

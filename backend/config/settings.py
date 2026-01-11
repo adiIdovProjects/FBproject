@@ -82,7 +82,7 @@ ACTIVE_BREAKDOWN_GROUPS = [g for g in BREAKDOWN_GROUPS if g['enabled']]
 # ACTION TYPES - Only Revenue-Driving
 # ==============================================================================
 
-ACTION_TYPES_TO_TRACK = [
+DEFAULT_CONVERSION_TYPES = [
     'purchase',
     'lead',
     'lead_website',
@@ -98,12 +98,24 @@ ACTION_TYPES_TO_TRACK = [
     'start_trial'
 ]
 
+IGNORED_ACTION_TYPES = [
+    'comment', 
+    'like', 
+    'post_reaction', 
+    'post', 
+    'photo_view', 
+    'link_click', 
+    'video_view',
+    'onsite_conversion.post_save',
+    'landing_page_view'
+]
+
 # ==============================================================================
 # ETL CONFIGURATION
 # ==============================================================================
 
-FIRST_PULL_DAYS = 450  # 3 years initially
-DAILY_PULL_DAYS = 2  # Yesterday + today
+FIRST_PULL_DAYS = 365  # 1 year initially
+DAILY_PULL_DAYS = 7  # Last 7 days for attribution updates
 CHUNK_DAYS = 90  # API call chunking
 
 # ==============================================================================

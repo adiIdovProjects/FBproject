@@ -15,6 +15,7 @@ interface CampaignsTableProps {
   isLoading?: boolean;
   currency?: string;
   isRTL?: boolean;
+  showComparison?: boolean;
 }
 
 export const CampaignsTable: React.FC<CampaignsTableProps> = ({
@@ -22,6 +23,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
   isLoading = false,
   currency = 'USD',
   isRTL = false,
+  showComparison = false,
 }) => {
   const t = useTranslations();
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -40,6 +42,11 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     sorted.sort((a, b) => {
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
+
+      // Handle computed values for sorting if needed
+      if (sortConfig.key === 'ctr' as any) {  // Type assertion if key isn't in CampaignRow yet (it is)
+        // a.ctr is available
+      }
 
       if (aValue === undefined || bValue === undefined) return 0;
 
@@ -60,9 +67,9 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
   }, [campaigns, sortConfig]);
 
   // Handle column sort
-  const handleSort = (key: keyof CampaignRow) => {
+  const handleSort = (key: keyof CampaignRow | 'conversion_rate') => { // Added conversion_rate alias if needed, but we can compute it
     setSortConfig((prev) => ({
-      key,
+      key: key as keyof CampaignRow,
       direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc',
     }));
   };
@@ -106,15 +113,15 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
 
   // Render trend badge
   const renderTrendBadge = (changePercent?: number, metricType: 'cost' | 'performance' = 'performance') => {
-    if (changePercent === undefined || changePercent === null) {
+    if (changePercent === undefined || changePercent === null || isNaN(changePercent)) {
       return <span className="text-gray-500 text-sm">-</span>;
     }
 
     const isPositive = changePercent > 0;
     const isNegative = changePercent < 0;
 
-    // For cost metrics (CPA, Spend), down is good
-    // For performance metrics (ROAS, Conversions), up is good
+    // For cost metrics (CPA, Spend, CPC), down is good
+    // For performance metrics (ROAS, Conversions, CTR, Conv Rate), up is good
     let isGood = false;
 
     if (metricType === 'cost') {
@@ -178,6 +185,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
 
+              {/* Spend */}
               <th
                 className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('spend')}
@@ -187,11 +195,92 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  {t('common.vs_previous')}
+                </th>
+              )}
 
-              <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                {t('common.vs_previous')}
+              {/* CTR */}
+              <th
+                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                onClick={() => handleSort('ctr')}
+              >
+                <div className="flex items-center justify-end gap-2">
+                  <span>{t('metrics.ctr')}</span>
+                  <ArrowUpDown className="w-3 h-3 opacity-50" />
+                </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
 
+              {/* CPC */}
+              <th
+                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                onClick={() => handleSort('cpc')}
+              >
+                <div className="flex items-center justify-end gap-2">
+                  <span>{t('metrics.cpc')}</span>
+                  <ArrowUpDown className="w-3 h-3 opacity-50" />
+                </div>
+              </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
+
+              {/* Conversions */}
+              <th
+                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                onClick={() => handleSort('conversions')}
+              >
+                <div className="flex items-center justify-end gap-2">
+                  <span>{t('metrics.conversions')}</span>
+                  <ArrowUpDown className="w-3 h-3 opacity-50" />
+                </div>
+              </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
+
+              {/* CPA */}
+              <th
+                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                onClick={() => handleSort('cpa')}
+              >
+                <div className="flex items-center justify-end gap-2">
+                  <span>{t('metrics.cpa')}</span>
+                  <ArrowUpDown className="w-3 h-3 opacity-50" />
+                </div>
+              </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
+
+              {/* Conversion Rate */}
+              <th
+                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+              // On-the-fly computed
+              >
+                <div className="flex items-center justify-end gap-2">
+                  <span>{t('metrics.conversion_rate')}</span>
+                </div>
+              </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
+
+              {/* ROAS - Conditional */}
               {hasConversionValue && (
                 <>
                   <th
@@ -203,105 +292,132 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                       <ArrowUpDown className="w-3 h-3 opacity-50" />
                     </div>
                   </th>
-
-                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                    {t('common.vs_previous')}
-                  </th>
+                  {showComparison && (
+                    <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                      VS PREV
+                    </th>
+                  )}
                 </>
               )}
-
-              <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
-                onClick={() => handleSort('conversions')}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  <span>{t('metrics.conversions')}</span>
-                  <ArrowUpDown className="w-3 h-3 opacity-50" />
-                </div>
-              </th>
-
-              <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                {t('campaigns.leads') || 'Leads'}
-              </th>
-
-              <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                VS PREV
-              </th>
-
-              <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
-                onClick={() => handleSort('cpa')}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  <span>{t('metrics.cpa')}</span>
-                  <ArrowUpDown className="w-3 h-3 opacity-50" />
-                </div>
-              </th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-white/[0.03]">
-            {sortedCampaigns.map((campaign) => (
-              <tr
-                key={campaign.campaign_id}
-                className="group hover:bg-white/[0.02] transition-colors duration-150"
-              >
-                <td className="px-6 py-5">
-                  <div className="flex flex-col">
-                    <span className="text-sm text-white font-bold group-hover:text-accent transition-colors">{campaign.campaign_name}</span>
-                    <span className="text-[10px] text-gray-500 font-mono mt-0.5">{campaign.campaign_id}</span>
-                  </div>
-                </td>
+            {sortedCampaigns.map((campaign) => {
+              // Calculate Conv Rate Change
+              let convRateChange = undefined;
+              if (showComparison && campaign.previous_clicks && campaign.previous_conversions !== undefined) {
+                const currentRate = campaign.clicks > 0 ? (campaign.conversions / campaign.clicks) : 0;
+                const prevRate = campaign.previous_clicks > 0 ? (campaign.previous_conversions / campaign.previous_clicks) : 0;
 
-                <td className="px-6 py-5">
-                  {renderStatusBadge(campaign.campaign_status)}
-                </td>
+                if (prevRate > 0) {
+                  convRateChange = ((currentRate - prevRate) / prevRate) * 100;
+                }
+              }
 
-                <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                  {formatCurrency(campaign.spend)}
-                </td>
+              return (
+                <tr
+                  key={campaign.campaign_id}
+                  className="group hover:bg-white/[0.02] transition-colors duration-150"
+                >
+                  {/* Name */}
+                  <td className="px-6 py-5">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-white font-bold group-hover:text-accent transition-colors">{campaign.campaign_name}</span>
+                      <span className="text-[10px] text-gray-500 font-mono mt-0.5">{campaign.campaign_id}</span>
+                    </div>
+                  </td>
 
-                <td className="px-6 py-5 text-right">
-                  {renderTrendBadge(campaign.spend_change_pct, 'cost')}
-                </td>
+                  {/* Status */}
+                  <td className="px-6 py-5">
+                    {renderStatusBadge(campaign.campaign_status)}
+                  </td>
 
-                {hasConversionValue && (
-                  <>
-                    <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                      {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 ? (
-                        <>
-                          <span className="text-gray-400 text-[10px] mr-1">x</span>
-                          {campaign.roas.toFixed(2)}
-                        </>
-                      ) : (
-                        <span className="text-gray-500 italic text-[10px]">N/A</span>
-                      )}
-                    </td>
-
+                  {/* Spend */}
+                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    {formatCurrency(campaign.spend)}
+                  </td>
+                  {showComparison && (
                     <td className="px-6 py-5 text-right">
-                      {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 &&
-                        renderTrendBadge(campaign.roas_change_pct, 'performance')}
+                      {renderTrendBadge(campaign.spend_change_pct, 'cost')}
                     </td>
-                  </>
-                )}
+                  )}
 
-                <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                  {formatNumber(campaign.conversions)}
-                </td>
+                  {/* CTR */}
+                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    {formatPercentage(campaign.ctr)}
+                  </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(campaign.ctr_change_pct, 'performance')}
+                    </td>
+                  )}
 
-                <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                  {formatNumber((campaign.lead_website || 0) + (campaign.lead_form || 0))}
-                </td>
+                  {/* CPC */}
+                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    {formatCurrency(campaign.cpc)}
+                  </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(campaign.cpc_change_pct, 'cost')}
+                    </td>
+                  )}
 
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  {renderTrendBadge(campaign.conversions_change_pct, 'performance')}
-                </td>
+                  {/* Conversions */}
+                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    {formatNumber(campaign.conversions)}
+                  </td>
+                  {showComparison && (
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {renderTrendBadge(campaign.conversions_change_pct, 'performance')}
+                    </td>
+                  )}
 
-                <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                  {formatCurrency(campaign.cpa)}
-                </td>
-              </tr>
-            ))}
+                  {/* CPA */}
+                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    {formatCurrency(campaign.cpa)}
+                  </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(campaign.cpa_change_pct, 'cost')}
+                    </td>
+                  )}
+
+                  {/* Conv Rate (Conversions / Clicks) */}
+                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    {campaign.clicks > 0 ? formatPercentage((campaign.conversions / campaign.clicks) * 100) : '0.00%'}
+                  </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(convRateChange, 'performance')}
+                    </td>
+                  )}
+
+                  {/* ROAS */}
+                  {hasConversionValue && (
+                    <>
+                      <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                        {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 ? (
+                          <>
+                            <span className="text-gray-400 text-[10px] mr-1">x</span>
+                            {campaign.roas.toFixed(2)}
+                          </>
+                        ) : (
+                          <span className="text-gray-500 italic text-[10px]">N/A</span>
+                        )}
+                      </td>
+
+                      {showComparison && (
+                        <td className="px-6 py-5 text-right">
+                          {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 &&
+                            renderTrendBadge(campaign.roas_change_pct, 'performance')}
+                        </td>
+                      )}
+                    </>
+                  )}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

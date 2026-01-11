@@ -33,6 +33,7 @@ def get_insights_summary(
     breakdown_type: Optional[str] = Query(None, description="Breakdown type: adset, platform, placement, age-gender, country"),
     breakdown_group_by: Optional[str] = Query(None, description="For age-gender breakdown: age, gender, or both"),
     account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language (e.g., en, he, fr)"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -53,7 +54,8 @@ def get_insights_summary(
             breakdown_type=breakdown_type,
             breakdown_group_by=breakdown_group_by,
             user_id=current_user.id,
-            account_id=account_id
+            account_id=account_id,
+            locale=locale
         )
     except Exception as e:
         import traceback
@@ -68,6 +70,7 @@ def get_deep_insights(
     start_date: date = Query(..., description="Start date for analysis"),
     end_date: date = Query(..., description="End date for analysis"),
     account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language (e.g., en, he, fr)"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -78,7 +81,7 @@ def get_deep_insights(
     """
     try:
         service = InsightsService(db, current_user.id)
-        return service.get_deep_analysis(start_date, end_date, user_id=current_user.id, account_id=account_id)
+        return service.get_deep_analysis(start_date, end_date, user_id=current_user.id, account_id=account_id, locale=locale)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate deep analysis: {str(e)}")
 

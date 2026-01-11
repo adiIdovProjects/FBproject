@@ -28,10 +28,16 @@ export interface CampaignRow {
   previous_conversion_value?: number;
   previous_roas?: number;
   previous_cpa?: number;
+  previous_clicks?: number;
+  previous_impressions?: number;
+  previous_ctr?: number;
+  previous_cpc?: number;
   spend_change_pct?: number;
   conversions_change_pct?: number;
   roas_change_pct?: number;
   cpa_change_pct?: number;
+  ctr_change_pct?: number;
+  cpc_change_pct?: number;
 }
 
 // Breakdown data (placement, demographics, country)

@@ -78,6 +78,8 @@ export default function ConnectPage() {
     const handleConnectFacebook = () => {
         const state = generateState();
         const url = getFacebookLoginUrl(state);
+        console.log('[Connect Page] Generated state:', state);
+        console.log('[Connect Page] Facebook URL:', url);
         window.location.href = url;
     };
 

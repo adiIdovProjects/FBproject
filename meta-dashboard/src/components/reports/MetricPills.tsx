@@ -16,7 +16,8 @@ export type MetricKey =
   | 'conversions'
   | 'conversion_value'
   | 'roas'
-  | 'cpa';
+  | 'cpa'
+  | 'conversion_rate';
 
 export const ALL_METRICS: MetricKey[] = [
   'spend',
@@ -29,6 +30,7 @@ export const ALL_METRICS: MetricKey[] = [
   'conversion_value',
   'roas',
   'cpa',
+  'conversion_rate',
 ];
 
 interface MetricPillsProps {

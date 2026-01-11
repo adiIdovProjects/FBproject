@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Loader2 } from 'lucide-react';
 import { DailyMetric, MetricType, MetricOption } from '../../types/dashboard.types';
+import { TimeGranularity } from '../../types/campaigns.types';
 
 interface ActionsMetricsChartProps {
   dailyData: DailyMetric[];
@@ -15,6 +16,7 @@ interface ActionsMetricsChartProps {
   onMetricChange: (metric: MetricType) => void;
   isLoading?: boolean;
   currency?: string;
+  granularity?: TimeGranularity;
 }
 
 const METRIC_OPTIONS: MetricOption[] = [
@@ -25,6 +27,7 @@ const METRIC_OPTIONS: MetricOption[] = [
   { value: 'cpc', label: 'metrics.cpc', format: 'currency' },
   { value: 'cpm', label: 'metrics.cpm', format: 'currency' },
   { value: 'impressions', label: 'metrics.impressions', format: 'number' },
+  { value: 'conversion_rate', label: 'metrics.conversion_rate', format: 'percentage' },
 ];
 
 export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
@@ -33,6 +36,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
   onMetricChange,
   isLoading = false,
   currency = 'USD',
+  granularity = 'day',
 }) => {
   const t = useTranslations();
   // Second metric for dual Y-axis
@@ -56,6 +60,8 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
         return day.total_clicks > 0 ? day.total_spend / day.total_clicks : 0;
       case 'cpm':
         return day.total_impressions > 0 ? (day.total_spend / day.total_impressions) * 1000 : 0;
+      case 'conversion_rate':
+        return day.total_clicks > 0 ? ((day.total_conversions || 0) / day.total_clicks) * 100 : 0;
       case 'impressions':
         return day.total_impressions || 0;
       default:
@@ -126,7 +132,13 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
       {/* Header with Metric Selectors */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-6">
         <div>
-          <h3 className="text-2xl font-black text-white tracking-tight">{t('common.daily_trend')}</h3>
+          <h3 className="text-2xl font-black text-white tracking-tight">
+            {granularity === 'week'
+              ? t('common.weekly_trend')
+              : granularity === 'month'
+                ? t('common.monthly_trend')
+                : t('common.daily_trend')}
+          </h3>
           <p className="text-gray-500 text-sm">{t('dashboard.subtitle')}</p>
         </div>
 
@@ -141,7 +153,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
             >
               {METRIC_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value} className="bg-gray-900">
-                  {option.label}
+                  {t(option.label)}
                 </option>
               ))}
             </select>
@@ -158,7 +170,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
               <option value="" className="bg-gray-900">{t('common.none')}</option>
               {METRIC_OPTIONS.filter(opt => opt.value !== selectedMetric).map((option) => (
                 <option key={option.value} value={option.value} className="bg-gray-900">
-                  {option.label}
+                  {t(option.label)}
                 </option>
               ))}
             </select>

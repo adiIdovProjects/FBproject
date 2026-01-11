@@ -11,7 +11,10 @@ class CreativeRepository(BaseRepository):
         start_date: date,
         end_date: date,
         is_video: Optional[bool] = None,
-        min_spend: float = 0
+        min_spend: float = 0,
+        search_query: Optional[str] = None,
+        ad_status: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get creative-level metrics.
@@ -19,6 +22,43 @@ class CreativeRepository(BaseRepository):
         video_filter = ""
         if is_video is not None:
             video_filter = "AND cr.is_video = :is_video"
+
+        search_filter = ""
+        if search_query:
+            search_filter = "AND LOWER(cr.title) LIKE LOWER(:search_query)"
+
+        status_filter = ""
+        if ad_status:
+            status_filter = "AND ad.ad_status = :ad_status"
+
+        account_filter = ""
+        params = {
+            'start_date': start_date,
+            'end_date': end_date,
+            'min_spend': min_spend
+        }
+
+        if account_ids is not None:
+            if account_ids:
+                # Build IN clause for accounts
+                placeholders = ', '.join([f':acc_id_{i}' for i in range(len(account_ids))])
+                account_filter = f"AND f.account_id IN ({placeholders})"
+
+                # Add parameters
+                for i, acc_id in enumerate(account_ids):
+                    params[f'acc_id_{i}'] = acc_id
+            else:
+                 # Explicit empty list means no accounts allowed
+                 account_filter = "AND 1=0"
+
+        if is_video is not None:
+            params['is_video'] = is_video
+
+        if search_query:
+            params['search_query'] = f'%{search_query}%'
+
+        if ad_status:
+            params['ad_status'] = ad_status
 
         query = text(f"""
             SELECT
@@ -34,17 +74,20 @@ class CreativeRepository(BaseRepository):
                 SUM(f.clicks) as clicks,
                 COALESCE(SUM(conv.action_count), 0) as conversions,
                 COALESCE(SUM(conv.action_value), 0) as conversion_value,
+                SUM(f.purchases) as purchases,
+                SUM(f.purchase_value) as purchase_value,
                 SUM(f.video_plays) as video_plays,
                 SUM(f.video_p25_watched) as video_p25_watched,
                 SUM(f.video_p50_watched) as video_p50_watched,
                 SUM(f.video_p75_watched) as video_p75_watched,
                 SUM(f.video_p100_watched) as video_p100_watched,
-                CASE WHEN SUM(f.video_plays) > 0 
-                     THEN SUM(f.video_avg_time_watched * f.video_plays) / SUM(f.video_plays) 
+                CASE WHEN SUM(f.video_plays) > 0
+                     THEN SUM(f.video_avg_time_watched * f.video_plays) / SUM(f.video_plays)
                      ELSE 0 END as video_avg_time_watched
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
+            JOIN dim_ad ad ON f.ad_id = ad.ad_id
             LEFT JOIN (
                 SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
                        SUM(action_count) as action_count,
@@ -62,20 +105,14 @@ class CreativeRepository(BaseRepository):
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {video_filter}
+                {search_filter}
+                {status_filter}
+                {account_filter}
             GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video,
                      cr.video_length_seconds, cr.image_url, cr.video_url
             HAVING SUM(f.spend) >= :min_spend
             ORDER BY spend DESC
         """)
-
-        params = {
-            'start_date': start_date,
-            'end_date': end_date,
-            'min_spend': min_spend
-        }
-
-        if is_video is not None:
-            params['is_video'] = is_video
 
         results = self.db.execute(query, params).fetchall()
 
@@ -94,6 +131,8 @@ class CreativeRepository(BaseRepository):
                 'clicks': int(row.clicks or 0),
                 'conversions': int(row.conversions or 0),
                 'conversion_value': float(row.conversion_value or 0),
+                'purchases': int(row.purchases or 0),
+                'purchase_value': float(row.purchase_value or 0),
                 'video_plays': int(row.video_plays or 0),
                 'video_p25_watched': int(row.video_p25_watched or 0),
                 'video_p50_watched': int(row.video_p50_watched or 0),
@@ -108,7 +147,8 @@ class CreativeRepository(BaseRepository):
         self,
         creative_id: int,
         start_date: date,
-        end_date: date
+        end_date: date,
+        account_ids: Optional[List[int]] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Get detailed metrics for a single creative.
@@ -157,16 +197,30 @@ class CreativeRepository(BaseRepository):
             WHERE cr.creative_id = :creative_id
                 AND d.date >= :start_date
                 AND d.date <= :end_date
+                {account_filter}
             GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video,
                      cr.video_length_seconds, cr.image_url, cr.video_url,
                      cr.call_to_action_type
         """)
 
-        result = self.db.execute(query, {
+        params = {
             'creative_id': creative_id,
             'start_date': start_date,
             'end_date': end_date
-        }).fetchone()
+        }
+
+        # Build account filter
+        account_filter = ""
+        if account_ids is not None:
+            if account_ids:
+                acc_placeholders = ', '.join([f':acc_id_{i}' for i in range(len(account_ids))])
+                account_filter = f"AND f.account_id IN ({acc_placeholders})"
+                for i, acc_id in enumerate(account_ids):
+                    params[f'acc_id_{i}'] = acc_id
+            else:
+                account_filter = "AND 1=0"
+
+        result = self.db.execute(query.format(account_filter=account_filter), params).fetchone()
 
         if not result:
             return None
@@ -197,15 +251,12 @@ class CreativeRepository(BaseRepository):
             WHERE f.creative_id = :creative_id
                 AND d.date >= :start_date
                 AND d.date <= :end_date
+                {account_filter}
             GROUP BY d.date
             ORDER BY d.date ASC
         """)
 
-        trend_results = self.db.execute(trend_query, {
-            'creative_id': creative_id,
-            'start_date': start_date,
-            'end_date': end_date
-        }).fetchall()
+        trend_results = self.db.execute(trend_query.format(account_filter=account_filter), params).fetchall()
 
         trend = []
         for row in trend_results:
@@ -246,7 +297,8 @@ class CreativeRepository(BaseRepository):
         self,
         creative_ids: List[int],
         start_date: date,
-        end_date: date
+        end_date: date,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get metrics for multiple creatives for comparison.
@@ -256,6 +308,26 @@ class CreativeRepository(BaseRepository):
 
         # Build IN clause
         placeholders = ', '.join([f':id_{i}' for i in range(len(creative_ids))])
+
+        # Build account filter BEFORE using it in query
+        account_filter = ""
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        if account_ids is not None:
+            if account_ids:
+                acc_placeholders = ', '.join([f':acc_id_{i}' for i in range(len(account_ids))])
+                account_filter = f"AND f.account_id IN ({acc_placeholders})"
+                for i, acc_id in enumerate(account_ids):
+                    params[f'acc_id_{i}'] = acc_id
+            else:
+                account_filter = "AND 1=0"
+
+        # Add creative IDs to params
+        for i, creative_id in enumerate(creative_ids):
+            params[f'id_{i}'] = creative_id
 
         query = text(f"""
             SELECT
@@ -270,8 +342,8 @@ class CreativeRepository(BaseRepository):
                 SUM(f.video_plays) as video_plays,
                 SUM(f.video_p25_watched) as video_p25_watched,
                 SUM(f.video_p100_watched) as video_p100_watched,
-                CASE WHEN SUM(f.video_plays) > 0 
-                     THEN SUM(f.video_avg_time_watched * f.video_plays) / SUM(f.video_plays) 
+                CASE WHEN SUM(f.video_plays) > 0
+                     THEN SUM(f.video_avg_time_watched * f.video_plays) / SUM(f.video_plays)
                      ELSE 0 END as video_avg_time_watched
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
@@ -284,8 +356,8 @@ class CreativeRepository(BaseRepository):
                 JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
                 WHERE dat.is_conversion = TRUE
                 GROUP BY 1, 2, 3, 4, 5, 6
-            ) conv ON f.date_id = conv.date_id 
-                  AND f.account_id = conv.account_id 
+            ) conv ON f.date_id = conv.date_id
+                  AND f.account_id = conv.account_id
                   AND f.campaign_id = conv.campaign_id
                   AND f.adset_id = conv.adset_id
                   AND f.ad_id = conv.ad_id
@@ -293,18 +365,10 @@ class CreativeRepository(BaseRepository):
             WHERE cr.creative_id IN ({placeholders})
                 AND d.date >= :start_date
                 AND d.date <= :end_date
+                {account_filter}
             GROUP BY cr.creative_id, cr.title, cr.is_video
             ORDER BY spend DESC
         """)
-
-        params = {
-            'start_date': start_date,
-            'end_date': end_date
-        }
-
-        # Add creative IDs to params
-        for i, creative_id in enumerate(creative_ids):
-            params[f'id_{i}'] = creative_id
 
         results = self.db.execute(query, params).fetchall()
 
@@ -329,13 +393,29 @@ class CreativeRepository(BaseRepository):
     def get_video_insights(
         self,
         start_date: date,
-        end_date: date
+        end_date: date,
+        account_ids: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
         Get video performance insights and patterns.
         """
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        account_filter = ""
+        if account_ids is not None:
+            if account_ids:
+                acc_placeholders = ', '.join([f':acc_id_{i}' for i in range(len(account_ids))])
+                account_filter = f"AND f.account_id IN ({acc_placeholders})"
+                for i, acc_id in enumerate(account_ids):
+                    params[f'acc_id_{i}'] = acc_id
+            else:
+                account_filter = "AND 1=0"
+
         # Get overall video metrics
-        query = text("""
+        query = text(f"""
             SELECT
                 AVG(CASE WHEN f.video_plays > 0
                     THEN (f.video_p25_watched::float / f.video_plays) * 100
@@ -356,15 +436,13 @@ class CreativeRepository(BaseRepository):
                 AND d.date <= :end_date
                 AND cr.is_video = true
                 AND f.video_plays > 0
+                {account_filter}
         """)
 
-        result = self.db.execute(query, {
-            'start_date': start_date,
-            'end_date': end_date
-        }).fetchone()
+        result = self.db.execute(query, params).fetchone()
 
         # Get top performing videos
-        top_videos_query = text("""
+        top_videos_query = text(f"""
             SELECT
                 cr.creative_id,
                 cr.title,
@@ -386,16 +464,14 @@ class CreativeRepository(BaseRepository):
                 AND d.date <= :end_date
                 AND cr.is_video = true
                 AND f.video_plays > 0
+                {account_filter}
             GROUP BY cr.creative_id, cr.title, cr.video_length_seconds
             HAVING SUM(f.spend) >= 100
             ORDER BY hook_rate DESC
             LIMIT 5
         """)
 
-        top_videos = self.db.execute(top_videos_query, {
-            'start_date': start_date,
-            'end_date': end_date
-        }).fetchall()
+        top_videos = self.db.execute(top_videos_query, params).fetchall()
 
         top_videos_list = []
         for row in top_videos:

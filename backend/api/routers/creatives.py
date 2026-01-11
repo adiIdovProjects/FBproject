@@ -49,7 +49,11 @@ def get_creatives(
     is_video: Optional[bool] = Query(None, description="Filter by video/image creatives"),
     min_spend: float = Query(0, ge=0, description="Minimum spend threshold"),
     sort_by: str = Query("spend", description="Metric to sort by"),
-    db: Session = Depends(get_db)
+    search_query: Optional[str] = Query(None, description="Search by creative title"),
+    ad_status: Optional[str] = Query(None, description="Filter by ad status (ACTIVE, PAUSED, ARCHIVED)"),
+    account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get creative-level performance metrics.
@@ -58,13 +62,18 @@ def get_creatives(
     (hook rate, completion rate) for video creatives.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+
+
         return service.get_creative_metrics(
             start_date=start_date,
             end_date=end_date,
             is_video=is_video,
             min_spend=min_spend,
-            sort_by=sort_by
+            sort_by=sort_by,
+            search_query=search_query,
+            ad_status=ad_status,
+            account_ids=[account_id] if account_id else None
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get creative metrics: {str(e)}")
@@ -80,7 +89,9 @@ def get_creative_detail(
     creative_id: int,
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
-    db: Session = Depends(get_db)
+    account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get detailed metrics for a single creative.
@@ -88,11 +99,12 @@ def get_creative_detail(
     Returns aggregated metrics, video metrics (if applicable), and daily trend data.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
         result = service.get_creative_detail(
             creative_id=creative_id,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            account_ids=[account_id] if account_id else None
         )
 
         if not result:
@@ -113,7 +125,9 @@ def get_creative_detail(
 )
 def compare_creatives(
     request: CreativeComparisonRequest = Body(...),
-    db: Session = Depends(get_db)
+    account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Compare multiple creatives side-by-side.
@@ -127,12 +141,13 @@ def compare_creatives(
         if len(request.creative_ids) > 5:
             raise HTTPException(status_code=400, detail="Cannot compare more than 5 creatives")
 
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
         result = service.get_creative_comparison(
             creative_ids=request.creative_ids,
             start_date=request.start_date,
             end_date=request.end_date,
-            metrics=request.metrics
+            metrics=request.metrics,
+            account_ids=[account_id] if account_id else None
         )
 
         if not result:
@@ -154,7 +169,9 @@ def compare_creatives(
 def get_video_insights(
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
-    db: Session = Depends(get_db)
+    account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get video performance insights.
@@ -163,10 +180,11 @@ def get_video_insights(
     about video performance patterns.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
         return service.get_video_insights(
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            account_ids=[account_id] if account_id else None
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get video insights: {str(e)}")

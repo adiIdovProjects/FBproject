@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { AlertTriangle, AlertCircle, Clock, TrendingDown } from 'lucide-react';
 import {
   fetchCreativeFatigue,
@@ -23,6 +24,7 @@ export default function AdFatigueView({
   endDate,
   isRTL
 }: AdFatigueViewProps) {
+  const locale = useLocale();
   const [data, setData] = useState<CreativeFatigueResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function AdFatigueView({
       setError(null);
 
       try {
-        const result = await fetchCreativeFatigue(lookbackDays);
+        const result = await fetchCreativeFatigue(lookbackDays, locale);
         setData(result);
       } catch (err: any) {
         console.error('[Ad Fatigue] Error:', err);

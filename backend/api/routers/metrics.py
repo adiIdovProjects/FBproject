@@ -219,7 +219,7 @@ def get_age_gender_breakdown(
             end_date=end_date,
             campaign_id=campaign_id,
             group_by=group_by,
-            campaign_status=status,
+            campaign_status=[campaign_status.value],
             search_query=search,
             account_ids=account_ids
         )

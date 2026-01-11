@@ -322,6 +322,37 @@ class AuditLog(Base):
     )
 
 
+# ==============================================================================
+# ACCOUNT QUIZ RESPONSES
+# ==============================================================================
+
+class AccountQuizResponses(Base):
+    """Per-account quiz responses for personalized insights"""
+    __tablename__ = 'account_quiz_responses'
+
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id', ondelete='CASCADE'), primary_key=True)
+
+    # Q1: Primary advertising goal
+    primary_goal = Column(String(100))
+    primary_goal_other = Column(Text)
+
+    # Q2: Primary conversions (JSON array)
+    primary_conversions = Column(Text)
+
+    # Q3: Industry/Business type
+    industry = Column(String(100))
+
+    # Q4: Optimization priority
+    optimization_priority = Column(String(100))
+
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index('idx_account_quiz_account_id', 'account_id'),
+    )
+
+
 def create_schema(engine):
     """Create all tables"""
     Base.metadata.create_all(engine)

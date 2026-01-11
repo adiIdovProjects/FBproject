@@ -27,6 +27,7 @@ CREATIVE_CACHE = {}
 CACHE_TTL = 3600  # 1 hour
 
 CREATIVE_ANALYSIS_PROMPT = """You are a Creative Strategy Expert and Performance Marketer specializing in Facebook Ads creative optimization.
+Respond in {target_lang}.
 
 Analyze the provided creative performance data and provide actionable insights on what's working and what needs to change.
 
@@ -170,10 +171,11 @@ class CreativeInsightsService:
         self,
         start_date: date,
         end_date: date,
-        campaign_id: Optional[int]
+        campaign_id: Optional[int],
+        locale: str = "en"
     ) -> str:
         """Generate cache key from parameters"""
-        key_str = f"creative:{start_date}:{end_date}:{campaign_id}"
+        key_str = f"creative:{start_date}:{end_date}:{campaign_id}:{locale}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
     async def analyze_creative_patterns(
@@ -181,7 +183,8 @@ class CreativeInsightsService:
         start_date: date,
         end_date: date,
         campaign_id: Optional[int] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        locale: str = "en"
     ) -> Dict[str, Any]:
         """
         Generate comprehensive creative performance analysis.
@@ -204,7 +207,7 @@ class CreativeInsightsService:
 
         try:
             # Check cache
-            cache_key = self._get_cache_key(start_date, end_date, campaign_id)
+            cache_key = self._get_cache_key(start_date, end_date, campaign_id, locale)
             if cache_key in CREATIVE_CACHE:
                 cached_time, cached_response = CREATIVE_CACHE[cache_key]
                 if time.time() - cached_time < CACHE_TTL:
@@ -268,9 +271,21 @@ class CreativeInsightsService:
 
             context_json = json.dumps(context, indent=2, default=str)
 
+            # Map locale to language name
+            lang_map = {
+                'en': 'English',
+                'he': 'Hebrew',
+                'fr': 'French',
+                'de': 'German',
+                'es': 'Spanish',
+                'ar': 'Arabic'
+            }
+            target_lang = lang_map.get(locale, 'English')
+
             prompt = (
                 f"Analyze this Facebook Ads creative performance data for {start_date} to {end_date}.\n\n"
                 f"Creative Performance Data:\n{context_json}\n\n"
+                f"Respond in {target_lang}.\n"
                 "Provide comprehensive creative strategy insights including theme analysis, "
                 "CTA recommendations, fatigue alerts, and winning patterns. "
                 "Follow the response format specified in your instructions."
@@ -323,7 +338,8 @@ class CreativeInsightsService:
 
     async def get_creative_fatigue_report(
         self,
-        lookback_days: int = 30
+        lookback_days: int = 30,
+        locale: str = "en"
     ) -> Dict[str, Any]:
         """
         Generate focused ad fatigue report.
@@ -363,7 +379,7 @@ class CreativeInsightsService:
                 'critical_refreshes': critical,
                 'warning_refreshes': warning,
                 'monitor_closely': monitor,
-                'recommendations': self._generate_fatigue_recommendations(critical, warning)
+                'recommendations': self._generate_fatigue_recommendations(critical, warning, locale)
             }
 
         except Exception as e:
@@ -376,27 +392,43 @@ class CreativeInsightsService:
     def _generate_fatigue_recommendations(
         self,
         critical: List[Dict],
-        warning: List[Dict]
+        warning: List[Dict],
+        locale: str = "en"
     ) -> List[str]:
         """Generate action items for fatigued creatives"""
         recommendations = []
 
+        # Define translations
+        translations = {
+            'en': {
+                'urgent': "🔴 URGENT: Pause or refresh {count} critically fatigued ads immediately (CTR declined >30%)",
+                'warning': "⚠️ Plan refreshes for {count} ads showing significant fatigue (CTR declined 20-30%)",
+                'new_vars': "💡 Create new ad variations with different hooks/angles",
+                'new_formats': "🎨 Test new creative formats (if using images, try video and vice versa)",
+                'review': "📊 Review winning ads from historical analysis for inspiration"
+            },
+            'he': {
+                'urgent': "🔴 דחוף: עצור או רענן {count} מודעות שחוקות באופן קריטי (CTR ירד >30%)",
+                'warning': "⚠️ תכנן רענון עבור {count} מודעות המראות שחיקה משמעותית (CTR ירד 20-30%)",
+                'new_vars': "💡 צור וריאציות חדשות עם זוויות/הוקים שונים",
+                'new_formats': "🎨 בדוק פורמטים חדשים (אם משתמשים בתמונות, נסה וידאו ולהפך)",
+                'review': "📊 סקור מודעות מנצחות מהניתוח ההיסטורי להשראה"
+            },
+            # Add other languages as needed, fallback to 'en'
+        }
+        
+        t = translations.get(locale, translations['en'])
+
         if critical:
-            recommendations.append(
-                f"🔴 URGENT: Pause or refresh {len(critical)} critically fatigued ads immediately "
-                f"(CTR declined >30%)"
-            )
+            recommendations.append(t['urgent'].format(count=len(critical)))
 
         if warning:
-            recommendations.append(
-                f"⚠️ Plan refreshes for {len(warning)} ads showing significant fatigue "
-                f"(CTR declined 20-30%)"
-            )
+            recommendations.append(t['warning'].format(count=len(warning)))
 
         recommendations.extend([
-            "💡 Create new ad variations with different hooks/angles",
-            "🎨 Test new creative formats (if using images, try video and vice versa)",
-            "📊 Review winning ads from historical analysis for inspiration"
+            t['new_vars'],
+            t['new_formats'],
+            t['review']
         ])
 
         return recommendations

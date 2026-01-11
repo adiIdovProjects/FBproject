@@ -12,7 +12,8 @@ class AdSetRepository(BaseRepository):
         end_date: date,
         campaign_id: Optional[int] = None,
         campaign_status: Optional[List[str]] = None,
-        search_query: Optional[str] = None
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get adset-level metrics and targeting info.
@@ -26,6 +27,14 @@ class AdSetRepository(BaseRepository):
         if campaign_status and campaign_status != ['ALL']:
             placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
             status_filter = f"AND c.campaign_status IN ({placeholders})"
+
+        # Build account filter
+        account_filter = ""
+        if account_ids:
+             # Just use the first one if multiple for now to be safe, or expand
+             # The pattern used is manual expansion
+             placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
+             account_filter = f"AND f.account_id IN ({placeholders})"
             
         # Build search filter
         search_filter = ""
@@ -72,6 +81,7 @@ class AdSetRepository(BaseRepository):
                 AND d.date <= :end_date
                 {campaign_filter}
                 {status_filter}
+                {account_filter}
                 {search_filter}
             GROUP BY a.adset_id, a.adset_name, a.targeting_type, a.targeting_summary
             ORDER BY spend DESC
@@ -93,22 +103,46 @@ class AdSetRepository(BaseRepository):
             for i, status in enumerate(campaign_status):
                 params[f'status_{i}'] = status
 
+        # Add account params
+        if account_ids:
+            for i, aid in enumerate(account_ids):
+                params[f'account_id_{i}'] = aid
+
         results = self.db.execute(query, params).fetchall()
 
         adsets = []
         for row in results:
+            spend = float(row.spend or 0)
+            clicks = int(row.clicks or 0)
+            impressions = int(row.impressions or 0)
+            conversions = int(row.conversions or 0)
+            purchase_value = float(row.purchase_value or 0)
+            purchases = int(row.purchases or 0)
+            
+            # Calculate derived metrics
+            ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
+            cpc = (spend / clicks) if clicks > 0 else 0.0
+            roas = (purchase_value / spend) if spend > 0 else 0.0
+            cpa = (spend / conversions) if conversions > 0 else 0.0
+
             adsets.append({
                 'adset_id': int(row.adset_id),
                 'adset_name': str(row.adset_name),
                 'targeting_type': str(row.targeting_type or 'Broad'),
                 'targeting_summary': str(row.targeting_summary or 'N/A'),
-                'spend': float(row.spend or 0),
-                'impressions': int(row.impressions or 0),
-                'clicks': int(row.clicks or 0),
-                'conversions': int(row.conversions or 0),
+                'spend': spend,
+                'impressions': impressions,
+                'clicks': clicks,
+                'ctr': ctr,
+                'cpc': cpc,
+                'conversions': conversions,
                 'conversion_value': float(row.conversion_value or 0),
                 'lead_website': int(row.lead_website or 0),
-                'lead_form': int(row.lead_form or 0)
+                'lead_form': int(row.lead_form or 0),
+                'purchases': purchases,
+                'purchase_value': purchase_value,
+                'roas': roas,
+                'cpa': cpa
             })
 
         return adsets

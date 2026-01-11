@@ -72,6 +72,7 @@ class ReportsService:
         cpm = calc.cpm(spend, impressions)
         roas = calc.roas(conversion_value, spend, conversions)
         cpa = calc.cpa(spend, conversions)
+        conversion_rate = calc.conversion_rate(conversions, clicks)
 
         return MetricsPeriod(
             spend=spend,
@@ -85,7 +86,8 @@ class ReportsService:
             purchases=purchases,
             purchase_value=purchase_value,
             roas=round(roas, 2) if roas is not None else None,
-            cpa=round(cpa, 2)
+            cpa=round(cpa, 2),
+            conversion_rate=round(conversion_rate, 2)
         )
 
     def _calculate_changes(
@@ -114,7 +116,8 @@ class ReportsService:
             conversions=self.comparison_service.calculate_change_percentage(period1.conversions, period2.conversions),
             conversion_value=self.comparison_service.calculate_change_percentage(period1.conversion_value, period2.conversion_value),
             roas=self.comparison_service.calculate_change_percentage(period1.roas or 0, period2.roas or 0),
-            cpa=self.comparison_service.calculate_change_percentage(period1.cpa, period2.cpa)
+            cpa=self.comparison_service.calculate_change_percentage(period1.cpa, period2.cpa),
+            conversion_rate=self.comparison_service.calculate_change_percentage(period1.conversion_rate, period2.conversion_rate)
         )
 
         # Absolute changes
@@ -128,7 +131,8 @@ class ReportsService:
             'conversions': self.comparison_service.calculate_absolute_change(period1.conversions, period2.conversions),
             'conversion_value': self.comparison_service.calculate_absolute_change(period1.conversion_value, period2.conversion_value),
             'roas': self.comparison_service.calculate_absolute_change(period1.roas or 0, period2.roas or 0),
-            'cpa': self.comparison_service.calculate_absolute_change(period1.cpa, period2.cpa)
+            'cpa': self.comparison_service.calculate_absolute_change(period1.cpa, period2.cpa),
+            'conversion_rate': self.comparison_service.calculate_absolute_change(period1.conversion_rate, period2.conversion_rate)
         }
 
         return change_pct, change_abs
@@ -144,7 +148,8 @@ class ReportsService:
         secondary_breakdown: str = 'none',
         campaign_filter: Optional[str] = None,
         ad_set_filter: Optional[str] = None,
-        ad_filter: Optional[str] = None
+        ad_filter: Optional[str] = None,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """
         Get comparison data between two periods.
@@ -164,7 +169,14 @@ class ReportsService:
         Returns:
             ReportsComparisonResponse with comparison data
         """
-        currency = self.repository.get_account_currency()
+        # Get user's account IDs for filtering/currency
+        if account_id and account_id != 'all':
+            account_ids = [int(account_id)]
+        else:
+            account_ids = self._get_user_account_ids()
+
+        logger.info(f"Report Request: account_id={account_id}, period1={period1_start} to {period1_end}, breakdown={breakdown}")
+        currency = self.repository.get_account_currency(account_ids)
 
         # Handle multi-dimensional breakdown
         if secondary_breakdown != 'none':
@@ -176,7 +188,8 @@ class ReportsService:
                 campaign_filter,
                 ad_set_filter,
                 ad_filter,
-                currency
+                currency,
+                account_id
             )
 
         # Use breakdown parameter instead of dimension
@@ -184,14 +197,16 @@ class ReportsService:
             return self._get_overview_comparison(
                 period1_start, period1_end,
                 period2_start, period2_end,
-                currency
+                currency,
+                account_id
             )
         elif breakdown == 'campaign_name':
             return self._get_campaign_comparison(
                 period1_start, period1_end,
                 period2_start, period2_end,
                 campaign_filter,
-                currency
+                currency,
+                account_id
             )
         elif breakdown == 'ad_set_name':
             return self._get_adset_comparison(
@@ -199,7 +214,8 @@ class ReportsService:
                 period2_start, period2_end,
                 campaign_filter,
                 ad_set_filter,
-                currency
+                currency,
+                account_id
             )
         elif breakdown == 'ad_name':
             return self._get_ad_comparison(
@@ -208,7 +224,8 @@ class ReportsService:
                 campaign_filter,
                 ad_set_filter,
                 ad_filter,
-                currency
+                currency,
+                account_id
             )
         elif breakdown in ['date', 'week', 'month']:
             return self._get_time_breakdown(
@@ -218,7 +235,8 @@ class ReportsService:
                 campaign_filter,
                 ad_set_filter,
                 ad_filter,
-                currency
+                currency,
+                account_id
             )
         else:
             raise ValueError(f"Invalid breakdown: {breakdown}")
@@ -229,14 +247,16 @@ class ReportsService:
         period1_end: date,
         period2_start: Optional[date],
         period2_end: Optional[date],
-        currency: str
+        currency: str,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """Get overview-level comparison"""
         # Get user's account IDs for filtering
-        account_ids = self._get_user_account_ids()
+        account_ids = [account_id] if account_id else self._get_user_account_ids()
 
         # Fetch data for period 1
         period1_raw = self.repository.get_aggregated_metrics(period1_start, period1_end, account_ids=account_ids)
+        logger.info(f"Overview Metrics Raw: {period1_raw}")
         period1_metrics = self._calculate_metrics(period1_raw)
 
         # Fetch period 2 data only if comparison is enabled
@@ -246,9 +266,10 @@ class ReportsService:
             change_pct, change_abs = self._calculate_changes(period1_metrics, period2_metrics)
         else:
             # No comparison - use zeros for period 2
+            # No comparison - use zeros for period 2
             period2_metrics = MetricsPeriod(
                 spend=0, impressions=0, clicks=0, ctr=0, cpc=0, cpm=0,
-                conversions=0, conversion_value=0, roas=None, cpa=0
+                conversions=0, conversion_value=0, roas=None, cpa=0, conversion_rate=0
             )
             change_pct, change_abs = self._calculate_changes(period1_metrics, period2_metrics)
 
@@ -280,11 +301,12 @@ class ReportsService:
         period2_start: Optional[date],
         period2_end: Optional[date],
         campaign_filter: Optional[str],
-        currency: str
+        currency: str,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """Get campaign-level comparison"""
         # Get user's account IDs for filtering
-        account_ids = self._get_user_account_ids()
+        account_ids = [account_id] if account_id else self._get_user_account_ids()
 
         # Fetch campaign breakdowns for both periods
         period1_campaigns = self.campaign_repo.get_campaign_breakdown(
@@ -352,11 +374,12 @@ class ReportsService:
         period2_end: Optional[date],
         campaign_filter: Optional[str],
         adset_filter: Optional[str],
-        currency: str
+        currency: str,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """Get ad set-level comparison"""
         # Get user's account IDs for filtering
-        account_ids = self._get_user_account_ids()
+        account_ids = [account_id] if account_id else self._get_user_account_ids()
 
         # Fetch adset breakdowns for both periods
         period1_adsets = self.adset_repo.get_adset_breakdown(
@@ -429,15 +452,18 @@ class ReportsService:
         campaign_filter: Optional[str],
         adset_filter: Optional[str],
         ad_filter: Optional[str],
-        currency: str
+        currency: str,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """Get ad-level comparison"""
         # Get user's account IDs for filtering
-        account_ids = self._get_user_account_ids()
+        account_ids = [account_id] if account_id else self._get_user_account_ids()
 
         # Fetch ad breakdowns for both periods
         period1_ads = self.ad_repo.get_ad_breakdown(
             period1_start, period1_end,
+            campaign_filter=campaign_filter,
+            adset_filter=adset_filter,
             search_query=ad_filter,
             account_ids=account_ids
         )
@@ -446,6 +472,8 @@ class ReportsService:
         if period2_start and period2_end:
             period2_ads = self.ad_repo.get_ad_breakdown(
                 period2_start, period2_end,
+                campaign_filter=campaign_filter,
+                adset_filter=adset_filter,
                 search_query=ad_filter,
                 account_ids=account_ids
             )
@@ -507,11 +535,12 @@ class ReportsService:
         campaign_filter: Optional[str],
         ad_set_filter: Optional[str],
         ad_filter: Optional[str],
-        currency: str
+        currency: str,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """Get time-based breakdown (date/week/month)"""
         # Get user's account IDs for filtering
-        account_ids = self._get_user_account_ids()
+        account_ids = [account_id] if account_id else self._get_user_account_ids()
 
         # Map breakdown_type to granularity
         granularity_map = {
@@ -595,7 +624,8 @@ class ReportsService:
         campaign_filter: Optional[str],
         ad_set_filter: Optional[str],
         ad_filter: Optional[str],
-        currency: str
+        currency: str,
+        account_id: Optional[str] = None
     ) -> ReportsComparisonResponse:
         """
         Get multi-dimensional breakdown (e.g., Campaign + Week).
@@ -614,11 +644,15 @@ class ReportsService:
             ad_set_filter: Optional ad set name filter
             ad_filter: Optional ad name filter
             currency: Account currency
+            account_id: Optional account ID to filter by
 
         Returns:
             ReportsComparisonResponse with flat comparison items
         """
         from sqlalchemy import text
+
+        # Get user's account IDs for filtering
+        account_ids = [account_id] if account_id else self._get_user_account_ids()
 
         # Map dimension types to SQL expressions and joins
         dimension_sql = {

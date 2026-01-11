@@ -67,7 +67,13 @@ class Settings(BaseSettings):
 
     # AI Settings
     GEMINI_API_KEY: Optional[str] = None
-    
+
+    # Email Settings (Resend)
+    RESEND_API_KEY: Optional[str] = None
+    EMAIL_FROM_ADDRESS: str = "noreply@example.com"
+    EMAIL_FROM_NAME: str = "AdManager Pro"
+    MAGIC_LINK_EXPIRY_MINUTES: int = 15
+
     model_config = SettingsConfigDict(
         env_file=os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env")),
         env_file_encoding="utf-8",

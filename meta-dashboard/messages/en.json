@@ -14,9 +14,17 @@
     "all_statuses": "All Statuses",
     "currency": "Currency",
     "daily_trend": "Daily Trend",
+    "weekly_trend": "Weekly Trend",
+    "monthly_trend": "Monthly Trend",
     "status": "Status",
     "vs_previous": "vs Previous",
-    "name": "Name"
+    "name": "Name",
+    "error_occurred": "An error occurred",
+    "delete_permanently": "Delete Permanently",
+    "unlink_only": "Unlink Only",
+    "compare_periods": "Compare Periods",
+    "saving": "Saving...",
+    "saved_successfully": "Saved successfully"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -52,7 +60,8 @@
     "primary_metric": "Primary Metric",
     "leads": "Leads",
     "lead_website": "Lead (Web)",
-    "lead_form": "Lead (Form)"
+    "lead_form": "Lead (Form)",
+    "conversion_rate": "Conversion Rate"
   },
   "dashboard": {
     "title": "Performance Dashboard",
@@ -161,7 +170,7 @@
     "maximum": "All Time"
   },
   "footer": {
-    "system_info": "Next.js & FastAPI Analytics System"
+    "system_info": "FBWatson Analytics System"
   },
   "ai_investigator": {
     "title": "AI Investigator",
@@ -225,7 +234,8 @@
     "all_set": "All Set!",
     "redirecting": "Redirecting to dashboard...",
     "connection_failed": "Connection Failed",
-    "return_to_login": "Return to Login"
+    "return_to_login": "Return to Login",
+    "continue": "Continue"
   },
   "settings": {
     "profile": "Profile",
@@ -237,6 +247,7 @@
     "personal_info": "Personal Info",
     "full_name": "Full Name",
     "email_address": "Email Address",
+    "job_title": "Job Title",
     "language": "Language",
     "current_plan": "Current Plan",
     "upgrade_plan": "Upgrade Plan",
@@ -253,6 +264,7 @@
     "tracking_as_conversion": "Tracking as Conversion",
     "ignored": "Ignored",
     "account_settings": "Account Settings",
+    "user_settings": "User Settings",
     "connected": "Connected",
     "not_connected": "Not Connected",
     "manage_settings_desc": "Manage your settings and preferences.",
@@ -262,7 +274,53 @@
     "add_account": "Connect New Account",
     "remove": "Remove",
     "confirm_unlink": "Are you sure you want to unlink this account?",
-    "no_accounts": "No connected accounts found."
+    "no_accounts": "No connected accounts found.",
+    "unlink_warning": "Unlinking will remove access to this account's data",
+    "delete_data_checkbox": "Also delete all historical data for this account",
+    "delete_data_desc": "This action cannot be undone",
+    "email_readonly": "Email address cannot be changed (linked to OAuth)",
+    "years_experience": "Years of Experience",
+    "referral_source": "Referral Source",
+    "additional_info": "Additional Information",
+    "quiz_data_readonly": "These values were set during initial setup and cannot be edited here",
+    "security_settings": "Security Settings",
+    "security_desc": "Manage your password, two-factor authentication, and account security",
+    "billing_subscription": "Billing & Subscription",
+    "billing_desc": "Manage your subscription plan and payment methods",
+    "coming_soon": "Coming soon...",
+    "overview": "Overview",
+    "optimization": "Optimization",
+    "account_information": "Account Information",
+    "account_info_desc": "View your Facebook ad account details",
+    "account_name": "Account Name",
+    "account_id": "Account ID",
+    "currency": "Currency",
+    "facebook_readonly": "Account information is synced from Facebook and cannot be edited here",
+    "optimization_preferences": "Optimization Preferences",
+    "optimization_preferences_desc": "View your account optimization settings from the initial setup",
+    "optimization_readonly": "These preferences were set during account setup. Contact support to update them.",
+    "account_settings_desc": "Manage settings for this ad account",
+    "quiz_not_completed": "Setup Not Completed",
+    "complete_setup_first": "Complete the account setup quiz to configure optimization preferences",
+    "complete_setup": "Complete Setup",
+    "sharing": "Sharing",
+    "share_account": "Share Account",
+    "people_with_access": "People with Access",
+    "enter_email": "Enter email address",
+    "share": "Share",
+    "shared_successfully": "Account shared successfully",
+    "access_removed": "Access removed successfully",
+    "user_not_found": "User with this email not found",
+    "already_shared": "Account already shared with this user",
+    "confirm_remove_member": "Are you sure you want to remove this collaborator's access?",
+    "viewer": "Viewer",
+    "admin": "Admin"
+  },
+  "quiz": {
+    "primary_goal": "Primary Goal",
+    "conversion_types": "Conversion Types",
+    "industry": "Industry",
+    "optimization_priority": "Optimization Priority"
   },
   "breakdown": {
     "platform": "Platform",
@@ -293,5 +351,36 @@
     "ad": {
       "label": "Ad Filter"
     }
-  }
+  },
+  "token": "(MISSING: token)",
+  "state": "(MISSING: state)",
+  "step": "(MISSING: step)",
+  "T": "(MISSING: T)",
+  "tab": "(MISSING: tab)",
+  "connect_success": "(MISSING: connect_success)",
+  "error": "(MISSING: error)",
+  "both": "(MISSING: both)",
+  "age": "(MISSING: age)",
+  "gender": "(MISSING: gender)",
+  "no_data_available": "(MISSING: no_data_available)",
+  "ad_set_name": "(MISSING: ad_set_name)",
+  "targeting_type": "(MISSING: targeting_type)",
+  "targeting_summary": "(MISSING: targeting_summary)",
+  "spend": "(MISSING: spend)",
+  "impressions": "(MISSING: impressions)",
+  "clicks": "(MISSING: clicks)",
+  "ctr": "(MISSING: ctr)",
+  "cpc": "(MISSING: cpc)",
+  "conversions": "(MISSING: conversions)",
+  "roas": "(MISSING: roas)",
+  "cpa": "(MISSING: cpa)",
+  "broad": "(MISSING: broad)",
+  "campaign_name": "(MISSING: campaign_name)",
+  "campaign_status": "(MISSING: campaign_status)",
+  "a": "(MISSING: a)",
+  "-": "(MISSING: -)",
+  "": {
+    "language-switcher": "(MISSING: .language-switcher)"
+  },
+  "name": "(MISSING: name)"
 }

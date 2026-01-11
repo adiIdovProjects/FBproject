@@ -16,6 +16,7 @@ import DateFilter from '../../../components/DateFilter';
 import ComparisonTable from '../../../components/reports/ComparisonTable';
 import ComparisonChart from '../../../components/reports/ComparisonChart';
 import { MetricKey } from '../../../components/reports/MetricPills';
+import GoogleConnectModal from '../../../components/reports/GoogleConnectModal';
 
 // Services & Types
 import {
@@ -25,6 +26,7 @@ import {
   exportToExcel,
   exportToGoogleSheets,
 } from '../../../services/reports.service';
+import { useAccount } from '../../../context/AccountContext';
 
 // Utilities
 import { formatDate, calculateDateRange } from '../../../utils/date';
@@ -47,8 +49,12 @@ export default function ReportsPage() {
   const [secondaryBreakdown, setSecondaryBreakdown] = useState<BreakdownType>('none');
   const [campaignFilter, setCampaignFilter] = useState<string>('');
   const [adSetFilter, setAdSetFilter] = useState<string>('');
+
   const [adFilter, setAdFilter] = useState<string>('');
   const [selectedMetrics, setSelectedMetrics] = useState<MetricKey[]>(['spend', 'ctr', 'roas']);
+
+  // Global Account State
+  const { selectedAccountId } = useAccount();
 
   // UI state
   const [viewMode, setViewMode] = useState<'table' | 'chart'>('table');
@@ -59,6 +65,9 @@ export default function ReportsPage() {
   const [displayData, setDisplayData] = useState<ComparisonItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Google connection modal state
+  const [showGoogleConnectModal, setShowGoogleConnectModal] = useState(false);
 
   // Check if any item has conversion value
   const hasConversionValue = useMemo(() => {
@@ -71,6 +80,66 @@ export default function ReportsPage() {
       setSelectedMetrics(selectedMetrics.filter(m => m !== 'roas'));
     }
   }, [hasConversionValue]);
+
+  // Detect post-OAuth return and auto-retry export
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('[Reports] useEffect - Checking for post-OAuth return');
+    console.log('[Reports] URL params:', Object.fromEntries(urlParams.entries()));
+
+    if (urlParams.get('google_connected') === 'true') {
+      console.log('[Reports] ✅ Detected post-OAuth return!');
+
+      // Also handle token in URL if present
+      const token = urlParams.get('token');
+      if (token) {
+        console.log('[Reports] Found token in URL, storing...');
+        localStorage.setItem('token', token);
+      }
+
+      // Clean URL (remove query params)
+      window.history.replaceState({}, '', window.location.pathname);
+
+      // Check for pending export in localStorage
+      const pendingExport = localStorage.getItem('pendingGoogleSheetsExport');
+      console.log('[Reports] Pending export in localStorage:', pendingExport);
+
+      if (pendingExport) {
+        try {
+          const { timestamp, reportData } = JSON.parse(pendingExport);
+          const age = Date.now() - timestamp;
+          console.log('[Reports] Pending export age:', age, 'ms');
+
+          // Only retry if < 5 minutes old (prevent stale exports)
+          if (age < 5 * 60 * 1000) {
+            console.log('[Reports] Auto-retrying export...');
+            localStorage.removeItem('pendingGoogleSheetsExport');
+
+            // Auto-retry the export
+            exportToGoogleSheets(reportData)
+              .then(url => {
+                console.log('[Reports] Auto-retry successful:', url);
+                alert(`Successfully exported to Google Sheets: ${url}`);
+                window.open(url, '_blank');
+              })
+              .catch((err) => {
+                console.error('[Reports] Auto-retry failed:', err);
+                alert('Export failed after connecting. Please try again.');
+              });
+          } else {
+            // Expired, just remove it
+            console.log('[Reports] Pending export expired, removing');
+            localStorage.removeItem('pendingGoogleSheetsExport');
+          }
+        } catch (err) {
+          console.error('[Reports] Failed to parse pending export:', err);
+          localStorage.removeItem('pendingGoogleSheetsExport');
+        }
+      } else {
+        console.log('[Reports] No pending export found in localStorage');
+      }
+    }
+  }, []);
 
   // Fetch comparison data
   const fetchData = async () => {
@@ -90,6 +159,7 @@ export default function ReportsPage() {
         campaignFilter: campaignFilter || undefined,
         adSetFilter: adSetFilter || undefined,
         adFilter: adFilter || undefined,
+        accountId: selectedAccountId || undefined,
       });
 
       setComparisonData(data);
@@ -112,7 +182,7 @@ export default function ReportsPage() {
   // Initial load & date changes
   useEffect(() => {
     fetchData();
-  }, [period1Start, period1End]);
+  }, [period1Start, period1End, selectedAccountId]);
 
   // Auto-fetch when breakdown or text filters change
   useEffect(() => {
@@ -164,16 +234,63 @@ export default function ReportsPage() {
 
   // Handle export to Google Sheets
   const handleExportGoogleSheets = async () => {
-    if (!comparisonData) return;
+    console.log('[Reports] Export to Google Sheets clicked', { hasData: !!comparisonData });
+
+    if (!comparisonData) {
+      console.warn('[Reports] No comparison data available');
+      return;
+    }
 
     try {
+      console.log('[Reports] Calling exportToGoogleSheets...');
       const url = await exportToGoogleSheets(comparisonData);
+      console.log('[Reports] Export successful:', url);
       alert(`Exported to Google Sheets: ${url}`);
       window.open(url, '_blank');
-    } catch (error) {
-      console.error('Export to Google Sheets failed:', error);
-      alert('Export to Google Sheets failed');
+    } catch (error: any) {
+      console.error('[Reports] Export to Google Sheets failed:', error);
+      console.log('[Reports] Error name:', error.name);
+      console.log('[Reports] Error message:', error.message);
+
+      // Check if this is the "Google not connected" error
+      if (error.name === 'GoogleAuthRequired') {
+        console.log('[Reports] Showing Google connect modal');
+        setShowGoogleConnectModal(true); // Show modal instead of alert
+      } else {
+        alert('Export to Google Sheets failed');
+      }
     }
+  };
+
+  // Handle Google account connection
+  const handleGoogleConnect = () => {
+    console.log('[Reports] Google connect initiated');
+
+    // Save pending export to localStorage (for auto-retry after OAuth)
+    const exportData = {
+      timestamp: Date.now(),
+      reportData: comparisonData
+    };
+    localStorage.setItem('pendingGoogleSheetsExport', JSON.stringify(exportData));
+    console.log('[Reports] Saved pending export to localStorage:', exportData);
+
+    // Build OAuth URL with return state
+    const returnUrl = `/${locale}/reports`;
+    const stateData = {
+      csrf: Math.random().toString(36).substring(2),
+      return_to: returnUrl
+    };
+    const stateParam = encodeURIComponent(JSON.stringify(stateData));
+
+    // Get API base URL from environment or default to localhost
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const oauthUrl = `${apiBaseUrl}/api/v1/auth/google/login?state=${stateParam}`;
+
+    console.log('[Reports] Redirecting to OAuth URL:', oauthUrl);
+    console.log('[Reports] State data:', stateData);
+
+    // Redirect to backend OAuth
+    window.location.href = oauthUrl;
   };
 
   return (
@@ -296,11 +413,7 @@ export default function ReportsPage() {
                   </h3>
                 </div>
 
-                {comparisonData?.currency && (
-                  <span className="text-xs font-mono text-gray-500 bg-gray-800/50 px-2 py-1 rounded">
-                    {t('common.currency')}: {comparisonData.currency}
-                  </span>
-                )}
+
               </div>
 
               <div className="p-6">
@@ -332,6 +445,14 @@ export default function ReportsPage() {
           )}
         </div>
       </div>
+
+      {/* Google Connect Modal */}
+      <GoogleConnectModal
+        isOpen={showGoogleConnectModal}
+        onClose={() => setShowGoogleConnectModal(false)}
+        onConnect={handleGoogleConnect}
+        locale={locale}
+      />
     </MainLayout>
   );
 }

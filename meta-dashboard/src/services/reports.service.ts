@@ -16,6 +16,7 @@ export interface MetricsPeriod {
   conversion_value: number;
   roas: number | null;
   cpa: number;
+  conversion_rate: number;
 }
 
 export interface ChangePercentage {
@@ -29,6 +30,7 @@ export interface ChangePercentage {
   conversion_value: number | null;
   roas: number | null;
   cpa: number | null;
+  conversion_rate: number | null;
 }
 
 export interface ComparisonItem {
@@ -62,6 +64,7 @@ export interface ComparisonParams {
   campaignFilter?: string;
   adSetFilter?: string;
   adFilter?: string;
+  accountId?: string;
 }
 
 /**
@@ -93,6 +96,9 @@ export async function fetchComparisonData(
   }
   if (params.adFilter) {
     queryParams.ad_filter = params.adFilter;
+  }
+  if (params.accountId) {
+    queryParams.account_id = params.accountId;
   }
 
   try {
@@ -154,20 +160,63 @@ export async function exportToGoogleSheets(
 ): Promise<string> {
   const exportSheetName = sheetName || `Reports ${new Date().toISOString().split('T')[0]}`;
 
+  // Transform comparison data into flat rows (just Period 1 data, no comparison)
+  const items = data.dimension === 'overview' && data.overview ? [data.overview] : data.items;
+
+  const flatData = items.map(item => {
+    const row: any = {};
+
+    // Add ID and Name if available
+    if (item.id) row.id = item.id;
+    if (item.name) row.name = item.name;
+
+    // Add all metrics from period1 (current period)
+    const metrics = item.period1;
+
+    // Core metrics
+    if (metrics.spend !== undefined) row.spend = metrics.spend;
+    if (metrics.impressions !== undefined) row.impressions = metrics.impressions;
+    if (metrics.clicks !== undefined) row.clicks = metrics.clicks;
+    if (metrics.conversions !== undefined) row.conversions = metrics.conversions;
+    if (metrics.conversion_value !== undefined) row.conversion_value = metrics.conversion_value;
+
+    // Calculated metrics
+    if (metrics.ctr !== undefined) row.ctr = metrics.ctr;
+    if (metrics.cpc !== undefined) row.cpc = metrics.cpc;
+    if (metrics.cpm !== undefined) row.cpm = metrics.cpm;
+    if (metrics.roas !== undefined) row.roas = metrics.roas;
+
+    // Additional metrics
+    if (metrics.purchases !== undefined) row.purchases = metrics.purchases;
+    if (metrics.purchase_value !== undefined) row.purchase_value = metrics.purchase_value;
+    if (metrics.leads !== undefined) row.leads = metrics.leads;
+    if (metrics.add_to_cart !== undefined) row.add_to_cart = metrics.add_to_cart;
+    if (metrics.video_plays !== undefined) row.video_plays = metrics.video_plays;
+
+    return row;
+  });
+
   // Prepare data for export
   const exportData = {
-    title: exportSheetName,
-    period1: `${data.period1_start} to ${data.period1_end}`,
-    period2: `${data.period2_start} to ${data.period2_end}`,
-    dimension: data.dimension,
-    data: data.dimension === 'overview' && data.overview ? [data.overview] : data.items,
+    title: `${exportSheetName} (${data.period1_start} to ${data.period1_end})`,
+    data: flatData,
   };
 
   try {
     const response = await apiClient.post<{ spreadsheet_url: string }>('/api/v1/export/google-sheets-generic', exportData);
     return response.data.spreadsheet_url;
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Reports Service] Error exporting to Google Sheets:', error);
+
+    // Detect if error is 401 and Google account not connected
+    if (error.response?.status === 401 &&
+        error.response?.data?.detail?.includes('Google account not connected')) {
+      // Throw special error type that UI can detect
+      const googleError = new Error('GOOGLE_NOT_CONNECTED');
+      googleError.name = 'GoogleAuthRequired';
+      throw googleError;
+    }
+
     throw error;
   }
 }

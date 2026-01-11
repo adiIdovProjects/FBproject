@@ -144,4 +144,29 @@ class UserProfileUpdateRequest(BaseModel):
     referral_source: str = Field(..., min_length=1, max_length=100, description="How user heard about us")
 
 
+# ============================================================================
+# ACCOUNT OPTIMIZATION QUIZ SCHEMAS
+# ============================================================================
+
+class AccountQuizRequest(BaseModel):
+    """Request parameters for saving account quiz responses"""
+    primary_goal: str = Field(..., min_length=1, max_length=100, description="Primary advertising goal")
+    primary_goal_other: Optional[str] = Field(None, max_length=500, description="Other goal (if selected)")
+    primary_conversions: List[str] = Field(..., min_items=1, description="List of primary conversion types")
+    industry: str = Field(..., min_length=1, max_length=100, description="Business industry")
+    optimization_priority: str = Field(..., min_length=1, max_length=100, description="Optimization priority")
+
+
+class ConversionTypesResponse(BaseModel):
+    """Response for conversion types endpoint"""
+    conversion_types: List[str] = Field(..., description="List of available conversion types")
+    is_syncing: bool = Field(..., description="Whether account data is still syncing")
+
+
+class ShareAccountRequest(BaseModel):
+    """Request parameters for sharing an ad account with another user"""
+    email: str = Field(..., description="Email of user to share with")
+    permission_level: str = Field(default='viewer', pattern='^(admin|viewer)$', description="Permission level (admin or viewer)")
+
+
 

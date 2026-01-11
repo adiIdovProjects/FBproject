@@ -38,6 +38,7 @@ export default function ComparisonChart({
       conversion_value: t('metrics.conversion_value'),
       roas: t('metrics.roas'),
       cpa: t('metrics.cpa'),
+      conversion_rate: t('metrics.conversion_rate'),
     };
     return labels[metric];
   };
@@ -51,7 +52,11 @@ export default function ComparisonChart({
       case 'cpm':
       case 'cpa':
       case 'conversion_value':
-        return `$${value.toFixed(2)}`;
+        return currency === 'ILS' ? `₪${value.toFixed(2)}` :
+          currency === 'EUR' ? `€${value.toFixed(2)}` :
+            currency === 'GBP' ? `£${value.toFixed(2)}` :
+              `$${value.toFixed(2)}`;
+      case 'conversion_rate':
       case 'ctr':
         return `${value.toFixed(2)}%`;
       case 'roas':

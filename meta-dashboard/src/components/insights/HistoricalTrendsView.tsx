@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { TrendingUp, TrendingDown, Calendar, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -34,13 +35,16 @@ export default function HistoricalTrendsView({
     90
   );
 
+  // Get locale
+  const locale = useLocale();
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const result = await fetchHistoricalAnalysis(lookbackDays);
+        const result = await fetchHistoricalAnalysis(lookbackDays, undefined, locale);
         setData(result);
       } catch (err: any) {
         console.error('[Historical Trends] Error:', err);
@@ -173,9 +177,8 @@ export default function HistoricalTrendsView({
                     <td className="py-3 px-4 text-sm text-right">
                       {(week.roas ?? 0).toFixed(2)}x
                     </td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${
-                      (week.wow_change_pct ?? 0) > 0 ? 'text-green-400' : (week.wow_change_pct ?? 0) < 0 ? 'text-red-400' : 'text-gray-400'
-                    }`}>
+                    <td className={`py-3 px-4 text-sm text-right font-semibold ${(week.wow_change_pct ?? 0) > 0 ? 'text-green-400' : (week.wow_change_pct ?? 0) < 0 ? 'text-red-400' : 'text-gray-400'
+                      }`}>
                       {(week.wow_change_pct ?? 0) > 0 ? '+' : ''}{(week.wow_change_pct ?? 0).toFixed(1)}%
                     </td>
                   </tr>

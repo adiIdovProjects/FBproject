@@ -15,10 +15,12 @@ import {
     BarChart,
     User,
     Lightbulb,
-    ChevronDown
+    ChevronDown,
+    ArrowRight
 } from 'lucide-react';
 import { useAccount } from '@/context/AccountContext';
 import { useLocale, useTranslations } from 'next-intl';
+import { accountsService } from '@/services/accounts.service';
 
 export const Sidebar: React.FC = () => {
     const t = useTranslations();
@@ -29,11 +31,34 @@ export const Sidebar: React.FC = () => {
     // Account Context
     const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
     const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
+    const [quizCompleted, setQuizCompleted] = React.useState<boolean | null>(null);
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
+    // Check if account setup quiz is completed
+    React.useEffect(() => {
+        const checkQuizStatus = async () => {
+            if (!selectedAccountId) {
+                setQuizCompleted(null);
+                return;
+            }
+
+            try {
+                const response = await accountsService.getAccountQuiz(selectedAccountId);
+                console.log('[Sidebar] Quiz status response:', response.data);
+                setQuizCompleted(response.data.quiz_completed);
+            } catch (error) {
+                console.error('Error checking quiz status:', error);
+                // If there's an error, assume quiz is not completed (show button)
+                setQuizCompleted(false);
+            }
+        };
+
+        checkQuizStatus();
+    }, [selectedAccountId]);
+
     const navItems = [
-        { name: t('nav.dashboard'), href: `/${locale}`, icon: LayoutDashboard },
+        { name: t('nav.dashboard'), href: `/${locale}/dashboard`, icon: LayoutDashboard },
         { name: t('nav.campaigns'), href: `/${locale}/campaigns`, icon: BarChart3 },
         { name: t('nav.creatives'), href: `/${locale}/creatives`, icon: Palette },
         { name: t('nav.insights'), href: `/${locale}/insights`, icon: Lightbulb },
@@ -55,9 +80,7 @@ export const Sidebar: React.FC = () => {
                     </div>
                     <div>
                         <h2 className="font-bold text-lg tracking-tight">AdManager</h2>
-                        <Link href={`/${locale}/settings`} className="text-[10px] text-gray-500 font-medium uppercase tracking-widest hover:text-accent transition-colors">
-                            Settings
-                        </Link>
+                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Analytics Platform</p>
                     </div>
                 </div>
 
@@ -154,44 +177,41 @@ export const Sidebar: React.FC = () => {
                         );
                     })}
                 </div>
-
-                <div className="mt-8">
-                    <p className="px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Advanced</p>
-                    {secondaryItems.map((item) => (
-                        <div
-                            key={item.name}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 cursor-not-allowed group opacity-60"
-                        >
-                            <item.icon className="w-5 h-5" />
-                            <span className="text-sm">{item.name}</span>
-                            <span className="ml-auto text-[8px] bg-gray-800 px-1.5 py-0.5 rounded text-gray-400 uppercase">Soon</span>
-                        </div>
-                    ))}
-                </div>
             </nav>
 
             {/* Bottom Actions */}
             <div className="p-4 border-t border-border-subtle space-y-2">
-                <Link
-                    href={`/${locale}/settings`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes('/settings') ? 'bg-white/5 text-white' : ''}`}
-                >
-                    <Settings className="w-5 h-5" />
-                    <span>{t('nav.settings')}</span>
-                </Link>
+                {/* Complete Account Setup Button - Show if quiz not completed */}
+                {/* DEBUG: quizCompleted={String(quizCompleted)} */}
+                {(quizCompleted === false || quizCompleted === null) && selectedAccountId && (
+                    <Link
+                        href={`/${locale}/account-quiz?account_id=${selectedAccountId}`}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group"
+                    >
+                        <Sparkles className="w-5 h-5 text-purple-400" />
+                        <span className="flex-1 text-white font-semibold">Complete Setup</span>
+                        <ArrowRight className="w-4 h-4 text-purple-400 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                )}
 
+                {/* Account Settings (per-account) */}
+                {selectedAccountId && (
+                    <Link
+                        href={`/${locale}/accounts/${selectedAccountId}/settings`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-white/5 text-white' : ''}`}
+                    >
+                        <Settings className="w-5 h-5" />
+                        <span>{t('settings.account_settings')}</span>
+                    </Link>
+                )}
+
+                {/* User Settings */}
                 <Link
                     href={`/${locale}/settings`}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-accent/40 hover:bg-white/10 transition-all group"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-white/5 text-white' : ''}`}
                 >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-black shadow-lg group-hover:scale-110 transition-transform">
-                        <User className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black truncate tracking-tight text-white">Alex Morgen</p>
-                        <p className="text-[10px] text-gray-500 font-bold truncate tracking-widest uppercase">{t('nav.manage_account')}</p>
-                    </div>
-                    {isRTL ? <ChevronLeft className="w-4 h-4 text-gray-600 group-hover:text-accent transition-colors" /> : <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-accent transition-colors" />}
+                    <User className="w-5 h-5" />
+                    <span>{t('settings.user_settings')}</span>
                 </Link>
             </div>
         </aside>

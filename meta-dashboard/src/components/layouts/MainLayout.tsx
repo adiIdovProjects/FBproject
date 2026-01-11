@@ -59,7 +59,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             {/* Logo */}
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-indigo-400">
-                Facebook Ads Analytics
+                FBWatson
               </h1>
             </div>
 
@@ -81,10 +81,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   href={item.href}
                   className={`
                     flex items-center px-3 py-4 text-sm font-medium border-b-2 transition-colors
-                    ${
-                      item.current
-                        ? 'border-indigo-500 text-white'
-                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
+                    ${item.current
+                      ? 'border-indigo-500 text-white'
+                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                     }
                   `}
                 >
@@ -106,7 +105,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <footer className="bg-gray-800 border-t border-gray-700 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} Facebook Ads Analytics. All rights reserved.
+            © {new Date().getFullYear()} FBWatson. All rights reserved.
           </p>
         </div>
       </footer>

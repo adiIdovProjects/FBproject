@@ -33,13 +33,19 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // Check if we are already on the login page to avoid loops
-            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                // Clear invalid token
-                localStorage.removeItem('token');
-                // Redirect to login (or show login modal)
-                // window.location.href = '/login'; 
-                console.warn('Unauthorized: Token expired or invalid');
+            // Check if this is a "Google not connected" error (not an auth failure)
+            const isGoogleNotConnected = error.response.data?.detail?.includes('Google account not connected');
+
+            if (!isGoogleNotConnected) {
+                // Only redirect for actual authentication failures
+                // Check if we are already on the login page to avoid loops
+                if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                    // Clear invalid token
+                    localStorage.removeItem('token');
+                    // Redirect to login (or show login modal)
+                    window.location.href = '/en/login';
+                    console.warn('Unauthorized: Token expired or invalid');
+                }
             }
         }
         return Promise.reject(error);

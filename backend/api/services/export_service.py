@@ -29,9 +29,23 @@ class ExportService:
         )
         self._sheets_service = None
 
-    def _get_sheets_service(self):
+    def _get_sheets_service(
+        self, 
+        access_token: Optional[str] = None, 
+        refresh_token: Optional[str] = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        token_uri: Optional[str] = "https://oauth2.googleapis.com/token"
+    ):
         """
         Get or create Google Sheets API service.
+
+        Args:
+           access_token: Optional OAuth access token
+           refresh_token: Optional OAuth refresh token
+           client_id: OAuth client ID (required for refresh)
+           client_secret: OAuth client secret (required for refresh)
+           token_uri: Token URI for refreshing
 
         Returns:
             Google Sheets API service instance
@@ -39,12 +53,34 @@ class ExportService:
         Raises:
             RuntimeError: If credentials are not configured
         """
-        if self._sheets_service:
-            return self._sheets_service
-
+        # Note: If we have a refresh token (even if we have an existing service), 
+        # we might want to re-initialize to ensure we can refresh.
+        # But for simplicity, if we have a service initialized with user creds, reuse it?
+        # Ideally, we should check if the current service's creds match the requested ones.
+        # For now, let's just always rebuild if access_token is provided to be safe/stateless for this request scope.
+        
         try:
+            from google.oauth2.credentials import Credentials
             from google.oauth2 import service_account
             from googleapiclient.discovery import build
+
+            if access_token:
+                # If we have refresh logic components
+                if refresh_token and client_id and client_secret:
+                    creds = Credentials(
+                        token=access_token,
+                        refresh_token=refresh_token,
+                        token_uri=token_uri,
+                        client_id=client_id,
+                        client_secret=client_secret
+                    )
+                else:
+                    # Access token only (might expire)
+                    creds = Credentials(token=access_token)
+                
+                service = build('sheets', 'v4', credentials=creds)
+                logger.info("✅ Google Sheets service initialized with User Token")
+                return service
 
             if not self.google_credentials_path or not os.path.exists(self.google_credentials_path):
                 raise RuntimeError(
@@ -59,7 +95,7 @@ class ExportService:
             )
 
             self._sheets_service = build('sheets', 'v4', credentials=credentials)
-            logger.info("✅ Google Sheets service initialized")
+            logger.info("✅ Google Sheets service initialized with Service Account")
             return self._sheets_service
 
         except ImportError:
@@ -76,7 +112,11 @@ class ExportService:
         data: List[Dict[str, Any]],
         spreadsheet_id: Optional[str] = None,
         sheet_name: str = "Facebook Ads Data",
-        title: str = "Facebook Ads Analytics Export"
+        title: str = "Facebook Ads Analytics Export",
+        access_token: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None
     ) -> str:
         """
         Export data to Google Sheets.
@@ -86,28 +126,28 @@ class ExportService:
             spreadsheet_id: Optional existing spreadsheet ID
             sheet_name: Name of the sheet tab
             title: Spreadsheet title (for new spreadsheets)
+            access_token: Optional OAuth access token
+            refresh_token: Optional OAuth refresh token
+            client_id: OAuth Client ID
+            client_secret: OAuth Client Secret
 
         Returns:
             Spreadsheet URL
-
-        Example:
-            ```python
-            data = [
-                {"campaign": "Summer Sale", "spend": 1000, "clicks": 500},
-                {"campaign": "Fall Promo", "spend": 800, "clicks": 400}
-            ]
-            url = export_service.export_to_google_sheets(data)
-            ```
         """
         if not data:
             raise ValueError("No data to export")
 
-        service = self._get_sheets_service()
+        service = self._get_sheets_service(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            client_id=client_id,
+            client_secret=client_secret
+        )
 
         try:
             # Create new spreadsheet or use existing
             if not spreadsheet_id:
-                spreadsheet_id = self._create_spreadsheet(service, title)
+                spreadsheet_id = self._create_spreadsheet(service, title, sheet_name)
 
             # Prepare data for sheets
             headers = list(data[0].keys())
@@ -131,12 +171,19 @@ class ExportService:
             logger.error(f"Failed to export to Google Sheets: {e}")
             raise RuntimeError(f"Google Sheets export failed: {str(e)}")
 
-    def _create_spreadsheet(self, service, title: str) -> str:
+    def _create_spreadsheet(self, service, title: str, sheet_title: str) -> str:
         """Create a new Google Spreadsheet"""
         spreadsheet = {
             'properties': {
                 'title': title
-            }
+            },
+            'sheets': [
+                {
+                    'properties': {
+                        'title': sheet_title
+                    }
+                }
+            ]
         }
         spreadsheet = service.spreadsheets().create(
             body=spreadsheet,
@@ -156,7 +203,11 @@ class ExportService:
         range_start: str
     ):
         """Write data to a sheet range"""
-        range_name = f"{sheet_name}!{range_start}"
+        # Quote sheet name if it contains spaces
+        if " " in sheet_name:
+            range_name = f"'{sheet_name}'!{range_start}"
+        else:
+            range_name = f"{sheet_name}!{range_start}"
 
         body = {
             'values': data
