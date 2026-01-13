@@ -10,9 +10,12 @@ interface InsightsSectionProps {
   title: string;
   items?: InsightItem[];
   isRTL?: boolean;
+  onInvestigate?: (query: string) => void;
 }
 
-export default function InsightsSection({ title, items, isRTL = false }: InsightsSectionProps) {
+import { Search } from 'lucide-react';
+
+export default function InsightsSection({ title, items, isRTL = false, onInvestigate }: InsightsSectionProps) {
   if (!items || items.length === 0) {
     return null;
   }
@@ -34,18 +37,26 @@ export default function InsightsSection({ title, items, isRTL = false }: Insight
                 <p className="text-gray-200 leading-relaxed">{item.text}</p>
                 {item.priority && (
                   <span
-                    className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
-                      item.priority === 'high'
+                    className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${item.priority === 'high'
                         ? 'bg-red-900/40 text-red-300 border border-red-700'
                         : item.priority === 'medium'
-                        ? 'bg-yellow-900/40 text-yellow-300 border border-yellow-700'
-                        : 'bg-blue-900/40 text-blue-300 border border-blue-700'
-                    }`}
+                          ? 'bg-yellow-900/40 text-yellow-300 border border-yellow-700'
+                          : 'bg-blue-900/40 text-blue-300 border border-blue-700'
+                      }`}
                   >
                     {item.priority === 'high' ? '🔴 High Priority' : item.priority === 'medium' ? '🟡 Medium' : '🔵 Low'}
                   </span>
                 )}
               </div>
+              {onInvestigate && (
+                <button
+                  onClick={() => onInvestigate(`Investigate this finding: ${item.text}`)}
+                  className="p-2 text-gray-400 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                  title="Investigate with AI"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              )}
             </div>
           ))}
         </div>

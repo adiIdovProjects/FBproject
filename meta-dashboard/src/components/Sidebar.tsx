@@ -12,15 +12,25 @@ import {
     ChevronLeft,
     Sparkles,
     Zap,
+    PlusCircle,
     BarChart,
     User,
     Lightbulb,
     ChevronDown,
-    ArrowRight
+    ArrowRight,
+    Target,
+    ChevronUp,
+    Sliders,
+    Brain,
+    Upload,
+    Shield,
+    TrendingUp,
+    FileText
 } from 'lucide-react';
 import { useAccount } from '@/context/AccountContext';
 import { useLocale, useTranslations } from 'next-intl';
 import { accountsService } from '@/services/accounts.service';
+import { apiClient } from '@/services/apiClient';
 
 export const Sidebar: React.FC = () => {
     const t = useTranslations();
@@ -32,8 +42,65 @@ export const Sidebar: React.FC = () => {
     const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
     const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
     const [quizCompleted, setQuizCompleted] = React.useState<boolean | null>(null);
+    const [isAdmin, setIsAdmin] = React.useState(false);
+
+    // Section expand/collapse state - default to expanded, load from localStorage in useEffect
+    const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
+        analytics: true,
+        manage_account: true,
+        intelligence: true
+    });
+
+    // Load expanded sections from localStorage after mount (prevents hydration mismatch)
+    React.useEffect(() => {
+        const saved = localStorage.getItem('sidebar-expanded-sections');
+        if (saved) {
+            try {
+                setExpandedSections(JSON.parse(saved));
+            } catch {
+                // Keep defaults
+            }
+        }
+    }, []);
+
+    // Auto-expand section if nested item is active
+    React.useEffect(() => {
+        const analyticsRoutes = ['/account-dashboard', '/campaigns', '/targeting', '/creatives'];
+        const manageRoutes = ['/campaign-control', '/uploader'];
+        const intelligenceRoutes = ['/insights', '/reports', '/ai-investigator'];
+
+        const isAnalyticsActive = analyticsRoutes.some(route => pathname.includes(route));
+        const isManageActive = manageRoutes.some(route => pathname.includes(route));
+        const isIntelligenceActive = intelligenceRoutes.some(route => pathname.includes(route));
+
+        setExpandedSections(prev => {
+            let updated = { ...prev };
+            if (isAnalyticsActive && !prev.analytics) updated.analytics = true;
+            if (isManageActive && !prev.manage_account) updated.manage_account = true;
+            if (isIntelligenceActive && !prev.intelligence) updated.intelligence = true;
+
+            if (JSON.stringify(updated) !== JSON.stringify(prev)) {
+                localStorage.setItem('sidebar-expanded-sections', JSON.stringify(updated));
+                return updated;
+            }
+            return prev;
+        });
+    }, [pathname]);
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
+
+    // Check admin status
+    React.useEffect(() => {
+        const checkAdminStatus = async () => {
+            try {
+                const response = await apiClient.get('/api/v1/users/me');
+                setIsAdmin(response.data.is_admin === true);
+            } catch {
+                setIsAdmin(false);
+            }
+        };
+        checkAdminStatus();
+    }, []);
 
     // Check if account setup quiz is completed
     React.useEffect(() => {
@@ -57,14 +124,50 @@ export const Sidebar: React.FC = () => {
         checkQuizStatus();
     }, [selectedAccountId]);
 
-    const navItems = [
-        { name: t('nav.dashboard'), href: `/${locale}/dashboard`, icon: LayoutDashboard },
-        { name: t('nav.campaigns'), href: `/${locale}/campaigns`, icon: BarChart3 },
-        { name: t('nav.creatives'), href: `/${locale}/creatives`, icon: Palette },
-        { name: t('nav.insights'), href: `/${locale}/insights`, icon: Lightbulb },
-        { name: t('nav.reports'), href: `/${locale}/reports`, icon: BarChart },
-        { name: t('nav.ai_investigator'), href: `/${locale}/ai-investigator`, icon: Sparkles },
+    // Navigation structure with sections
+    const navStructure = [
+        {
+            type: 'section' as const,
+            id: 'analytics',
+            name: t('nav.analytics'),
+            icon: BarChart3,
+            items: [
+                { name: t('nav.account_performance'), href: `/${locale}/account-dashboard`, icon: LayoutDashboard },
+                { name: t('nav.campaigns_performance'), href: `/${locale}/campaigns`, icon: TrendingUp },
+                { name: t('nav.targeting_performance'), href: `/${locale}/targeting`, icon: Target },
+                { name: t('nav.creative_performance'), href: `/${locale}/creatives`, icon: Palette },
+            ]
+        },
+        {
+            type: 'section' as const,
+            id: 'manage_account',
+            name: t('nav.manage_account'),
+            icon: Sliders,
+            items: [
+                { name: t('nav.campaign_control'), href: `/${locale}/campaign-control`, icon: Sliders },
+                { name: t('nav.uploader'), href: `/${locale}/uploader`, icon: Upload },
+            ]
+        },
+        {
+            type: 'section' as const,
+            id: 'intelligence',
+            name: t('nav.intelligence'),
+            icon: Brain,
+            items: [
+                { name: t('nav.insights'), href: `/${locale}/insights`, icon: Lightbulb },
+                { name: t('nav.custom_reports'), href: `/${locale}/reports`, icon: FileText },
+                { name: t('nav.ai_investigator'), href: `/${locale}/ai-investigator`, icon: Sparkles },
+            ]
+        },
     ];
+
+    const toggleSection = (sectionId: string) => {
+        setExpandedSections(prev => {
+            const updated = { ...prev, [sectionId]: !prev[sectionId] };
+            localStorage.setItem('sidebar-expanded-sections', JSON.stringify(updated));
+            return updated;
+        });
+    };
 
     const secondaryItems: any[] = [];
 
@@ -152,38 +255,93 @@ export const Sidebar: React.FC = () => {
             </div>
 
             {/* Main Navigation */}
-            <nav className="flex-1 px-4 py-4 space-y-1">
+            <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
                 <div className="mb-4">
                     <p className="px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Main Menu</p>
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href;
-                        const Icon = item.icon;
+                    {navStructure.map((item, index) => {
+                        if (item.type === 'item') {
+                            const isActive = pathname === item.href;
+                            const Icon = item.icon;
 
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-accent/15 text-accent font-black shadow-sm'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                    }`}
-                            >
-                                <Icon className={`w-5 h-5 ${isActive ? 'text-accent' : 'group-hover:text-white'}`} />
-                                <span className="text-sm">{item.name}</span>
-                                {isActive && (
-                                    <div className={`ml-auto w-1.5 h-1.5 rounded-full bg-accent ${isRTL ? 'mr-auto ml-0' : 'ml-auto'}`} />
-                                )}
-                            </Link>
-                        );
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${item.highlight
+                                        ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 text-white font-semibold'
+                                        : isActive
+                                            ? 'bg-accent/15 text-accent font-black shadow-sm'
+                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                >
+                                    <Icon className={`w-5 h-5 ${item.highlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
+                                    <span className="text-sm">{item.name}</span>
+                                    {isActive && !item.highlight && (
+                                        <div className={`w-1.5 h-1.5 rounded-full bg-accent ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
+                                    )}
+                                </Link>
+                            );
+                        }
+
+                        // Section rendering
+                        if (item.type === 'section') {
+                            const isExpanded = expandedSections[item.id];
+                            const Icon = item.icon;
+                            const ChevronIcon = isExpanded ? ChevronUp : ChevronDown;
+
+                            return (
+                                <div key={item.id}>
+                                    <button
+                                        onClick={() => toggleSection(item.id)}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 group"
+                                    >
+                                        <Icon className="w-5 h-5 group-hover:text-white" />
+                                        <span className="text-sm flex-1 text-left">{item.name}</span>
+                                        <ChevronIcon className={`w-4 h-4 transition-transform duration-200 ${isRTL ? 'rotate-0' : ''}`} />
+                                    </button>
+
+                                    {isExpanded && (
+                                        <div className="mt-1 space-y-1">
+                                            {item.items.map((subItem: any) => {
+                                                const isActive = pathname === subItem.href;
+                                                const SubIcon = subItem.icon;
+                                                const isHighlight = subItem.highlight;
+
+                                                return (
+                                                    <Link
+                                                        key={subItem.href}
+                                                        href={subItem.href}
+                                                        className={`flex items-center gap-3 py-2 rounded-xl transition-all duration-200 group ${isRTL ? 'pr-12 pl-3' : 'pl-12 pr-3'} ${
+                                                            isHighlight
+                                                                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 text-white font-semibold'
+                                                                : isActive
+                                                                    ? 'bg-accent/15 text-accent font-black shadow-sm'
+                                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                                        }`}
+                                                    >
+                                                        <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
+                                                        <span className="text-sm">{subItem.name}</span>
+                                                        {isActive && !isHighlight && (
+                                                            <div className={`w-1.5 h-1.5 rounded-full bg-accent ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
+                                                        )}
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
+                        return null;
                     })}
                 </div>
             </nav>
 
             {/* Bottom Actions */}
             <div className="p-4 border-t border-border-subtle space-y-2">
-                {/* Complete Account Setup Button - Show if quiz not completed */}
-                {/* DEBUG: quizCompleted={String(quizCompleted)} */}
-                {(quizCompleted === false || quizCompleted === null) && selectedAccountId && (
+                {/* Complete Account Setup Button - Show only if quiz explicitly not completed */}
+                {quizCompleted === false && selectedAccountId && (
                     <Link
                         href={`/${locale}/account-quiz?account_id=${selectedAccountId}`}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group"
@@ -213,6 +371,17 @@ export const Sidebar: React.FC = () => {
                     <User className="w-5 h-5" />
                     <span>{t('settings.user_settings')}</span>
                 </Link>
+
+                {/* Admin Dashboard - Only visible for admins */}
+                {isAdmin && (
+                    <Link
+                        href={`/${locale}/admin`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-900/30 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-indigo-900/30 text-white' : ''}`}
+                    >
+                        <Shield className="w-5 h-5" />
+                        <span>Admin Dashboard</span>
+                    </Link>
+                )}
             </div>
         </aside>
     );

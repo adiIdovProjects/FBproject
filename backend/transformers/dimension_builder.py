@@ -83,9 +83,6 @@ def _extract_dim_action_type(df: pd.DataFrame) -> pd.DataFrame:
     df_dim = pd.DataFrame({'action_type': action_types})
     
     # Determine if conversion
-    # We import here to avoid circular dependencies if possible, or assume config availability
-    from backend.config.settings import ACTION_TYPES_TO_TRACK
-    
     # Conversion types usually include purchase, lead, etc.
     # We can infer based on the name or use the config list
     conversion_keywords = [

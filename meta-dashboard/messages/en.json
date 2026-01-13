@@ -24,17 +24,45 @@
     "unlink_only": "Unlink Only",
     "compare_periods": "Compare Periods",
     "saving": "Saving...",
-    "saved_successfully": "Saved successfully"
+    "saved_successfully": "Saved successfully",
+    "actions": "Actions",
+    "loading": "Loading..."
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "PAUSED": "Paused",
+    "ARCHIVED": "Archived",
+    "UNKNOWN": "Unknown"
   },
   "nav": {
     "dashboard": "Dashboard",
+    "performance": "Performance",
     "campaigns": "Campaigns",
+    "targeting": "Targeting",
     "creatives": "Creatives",
+    "manage": "Manage",
+    "uploader": "Uploader",
     "insights": "Insights",
     "reports": "Reports",
     "ai_investigator": "AI Investigator",
     "settings": "Settings",
-    "manage_account": "Manage Account"
+    "manage_account": "Manage Account",
+    "analytics": "Analytics",
+    "account_performance": "Account Performance",
+    "campaigns_performance": "Campaigns Performance",
+    "targeting_performance": "Targeting Performance",
+    "creative_performance": "Creative Performance",
+    "campaign_control": "Campaign Control",
+    "intelligence": "Intelligence",
+    "custom_reports": "Custom Reports"
+  },
+  "manage": {
+    "title": "Manage Campaigns",
+    "page_title": "Manage Account",
+    "subtitle": "Pause, resume, and monitor your campaigns, ad sets, and ads",
+    "daily_budget": "Daily Budget",
+    "edit_budget": "Edit budget",
+    "invalid_budget": "Please enter a valid budget amount"
   },
   "metrics": {
     "spend": "Spend",
@@ -76,6 +104,9 @@
     "search_placeholder": "Search campaigns...",
     "chart_title": "Performance Over Time",
     "table_title": "Campaigns",
+    "filter_group_name": "Campaign Filter",
+    "filter_group_status": "Status Filter",
+    "filter_group_delivery": "Delivery Filter",
     "breakdown_title": "Breakdown Analysis",
     "all_statuses": "All Statuses",
     "no_data": "No campaigns found",
@@ -137,6 +168,21 @@
     "avg_watch_time": "Avg Watch Time",
     "avg_completion": "Avg Completion"
   },
+  "targeting": {
+    "title": "Targeting Analysis",
+    "subtitle": "Analyze ad set performance with targeting insights and breakdowns",
+    "table_title": "Ad Sets",
+    "search_placeholder": "Search ad sets...",
+    "no_data": "No ad sets found",
+    "loading": "Loading ad sets...",
+    "adset_name": "Ad Set Name",
+    "targeting_type": "Targeting Type",
+    "targeting_summary": "Targeting Details",
+    "broad_targeting": "Broad Targeting",
+    "lookalike_targeting": "Lookalike Targeting",
+    "interest_targeting": "Interest Targeting",
+    "custom_audience_targeting": "Custom Audience Targeting"
+  },
   "actions": {
     "export": "Export",
     "download_excel": "Download as Excel",
@@ -150,7 +196,13 @@
     "export_to_google_sheets": "Export to Google Sheets",
     "exporting": "Exporting...",
     "select_all": "Select All",
-    "clear_all": "Clear All"
+    "clear_all": "Clear All",
+    "pause": "Pause",
+    "resume": "Resume",
+    "update_budget": "Update Budget"
+  },
+  "errors": {
+    "failed_to_update": "Failed to update. Please try again."
   },
   "date": {
     "label": "Date",
@@ -163,6 +215,8 @@
     "last_7_days": "Last 7 Days",
     "last_14_days": "Last 14 Days",
     "last_30_days": "Last 30 Days",
+    "last_60_days": "Last 60 Days",
+    "last_90_days": "Last 90 Days",
     "last_month": "Last Month",
     "this_month": "This Month",
     "today_yesterday": "Today & Yesterday",
@@ -199,6 +253,8 @@
     "overview_desc": "Strategic insights & recommendations",
     "historical_trends": "Historical Trends",
     "historical_trends_desc": "90-day trends & seasonality",
+    "campaign_analysis": "Campaign Analysis",
+    "campaign_analysis_desc": "Portfolio optimization & budget",
     "creative_analysis": "Creative Analysis",
     "creative_analysis_desc": "Themes, CTAs & patterns",
     "ad_fatigue": "Ad Fatigue",

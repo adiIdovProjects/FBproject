@@ -10,13 +10,14 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { BreakdownRow, BreakdownType, DateRange } from '../../types/campaigns.types';
 import { fetchBreakdown } from '../../services/campaigns.service';
+import { useAccount } from '../../context/AccountContext';
 
 interface CreativeBreakdownTabsProps {
   dateRange: DateRange;
   currency?: string;
   isRTL?: boolean;
   accountId?: string | null;
-  creativeId?: number | null;  // Optional: filter by specific creative
+  creativeIds?: number[] | null;  // Optional: filter by specific creatives
 }
 
 type CreativeBreakdownType = 'placement' | 'age-gender' | 'country';
@@ -37,9 +38,10 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
   currency = 'USD',
   isRTL = false,
   accountId = null,
-  creativeId = null,
+  creativeIds = null,
 }) => {
   const t = useTranslations();
+  const { hasROAS } = useAccount();
   const [activeTab, setActiveTab] = useState<CreativeBreakdownType>('placement');
   const [demographicSubTab, setDemographicSubTab] = useState<'age' | 'gender' | 'both'>('both');
   const [breakdownData, setBreakdownData] = useState<BreakdownRow[]>([]);
@@ -49,8 +51,8 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
   // Track if component has been interacted with (lazy loading)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  // Check if any row has conversion value
-  const hasConversionValue = breakdownData.some(row => (row.conversion_value || 0) > 0);
+  // Use account-level hasROAS from context (with fallback to local check)
+  const hasConversionValue = hasROAS ?? breakdownData.some(row => (row.conversion_value || 0) > 0);
 
   // Fetch breakdown data when tab changes or date range changes
   useEffect(() => {
@@ -61,8 +63,6 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
       setError(null);
 
       try {
-        // Note: fetchBreakdown from campaigns.service should be updated to support creative_id
-        // For now, we'll pass it through statusFilter as a workaround
         const data = await fetchBreakdown(
           dateRange,
           activeTab as BreakdownType,
@@ -70,7 +70,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
           [], // statusFilter
           '', // searchQuery
           accountId,
-          creativeId // Pass creative_id
+          creativeIds // Pass creative_ids array
         );
         setBreakdownData(data);
       } catch (err: any) {
@@ -82,7 +82,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
     };
 
     loadBreakdownData();
-  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, accountId, creativeId]);
+  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, accountId, creativeIds]);
 
   // Handle tab click (lazy load on first interaction)
   const handleTabClick = (tab: CreativeBreakdownType) => {

@@ -20,7 +20,7 @@ import {
     SelectItem,
     Badge
 } from '@tremor/react';
-import { Filter, Play, Image as ImageIcon, SortAsc, LayoutGrid, Search, TrendingUp } from 'lucide-react';
+import { Filter, Play, Image as ImageIcon, SortAsc, LayoutGrid, Search, TrendingUp, X } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -28,17 +28,18 @@ import Navigation from '../../../components/Navigation';
 import DateFilter from '../../../components/DateFilter';
 import CreativeCard from '../../../components/creatives/CreativeCard';
 import CreativesTable from '../../../components/creatives/CreativesTable';
-import VideoInsightsSection from '../../../components/creatives/VideoInsightsSection';
 import SkeletonMetricCard from '../../../components/dashboard/SkeletonMetricCard';
-import InsightCard from '../../../components/insights/InsightCard';
+// Output removed by refactor
+
 import TimeGranularityToggle from '../../../components/campaigns/TimeGranularityToggle';
 import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsChart';
 import CreativeComparisonModal from '../../../components/creatives/CreativeComparisonModal';
 import CreativeBreakdownTabs from '../../../components/creatives/CreativeBreakdownTabs';
 
 // Services & Types
-import { fetchCreatives, fetchVideoInsights } from '../../../services/creatives.service';
-import { fetchInsightsSummary, InsightItem } from '../../../services/insights.service';
+import { fetchCreatives } from '../../../services/creatives.service';
+// Output removed by refactor
+
 import { fetchTrendData } from '../../../services/campaigns.service';
 import { CreativeMetrics, VideoInsightsResponse, CreativeSortMetric } from '../../../types/creatives.types';
 import { DateRange, MetricType } from '../../../types/dashboard.types';
@@ -49,7 +50,7 @@ export default function CreativesPage() {
     const t = useTranslations();
     const locale = useLocale();
     const isRTL = locale === 'ar' || locale === 'he';
-    const { selectedAccountId } = useAccount(); // Use context
+    const { selectedAccountId, hasROAS } = useAccount(); // Use context
 
     // State
     const [dateRange, setDateRange] = useState<DateRange>({
@@ -59,7 +60,7 @@ export default function CreativesPage() {
 
     const [creatives, setCreatives] = useState<CreativeMetrics[]>([]);
     const [videoInsights, setVideoInsights] = useState<VideoInsightsResponse | null>(null);
-    const [insights, setInsights] = useState<InsightItem[]>([]);
+    // Insights state - removed
     const [isLoading, setIsLoading] = useState(true);
     const [sortBy, setSortBy] = useState<CreativeSortMetric>('spend');
     const [mediaFilter, setMediaFilter] = useState<'all' | 'video' | 'image'>('all');
@@ -71,6 +72,10 @@ export default function CreativesPage() {
     const [selectedCreativeIds, setSelectedCreativeIds] = useState<number[]>([]);
     const [showComparisonModal, setShowComparisonModal] = useState(false);
 
+    // Filter state
+    const [isFilterActive, setIsFilterActive] = useState(false);
+    const [filteredCreativeIds, setFilteredCreativeIds] = useState<number[]>([]);
+
     // Chart state
     const [selectedMetric, setSelectedMetric] = useState<MetricType>('spend');
     const [granularity, setGranularity] = useState<TimeGranularity>('day');
@@ -78,46 +83,47 @@ export default function CreativesPage() {
     const [isTrendLoading, setIsTrendLoading] = useState(false);
     const [currency, setCurrency] = useState<string>('USD');
 
-    // Check if any creative has conversion value
-    const hasConversionValue = creatives.some(creative => (creative.conversion_value || 0) > 0);
+    // Use account-level hasROAS from context (with fallback to local check)
+    const hasConversionValue = hasROAS ?? creatives.some(creative => (creative.conversion_value || 0) > 0);
 
-    // Calculate Image vs Video performance metrics
+    // Calculate Image, Carousel, and Video performance metrics
     const formatMetrics = useMemo(() => {
-        const imageCreatives = creatives.filter(c => !c.is_video);
-        const videoCreatives = creatives.filter(c => c.is_video);
+        // Filter creatives if filter is active
+        const creativesToAnalyze = isFilterActive && filteredCreativeIds.length > 0
+            ? creatives.filter(c => filteredCreativeIds.includes(c.creative_id))
+            : creatives;
+
+        const imageCreatives = creativesToAnalyze.filter(c => !c.is_video && !c.is_carousel);
+        const carouselCreatives = creativesToAnalyze.filter(c => c.is_carousel);
+        const videoCreatives = creativesToAnalyze.filter(c => c.is_video);
 
         const calculateMetrics = (creativesArray: CreativeMetrics[]) => {
             if (creativesArray.length === 0) {
-                return { avgROAS: 0, avgCTR: 0, avgHookRate: 0, totalSpend: 0, count: 0 };
+                return { totalSpend: 0, avgCTR: 0, avgCPC: 0, totalConversions: 0, count: 0 };
             }
 
             const totalSpend = creativesArray.reduce((sum, c) => sum + c.spend, 0);
-            const totalConversionValue = creativesArray.reduce((sum, c) => sum + (c.conversion_value || 0), 0);
             const totalClicks = creativesArray.reduce((sum, c) => sum + c.clicks, 0);
             const totalImpressions = creativesArray.reduce((sum, c) => sum + c.impressions, 0);
+            const totalConversions = creativesArray.reduce((sum, c) => sum + (c.conversions || 0), 0);
             const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-            const avgROAS = totalSpend > 0 ? totalConversionValue / totalSpend : 0;
-
-            // Video-specific metrics
-            const videosWithHookRate = creativesArray.filter(c => c.hook_rate !== null);
-            const avgHookRate = videosWithHookRate.length > 0
-                ? videosWithHookRate.reduce((sum, c) => sum + (c.hook_rate || 0), 0) / videosWithHookRate.length
-                : 0;
+            const avgCPC = totalClicks > 0 ? totalSpend / totalClicks : 0;
 
             return {
-                avgROAS,
-                avgCTR,
-                avgHookRate,
                 totalSpend,
+                avgCTR,
+                avgCPC,
+                totalConversions,
                 count: creativesArray.length
             };
         };
 
         return {
             image: calculateMetrics(imageCreatives),
+            carousel: calculateMetrics(carouselCreatives),
             video: calculateMetrics(videoCreatives)
         };
-    }, [creatives]);
+    }, [creatives, isFilterActive, filteredCreativeIds]);
 
     // Handle search debounce
     useEffect(() => {
@@ -132,21 +138,29 @@ export default function CreativesPage() {
         async function loadData() {
             setIsLoading(true);
             try {
-                const [creativesData, videoInsightsData, insightsData] = await Promise.all([
-                    fetchCreatives({
-                        dateRange,
-                        sort_by: sortBy,
-                        search_query: searchQuery,
-                        is_video: typeFilter === 'video' ? true : typeFilter === 'image' ? false : undefined,
-                        ad_status: statusFilter || undefined,
-                    }, selectedAccountId),
-                    fetchVideoInsights(dateRange, selectedAccountId),
-                    fetchInsightsSummary(dateRange, 'creatives', undefined, selectedAccountId)
-                ]);
+                // For carousel filter, we fetch all non-videos and filter on frontend
+                const isVideoParam = typeFilter === 'video' ? true :
+                    (typeFilter === 'image' || typeFilter === 'carousel') ? false : undefined;
 
-                setCreatives(creativesData);
-                setVideoInsights(videoInsightsData);
-                setInsights(insightsData);
+                const creativesData = await fetchCreatives({
+                    dateRange,
+                    sort_by: sortBy,
+                    search_query: searchQuery,
+                    is_video: isVideoParam,
+                    ad_status: statusFilter || undefined,
+                }, selectedAccountId);
+
+                // Apply frontend filtering for image vs carousel
+                let filteredData = creativesData;
+                if (typeFilter === 'image') {
+                    filteredData = creativesData.filter(c => !c.is_carousel);
+                } else if (typeFilter === 'carousel') {
+                    filteredData = creativesData.filter(c => c.is_carousel);
+                }
+
+                setCreatives(filteredData);
+                // Output removed by refactor
+
             } catch (error) {
                 console.error('[Creatives Page] Failed to load data:', error);
             } finally {
@@ -164,7 +178,12 @@ export default function CreativesPage() {
 
             setIsTrendLoading(true);
             try {
-                const data = await fetchTrendData(dateRange, granularity, selectedAccountId);
+                const data = await fetchTrendData(
+                    dateRange,
+                    granularity,
+                    selectedAccountId,
+                    isFilterActive ? filteredCreativeIds : null
+                );
                 setTrendData(data || []);
             } catch (err: any) {
                 console.error('[Creatives Page] Error fetching trend data:', err);
@@ -174,7 +193,7 @@ export default function CreativesPage() {
         };
 
         fetchTrend();
-    }, [dateRange, granularity, selectedAccountId]);
+    }, [dateRange, granularity, selectedAccountId, isFilterActive, filteredCreativeIds]);
 
     // Map trend data for chart
     const chartData = useMemo(() => {
@@ -200,7 +219,7 @@ export default function CreativesPage() {
 
     return (
         <MainLayout
-            title={t('creatives.title')}
+            title={t('nav.creative_performance')}
             description={t('creatives.subtitle')}
         >
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
@@ -238,6 +257,7 @@ export default function CreativesPage() {
                                 <option value="" className="bg-gray-900 text-white">All Types</option>
                                 <option value="video" className="bg-gray-900 text-white">Video</option>
                                 <option value="image" className="bg-gray-900 text-white">Image</option>
+                                <option value="carousel" className="bg-gray-900 text-white">Carousel</option>
                             </select>
                             <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,8 +288,37 @@ export default function CreativesPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Filter Page Button - Shows when creatives selected and filter not active */}
+                    {selectedCreativeIds.length > 0 && !isFilterActive && (
+                        <button
+                            onClick={() => {
+                                setIsFilterActive(true);
+                                setFilteredCreativeIds(selectedCreativeIds);
+                            }}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                        >
+                            <Filter className="w-4 h-4" />
+                            <span>Filter ({selectedCreativeIds.length})</span>
+                        </button>
+                    )}
+
+                    {/* Clear Filter Button - Shows when filter is active */}
+                    {isFilterActive && (
+                        <button
+                            onClick={() => {
+                                setIsFilterActive(false);
+                                setFilteredCreativeIds([]);
+                                setSelectedCreativeIds([]);
+                            }}
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                            <span>Clear Filter</span>
+                        </button>
+                    )}
+
                     {/* Compare Button - Shows when 2-5 creatives selected */}
-                    {selectedCreativeIds.length >= 2 && selectedCreativeIds.length <= 5 && (
+                    {selectedCreativeIds.length >= 2 && selectedCreativeIds.length <= 5 && !isFilterActive && (
                         <button
                             onClick={() => setShowComparisonModal(true)}
                             className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
@@ -294,86 +343,63 @@ export default function CreativesPage() {
                 </div>
             </div>
 
-            {/* Image vs Video Performance Cards */}
+            {/* Creative Type Comparison Table */}
             {!isLoading && creatives.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    {/* Image Performance Card */}
-                    <div className="card-gradient rounded-2xl border border-border-subtle p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                                    <ImageIcon className="w-5 h-5 text-blue-400" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white">Image Creatives</h3>
-                            </div>
-                            {formatMetrics.image.avgROAS > formatMetrics.video.avgROAS && (
-                                <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                    Winner
-                                </span>
-                            )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Avg ROAS</p>
-                                <p className="text-2xl font-bold text-white">{formatMetrics.image.avgROAS.toFixed(2)}x</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Avg CTR</p>
-                                <p className="text-2xl font-bold text-white">{formatMetrics.image.avgCTR.toFixed(2)}%</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Total Spend</p>
-                                <p className="text-xl font-bold text-white">${formatMetrics.image.totalSpend.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Count</p>
-                                <p className="text-xl font-bold text-white">{formatMetrics.image.count}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Video Performance Card */}
-                    <div className="card-gradient rounded-2xl border border-border-subtle p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                    <Play className="w-5 h-5 text-purple-400" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white">Video Creatives</h3>
-                            </div>
-                            {formatMetrics.video.avgROAS > formatMetrics.image.avgROAS && (
-                                <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                    Winner
-                                </span>
-                            )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Avg ROAS</p>
-                                <p className="text-2xl font-bold text-white">{formatMetrics.video.avgROAS.toFixed(2)}x</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Avg CTR</p>
-                                <p className="text-2xl font-bold text-white">{formatMetrics.video.avgCTR.toFixed(2)}%</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Avg Hook Rate</p>
-                                <p className="text-xl font-bold text-white">{formatMetrics.video.avgHookRate.toFixed(1)}%</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 mb-1">Total Spend</p>
-                                <p className="text-xl font-bold text-white">${formatMetrics.video.totalSpend.toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </div>
+                <div className="card-gradient rounded-xl border border-border-subtle overflow-hidden mb-8">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border-subtle bg-black/20">
+                                <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Spend</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CTR</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPC</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Conversions</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPA</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-subtle">
+                            {[
+                                { key: 'image', name: 'Image', data: formatMetrics.image, icon: ImageIcon, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' },
+                                { key: 'carousel', name: 'Carousel', data: formatMetrics.carousel, icon: LayoutGrid, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400' },
+                                { key: 'video', name: 'Video', data: formatMetrics.video, icon: Play, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400' },
+                            ]
+                                .sort((a, b) => b.data.totalSpend - a.data.totalSpend)
+                                .map((type) => {
+                                    const cpa = type.data.totalConversions > 0 ? type.data.totalSpend / type.data.totalConversions : 0;
+                                    return (
+                                        <tr key={type.key} className="hover:bg-white/[0.02]">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-7 h-7 rounded-lg ${type.bgClass} border ${type.borderClass} flex items-center justify-center`}>
+                                                        <type.icon className={`w-3.5 h-3.5 ${type.textClass}`} />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-white">{type.name}</span>
+                                                    <span className="text-xs text-gray-500">({type.data.count})</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">${Math.round(type.data.totalSpend).toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">{type.data.avgCTR.toFixed(2)}%</td>
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">${type.data.avgCPC.toFixed(1)}</td>
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">{type.data.totalConversions.toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">${cpa.toFixed(1)}</td>
+                                        </tr>
+                                    );
+                                })}
+                        </tbody>
+                    </table>
                 </div>
             )}
 
             {/* Creatives Table */}
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-100 mb-4">All Creatives</h2>
+                <h2 className="text-2xl font-bold text-gray-100 mb-4">
+                    {isFilterActive ? `Filtered Creatives (${filteredCreativeIds.length})` : 'All Creatives'}
+                </h2>
                 <CreativesTable
-                    creatives={creatives}
+                    creatives={isFilterActive && filteredCreativeIds.length > 0
+                        ? creatives.filter(c => filteredCreativeIds.includes(c.creative_id))
+                        : creatives
+                    }
                     isLoading={isLoading}
                     currency={currency}
                     isRTL={isRTL}
@@ -387,7 +413,14 @@ export default function CreativesPage() {
             {/* Performance Chart */}
             <div className="mb-8">
                 <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <h2 className="text-2xl font-bold text-gray-100">Performance Over Time</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-gray-100">Performance Over Time</h2>
+                        {isFilterActive && (
+                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                Filtered ({filteredCreativeIds.length} creatives)
+                            </span>
+                        )}
+                    </div>
                     <TimeGranularityToggle
                         selected={granularity}
                         onChange={setGranularity}
@@ -407,24 +440,24 @@ export default function CreativesPage() {
 
             {/* Creative Breakdown Tabs */}
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-100 mb-4">Breakdown Analysis</h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-100">Breakdown Analysis</h2>
+                    {isFilterActive && (
+                        <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            Filtered ({filteredCreativeIds.length} creatives)
+                        </span>
+                    )}
+                </div>
                 <CreativeBreakdownTabs
                     dateRange={dateRange}
                     currency={currency}
                     isRTL={isRTL}
                     accountId={selectedAccountId}
-                    creativeId={null}
+                    creativeIds={isFilterActive ? filteredCreativeIds : null}
                 />
             </div>
 
-            {/* Quick Insights */}
-            <div className="mb-8">
-                <InsightCard
-                    insights={insights}
-                    isLoading={isLoading}
-                    isRTL={isRTL}
-                />
-            </div>
+            {/* Quick Insights - Removed */}
 
             {/* Creative Comparison Modal */}
             <CreativeComparisonModal

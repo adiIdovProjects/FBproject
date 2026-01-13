@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Lightbulb, TrendingUp, Palette, AlertTriangle } from 'lucide-react';
 
 // Components
@@ -16,7 +17,8 @@ import InsightsSection from '../../../components/insights/InsightsSection';
 import PrioritizedRecommendations from '../../../components/insights/PrioritizedRecommendations';
 import HistoricalTrendsView from '../../../components/insights/HistoricalTrendsView';
 import CreativeAnalysisView from '../../../components/insights/CreativeAnalysisView';
-import AdFatigueView from '../../../components/insights/AdFatigueView';
+import CampaignAnalysisView from '../../../components/insights/CampaignAnalysisView';
+import AIChat from '../../../components/insights/AIChat';
 
 // Services & Types
 import { fetchDeepInsights, DeepInsightsResponse } from '../../../services/insights.service';
@@ -32,8 +34,11 @@ export default function InsightsPage() {
   const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar' || locale === 'he';
+  const searchParams = useSearchParams();
+  const accountId = searchParams.get('account_id') || undefined;
 
   // Tab state
+  type TabKey = 'overview' | 'campaigns' | 'trends' | 'creatives';
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
   // Initialize date range
@@ -50,6 +55,16 @@ export default function InsightsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // AI Chat State
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [initialChatQuery, setInitialChatQuery] = useState<string | undefined>(undefined);
+
+  const openChat = (query?: string) => {
+    if (query) setInitialChatQuery(query);
+    setIsChatOpen(true);
+  };
+
+
   // Fetch deep insights (for Overview tab)
   useEffect(() => {
     if (activeTab !== 'overview') return;
@@ -62,7 +77,7 @@ export default function InsightsPage() {
 
       try {
         const dateRange = { startDate, endDate };
-        const data = await fetchDeepInsights(dateRange, undefined, locale);
+        const data = await fetchDeepInsights(dateRange, accountId, locale);
         setDeepInsights(data);
       } catch (err: any) {
         console.error('[Insights Page] Error fetching insights:', err);
@@ -73,7 +88,7 @@ export default function InsightsPage() {
     };
 
     fetchData();
-  }, [startDate, endDate, activeTab]);
+  }, [startDate, endDate, activeTab, accountId]);
 
   // Handle date range change
   const handleDateRangeChange = (start: string | null, end: string | null) => {
@@ -96,16 +111,16 @@ export default function InsightsPage() {
       description: t('insights.historical_trends_desc')
     },
     {
+      key: 'campaigns' as TabKey,
+      label: t('insights.campaign_analysis'),
+      icon: TrendingUp, // Reusing TrendingUp or finding another icon
+      description: t('insights.campaign_analysis_desc')
+    },
+    {
       key: 'creatives' as TabKey,
       label: t('insights.creative_analysis'),
       icon: Palette,
       description: t('insights.creative_analysis_desc')
-    },
-    {
-      key: 'fatigue' as TabKey,
-      label: t('insights.ad_fatigue'),
-      icon: AlertTriangle,
-      description: t('insights.ad_fatigue_desc')
     }
   ];
 
@@ -206,6 +221,7 @@ export default function InsightsPage() {
                   title={t('insights.key_findings')}
                   items={deepInsights.key_findings}
                   isRTL={isRTL}
+                  onInvestigate={openChat}
                 />
 
                 {/* Performance Trends Section */}
@@ -213,12 +229,14 @@ export default function InsightsPage() {
                   title={t('insights.performance_trends')}
                   items={deepInsights.performance_trends}
                   isRTL={isRTL}
+                  onInvestigate={openChat}
                 />
 
                 {/* Strategic Recommendations Section */}
                 <PrioritizedRecommendations
                   items={deepInsights.recommendations}
                   isRTL={isRTL}
+                  onInvestigate={openChat}
                 />
 
                 {/* Opportunities Section */}
@@ -226,6 +244,7 @@ export default function InsightsPage() {
                   title={t('insights.opportunities')}
                   items={deepInsights.opportunities}
                   isRTL={isRTL}
+                  onInvestigate={openChat}
                 />
 
                 {/* Generated Timestamp */}
@@ -256,6 +275,16 @@ export default function InsightsPage() {
           />
         )}
 
+        {/* Campaign Analysis Tab */}
+        {activeTab === 'campaigns' && (
+          <CampaignAnalysisView
+            startDate={startDate}
+            endDate={endDate}
+            isRTL={isRTL}
+            accountId={accountId}
+          />
+        )}
+
         {/* Creative Analysis Tab */}
         {activeTab === 'creatives' && (
           <CreativeAnalysisView
@@ -265,15 +294,35 @@ export default function InsightsPage() {
           />
         )}
 
-        {/* Ad Fatigue Tab */}
-        {activeTab === 'fatigue' && (
-          <AdFatigueView
-            startDate={startDate}
-            endDate={endDate}
-            isRTL={isRTL}
-          />
-        )}
       </div>
-    </MainLayout>
+
+
+      {/* Floating Action Button for AI Chat */}
+      <button
+        onClick={() => openChat()}
+        className="fixed bottom-8 right-8 bg-accent hover:bg-accent/90 text-white p-4 rounded-full shadow-2xl z-30 transition-all hover:scale-105 group"
+      >
+        <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-[#131620]"></div>
+        <Lightbulb className="w-8 h-8 group-hover:rotate-12 transition-transform" />
+        <span className="sr-only">Ask AI Investigator</span>
+      </button>
+
+      {/* AI Chat Drawer */}
+      <AIChat
+        isOpen={isChatOpen}
+        onClose={() => {
+          setIsChatOpen(false);
+          setInitialChatQuery(undefined);
+        }}
+        context={{
+          startDate,
+          endDate,
+          page: 'insights',
+          accountId
+        }}
+        accountId={accountId}
+        initialQuery={initialChatQuery}
+      />
+    </MainLayout >
   );
 }

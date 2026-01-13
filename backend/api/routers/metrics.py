@@ -6,13 +6,13 @@ This module defines the FastAPI endpoints for metrics operations.
 
 from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from sqlalchemy.orm import Session
 
 
 from backend.api.dependencies import get_db, get_current_user
 from backend.api.services.metrics_service import MetricsService
-from backend.api.schemas.requests import CampaignStatus, Granularity
+from backend.api.schemas.requests import CampaignStatus, Granularity, CampaignComparisonRequest
 from backend.api.schemas.responses import (
     MetricsOverviewResponse,
     CampaignMetrics,
@@ -23,7 +23,8 @@ from backend.api.schemas.responses import (
     CountryBreakdown,
     CreativeMetrics,
     ErrorResponse,
-    AdsetBreakdown
+    AdsetBreakdown,
+    CampaignComparisonResponse
 )
 from backend.api.utils.exceptions import DatabaseError
 
@@ -151,6 +152,49 @@ def get_campaigns_comparison(
         raise DatabaseError(detail=f"Failed to get campaign comparison: {str(e)}")
 
 
+@router.post(
+    "/campaigns/compare",
+    response_model=CampaignComparisonResponse,
+    summary="Compare multiple campaigns side-by-side",
+    description="Compare 2-5 campaigns with winner highlighting"
+)
+def compare_campaigns(
+    request: CampaignComparisonRequest = Body(...),
+    account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Compare multiple campaigns side-by-side.
+
+    Accepts 2-5 campaign IDs and returns comparison data showing which campaign
+    performs best for each metric.
+    """
+    try:
+        if len(request.campaign_ids) < 2:
+            raise HTTPException(status_code=400, detail="Must provide at least 2 campaign IDs")
+        if len(request.campaign_ids) > 5:
+            raise HTTPException(status_code=400, detail="Cannot compare more than 5 campaigns")
+
+        service = MetricsService(db, user_id=current_user.id)
+        result = service.compare_campaigns(
+            campaign_ids=request.campaign_ids,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            metrics=request.metrics,
+            account_ids=[account_id] if account_id else None
+        )
+
+        if not result:
+            raise HTTPException(status_code=404, detail="No data found for the provided campaign IDs")
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to compare campaigns: {str(e)}")
+
+
 @router.get(
     "/trend",
     response_model=List[TimeSeriesDataPoint],
@@ -164,6 +208,8 @@ def get_trend(
     metrics: Optional[List[str]] = Query(None, description="Metrics to include (optional, returns all)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -182,7 +228,9 @@ def get_trend(
             granularity=granularity.value,
             metrics=metrics,
             campaign_id=campaign_id,
-            account_ids=account_ids
+            account_ids=account_ids,
+            creative_ids=creative_ids,
+            campaign_ids=campaign_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get time series: {str(e)}")
@@ -202,6 +250,8 @@ def get_age_gender_breakdown(
     campaign_status: CampaignStatus = Query(CampaignStatus.ALL, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -221,7 +271,9 @@ def get_age_gender_breakdown(
             group_by=group_by,
             campaign_status=[campaign_status.value],
             search_query=search,
-            account_ids=account_ids
+            account_ids=account_ids,
+            creative_ids=creative_ids,
+            campaign_ids=campaign_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get age/gender breakdown: {str(e)}")
@@ -240,6 +292,8 @@ def get_placement_breakdown(
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -258,7 +312,9 @@ def get_placement_breakdown(
             campaign_id=campaign_id,
             campaign_status=status,
             search_query=search,
-            account_ids=account_ids
+            account_ids=account_ids,
+            creative_ids=creative_ids,
+            campaign_ids=campaign_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get placement breakdown: {str(e)}")
@@ -277,6 +333,7 @@ def get_platform_breakdown(
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -295,7 +352,8 @@ def get_platform_breakdown(
             campaign_id=campaign_id,
             campaign_status=status,
             search_query=search,
-            account_ids=account_ids
+            account_ids=account_ids,
+            campaign_ids=campaign_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get platform breakdown: {str(e)}")
@@ -315,6 +373,8 @@ def get_country_breakdown(
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -334,7 +394,9 @@ def get_country_breakdown(
             top_n=top_n,
             campaign_status=status,
             search_query=search,
-            account_ids=account_ids
+            account_ids=account_ids,
+            creative_ids=creative_ids,
+            campaign_ids=campaign_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get country breakdown: {str(e)}")
@@ -353,6 +415,7 @@ def get_adset_breakdown(
     status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
     search: Optional[str] = Query(None, description="Search by campaign name"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -371,7 +434,8 @@ def get_adset_breakdown(
             campaign_id=campaign_id,
             campaign_status=status,
             search_query=search,
-            account_ids=account_ids
+            account_ids=account_ids,
+            campaign_ids=campaign_ids
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get adset breakdown: {str(e)}")

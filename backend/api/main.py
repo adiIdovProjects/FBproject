@@ -25,7 +25,7 @@ load_dotenv(dotenv_path=env_path)
 
 from backend.api.dependencies import get_db
 from sqlalchemy.orm import Session
-from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts
+from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts, mutations, admin
 from backend.models import create_schema
 from backend.utils.db_utils import get_db_engine
 from backend.utils.logging_utils import setup_logging, get_logger
@@ -73,7 +73,7 @@ async def log_requests(request: Request, call_next):
     logger.info(
         f"Request finished: {request.method} {request.url.path} - {response.status_code}",
         extra={
-            "request_id": request_id,
+            "request_id": request_id, 
             "status_code": response.status_code,
             "duration_ms": round(process_time * 1000, 2)
         }
@@ -110,6 +110,8 @@ app.include_router(reports.router)
 app.include_router(users.router)
 app.include_router(sync.router)
 app.include_router(accounts.router)
+app.include_router(mutations.router)
+app.include_router(admin.router)
 
 @app.get("/ping", tags=["health"])
 def ping():
@@ -176,7 +178,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "backend.api.main:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
+        port=int(os.getenv("PORT", 8002)),
         reload=settings.DEBUG,
         log_level="info"
     )

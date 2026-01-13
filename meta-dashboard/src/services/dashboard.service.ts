@@ -51,7 +51,7 @@ export async function fetchMetricTrends(
     const params: any = {
       start_date: startDate,
       end_date: endDate,
-      time_grain: time_grain
+      granularity: time_grain
     };
     if (accountId) {
       params.account_id = accountId;

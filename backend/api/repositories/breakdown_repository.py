@@ -15,7 +15,8 @@ class BreakdownRepository(BaseRepository):
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
-        creative_id: Optional[int] = None
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get age and gender breakdown metrics.
@@ -26,8 +27,9 @@ class BreakdownRepository(BaseRepository):
             campaign_filter = "AND f.campaign_id = :campaign_id"
 
         creative_filter = ""
-        if creative_id is not None:
-            creative_filter = "AND f.creative_id = :creative_id"
+        if creative_ids is not None and len(creative_ids) > 0:
+            placeholders = ', '.join([f":creative_id_{i}" for i in range(len(creative_ids))])
+            creative_filter = f"AND f.creative_id IN ({placeholders})"
 
         # Build status filter
         status_filter = ""
@@ -47,6 +49,12 @@ class BreakdownRepository(BaseRepository):
         search_filter = ""
         if search_query:
             search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
+
+        # Build campaign_ids filter
+        campaign_ids_filter = ""
+        if campaign_ids is not None and len(campaign_ids) > 0:
+            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
 
         # Always fetch both dimensions from DB
         query = text(f"""
@@ -68,6 +76,7 @@ class BreakdownRepository(BaseRepository):
                 {status_filter}
                 {account_filter}
                 {search_filter}
+                {campaign_ids_filter}
             GROUP BY a.age_group, g.gender
             ORDER BY spend DESC
         """)
@@ -80,8 +89,9 @@ class BreakdownRepository(BaseRepository):
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
 
-        if creative_id is not None:
-            params['creative_id'] = creative_id
+        if creative_ids:
+            for i, cid in enumerate(creative_ids):
+                params[f'creative_id_{i}'] = cid
 
         if search_query:
             params['search_query'] = f"%{search_query.lower()}%"
@@ -90,11 +100,16 @@ class BreakdownRepository(BaseRepository):
         if campaign_status and campaign_status != ['ALL']:
             for i, status in enumerate(campaign_status):
                 params[f'status_{i}'] = status
-                
+
         # Add account params
         if account_ids:
             for i, aid in enumerate(account_ids):
                 params[f'account_id_{i}'] = aid
+
+        # Add campaign_ids params
+        if campaign_ids:
+            for i, cid in enumerate(campaign_ids):
+                params[f'campaign_ids_{i}'] = cid
 
         results = self.db.execute(query, params).fetchall()
 
@@ -170,7 +185,8 @@ class BreakdownRepository(BaseRepository):
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
-        creative_id: Optional[int] = None
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get placement breakdown metrics.
@@ -180,8 +196,9 @@ class BreakdownRepository(BaseRepository):
             campaign_filter = "AND f.campaign_id = :campaign_id"
 
         creative_filter = ""
-        if creative_id is not None:
-            creative_filter = "AND f.creative_id = :creative_id"
+        if creative_ids is not None and len(creative_ids) > 0:
+            placeholders = ', '.join([f":creative_id_{i}" for i in range(len(creative_ids))])
+            creative_filter = f"AND f.creative_id IN ({placeholders})"
 
         # Build status filter
         status_filter = ""
@@ -202,6 +219,12 @@ class BreakdownRepository(BaseRepository):
         if search_query:
             search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
+        # Build campaign_ids filter
+        campaign_ids_filter = ""
+        if campaign_ids is not None and len(campaign_ids) > 0:
+            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
+
         query = text(f"""
             SELECT
                 p.placement_name,
@@ -219,6 +242,7 @@ class BreakdownRepository(BaseRepository):
                 {status_filter}
                 {account_filter}
                 {search_filter}
+                {campaign_ids_filter}
             GROUP BY p.placement_name
             ORDER BY spend DESC
         """)
@@ -231,8 +255,9 @@ class BreakdownRepository(BaseRepository):
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
 
-        if creative_id is not None:
-            params['creative_id'] = creative_id
+        if creative_ids:
+            for i, cid in enumerate(creative_ids):
+                params[f'creative_id_{i}'] = cid
 
         if search_query:
             params['search_query'] = f"%{search_query.lower()}%"
@@ -241,11 +266,16 @@ class BreakdownRepository(BaseRepository):
         if campaign_status and campaign_status != ['ALL']:
             for i, status in enumerate(campaign_status):
                 params[f'status_{i}'] = status
-                
+
         # Add account params
         if account_ids:
             for i, aid in enumerate(account_ids):
                 params[f'account_id_{i}'] = aid
+
+        # Add campaign_ids params
+        if campaign_ids:
+            for i, cid in enumerate(campaign_ids):
+                params[f'campaign_ids_{i}'] = cid
 
         results = self.db.execute(query, params).fetchall()
 
@@ -255,7 +285,7 @@ class BreakdownRepository(BaseRepository):
             spend = float(row.spend or 0)
             clicks = int(row.clicks or 0)
             impressions = int(row.impressions or 0)
-            
+
             # Derived metrics
             ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
             cpc = (spend / clicks) if clicks > 0 else 0.0
@@ -278,7 +308,8 @@ class BreakdownRepository(BaseRepository):
         campaign_id: Optional[int] = None,
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get platform breakdown metrics (derived from placement_name).
@@ -306,6 +337,12 @@ class BreakdownRepository(BaseRepository):
         if search_query:
             search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
+        # Build campaign_ids filter
+        campaign_ids_filter = ""
+        if campaign_ids is not None and len(campaign_ids) > 0:
+            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
+
         # Use placement_name and aggregate in Python to avoid DB-specific string functions
         query = text(f"""
             SELECT
@@ -323,6 +360,7 @@ class BreakdownRepository(BaseRepository):
                 {status_filter}
                 {account_filter}
                 {search_filter}
+                {campaign_ids_filter}
             GROUP BY p.placement_name
             ORDER BY spend DESC
         """)
@@ -342,11 +380,16 @@ class BreakdownRepository(BaseRepository):
         if campaign_status and campaign_status != ['ALL']:
             for i, status in enumerate(campaign_status):
                 params[f'status_{i}'] = status
-                
+
         # Add account params
         if account_ids:
             for i, aid in enumerate(account_ids):
                 params[f'account_id_{i}'] = aid
+
+        # Add campaign_ids params
+        if campaign_ids:
+            for i, cid in enumerate(campaign_ids):
+                params[f'campaign_ids_{i}'] = cid
 
         results = self.db.execute(query, params).fetchall()
 
@@ -404,7 +447,8 @@ class BreakdownRepository(BaseRepository):
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
-        creative_id: Optional[int] = None
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get country breakdown metrics.
@@ -414,8 +458,9 @@ class BreakdownRepository(BaseRepository):
             campaign_filter = "AND f.campaign_id = :campaign_id"
 
         creative_filter = ""
-        if creative_id is not None:
-            creative_filter = "AND f.creative_id = :creative_id"
+        if creative_ids is not None and len(creative_ids) > 0:
+            placeholders = ', '.join([f":creative_id_{i}" for i in range(len(creative_ids))])
+            creative_filter = f"AND f.creative_id IN ({placeholders})"
 
         # Build status filter
         status_filter = ""
@@ -436,6 +481,12 @@ class BreakdownRepository(BaseRepository):
         if search_query:
             search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
+        # Build campaign_ids filter
+        campaign_ids_filter = ""
+        if campaign_ids is not None and len(campaign_ids) > 0:
+            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
+
         query = text(f"""
             SELECT
                 c.country,
@@ -453,6 +504,7 @@ class BreakdownRepository(BaseRepository):
                 {status_filter.replace('c.', 'cmp.')}
                 {account_filter}
                 {search_filter.replace('c.', 'cmp.')}
+                {campaign_ids_filter}
             GROUP BY c.country
             ORDER BY spend DESC
             LIMIT :top_n
@@ -467,8 +519,9 @@ class BreakdownRepository(BaseRepository):
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
 
-        if creative_id is not None:
-            params['creative_id'] = creative_id
+        if creative_ids:
+            for i, cid in enumerate(creative_ids):
+                params[f'creative_id_{i}'] = cid
 
         if search_query:
             params['search_query'] = f"%{search_query.lower()}%"
@@ -477,11 +530,16 @@ class BreakdownRepository(BaseRepository):
         if campaign_status and campaign_status != ['ALL']:
             for i, status in enumerate(campaign_status):
                 params[f'status_{i}'] = status
-                
+
         # Add account params
         if account_ids:
             for i, aid in enumerate(account_ids):
                 params[f'account_id_{i}'] = aid
+
+        # Add campaign_ids params
+        if campaign_ids:
+            for i, cid in enumerate(campaign_ids):
+                params[f'campaign_ids_{i}'] = cid
 
         results = self.db.execute(query, params).fetchall()
 
@@ -491,7 +549,7 @@ class BreakdownRepository(BaseRepository):
             spend = float(row.spend or 0)
             clicks = int(row.clicks or 0)
             impressions = int(row.impressions or 0)
-            
+
             # Derived metrics
             ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
             cpc = (spend / clicks) if clicks > 0 else 0.0

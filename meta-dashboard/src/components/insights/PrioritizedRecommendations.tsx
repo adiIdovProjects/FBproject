@@ -10,9 +10,12 @@ import { InsightItem } from '../../services/insights.service';
 interface PrioritizedRecommendationsProps {
   items?: InsightItem[];
   isRTL?: boolean;
+  onInvestigate?: (query: string) => void;
 }
 
-export default function PrioritizedRecommendations({ items, isRTL = false }: PrioritizedRecommendationsProps) {
+import { Search } from 'lucide-react';
+
+export default function PrioritizedRecommendations({ items, isRTL = false, onInvestigate }: PrioritizedRecommendationsProps) {
   const t = useTranslations();
 
   if (!items || items.length === 0) {
@@ -42,7 +45,16 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
               {highPriority.map((item, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'flex-row'}`}>
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
-                  <p className="text-gray-200 leading-relaxed">{item.text}</p>
+                  <p className="text-gray-200 leading-relaxed max-w-full flex-1">{item.text}</p>
+                  {onInvestigate && (
+                    <button
+                      onClick={() => onInvestigate(`How do I implement this recommendation: ${item.text}`)}
+                      className="p-1.5 text-red-300/70 hover:text-red-200 hover:bg-red-500/20 rounded-lg transition-colors"
+                      title="Investigate with AI"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -60,7 +72,16 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
               {mediumPriority.map((item, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'flex-row'}`}>
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
-                  <p className="text-gray-200 leading-relaxed">{item.text}</p>
+                  <p className="text-gray-200 leading-relaxed max-w-full flex-1">{item.text}</p>
+                  {onInvestigate && (
+                    <button
+                      onClick={() => onInvestigate(`Tell me more about this recommendation: ${item.text}`)}
+                      className="p-1.5 text-yellow-300/70 hover:text-yellow-200 hover:bg-yellow-500/20 rounded-lg transition-colors"
+                      title="Investigate with AI"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -78,7 +99,16 @@ export default function PrioritizedRecommendations({ items, isRTL = false }: Pri
               {lowPriority.map((item, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'flex-row'}`}>
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
-                  <p className="text-gray-200 leading-relaxed">{item.text}</p>
+                  <p className="text-gray-200 leading-relaxed max-w-full flex-1">{item.text}</p>
+                  {onInvestigate && (
+                    <button
+                      onClick={() => onInvestigate(`How can I test this idea: ${item.text}`)}
+                      className="p-1.5 text-blue-300/70 hover:text-blue-200 hover:bg-blue-500/20 rounded-lg transition-colors"
+                      title="Investigate with AI"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

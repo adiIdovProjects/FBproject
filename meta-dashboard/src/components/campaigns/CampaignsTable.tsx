@@ -9,6 +9,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowUpDown, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { CampaignRow, SortConfig } from '../../types/campaigns.types';
+import { useAccount } from '../../context/AccountContext';
 
 interface CampaignsTableProps {
   campaigns: CampaignRow[];
@@ -16,6 +17,8 @@ interface CampaignsTableProps {
   currency?: string;
   isRTL?: boolean;
   showComparison?: boolean;
+  selectedCampaignIds?: number[];
+  onSelectionChange?: (ids: number[]) => void;
 }
 
 export const CampaignsTable: React.FC<CampaignsTableProps> = ({
@@ -24,17 +27,37 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
   currency = 'USD',
   isRTL = false,
   showComparison = false,
+  selectedCampaignIds,
+  onSelectionChange,
 }) => {
   const t = useTranslations();
+  const { hasROAS } = useAccount();
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'spend',
     direction: 'desc',
   });
 
-  // Check if any campaign has conversion value
-  const hasConversionValue = useMemo(() => {
-    return campaigns.some(campaign => (campaign.conversion_value || 0) > 0);
-  }, [campaigns]);
+  // Checkbox handlers
+  const handleCheckboxToggle = (campaignId: number) => {
+    if (!onSelectionChange) return;
+    const isSelected = selectedCampaignIds?.includes(campaignId) || false;
+    const newSelection = isSelected
+      ? (selectedCampaignIds || []).filter(id => id !== campaignId)
+      : [...(selectedCampaignIds || []), campaignId];
+    onSelectionChange(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+    if ((selectedCampaignIds || []).length === sortedCampaigns.length) {
+      onSelectionChange([]);
+    } else {
+      onSelectionChange(sortedCampaigns.map(c => c.campaign_id));
+    }
+  };
+
+  // Use account-level hasROAS from context (with fallback to local check)
+  const hasConversionValue = hasROAS ?? campaigns.some(campaign => (campaign.conversion_value || 0) > 0);
 
   // Sort campaigns
   const sortedCampaigns = useMemo(() => {
@@ -66,6 +89,12 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     return sorted;
   }, [campaigns, sortConfig]);
 
+  // Selection state
+  const allSelected = sortedCampaigns.length > 0 &&
+    (selectedCampaignIds || []).length === sortedCampaigns.length;
+  const someSelected = (selectedCampaignIds || []).length > 0 &&
+    (selectedCampaignIds || []).length < sortedCampaigns.length;
+
   // Handle column sort
   const handleSort = (key: keyof CampaignRow | 'conversion_rate') => { // Added conversion_rate alias if needed, but we can compute it
     setSortConfig((prev) => ({
@@ -81,6 +110,16 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
       currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Format currency with 1 decimal (CPC, CPA)
+  const formatCurrencyDecimal = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
     }).format(value);
   };
 
@@ -165,6 +204,23 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-black/20 border-b border-border-subtle">
+              {/* Checkbox Column */}
+              {onSelectionChange && (
+                <th className="px-4 py-5 text-left">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate = someSelected;
+                      }
+                    }}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                  />
+                </th>
+              )}
+
               {/* Campaign Name */}
               <th
                 className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
@@ -299,11 +355,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   )}
                 </>
               )}
+
             </tr>
           </thead>
 
           <tbody className="divide-y divide-white/[0.03]">
             {sortedCampaigns.map((campaign) => {
+              const isSelected = (selectedCampaignIds || []).includes(campaign.campaign_id);
+
               // Calculate Conv Rate Change
               let convRateChange = undefined;
               if (showComparison && campaign.previous_clicks && campaign.previous_conversions !== undefined) {
@@ -318,8 +377,20 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               return (
                 <tr
                   key={campaign.campaign_id}
-                  className="group hover:bg-white/[0.02] transition-colors duration-150"
+                  className={`group hover:bg-white/[0.02] transition-colors duration-150 ${isSelected ? 'bg-accent/5' : ''}`}
                 >
+                  {/* Checkbox */}
+                  {onSelectionChange && (
+                    <td className="px-4 py-5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleCheckboxToggle(campaign.campaign_id)}
+                        className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                      />
+                    </td>
+                  )}
+
                   {/* Name */}
                   <td className="px-6 py-5">
                     <div className="flex flex-col">
@@ -355,7 +426,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
 
                   {/* CPC */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                    {formatCurrency(campaign.cpc)}
+                    {formatCurrencyDecimal(campaign.cpc)}
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">
@@ -375,7 +446,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
 
                   {/* CPA */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                    {formatCurrency(campaign.cpa)}
+                    {formatCurrencyDecimal(campaign.cpa)}
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">

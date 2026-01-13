@@ -37,7 +37,7 @@ def get_age_gender_breakdown(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     group_by: str = Query('both', regex="^(age|gender|both)$", description="Group by age, gender, or both"),
-    creative_id: Optional[int] = Query(None, description="Filter by specific creative"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
     db: Session = Depends(get_db)
 ):
     """
@@ -52,7 +52,7 @@ def get_age_gender_breakdown(
             end_date=end_date,
             campaign_id=campaign_id,
             group_by=group_by,
-            creative_id=creative_id
+            creative_ids=creative_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get age/gender breakdown: {str(e)}")
@@ -68,7 +68,7 @@ def get_placement_breakdown(
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
-    creative_id: Optional[int] = Query(None, description="Filter by specific creative"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
     db: Session = Depends(get_db)
 ):
     """
@@ -82,7 +82,7 @@ def get_placement_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
-            creative_id=creative_id
+            creative_ids=creative_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get placement breakdown: {str(e)}")
@@ -99,7 +99,7 @@ def get_country_breakdown(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     top_n: int = Query(10, ge=1, le=50, description="Number of top countries to return"),
-    creative_id: Optional[int] = Query(None, description="Filter by specific creative"),
+    creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
     db: Session = Depends(get_db)
 ):
     """
@@ -114,7 +114,7 @@ def get_country_breakdown(
             end_date=end_date,
             campaign_id=campaign_id,
             top_n=top_n,
-            creative_id=creative_id
+            creative_ids=creative_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get country breakdown: {str(e)}")

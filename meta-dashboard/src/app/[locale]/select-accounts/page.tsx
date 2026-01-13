@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AccountSelector } from '@/components/connect/AccountSelector';
 import { fetchAvailableAccounts, linkAccounts, AdAccount } from '@/services/accounts.service';
+import { apiClient } from '@/services/apiClient';
 
 export default function SelectAccountsPage() {
     const router = useRouter();
@@ -13,28 +14,9 @@ export default function SelectAccountsPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Check URL params for token from OAuth callback (Facebook login flow)
-        if (typeof window !== 'undefined') {
-            const searchParams = new URLSearchParams(window.location.search);
-            const tokenFromUrl = searchParams.get('token');
-
-            if (tokenFromUrl) {
-                console.log('[Select Accounts] Token received from OAuth callback');
-                // Store token from OAuth callback
-                localStorage.setItem('token', tokenFromUrl);
-                // Also set as cookie for redundancy
-                document.cookie = `token=${tokenFromUrl}; path=/; max-age=86400; SameSite=Lax`;
-                // Clean URL (remove query params)
-                window.history.replaceState({}, '', window.location.pathname);
-            }
-        }
-
-        // Small delay to ensure token is stored before making API call
-        const timer = setTimeout(() => {
-            loadAccounts();
-        }, 100);
-
-        return () => clearTimeout(timer);
+        // Token is now handled by /callback page before redirecting here
+        // Load accounts immediately
+        loadAccounts();
     }, []);
 
     const loadAccounts = async () => {
@@ -68,8 +50,15 @@ export default function SelectAccountsPage() {
             // Show success message briefly
             console.log(`Successfully linked ${response.linked_count} accounts`);
 
-            // Redirect to quiz page where user can answer questions while data syncs
-            router.push('/en/quiz');
+            // Check if user has already completed onboarding
+            const onboardingStatus = await apiClient.get('/api/v1/auth/onboarding/status');
+            if (onboardingStatus.data.onboarding_completed) {
+                // Already completed quiz - go to dashboard
+                router.push('/en/dashboard');
+            } else {
+                // First time - go to quiz
+                router.push('/en/quiz');
+            }
         } catch (err: any) {
             console.error('Error linking accounts:', err);
             setError(err.message || 'Failed to link accounts. Please try again.');

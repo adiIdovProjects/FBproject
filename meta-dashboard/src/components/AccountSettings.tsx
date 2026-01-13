@@ -6,28 +6,24 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import {
     User,
     CreditCard,
-    Users,
     Shield,
     Save,
-    CheckCircle2,
     Crown,
-    Settings,
-    Target,
     Globe,
     Trash2,
     RefreshCw,
     Plus,
-    ExternalLink,
-    ShieldAlert
+    ShieldAlert,
+    CheckCircle,
+    Users
 } from 'lucide-react';
-import { fetchActionTypes, toggleActionConversion, fetchFunnel, saveFunnel, ActionType, FunnelStep } from '@/services/actions.service';
-import { unlinkAccount } from '@/services/accounts.service'; // Import unlink service
+import { unlinkAccount } from '@/services/accounts.service';
 
 import { useAccount } from '@/context/AccountContext'; // Import context
 import { apiClient } from '@/services/apiClient'; // Import API client
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-type TabType = 'profile' | 'billing' | 'team' | 'security' | 'integrations' | 'conversions' | 'accounts';
+type TabType = 'profile' | 'billing' | 'security' | 'accounts';
 
 export const AccountSettings: React.FC = () => {
     const t = useTranslations();
@@ -37,7 +33,7 @@ export const AccountSettings: React.FC = () => {
 
     // Initialize tab from URL or default to 'profile'
     const tabParam = searchParams.get('tab') as TabType;
-    const initialTab = (tabParam && ['profile', 'accounts', 'billing', 'team', 'security', 'integrations', 'conversions'].includes(tabParam)) ? tabParam : 'profile';
+    const initialTab = (tabParam && ['profile', 'accounts', 'billing', 'security'].includes(tabParam)) ? tabParam : 'profile';
 
     const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
@@ -45,6 +41,21 @@ export const AccountSettings: React.FC = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedAccountForDeletion, setSelectedAccountForDeletion] = useState<string | null>(null);
     const [deleteDataChecked, setDeleteDataChecked] = useState(false);
+
+    // User Profile State
+    const [userProfile, setUserProfile] = useState<{
+        email: string;
+        full_name: string;
+        job_title: string;
+        years_experience: string;
+    }>({
+        email: '',
+        full_name: '',
+        job_title: '',
+        years_experience: ''
+    });
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
     const openDeleteModal = (accountId: string) => {
         setSelectedAccountForDeletion(accountId);
@@ -79,6 +90,16 @@ export const AccountSettings: React.FC = () => {
             window.history.replaceState({}, '', newUrl.toString());
             // Optional: Success toast here
         }
+        if (searchParams.get('reconnect_success') === 'true') {
+            // Refresh accounts list after reconnect
+            refreshAccounts();
+            // Clear the param
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('reconnect_success');
+            window.history.replaceState({}, '', newUrl.toString());
+            // Show success message
+            alert('Successfully reconnected! Facebook Page information has been updated.');
+        }
         if (searchParams.get('error')) {
             alert(searchParams.get('error'));
             const newUrl = new URL(window.location.href);
@@ -86,6 +107,25 @@ export const AccountSettings: React.FC = () => {
             window.history.replaceState({}, '', newUrl.toString());
         }
     }, [searchParams, refreshAccounts]);
+
+    // Load user profile
+    useEffect(() => {
+        const loadUserProfile = async () => {
+            try {
+                const profileResponse = await apiClient.get<any>('/api/v1/users/me');
+                setUserProfile({
+                    email: profileResponse.data.email || '',
+                    full_name: profileResponse.data.full_name || '',
+                    job_title: profileResponse.data.job_title || '',
+                    years_experience: profileResponse.data.years_experience || ''
+                });
+            } catch (e) {
+                console.error("User profile fetch error", e);
+            }
+        };
+
+        loadUserProfile();
+    }, []);
 
     // Update URL when tab changes
     const handleTabChange = (tab: TabType) => {
@@ -95,104 +135,33 @@ export const AccountSettings: React.FC = () => {
         window.history.pushState({}, '', newUrl.toString());
     };
 
+    // Save user profile
+    const handleSaveProfile = async () => {
+        setIsSavingProfile(true);
+        setProfileSaveSuccess(false);
+        try {
+            await apiClient.patch('/api/v1/users/me/profile', {
+                full_name: userProfile.full_name,
+                job_title: userProfile.job_title,
+                years_experience: userProfile.years_experience,
+                referral_source: '' // Not editing this field in settings
+            });
+
+            setProfileSaveSuccess(true);
+            setTimeout(() => setProfileSaveSuccess(false), 3000);
+        } catch (error) {
+            console.error('Failed to save profile:', error);
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
+
     const tabs = [
         { id: 'profile', label: t('settings.profile'), icon: User },
-        { id: 'accounts', label: t('settings.accounts'), icon: Globe }, // New Accounts Tab
+        { id: 'accounts', label: t('settings.accounts'), icon: Globe },
         { id: 'billing', label: t('settings.billing'), icon: CreditCard },
-        { id: 'team', label: t('settings.team'), icon: Users },
         { id: 'security', label: t('settings.security'), icon: Shield },
-        { id: 'conversions', label: t('settings.conversions'), icon: Target },
-        { id: 'integrations', label: t('settings.integrations'), icon: Settings },
     ];
-
-    const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
-    const [isLoadingActions, setIsLoadingActions] = useState(false);
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState<'all' | 'active'>('all');
-    const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>([]);
-    const [isSavingFunnel, setIsSavingFunnel] = useState(false);
-
-    React.useEffect(() => {
-        if (activeTab === 'conversions') {
-            loadActionTypes();
-            loadFunnel();
-        }
-    }, [activeTab]);
-
-    const loadActionTypes = async () => {
-        setIsLoadingActions(true);
-        try {
-            const data = await fetchActionTypes();
-            setActionTypes(data);
-        } catch (error) {
-            console.error('Failed to load action types:', error);
-        } finally {
-            setIsLoadingActions(false);
-        }
-    };
-
-    const loadFunnel = async () => {
-        try {
-            const steps = await fetchFunnel();
-            setFunnelSteps(steps);
-        } catch (error) {
-            console.error('Failed to load funnel:', error);
-        }
-    };
-
-    const filteredActions = actionTypes.filter(action => {
-        const matchesSearch = action.action_type.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filterType === 'all' ? true : action.is_conversion;
-        return matchesSearch && matchesFilter;
-    });
-
-    // Funnel Handlers
-    const addFunnelStep = () => {
-        setFunnelSteps([...funnelSteps, { step_order: funnelSteps.length + 1, action_type: '' }]);
-    };
-
-    const updateFunnelStep = (index: number, actionType: string) => {
-        const newSteps = [...funnelSteps];
-        newSteps[index].action_type = actionType;
-        setFunnelSteps(newSteps);
-    };
-
-    const removeFunnelStep = (index: number) => {
-        const newSteps = funnelSteps.filter((_, i) => i !== index).map((step, i) => ({
-            ...step,
-            step_order: i + 1
-        }));
-        setFunnelSteps(newSteps);
-    };
-
-    const moveFunnelStep = (index: number, direction: number) => {
-        if (index + direction < 0 || index + direction >= funnelSteps.length) return;
-
-        const newSteps = [...funnelSteps];
-        const temp = newSteps[index];
-        newSteps[index] = newSteps[index + direction];
-        newSteps[index + direction] = temp;
-
-        // Re-index
-        const reindexed = newSteps.map((step, i) => ({ ...step, step_order: i + 1 }));
-        setFunnelSteps(reindexed);
-    };
-
-    const handleSaveFunnel = async () => {
-        setIsSavingFunnel(true);
-        try {
-            // Filter out empty steps
-            const validSteps = funnelSteps.filter(s => s.action_type);
-            await saveFunnel(validSteps);
-            // alert('Funnel saved successfully!'); // Use toast if available
-        } catch (error) {
-            console.error('Failed to save funnel:', error);
-            alert('Failed to save funnel');
-        } finally {
-            setIsSavingFunnel(false);
-        }
-    };
 
 
 
@@ -220,25 +189,6 @@ export const AccountSettings: React.FC = () => {
         }
     };
 
-    const handleToggleConversion = async (actionType: string) => {
-        const currentAction = actionTypes.find(a => a.action_type === actionType);
-        if (!currentAction) return;
-
-        const targetState = !currentAction.is_conversion;
-
-        try {
-            await toggleActionConversion(actionType, targetState);
-            // Optimistic update
-            setActionTypes(prev => prev.map(a =>
-                a.action_type === actionType ? { ...a, is_conversion: targetState } : a
-            ));
-        } catch (error) {
-            console.error('Failed to toggle conversion:', error);
-            // Revert on error
-            loadActionTypes();
-        }
-    };
-
     const renderContent = () => {
         switch (activeTab) {
             case 'accounts':
@@ -259,22 +209,38 @@ export const AccountSettings: React.FC = () => {
                                     {linkedAccounts.length > 0 ? (
                                         linkedAccounts.map((account) => (
                                             <div key={account.account_id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-4 flex-1">
                                                     <div className="w-10 h-10 rounded-full bg-[#1877F2]/20 flex items-center justify-center text-[#1877F2]">
                                                         <Globe className="w-5 h-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-bold text-white">{account.name}</p>
-                                                        <p className="text-xs text-gray-500">ID: {account.account_id} • {account.currency}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            ID: {account.account_id} • {account.currency}
+                                                            {account.page_id && <span className="ml-2 text-green-500">✓ Page Connected</span>}
+                                                            {!account.page_id && <span className="ml-2 text-yellow-500">⚠ No Page</span>}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => openDeleteModal(account.account_id)}
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold transition-all"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                    {t('settings.remove')}
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    {!account.page_id && (
+                                                        <button
+                                                            onClick={handleConnectFacebook}
+                                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 text-xs font-bold transition-all"
+                                                            title="Reconnect to fetch Page ID"
+                                                        >
+                                                            <RefreshCw className="w-4 h-4" />
+                                                            Reconnect
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => openDeleteModal(account.account_id)}
+                                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold transition-all"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                        {t('settings.remove')}
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))
                                     ) : (
@@ -300,26 +266,81 @@ export const AccountSettings: React.FC = () => {
             case 'profile':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.personal_info')}</label>
-                                <input
-                                    type="text"
-                                    placeholder={t('settings.full_name')}
-                                    defaultValue="Alex Morgen"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all"
-                                />
+                        {/* Personal Info Section */}
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-accent" />
+                                    Personal Information
+                                </h3>
+                                {profileSaveSuccess && (
+                                    <span className="text-green-400 text-sm font-bold animate-in fade-in flex items-center gap-1">
+                                        <CheckCircle className="w-4 h-4" />
+                                        Saved!
+                                    </span>
+                                )}
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.email_address')}</label>
-                                <input
-                                    type="email"
-                                    placeholder={t('settings.email_address')}
-                                    defaultValue="alex@example.com"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all"
-                                />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Username (Full Name) */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                        Username
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userProfile.full_name}
+                                        onChange={(e) => setUserProfile({ ...userProfile, full_name: e.target.value })}
+                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                        placeholder="Enter your name"
+                                    />
+                                </div>
+
+                                {/* Email (Read-only) */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={userProfile.email}
+                                        disabled
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-400 cursor-not-allowed"
+                                        placeholder="Email address"
+                                    />
+                                </div>
+
+                                {/* Job Title */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                        Job Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userProfile.job_title}
+                                        onChange={(e) => setUserProfile({ ...userProfile, job_title: e.target.value })}
+                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                        placeholder="e.g., Marketing Manager"
+                                    />
+                                </div>
+
+                                {/* Years of Experience */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                        Years of Experience
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userProfile.years_experience}
+                                        onChange={(e) => setUserProfile({ ...userProfile, years_experience: e.target.value })}
+                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                        placeholder="e.g., 3-5 years"
+                                    />
+                                </div>
                             </div>
                         </div>
+
+                        {/* Language Section */}
                         <div className="pt-6 border-t border-white/10 space-y-4">
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.language')}</label>
@@ -329,9 +350,23 @@ export const AccountSettings: React.FC = () => {
                             </div>
                         </div>
 
-                        <button className="flex items-center gap-2 bg-accent hover:bg-accent-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-accent/20">
-                            <Save className="w-4 h-4" />
-                            {t('common.save_changes')}
+                        {/* Save Button */}
+                        <button
+                            onClick={handleSaveProfile}
+                            disabled={isSavingProfile}
+                            className="flex items-center gap-2 bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold py-3 px-6 rounded-xl transition-all"
+                        >
+                            {isSavingProfile ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Save Changes
+                                </>
+                            )}
                         </button>
                     </div>
                 );
@@ -365,39 +400,6 @@ export const AccountSettings: React.FC = () => {
                         </div>
                     </div>
                 );
-            case 'team':
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-white">{t('settings.manage_team')}</h3>
-                            <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-xl transition-all text-sm border border-white/10">
-                                <Plus className="w-4 h-4" />
-                                {t('settings.invite_member')}
-                            </button>
-                        </div>
-                        <div className="space-y-2">
-                            {[
-                                { name: 'Alex Morgen', email: 'alex@example.com', role: 'Owner', status: 'Active' },
-                                { name: 'Sarah Wilson', email: 'sarah@example.com', role: 'Admin', status: 'Active' },
-                                { name: 'Mike Ross', email: 'mike@example.com', role: 'Editor', status: 'Pending' },
-                            ].map((member) => (
-                                <div key={member.email} className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
-                                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold">
-                                        {member.name[0]}
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-bold text-white">{member.name}</p>
-                                        <p className="text-xs text-gray-500">{member.email}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold text-white">{member.role}</p>
-                                        <p className={`text-[10px] font-bold uppercase ${member.status === 'Active' ? 'text-green-500' : 'text-yellow-500'}`}>{member.status}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
             case 'security':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -417,191 +419,6 @@ export const AccountSettings: React.FC = () => {
                                     <p className="text-xs text-gray-500">{t('settings.change_password_desc')} 3 months ago.</p>
                                 </div>
                                 <button className="text-xs font-bold text-accent hover:underline">{t('settings.update')}</button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 'integrations':
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-                                    <CheckCircle2 className="w-6 h-6 text-[#1877F2]" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-white">Facebook Ads</p>
-                                    <p className="text-[10px] text-green-500 font-bold uppercase">{t('settings.connected')}</p>
-                                </div>
-                                <ExternalLink className="w-4 h-4 text-gray-600" />
-                            </div>
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 opacity-50">
-                                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
-                                    <Plus className="w-6 h-6 text-gray-400" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-white">Google Ads</p>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase">{t('settings.not_connected')}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 'conversions':
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        {/* Conversion Toggles Section */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-2">{t('settings.conversion_settings')}</h3>
-                            <p className="text-sm text-gray-400 mb-6">
-                                {t('settings.conversion_settings_description')}
-                            </p>
-
-                            {/* Search and Filter */}
-                            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                                <div className="relative flex-1">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        placeholder={t('settings.search_actions') || "Search actions..."}
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:border-accent/50 transition-all text-sm"
-                                    />
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setFilterType('all')}
-                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterType === 'all' ? 'bg-white/10 text-white border border-white/20' : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        All
-                                    </button>
-                                    <button
-                                        onClick={() => setFilterType('active')}
-                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterType === 'active' ? 'bg-accent/20 text-accent border border-accent/20' : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        Active
-                                    </button>
-                                </div>
-                            </div>
-
-                            {isLoadingActions ? (
-                                <div className="flex justify-center py-8">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {filteredActions.map((action) => (
-                                        <div
-                                            key={action.action_type}
-                                            onClick={() => handleToggleConversion(action.action_type)}
-                                            className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${action.is_conversion
-                                                ? 'bg-accent/10 border-accent/30 text-white'
-                                                : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
-                                                }`}
-                                        >
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold capitalize">
-                                                    {t.has(action.action_type) ? t(action.action_type) : action.action_type.replace(/_/g, ' ')}
-                                                </span>
-                                                <span className="text-[10px] uppercase tracking-wider opacity-50">
-                                                    {action.is_conversion ? t('settings.tracking_as_conversion') : t('settings.ignored')}
-                                                </span>
-                                            </div>
-                                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${action.is_conversion
-                                                ? 'bg-accent border-accent text-white'
-                                                : 'border-white/20 group-hover:border-white/40'
-                                                }`}>
-                                                {action.is_conversion && <CheckCircle2 className="w-3 h-3" />}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {filteredActions.length === 0 && (
-                                        <div className="col-span-2 text-center py-8 text-gray-500 text-sm">
-                                            No actions found matching "{searchTerm}"
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Funnel Builder Section */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h3 className="text-lg font-bold text-white mb-2">Marketing Funnel</h3>
-                                    <p className="text-sm text-gray-400">
-                                        Define the steps of your customer journey. You can include any action, even if it's not tracked as a primary conversion.
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={handleSaveFunnel}
-                                    disabled={isSavingFunnel}
-                                    className="flex items-center gap-2 bg-accent hover:bg-accent-light text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg shadow-accent/20 disabled:opacity-50 text-sm"
-                                >
-                                    {isSavingFunnel ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Save className="w-4 h-4" />}
-                                    Save Funnel
-                                </button>
-                            </div>
-
-                            <div className="space-y-4">
-                                {funnelSteps.map((step, index) => (
-                                    <div key={index} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
-                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-gray-400">
-                                            {index + 1}
-                                        </div>
-                                        <div className="flex-1">
-                                            <select
-                                                value={step.action_type}
-                                                onChange={(e) => updateFunnelStep(index, e.target.value)}
-                                                className="w-full bg-[#1C1F26] border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent text-sm capitalize"
-                                            >
-                                                <option value="" disabled>Select an action...</option>
-                                                {/* Show ALL action types, sorted alphabetically */}
-                                                {[...actionTypes].sort((a, b) => a.action_type.localeCompare(b.action_type)).map(action => (
-                                                    <option key={action.action_type} value={action.action_type}>
-                                                        {t.has(action.action_type) ? t(action.action_type) : action.action_type.replace(/_/g, ' ')}
-                                                        {!action.is_conversion && " (Not a Conversion)"}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => moveFunnelStep(index, -1)}
-                                                disabled={index === 0}
-                                                className="p-2 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                                            >
-                                                ↑
-                                            </button>
-                                            <button
-                                                onClick={() => moveFunnelStep(index, 1)}
-                                                disabled={index === funnelSteps.length - 1}
-                                                className="p-2 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                                            >
-                                                ↓
-                                            </button>
-                                            <button
-                                                onClick={() => removeFunnelStep(index)}
-                                                className="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <button
-                                    onClick={addFunnelStep}
-                                    className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all text-sm font-bold flex items-center justify-center gap-2"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Add Funnel Step
-                                </button>
                             </div>
                         </div>
                     </div>

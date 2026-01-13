@@ -212,5 +212,6 @@ class InsightsRepository:
             context['industry'] = quiz.get('industry')
             context['priority'] = quiz.get('optimization_priority')
             context['main_conversions'] = quiz.get('primary_conversions')
+            context['business_description'] = quiz.get('business_description')
             
         return context

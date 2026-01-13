@@ -15,52 +15,73 @@ logger = logging.getLogger(__name__)
 class SmartBudgetOptimizer:
     """Advanced budget optimizer with comparative analysis and multi-dimensional insights"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, account_ids: Optional[List[int]] = None):
         self.db = db
+        self.account_ids = account_ids
+
+    def _build_account_filter(self) -> Tuple[str, Dict[str, Any]]:
+        """Build account filter SQL and params"""
+        if not self.account_ids:
+            return "", {}
+
+        placeholders = ', '.join([f':acc_id_{i}' for i in range(len(self.account_ids))])
+        filter_sql = f"AND f.account_id IN ({placeholders})"
+        params = {f'acc_id_{i}': acc_id for i, acc_id in enumerate(self.account_ids)}
+        return filter_sql, params
 
     def _has_revenue(self) -> bool:
         """Check if account has any revenue (ROAS > 0)"""
-        result = self.db.execute(text("""
+        account_filter, params = self._build_account_filter()
+
+        query_str = f"""
             SELECT EXISTS(
-                SELECT 1 FROM fact_core_metrics
-                WHERE conversions > 0
+                SELECT 1 FROM fact_core_metrics f
+                WHERE f.conversions > 0
+                {account_filter}
                 LIMIT 1
             )
-        """)).scalar()
+        """
+        result = self.db.execute(text(query_str), params).scalar()
         return result
 
     def _get_period_data(self, start_date: date, end_date: date) -> List[Dict[str, Any]]:
         """Fetch campaign data for a specific period"""
-        query = text("""
+        account_filter, filter_params = self._build_account_filter()
+
+        query = text(f"""
             SELECT
-                campaign_name,
-                SUM(spend) as spend,
-                SUM(impressions) as impressions,
-                SUM(clicks) as clicks,
-                SUM(conversions) as conversions,
-                SUM(purchase_value) as revenue,
-                SUM(purchases) as purchases,
+                c.campaign_name,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks,
+                SUM(f.conversions) as conversions,
+                SUM(f.purchase_value) as revenue,
+                SUM(f.purchases) as purchases,
                 CASE
-                    WHEN SUM(spend) > 0 AND SUM(conversions) > 0 THEN SUM(conversion_value) / SUM(spend)
+                    WHEN SUM(f.spend) > 0 AND SUM(f.conversions) > 0 THEN SUM(f.conversion_value) / SUM(f.spend)
                     ELSE NULL
                 END as roas,
                 CASE
-                    WHEN SUM(impressions) > 0 THEN (SUM(clicks)::float / SUM(impressions)) * 100
+                    WHEN SUM(f.impressions) > 0 THEN (SUM(f.clicks)::float / SUM(f.impressions)) * 100
                     ELSE 0
                 END as ctr,
                 CASE
-                    WHEN SUM(conversions) > 0 THEN SUM(spend) / SUM(conversions)
+                    WHEN SUM(f.conversions) > 0 THEN SUM(f.spend) / SUM(f.conversions)
                     ELSE 0
                 END as cpa
-            FROM fact_core_metrics
-            WHERE date_day BETWEEN :start_date AND :end_date
-                AND campaign_name IS NOT NULL
-            GROUP BY campaign_name
-            HAVING SUM(spend) > 0
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            WHERE d.date BETWEEN :start_date AND :end_date
+                AND c.campaign_name IS NOT NULL
+                {account_filter}
+            GROUP BY c.campaign_name
+            HAVING SUM(f.spend) > 0
             ORDER BY spend DESC
         """)
 
-        result = self.db.execute(query, {"start_date": start_date, "end_date": end_date})
+        params = {"start_date": start_date, "end_date": end_date, **filter_params}
+        result = self.db.execute(query, params)
 
         return [
             {
@@ -109,32 +130,37 @@ class SmartBudgetOptimizer:
 
     def _get_demographic_insights(self, start_date: date, end_date: date) -> Dict[str, Any]:
         """Analyze performance by demographics (age, gender)"""
-        query = text("""
+        account_filter, filter_params = self._build_account_filter()
+
+        query = text(f"""
             SELECT
-                age,
-                gender,
-                SUM(spend) as spend,
-                SUM(conversions) as conversions,
-                SUM(purchases) as purchases,
+                agm.age_range as age,
+                agm.gender,
+                SUM(agm.spend) as spend,
+                SUM(agm.conversions) as conversions,
+                SUM(agm.purchases) as purchases,
                 CASE
-                    WHEN SUM(spend) > 0 AND SUM(conversions) > 0 THEN SUM(conversion_value) / SUM(spend)
+                    WHEN SUM(agm.spend) > 0 AND SUM(agm.conversions) > 0 THEN SUM(agm.conversion_value) / SUM(agm.spend)
                     ELSE NULL
                 END as roas,
                 CASE
-                    WHEN SUM(impressions) > 0 THEN (SUM(clicks)::float / SUM(impressions)) * 100
+                    WHEN SUM(agm.impressions) > 0 THEN (SUM(agm.clicks)::float / SUM(agm.impressions)) * 100
                     ELSE 0
                 END as ctr
-            FROM fact_core_metrics
-            WHERE date_day BETWEEN :start_date AND :end_date
-                AND age IS NOT NULL
-                AND gender IS NOT NULL
-            GROUP BY age, gender
-            HAVING SUM(spend) > 50
+            FROM fact_age_gender_metrics agm
+            JOIN dim_date d ON agm.date_id = d.date_id
+            WHERE d.date BETWEEN :start_date AND :end_date
+                AND agm.age_range IS NOT NULL
+                AND agm.gender IS NOT NULL
+                {account_filter}
+            GROUP BY agm.age_range, agm.gender
+            HAVING SUM(agm.spend) > 50
             ORDER BY roas DESC
             LIMIT 10
         """)
 
-        result = self.db.execute(query, {"start_date": start_date, "end_date": end_date})
+        params = {"start_date": start_date, "end_date": end_date, **filter_params}
+        result = self.db.execute(query, params)
 
         demographics = []
         for row in result:
@@ -152,29 +178,35 @@ class SmartBudgetOptimizer:
 
     def _get_placement_insights(self, start_date: date, end_date: date) -> Dict[str, Any]:
         """Analyze performance by placement"""
-        query = text("""
+        account_filter, filter_params = self._build_account_filter()
+
+        query = text(f"""
             SELECT
-                placement,
-                SUM(spend) as spend,
-                SUM(conversions) as conversions,
-                SUM(purchases) as purchases,
+                p.placement_name as placement,
+                SUM(pm.spend) as spend,
+                SUM(pm.conversions) as conversions,
+                SUM(pm.purchases) as purchases,
                 CASE
-                    WHEN SUM(spend) > 0 AND SUM(conversions) > 0 THEN SUM(conversion_value) / SUM(spend)
+                    WHEN SUM(pm.spend) > 0 AND SUM(pm.conversions) > 0 THEN SUM(pm.conversion_value) / SUM(pm.spend)
                     ELSE NULL
                 END as roas,
                 CASE
-                    WHEN SUM(impressions) > 0 THEN (SUM(clicks)::float / SUM(impressions)) * 100
+                    WHEN SUM(pm.impressions) > 0 THEN (SUM(pm.clicks)::float / SUM(pm.impressions)) * 100
                     ELSE 0
                 END as ctr
-            FROM fact_core_metrics
-            WHERE date_day BETWEEN :start_date AND :end_date
-                AND placement IS NOT NULL
-            GROUP BY placement
-            HAVING SUM(spend) > 50
+            FROM fact_placement_metrics pm
+            JOIN dim_date d ON pm.date_id = d.date_id
+            JOIN dim_placement p ON pm.placement_id = p.placement_id
+            WHERE d.date BETWEEN :start_date AND :end_date
+                AND p.placement_name IS NOT NULL
+                {account_filter.replace('f.account_id', 'pm.account_id')}
+            GROUP BY p.placement_name
+            HAVING SUM(pm.spend) > 50
             ORDER BY roas DESC
         """)
 
-        result = self.db.execute(query, {"start_date": start_date, "end_date": end_date})
+        params = {"start_date": start_date, "end_date": end_date, **filter_params}
+        result = self.db.execute(query, params)
 
         placements = []
         for row in result:
@@ -191,33 +223,40 @@ class SmartBudgetOptimizer:
 
     def _get_best_creatives(self, start_date: date, end_date: date) -> List[Dict[str, Any]]:
         """Get top performing ad creatives"""
-        query = text("""
+        account_filter, filter_params = self._build_account_filter()
+
+        query = text(f"""
             SELECT
-                ad_name,
-                ad_creative_title,
-                ad_creative_body,
-                SUM(spend) as spend,
-                SUM(conversions) as conversions,
-                SUM(purchases) as purchases,
+                ad.ad_name,
+                cr.title as ad_creative_title,
+                cr.body as ad_creative_body,
+                SUM(f.spend) as spend,
+                SUM(f.conversions) as conversions,
+                SUM(f.purchases) as purchases,
                 CASE
-                    WHEN SUM(spend) > 0 AND SUM(conversions) > 0 THEN SUM(conversion_value) / SUM(spend)
+                    WHEN SUM(f.spend) > 0 AND SUM(f.conversions) > 0 THEN SUM(f.conversion_value) / SUM(f.spend)
                     ELSE NULL
                 END as roas,
                 CASE
-                    WHEN SUM(impressions) > 0 THEN (SUM(clicks)::float / SUM(impressions)) * 100
+                    WHEN SUM(f.impressions) > 0 THEN (SUM(f.clicks)::float / SUM(f.impressions)) * 100
                     ELSE 0
                 END as ctr
-            FROM fact_core_metrics
-            WHERE date_day BETWEEN :start_date AND :end_date
-                AND ad_name IS NOT NULL
-                AND conversions > 0
-            GROUP BY ad_name, ad_creative_title, ad_creative_body
-            HAVING SUM(spend) > 20
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            JOIN dim_creative cr ON f.creative_id = cr.creative_id
+            WHERE d.date BETWEEN :start_date AND :end_date
+                AND ad.ad_name IS NOT NULL
+                AND f.conversions > 0
+                {account_filter}
+            GROUP BY ad.ad_name, cr.title, cr.body
+            HAVING SUM(f.spend) > 20
             ORDER BY roas DESC
             LIMIT 5
         """)
 
-        result = self.db.execute(query, {"start_date": start_date, "end_date": end_date})
+        params = {"start_date": start_date, "end_date": end_date, **filter_params}
+        result = self.db.execute(query, params)
 
         creatives = []
         for row in result:
@@ -236,22 +275,27 @@ class SmartBudgetOptimizer:
 
     def _get_time_patterns(self, start_date: date, end_date: date) -> Dict[str, Any]:
         """Analyze performance by day of week"""
-        query = text("""
+        account_filter, filter_params = self._build_account_filter()
+
+        query = text(f"""
             SELECT
-                EXTRACT(DOW FROM date_day) as day_of_week,
+                EXTRACT(DOW FROM d.date) as day_of_week,
                 AVG(CASE
-                    WHEN spend > 0 AND conversions > 0 THEN conversion_value / spend
+                    WHEN f.spend > 0 AND f.conversions > 0 THEN f.conversion_value / f.spend
                     ELSE NULL
                 END) as avg_roas,
-                SUM(spend) as total_spend,
-                SUM(conversions) as total_conversions
-            FROM fact_core_metrics
-            WHERE date_day BETWEEN :start_date AND :end_date
+                SUM(f.spend) as total_spend,
+                SUM(f.conversions) as total_conversions
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            WHERE d.date BETWEEN :start_date AND :end_date
+                {account_filter}
             GROUP BY day_of_week
             ORDER BY avg_roas DESC
         """)
 
-        result = self.db.execute(query, {"start_date": start_date, "end_date": end_date})
+        params = {"start_date": start_date, "end_date": end_date, **filter_params}
+        result = self.db.execute(query, params)
 
         day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         patterns = []

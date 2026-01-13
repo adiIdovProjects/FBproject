@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { DollarSign, ShoppingCart, TrendingUp, Search, Filter } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, Search, Filter, X } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -19,11 +19,14 @@ import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsCha
 import TimeGranularityToggle from '../../../components/campaigns/TimeGranularityToggle';
 import CampaignsTable from '../../../components/campaigns/CampaignsTable';
 import BreakdownTabs from '../../../components/campaigns/BreakdownTabs';
-import InsightCard from '../../../components/insights/InsightCard';
+import CampaignComparisonModal from '../../../components/campaigns/CampaignComparisonModal';
+// Output removed by refactor
+
 
 // Services & Types
 import { fetchCampaignsWithComparison, fetchTrendData } from '../../../services/campaigns.service';
-import { fetchInsightsSummary, InsightItem } from '../../../services/insights.service';
+// Output removed by refactor
+
 import { CampaignRow, TimeGranularity, CampaignMetrics, DateRange } from '../../../types/campaigns.types';
 import { MetricType } from '../../../types/dashboard.types';
 import { useCallback } from 'react';
@@ -40,7 +43,7 @@ export default function CampaignsPage() {
   const locale = useLocale();
   const isRTL = locale === 'ar' || locale === 'he';
   const dir = isRTL ? 'rtl' : 'ltr';
-  const { selectedAccountId } = useAccount(); // Use context
+  const { selectedAccountId, hasROAS } = useAccount(); // Use context
 
   // Initialize date range
   const initialDates = useMemo(() => calculateDateRange(DEFAULT_DATE_RANGE_KEY), []);
@@ -70,8 +73,14 @@ export default function CampaignsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
 
+  // Selection and filtering state
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<number[]>([]);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [filteredCampaignIds, setFilteredCampaignIds] = useState<number[]>([]);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+
   // Insights state
-  const [insights, setInsights] = useState<InsightItem[]>([]);
+  // Insights state - removed
 
   // Handle search debounce
   useEffect(() => {
@@ -92,19 +101,17 @@ export default function CampaignsPage() {
       try {
         const dateRange: DateRange = { startDate, endDate };
 
-        // Fetch campaigns with comparison, overview, and insights in parallel
-        const [campaignsData, overviewData, insightsData] = await Promise.all([
+        // Fetch campaigns with comparison, overview in parallel
+        const [campaignsData, overviewData] = await Promise.all([
           fetchCampaignsWithComparison(dateRange, statusFilter, searchQuery, undefined, undefined, selectedAccountId),
           fetch(`${API_BASE_URL}/api/v1/metrics/overview?start_date=${startDate}&end_date=${endDate}${selectedAccountId ? `&account_id=${selectedAccountId}` : ''}`)
             .then(res => res.ok ? res.json() : null)
-            .catch(() => null),
-          fetchInsightsSummary(dateRange, 'campaigns', {
-            campaignFilter: searchQuery || undefined
-          }, selectedAccountId)
+            .catch(() => null)
         ]);
 
         setCampaigns(campaignsData);
-        setInsights(insightsData);
+        // Output removed by refactor
+
 
         if (overviewData?.currency) {
           setCurrency(overviewData.currency);
@@ -128,7 +135,13 @@ export default function CampaignsPage() {
       setIsTrendLoading(true);
       try {
         const dateRange: DateRange = { startDate, endDate };
-        const data = await fetchTrendData(dateRange, granularity, selectedAccountId);
+        const data = await fetchTrendData(
+          dateRange,
+          granularity,
+          selectedAccountId,
+          null, // creativeIds
+          isFilterActive ? filteredCampaignIds : null // campaignIds
+        );
         setTrendData(data || []);
       } catch (err: any) {
         console.error('[Campaigns Page] Error fetching trend data:', err);
@@ -138,11 +151,16 @@ export default function CampaignsPage() {
     };
 
     fetchTrend();
-  }, [startDate, endDate, granularity, selectedAccountId]);
+  }, [startDate, endDate, granularity, selectedAccountId, isFilterActive, filteredCampaignIds]);
 
   // Calculate aggregated metrics from campaigns
   const aggregatedMetrics: CampaignMetrics = useMemo(() => {
-    if (campaigns.length === 0) {
+    // Filter campaigns if filter is active
+    const campaignsToAnalyze = isFilterActive && filteredCampaignIds.length > 0
+      ? campaigns.filter(c => filteredCampaignIds.includes(c.campaign_id))
+      : campaigns;
+
+    if (campaignsToAnalyze.length === 0) {
       return {
         totalSpend: 0,
         totalPurchases: 0,
@@ -158,16 +176,16 @@ export default function CampaignsPage() {
     }
 
     // Sum current period
-    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0);
-    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
-    const totalConversionValue = campaigns.reduce((sum, c) => sum + (c.conversion_value || 0), 0);
+    const totalSpend = campaignsToAnalyze.reduce((sum, c) => sum + c.spend, 0);
+    const totalConversions = campaignsToAnalyze.reduce((sum, c) => sum + c.conversions, 0);
+    const totalConversionValue = campaignsToAnalyze.reduce((sum, c) => sum + (c.conversion_value || 0), 0);
     const avgRoas = totalSpend > 0 && totalConversions > 0 ? totalConversionValue / totalSpend : 0;
     const avgCpa = totalConversions > 0 ? totalSpend / totalConversions : 0;
 
     // Sum previous period
-    const previousSpend = campaigns.reduce((sum, c) => sum + (c.previous_spend || 0), 0);
-    const previousConversions = campaigns.reduce((sum, c) => sum + (c.previous_conversions || 0), 0);
-    const previousConversionValue = campaigns.reduce((sum, c) => sum + (c.previous_conversion_value || 0), 0);
+    const previousSpend = campaignsToAnalyze.reduce((sum, c) => sum + (c.previous_spend || 0), 0);
+    const previousConversions = campaignsToAnalyze.reduce((sum, c) => sum + (c.previous_conversions || 0), 0);
+    const previousConversionValue = campaignsToAnalyze.reduce((sum, c) => sum + (c.previous_conversion_value || 0), 0);
     const previousAvgRoas = previousSpend > 0 && previousConversions > 0 ? previousConversionValue / previousSpend : 0;
     const previousAvgCpa = previousConversions > 0 ? previousSpend / previousConversions : 0;
 
@@ -191,7 +209,7 @@ export default function CampaignsPage() {
       conversionsTrend: calculateTrend(totalConversions, previousConversions),
       cpaTrend: -calculateTrend(avgCpa, previousAvgCpa), // Inverse for CPA
     };
-  }, [campaigns]);
+  }, [campaigns, isFilterActive, filteredCampaignIds]);
 
   // Map trend data for chart
   const chartData = useMemo(() => {
@@ -214,7 +232,7 @@ export default function CampaignsPage() {
 
   return (
     <MainLayout
-      title={t('campaigns.title')}
+      title={t('nav.campaigns_performance')}
       description={t('campaigns.subtitle')}
     >
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
@@ -264,6 +282,45 @@ export default function CampaignsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Filter Page Button */}
+          {selectedCampaignIds.length > 0 && !isFilterActive && (
+            <button
+              onClick={() => {
+                setIsFilterActive(true);
+                setFilteredCampaignIds(selectedCampaignIds);
+              }}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filter ({selectedCampaignIds.length})</span>
+            </button>
+          )}
+
+          {/* Clear Filter Button */}
+          {isFilterActive && (
+            <button
+              onClick={() => {
+                setIsFilterActive(false);
+                setFilteredCampaignIds([]);
+                setSelectedCampaignIds([]);
+              }}
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+            >
+              <X className="w-4 h-4" />
+              <span>Clear Filter</span>
+            </button>
+          )}
+
+          {/* Compare Button */}
+          {selectedCampaignIds.length >= 2 && selectedCampaignIds.length <= 5 && !isFilterActive && (
+            <button
+              onClick={() => setShowComparisonModal(true)}
+              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+            >
+              <span>Compare ({selectedCampaignIds.length})</span>
+            </button>
+          )}
+
           {/* Comparison Toggle */}
           <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5">
             <span className="text-sm text-gray-400">{t('common.compare_periods') || 'Compare Periods'}</span>
@@ -302,20 +359,34 @@ export default function CampaignsPage() {
 
       {/* Campaigns Table (Moved to Top) */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('campaigns.table_title')}</h2>
+        <h2 className="text-2xl font-bold text-gray-100 mb-4">
+          {isFilterActive ? `Filtered Campaigns (${filteredCampaignIds.length})` : t('campaigns.table_title')}
+        </h2>
         <CampaignsTable
-          campaigns={campaigns}
+          campaigns={isFilterActive && filteredCampaignIds.length > 0
+            ? campaigns.filter(c => filteredCampaignIds.includes(c.campaign_id))
+            : campaigns
+          }
           isLoading={isLoading}
           currency={currency}
           isRTL={isRTL}
           showComparison={showComparison}
+          selectedCampaignIds={selectedCampaignIds}
+          onSelectionChange={setSelectedCampaignIds}
         />
       </div>
 
       {/* Performance Chart */}
       <div className="mb-8">
         <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-          <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.chart_title')}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.chart_title')}</h2>
+            {isFilterActive && (
+              <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                Filtered ({filteredCampaignIds.length} campaigns)
+              </span>
+            )}
+          </div>
           <TimeGranularityToggle
             selected={granularity}
             onChange={setGranularity}
@@ -343,17 +414,24 @@ export default function CampaignsPage() {
           statusFilter={statusFilter}
           searchQuery={searchQuery}
           accountId={selectedAccountId}
+          campaignIds={isFilterActive ? filteredCampaignIds : null}
         />
       </div>
 
-      {/* Quick Insights (Moved to bottom) */}
-      <div className="mb-8">
-        <InsightCard
-          insights={insights}
-          isLoading={isLoading}
-          isRTL={isRTL}
-        />
-      </div>
+      {/* Quick Insights (Removed) */}
+
+      {/* Campaign Comparison Modal */}
+      <CampaignComparisonModal
+        campaignIds={selectedCampaignIds}
+        campaigns={campaigns}
+        dateRange={{ startDate, endDate }}
+        accountId={selectedAccountId}
+        isOpen={showComparisonModal}
+        onClose={() => {
+          setShowComparisonModal(false);
+          setSelectedCampaignIds([]);
+        }}
+      />
 
     </MainLayout>
   );

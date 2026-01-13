@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/MainLayout';
-import { UserSettings } from '@/components/settings/UserSettings';
+import { AccountSettings } from '@/components/AccountSettings';
 
 export default function SettingsPage() {
     const t = useTranslations();
@@ -11,7 +11,7 @@ export default function SettingsPage() {
             title={t('nav.settings')}
             description={t('settings.user_settings')}
         >
-            <UserSettings />
+            <AccountSettings />
         </MainLayout>
     );
 }

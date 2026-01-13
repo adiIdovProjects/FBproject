@@ -44,26 +44,7 @@ async def get_current_user(
 ):
     """
     Validates JWT token and returns current user.
-    Supports dev bypass via DEV_BYPASS_AUTH environment variable.
     """
-    # Development bypass (ONLY if explicitly enabled)
-    if settings.DEV_BYPASS_AUTH:
-        print(f"DEBUG: Auth bypass active for {settings.APP_NAME}")
-        # Skip database query entirely in dev mode - just return mock user
-        class MockUser:
-            id = 1
-            email = "dev@example.com"
-            is_active = True
-            fb_user_id = None
-            fb_access_token = None
-            google_id = None
-            full_name = "Dev User"
-            created_at = None
-        return MockUser()
-
-    print(f"DEBUG: Auth bypass NOT active. DEV_BYPASS_AUTH={settings.DEV_BYPASS_AUTH}")
-
-    # Production authentication flow
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -83,8 +64,7 @@ async def get_current_user(
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-    except JWTError as e:
-        print(f"JWT validation error: {e}")
+    except JWTError:
         raise credentials_exception
 
     # Fetch user from database
@@ -94,6 +74,19 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+
+async def get_current_admin(current_user=Depends(get_current_user)):
+    """
+    Validates that the current user is an admin.
+    Use this dependency for admin-only endpoints.
+    """
+    if not getattr(current_user, 'is_admin', False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
 
 
 async def get_current_user_optional(token: str = None, db: Session = Depends(get_db)):

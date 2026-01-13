@@ -14,11 +14,26 @@ class AccountRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def has_purchase_value(self, account_id: int) -> bool:
+        """
+        Check if account has any purchase conversion value > 0.
+        Used to determine if ROAS should be displayed for this account.
+        """
+        query = text("""
+            SELECT EXISTS(
+                SELECT 1 FROM fact_core_metrics
+                WHERE account_id = :account_id AND purchase_value > 0
+                LIMIT 1
+            )
+        """)
+        result = self.db.execute(query, {"account_id": account_id}).scalar()
+        return bool(result)
+
     def get_conversion_types(self, account_id: int) -> Dict[str, any]:
         """
         Get list of conversion types that have data for this account.
         Queries fact_core_metrics (fast, denormalized, no joins).
-        Returns dict with conversion_types list and is_syncing flag.
+        Returns dict with conversion_types list, is_syncing flag, and has_purchase_value.
         """
         # Query fact_core_metrics for conversions with data > 0
         # This is much faster than querying fact_action_metrics with joins
@@ -26,7 +41,8 @@ class AccountRepository:
             SELECT
                 CASE WHEN SUM(purchases) > 0 THEN 'purchase' ELSE NULL END as purchase,
                 CASE WHEN SUM(leads) > 0 THEN 'lead' ELSE NULL END as lead,
-                CASE WHEN SUM(add_to_cart) > 0 THEN 'add_to_cart' ELSE NULL END as add_to_cart
+                CASE WHEN SUM(add_to_cart) > 0 THEN 'add_to_cart' ELSE NULL END as add_to_cart,
+                CASE WHEN SUM(purchase_value) > 0 THEN TRUE ELSE FALSE END as has_purchase_value
             FROM fact_core_metrics
             WHERE account_id = :account_id
         """)
@@ -35,7 +51,7 @@ class AccountRepository:
 
         if not result:
             # No data yet - account is still syncing
-            return {"conversion_types": [], "is_syncing": True}
+            return {"conversion_types": [], "is_syncing": True, "has_purchase_value": False}
 
         # Extract non-null conversion types
         conversion_types = [
@@ -51,7 +67,8 @@ class AccountRepository:
 
         return {
             "conversion_types": conversion_types,
-            "is_syncing": is_syncing
+            "is_syncing": is_syncing,
+            "has_purchase_value": bool(result.has_purchase_value)
         }
 
     def save_account_quiz(
@@ -61,7 +78,8 @@ class AccountRepository:
         primary_goal_other: Optional[str],
         primary_conversions: List[str],
         industry: str,
-        optimization_priority: str
+        optimization_priority: str,
+        business_description: Optional[str] = None
     ) -> AccountQuizResponses:
         """
         Save or update account quiz responses.
@@ -82,6 +100,7 @@ class AccountRepository:
             existing.primary_conversions = conversions_json
             existing.industry = industry
             existing.optimization_priority = optimization_priority
+            existing.business_description = business_description
             self.db.commit()
             self.db.refresh(existing)
             return existing
@@ -93,7 +112,8 @@ class AccountRepository:
                 primary_goal_other=primary_goal_other,
                 primary_conversions=conversions_json,
                 industry=industry,
-                optimization_priority=optimization_priority
+                optimization_priority=optimization_priority,
+                business_description=business_description
             )
             self.db.add(quiz_response)
             self.db.commit()
@@ -122,6 +142,7 @@ class AccountRepository:
             "primary_conversions": conversions,
             "industry": quiz.industry,
             "optimization_priority": quiz.optimization_priority,
+            "business_description": quiz.business_description,
             "created_at": quiz.created_at,
             "updated_at": quiz.updated_at
         }

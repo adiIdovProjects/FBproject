@@ -411,14 +411,50 @@ class FacebookExtractor:
     def _process_creative_data(self, data: Dict) -> Dict:
         """Special processing for creatives"""
         cid_str = str(data.get('id', ''))
+        
+        # Carousel Detection Logic
+        is_carousel = False
+        
+        # method 1: object_story_spec.link_data.child_attachments
+        oss = data.get('object_story_spec')
+        if oss and isinstance(oss, dict):
+            link_data = oss.get('link_data')
+            if link_data and isinstance(link_data, dict):
+                child_attachments = link_data.get('child_attachments')
+                if child_attachments and isinstance(child_attachments, list) and len(child_attachments) > 1:
+                    is_carousel = True
+        
+        # method 2: asset_feed_spec (dynamic creative)
+        afs = data.get('asset_feed_spec')
+        if afs and isinstance(afs, dict):
+            # If we see multiple images/videos in ad_formats or just implicit
+            pass
+
+        # Image URL Extraction - Robust Fallback
+        image_url = data.get('image_url') or data.get('thumbnail_url')
+        
+        if not image_url and oss and isinstance(oss, dict):
+             # Try link_data picture (standard single image ad)
+             link_data = oss.get('link_data')
+             if link_data and isinstance(link_data, dict):
+                 image_url = link_data.get('picture')
+                 
+                 # If carousel (and main picture is missing), try first child
+                 if not image_url and is_carousel and link_data.get('child_attachments'):
+                      try:
+                          image_url = link_data['child_attachments'][0].get('picture')
+                      except: 
+                          pass
+
         result = {
             'id': cid_str,
             'title': data.get('title', '')[:255],
             'body': data.get('body', '')[:500],
             'call_to_action_type': data.get('call_to_action_type'),
-            'image_url': data.get('image_url') or data.get('thumbnail_url'),
+            'image_url': image_url,
             'video_id': data.get('video_id'),
             'is_video': bool(data.get('video_id')),
+            'is_carousel': is_carousel,
             'asset_feed_spec': data.get('asset_feed_spec'),
             'object_story_spec': data.get('object_story_spec'),
         }
@@ -435,6 +471,7 @@ class FacebookExtractor:
                 video_data = oss.get('video_data')
                 if video_data and isinstance(video_data, dict):
                     result['video_id'] = video_data.get('video_id')
+        
         
         # Video Cache Logic
         if result['video_id']:

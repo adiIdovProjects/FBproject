@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from './apiClient';
-import { CampaignRow, BreakdownRow, TimeGranularity, BreakdownType, DateRange } from '../types/campaigns.types';
+import { CampaignRow, BreakdownRow, TimeGranularity, BreakdownType, DateRange, CampaignComparisonResponse } from '../types/campaigns.types';
 
 /**
  * Fetch campaigns for a specific date range
@@ -85,17 +85,35 @@ export async function fetchCampaignsWithComparison(
 export async function fetchTrendData(
   dateRange: DateRange,
   granularity: TimeGranularity = 'day',
-  accountId?: string | null
+  accountId?: string | null,
+  creativeIds?: number[] | null,
+  campaignIds?: number[] | null
 ): Promise<any[]> {
   const { startDate, endDate } = dateRange;
   try {
+    const params: any = {
+      start_date: startDate,
+      end_date: endDate,
+      granularity,
+    };
+
+    if (accountId) {
+      params.account_id = accountId;
+    }
+
+    if (creativeIds && creativeIds.length > 0) {
+      params.creative_ids = creativeIds;
+    }
+
+    if (campaignIds && campaignIds.length > 0) {
+      params.campaign_ids = campaignIds;
+    }
+
     const response = await apiClient.get<any[]>('/api/v1/metrics/trend', {
-      params: {
-        start_date: startDate,
-        end_date: endDate,
-        granularity,
-        account_id: accountId
-      },
+      params,
+      paramsSerializer: {
+        indexes: null // Correct for FastAPI repeated params
+      }
     });
     return response.data;
   } catch (error) {
@@ -114,7 +132,8 @@ export async function fetchBreakdown(
   status: string[] = [],
   searchQuery: string = '',
   accountId?: string | null,
-  creativeId?: number | null
+  creativeIds?: number[] | null,
+  campaignIds?: number[] | null
 ): Promise<BreakdownRow[]> {
   const { startDate, endDate } = dateRange;
 
@@ -150,8 +169,12 @@ export async function fetchBreakdown(
     params.account_id = accountId;
   }
 
-  if (creativeId) {
-    params.creative_id = creativeId;
+  if (creativeIds && creativeIds.length > 0) {
+    params.creative_ids = creativeIds;
+  }
+
+  if (campaignIds && campaignIds.length > 0) {
+    params.campaign_ids = campaignIds;
   }
 
   try {
@@ -235,6 +258,38 @@ export async function exportToExcel(dateRange: DateRange): Promise<Blob> {
     return response.data;
   } catch (error) {
     console.error('[Campaigns Service] Error exporting to Excel:', error);
+    throw error;
+  }
+}
+
+/**
+ * Compare multiple campaigns side-by-side
+ */
+export async function fetchCampaignComparison(
+  campaignIds: number[],
+  dateRange: DateRange,
+  accountId?: string | null
+): Promise<CampaignComparisonResponse> {
+  const { startDate, endDate } = dateRange;
+
+  try {
+    const response = await apiClient.post<CampaignComparisonResponse>(
+      '/api/v1/metrics/campaigns/compare',
+      {
+        campaign_ids: campaignIds,
+        start_date: startDate,
+        end_date: endDate,
+        metrics: ['spend', 'roas', 'ctr', 'cpc', 'conversions', 'cpa']
+      },
+      {
+        params: {
+          account_id: accountId
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('[Campaigns Service] Error comparing campaigns:', error);
     throw error;
   }
 }

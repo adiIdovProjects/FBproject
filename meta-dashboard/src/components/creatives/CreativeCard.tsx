@@ -23,6 +23,32 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
         }).format(val);
     };
 
+    const getStatusColor = (status: string): "emerald" | "yellow" | "gray" => {
+        switch (status?.toUpperCase()) {
+            case 'ACTIVE': return 'emerald';
+            case 'PAUSED': return 'yellow';
+            case 'ARCHIVED': return 'gray';
+            default: return 'gray';
+        }
+    };
+
+    const getStatusTranslationKey = (status: string): string => {
+        return `status.${status}`;
+    };
+
+    const getStatusClassName = (status: string): string => {
+        switch (status?.toUpperCase()) {
+            case 'ACTIVE':
+                return 'bg-emerald-500/20 text-emerald-400';
+            case 'PAUSED':
+                return 'bg-yellow-500/20 text-yellow-400';
+            case 'ARCHIVED':
+                return 'bg-gray-500/20 text-gray-400';
+            default:
+                return 'bg-gray-500/20 text-gray-400';
+        }
+    };
+
     const handleMediaClick = () => {
         if (creative.video_url) {
             window.open(creative.video_url, '_blank');
@@ -49,10 +75,19 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                 )}
 
                 {/* Status Badge */}
-                <div className="absolute top-3 left-3">
-                    <Badge size="xs" color="emerald" className="bg-emerald-500/20 text-emerald-400 border-none px-2 py-0.5 rounded-md font-medium">
-                        {t('common.all_statuses')}
+                <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge
+                        size="xs"
+                        color={getStatusColor(creative.effective_status)}
+                        className={`${getStatusClassName(creative.effective_status)} border-none px-2 py-0.5 rounded-md font-medium`}
+                    >
+                        {t(getStatusTranslationKey(creative.effective_status))}
                     </Badge>
+                    {creative.is_carousel && (
+                        <Badge size="xs" color="purple" className="bg-purple-500/20 text-purple-400 border-none px-2 py-0.5 rounded-md font-medium">
+                            Carousel
+                        </Badge>
+                    )}
                 </div>
 
                 {/* Video Duration Badge */}

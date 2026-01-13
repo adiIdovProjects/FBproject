@@ -8,6 +8,7 @@ export interface AdAccount {
   account_id: string;
   name: string;
   currency: string;
+  page_id?: string;  // Default Facebook Page ID for this account
 }
 
 export const fetchLinkedAccounts = async (): Promise<AdAccount[]> => {
@@ -55,6 +56,7 @@ export interface AccountQuizData {
 export interface ConversionTypesResponse {
   conversion_types: string[];
   is_syncing: boolean;
+  has_purchase_value: boolean;
 }
 
 export interface QuizResponse {

@@ -66,6 +66,7 @@ class CreativeRepository(BaseRepository):
                 cr.title,
                 cr.body,
                 cr.is_video,
+                COALESCE(cr.is_carousel, FALSE) as is_carousel,
                 cr.video_length_seconds,
                 cr.image_url,
                 cr.video_url,
@@ -83,11 +84,26 @@ class CreativeRepository(BaseRepository):
                 SUM(f.video_p100_watched) as video_p100_watched,
                 CASE WHEN SUM(f.video_plays) > 0
                      THEN SUM(f.video_avg_time_watched * f.video_plays) / SUM(f.video_plays)
-                     ELSE 0 END as video_avg_time_watched
+                     ELSE 0 END as video_avg_time_watched,
+                ad.ad_status,
+                adset.adset_status,
+                campaign.campaign_status,
+                CASE
+                    WHEN ad.ad_status = 'ACTIVE'
+                        AND adset.adset_status = 'ACTIVE'
+                        AND campaign.campaign_status = 'ACTIVE'
+                    THEN 'ACTIVE'
+                    WHEN campaign.campaign_status = 'PAUSED' THEN 'PAUSED'
+                    WHEN adset.adset_status = 'PAUSED' THEN 'PAUSED'
+                    WHEN ad.ad_status = 'PAUSED' THEN 'PAUSED'
+                    ELSE COALESCE(ad.ad_status, 'UNKNOWN')
+                END as effective_status
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
             JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            JOIN dim_adset adset ON ad.adset_id = adset.adset_id
+            JOIN dim_campaign campaign ON adset.campaign_id = campaign.campaign_id
             LEFT JOIN (
                 SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
                        SUM(action_count) as action_count,
@@ -108,8 +124,9 @@ class CreativeRepository(BaseRepository):
                 {search_filter}
                 {status_filter}
                 {account_filter}
-            GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video,
-                     cr.video_length_seconds, cr.image_url, cr.video_url
+            GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video, cr.is_carousel,
+                     cr.video_length_seconds, cr.image_url, cr.video_url,
+                     ad.ad_status, adset.adset_status, campaign.campaign_status
             HAVING SUM(f.spend) >= :min_spend
             ORDER BY spend DESC
         """)
@@ -123,6 +140,7 @@ class CreativeRepository(BaseRepository):
                 'title': str(row.title) if row.title else None,
                 'body': str(row.body) if row.body else None,
                 'is_video': bool(row.is_video),
+                'is_carousel': bool(row.is_carousel) if hasattr(row, 'is_carousel') else False,
                 'video_length_seconds': int(row.video_length_seconds) if row.video_length_seconds else None,
                 'image_url': str(row.image_url) if row.image_url else None,
                 'video_url': str(row.video_url) if row.video_url else None,
@@ -138,7 +156,11 @@ class CreativeRepository(BaseRepository):
                 'video_p50_watched': int(row.video_p50_watched or 0),
                 'video_p75_watched': int(row.video_p75_watched or 0),
                 'video_p100_watched': int(row.video_p100_watched or 0),
-                'video_avg_time_watched': float(row.video_avg_time_watched or 0)
+                'video_avg_time_watched': float(row.video_avg_time_watched or 0),
+                'ad_status': str(row.ad_status) if row.ad_status else None,
+                'adset_status': str(row.adset_status) if row.adset_status else None,
+                'campaign_status': str(row.campaign_status) if row.campaign_status else None,
+                'effective_status': str(row.effective_status)
             })
 
         return creatives
@@ -160,6 +182,7 @@ class CreativeRepository(BaseRepository):
                 cr.title,
                 cr.body,
                 cr.is_video,
+                COALESCE(cr.is_carousel, FALSE) as is_carousel,
                 cr.video_length_seconds,
                 cr.image_url,
                 cr.video_url,
@@ -198,7 +221,7 @@ class CreativeRepository(BaseRepository):
                 AND d.date >= :start_date
                 AND d.date <= :end_date
                 {account_filter}
-            GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video,
+            GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video, cr.is_carousel,
                      cr.video_length_seconds, cr.image_url, cr.video_url,
                      cr.call_to_action_type
         """)
@@ -275,6 +298,7 @@ class CreativeRepository(BaseRepository):
             'title': str(result.title) if result.title else None,
             'body': str(result.body) if result.body else None,
             'is_video': bool(result.is_video),
+            'is_carousel': bool(result.is_carousel) if hasattr(result, 'is_carousel') else False,
             'video_length_seconds': int(result.video_length_seconds) if result.video_length_seconds else None,
             'image_url': str(result.image_url) if result.image_url else None,
             'video_url': str(result.video_url) if result.video_url else None,

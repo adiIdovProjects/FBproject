@@ -123,10 +123,6 @@ export default function UserProfileQuizPage() {
         router.push('/en/dashboard');
     };
 
-    const handleSkip = () => {
-        router.push('/en/dashboard');
-    };
-
     const progressPercent = ((currentQuestion + 1) / 4) * 100;
 
     const renderQuestion = () => {
@@ -390,18 +386,6 @@ export default function UserProfileQuizPage() {
                         </div>
                     )}
                 </div>
-
-                {/* Skip Option */}
-                {!isCompleted && (
-                    <div className="text-center mt-6">
-                        <button
-                            onClick={handleSkip}
-                            className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
-                        >
-                            Skip for now →
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );

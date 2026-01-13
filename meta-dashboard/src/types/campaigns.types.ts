@@ -55,6 +55,7 @@ export interface BreakdownRow {
   lead_website?: number;
   lead_form?: number;
   adset_id?: number;
+  adset_status?: string;
   targeting_type?: string;
   targeting_summary?: string;
 }
@@ -95,4 +96,64 @@ export interface SortConfig {
 export interface DateRange {
   startDate: string;
   endDate: string;
+}
+
+// Campaign comparison response from API
+export interface CampaignComparisonResponse {
+  campaign_ids: number[];
+  comparisons: ComparisonMetric[];
+}
+
+// Comparison metric with winner information
+export interface ComparisonMetric {
+  metric_name: string;
+  values: Record<number, number>;  // campaign_id -> value
+  winner_id: number | null;
+}
+
+// --- Hierarchy Types for Manage Page ---
+
+// Campaign for hierarchy view
+export interface HierarchyCampaign {
+  campaign_id: number;
+  campaign_name: string;
+  campaign_status: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  conversions: number;
+  cpa: number;
+  conv_rate: number;
+}
+
+// Ad Set for hierarchy view
+export interface HierarchyAdSet {
+  adset_id: number;
+  adset_name: string;
+  adset_status: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  conversions: number;
+  cpa: number;
+  conv_rate: number;
+}
+
+// Ad for hierarchy view
+export interface HierarchyAd {
+  ad_id: number;
+  ad_name: string;
+  ad_status: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  conversions: number;
+  cpa: number;
+  conv_rate: number;
 }

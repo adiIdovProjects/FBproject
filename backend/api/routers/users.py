@@ -15,7 +15,10 @@ class UserProfileResponse(BaseModel):
     full_name: Optional[str] = None
     facebook_id: Optional[str] = None  # Note: frontend expects this field name
     google_id: Optional[str] = None
+    job_title: Optional[str] = None
+    years_experience: Optional[str] = None
     is_active: bool = True
+    is_admin: bool = False
     created_at: Optional[datetime] = None
 
     class Config:
@@ -33,7 +36,10 @@ async def get_current_user_profile(current_user=Depends(get_current_user)):
         "full_name": current_user.full_name if hasattr(current_user, 'full_name') else None,
         "facebook_id": current_user.fb_user_id if hasattr(current_user, 'fb_user_id') else None,  # Map schema field to frontend expectation
         "google_id": current_user.google_id if hasattr(current_user, 'google_id') else None,
+        "job_title": current_user.job_title if hasattr(current_user, 'job_title') else None,
+        "years_experience": current_user.years_experience if hasattr(current_user, 'years_experience') else None,
         "is_active": getattr(current_user, 'is_active', True),
+        "is_admin": getattr(current_user, 'is_admin', False),
         "created_at": current_user.created_at if hasattr(current_user, 'created_at') else None
     }
 
@@ -41,6 +47,8 @@ class LinkedAccountResponse(BaseModel):
     account_id: str
     name: str
     currency: str
+    page_id: str | None = None
+    page_name: str | None = None
 
 @router.get("/me/accounts", response_model=list[LinkedAccountResponse])
 async def get_my_accounts(
@@ -57,11 +65,15 @@ async def get_my_accounts(
         # UserAdAccount has .account relationship to DimAccount
         account_name = user_acc.account.account_name if user_acc.account else f"Account {user_acc.account_id}"
         currency = user_acc.account.currency if user_acc.account else "USD"
-        
+        page_id = user_acc.page_id if hasattr(user_acc, 'page_id') else None
+        page_name = user_acc.page_name if hasattr(user_acc, 'page_name') else None
+
         files.append({
             "account_id": str(user_acc.account_id), # Convert BigInt to string for frontend safety
             "name": account_name,
-            "currency": currency
+            "currency": currency,
+            "page_id": page_id,
+            "page_name": page_name
         })
     return files
 
@@ -77,37 +89,28 @@ async def unlink_account(
     If delete_data is True, permanently removes all imported data for this account.
     """
     from backend.models.user_schema import UserAdAccount
-    
+
     # Check if link exists
     link = db.query(UserAdAccount).filter(
         UserAdAccount.user_id == current_user.id,
         UserAdAccount.account_id == int(account_id)
     ).first()
-    
-    if link:
-        # 1. Unlink first (prevent access)
-        db.delete(link)
-        db.commit()
-        
-        # 2. Cleanup data if requested
-        if delete_data:
-            from backend.api.services.cleanup_service import CleanupService
-            cleanup = CleanupService(db)
-            # Find if any other users are linked to this account?
-            # ideally we only delete if NO other users are linked, 
-            # OR we decide that this user "owns" the data import.
-            # For now, let's assume if they ask to delete, we delete.
-            # But safer check:
-            other_links = db.query(UserAdAccount).filter(UserAdAccount.account_id == int(account_id)).count()
-            if other_links == 0:
-                cleanup.delete_account_data(int(account_id))
-                return {"success": True, "message": "Account unlinked and data permanently deleted"}
-            else:
-                 return {"success": True, "message": "Account unlinked, but data preserved (other users have access)"}
 
-        return {"success": True, "message": "Account unlinked successfully"}
+    if not link:
+        return {"success": False, "message": "Account not found or not linked"}
 
-    return {"success": False, "message": "Account not found or not linked"}
+    # Unlink first (prevent access)
+    db.delete(link)
+    db.commit()
+
+    # Cleanup data if requested
+    if delete_data:
+        from backend.api.services.cleanup_service import CleanupService
+        cleanup = CleanupService(db)
+        cleanup.delete_account_data(int(account_id))
+        return {"success": True, "message": "Account unlinked and data permanently deleted"}
+
+    return {"success": True, "message": "Account unlinked successfully"}
 
 
 @router.patch("/me/profile", response_model=UserProfileResponse)
@@ -139,6 +142,8 @@ async def update_user_profile(
         "full_name": updated_user.full_name,
         "facebook_id": updated_user.fb_user_id,
         "google_id": updated_user.google_id,
+        "job_title": updated_user.job_title,
+        "years_experience": updated_user.years_experience,
         "is_active": True,
         "created_at": updated_user.created_at
     }

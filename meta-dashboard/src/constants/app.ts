@@ -36,6 +36,8 @@ export const QUICK_SELECT_OPTIONS = [
     { key: 'last_7_days' as const, labelKey: 'last_7_days' as TranslationKeys },
     { key: 'last_14_days' as const, labelKey: 'last_14_days' as TranslationKeys },
     { key: 'last_30_days' as const, labelKey: 'last_30_days' as TranslationKeys },
+    { key: 'last_60_days' as const, labelKey: 'last_60_days' as TranslationKeys },
+    { key: 'last_90_days' as const, labelKey: 'last_90_days' as TranslationKeys },
     { key: 'this_month' as const, labelKey: 'this_month' as TranslationKeys },
     { key: 'last_month' as const, labelKey: 'last_month' as TranslationKeys },
     { key: 'maximum' as const, labelKey: 'maximum' as TranslationKeys },
@@ -67,59 +69,59 @@ export interface FilterGroup {
 // רשימת קבוצות הפילטרים הניתנות לבחירה
 export const FILTER_GROUPS: FilterGroup[] = [
     {
-        groupKey: 'filter_group_name',
+        groupKey: 'campaigns.filter_group_name',
         filters: [
             {
                 key: 'campaign_name',
-                labelKey: 'campaign_name',
+                labelKey: 'campaigns.campaign_name',
                 type: 'text',
             },
             {
                 key: 'ad_set_name',
-                labelKey: 'ad_set_name',
+                labelKey: 'breakdown.ad_set_name',
                 type: 'text',
             },
             {
                 key: 'ad_name',
-                labelKey: 'ad_name',
+                labelKey: 'breakdown.ad_name',
                 type: 'text',
             },
         ]
     },
     {
-        groupKey: 'filter_group_status',
+        groupKey: 'campaigns.filter_group_status',
         filters: [
             {
                 key: 'campaign_status',
-                labelKey: 'campaign_status',
+                labelKey: 'campaigns.campaign_status',
                 type: 'status',
                 options: [
-                    { value: 'active', labelKey: 'status_active' },
-                    { value: 'paused', labelKey: 'status_paused' },
-                    { value: 'archived', labelKey: 'status_archived' },
+                    { value: 'active', labelKey: 'common.status' }, // Fallback or specific status keys needed
+                    { value: 'paused', labelKey: 'common.status' },
+                    { value: 'archived', labelKey: 'common.status' },
                 ],
             },
             {
                 key: 'ad_set_status',
-                labelKey: 'ad_set_status',
+                labelKey: 'breakdown.ad_set_name', // Using generic for now
                 type: 'status',
                 options: [
-                    { value: 'active', labelKey: 'status_active' },
-                    { value: 'paused', labelKey: 'status_paused' },
+                    { value: 'active', labelKey: 'common.status' },
+                    { value: 'paused', labelKey: 'common.status' },
                 ],
             },
         ]
     },
     {
-        groupKey: 'filter_group_delivery',
+        groupKey: 'campaigns.filter_group_delivery',
         filters: [
             {
                 key: 'delivery_status',
-                labelKey: 'delivery_status',
+                labelKey: 'reports.filters_panel', // Placeholder
                 type: 'select',
                 options: [
-                    { value: 'delivery_on', labelKey: 'delivery_on' },
-                    { value: 'delivery_off', labelKey: 'delivery_off' },
+                    { value: 'delivery_on', labelKey: 'common.status' },
+                    { value: 'delivery_off', labelKey: 'common.status' },
                 ],
             },
         ]

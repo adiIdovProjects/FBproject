@@ -17,6 +17,12 @@ export interface MetricsPeriod {
   roas: number | null;
   cpa: number;
   conversion_rate: number;
+  // Optional detailed metrics
+  purchases?: number;
+  purchase_value?: number;
+  leads?: number;
+  add_to_cart?: number;
+  video_plays?: number;
 }
 
 export interface ChangePercentage {
@@ -210,7 +216,7 @@ export async function exportToGoogleSheets(
 
     // Detect if error is 401 and Google account not connected
     if (error.response?.status === 401 &&
-        error.response?.data?.detail?.includes('Google account not connected')) {
+      error.response?.data?.detail?.includes('Google account not connected')) {
       // Throw special error type that UI can detect
       const googleError = new Error('GOOGLE_NOT_CONNECTED');
       googleError.name = 'GoogleAuthRequired';

@@ -16,13 +16,14 @@ from backend.api.routers.sync import update_sync_status
 load_dotenv()
 import time
 from datetime import date, timedelta, datetime
-from typing import Dict
+from typing import Dict, List, Optional
+import threading
 
 # Configuration
 from backend.config.settings import (
-    FIRST_PULL_DAYS, DAILY_PULL_DAYS, ACTIVE_BREAKDOWN_GROUPS,
-    STATIC_AGE_GROUPS, STATIC_GENDER_GROUPS, UNKNOWN_MEMBER_DEFAULTS,
-    FACT_TABLE_PKS, DIMENSION_PKS
+    QUICK_PULL_DAYS, FULL_PULL_DAYS, BREAKDOWN_PULL_DAYS, DAILY_PULL_DAYS,
+    ACTIVE_BREAKDOWN_GROUPS, STATIC_AGE_GROUPS, STATIC_GENDER_GROUPS,
+    UNKNOWN_MEMBER_DEFAULTS, FACT_TABLE_PKS, DIMENSION_PKS
 )
 
 # Database
@@ -66,31 +67,33 @@ class ETLPipeline:
             "durations": {}
         }
     
-    def run(self, start_date: date, end_date: date, user_id: int = None):
+    def run(self, start_date: date, end_date: date, user_id: int = None, skip_breakdowns: bool = False):
         """
         Run the complete ETL pipeline
-        
+
         Args:
             start_date: Start date for data pull
             end_date: End date for data pull
             user_id: Optional user_id for progress updates
+            skip_breakdowns: If True, skip breakdown data (age, gender, country, placement) for faster sync
         """
-        
+
         start_time_total = time.time()
+        mode = "quick (no breakdowns)" if skip_breakdowns else "full"
         self.logger.info(
-            f"Starting ETL Pipeline: {start_date} to {end_date}",
-            extra={"event": "etl_start", "start_date": str(start_date), "end_date": str(end_date)}
+            f"Starting ETL Pipeline [{mode}]: {start_date} to {end_date}",
+            extra={"event": "etl_start", "start_date": str(start_date), "end_date": str(end_date), "mode": mode}
         )
-        
+
         try:
             # Step 1: Ensure schema exists
             self._ensure_schema()
-            
+
             # Step 2: Extract data from Facebook
             start_extract = time.time()
             if user_id: update_sync_status(user_id, "in_progress", 20) # 20%: Starting Extraction
-            
-            raw_data = self._extract_data(start_date, end_date)
+
+            raw_data = self._extract_data(start_date, end_date, skip_breakdowns=skip_breakdowns)
             self.stats["durations"]["extract"] = round(time.time() - start_extract, 2)
             
             if not raw_data:
@@ -142,18 +145,26 @@ class ETLPipeline:
             )
             raise
 
-    def run_for_user(self, user_id: int, account_ids: List[int]):
+    def run_for_user(self, user_id: int, account_ids: List[int], sync_mode: str = "auto"):
         """
         Run ETL pipeline for a specific user with their own access token
+
+        Two-phase sync strategy for first-time pulls:
+        1. Quick sync: 30 days, core metrics only (no breakdowns) - fast, shows UI immediately
+        2. Full sync: 365 days core + 90 days breakdowns - runs in background automatically
 
         Args:
             user_id: Database user ID
             account_ids: List of Facebook ad account IDs to sync
+            sync_mode: "auto" (default), "quick", or "full"
+                - auto: Quick sync first, then trigger full sync in background
+                - quick: Only quick sync (30 days, no breakdowns)
+                - full: Only full sync (365 days core + 90 days breakdowns)
         """
         from sqlalchemy.orm import Session
         from backend.api.repositories.user_repository import UserRepository
 
-        self.logger.info(f"Starting ETL for user {user_id} with {len(account_ids)} accounts")
+        self.logger.info(f"Starting ETL for user {user_id} with {len(account_ids)} accounts (mode={sync_mode})")
 
         # Get user from database
         with Session(self.engine) as session:
@@ -170,10 +181,12 @@ class ETLPipeline:
 
             # Check if token is expired
             if user.fb_token_expires_at:
-                from datetime import datetime
                 if datetime.utcnow() > user.fb_token_expires_at:
                     self.logger.error(f"User {user_id} Facebook token expired at {user.fb_token_expires_at}")
                     return
+
+            # Store token for background task
+            access_token = user.fb_access_token
 
             # Run ETL for each ad account
             for account_id in account_ids:
@@ -182,13 +195,12 @@ class ETLPipeline:
 
                 # Create extractor with user's token
                 self.extractor = FacebookExtractor(
-                    access_token=user.fb_access_token,
+                    access_token=access_token,
                     account_id=str(account_id),
                     user_id=user_id
                 )
 
-                # Determine date range
-                # Check if this is the first pull for this account (no existing data)
+                # Determine date range based on existing data
                 from sqlalchemy import text
                 result = session.execute(
                     text("SELECT COUNT(*) FROM fact_core_metrics WHERE account_id = :account_id"),
@@ -196,32 +208,85 @@ class ETLPipeline:
                 ).scalar()
 
                 is_first_pull = result == 0
-
                 end_date = date.today() - timedelta(days=1)
-                if is_first_pull:
-                    # First pull: Get last 90 days of data
-                    start_date = end_date - timedelta(days=FIRST_PULL_DAYS)
-                    self.logger.info(f"First-time pull for account {account_id}: pulling {FIRST_PULL_DAYS} days")
-                else:
-                    # Incremental pull: Just last 2 days
-                    start_date = end_date - timedelta(days=DAILY_PULL_DAYS)
-                    self.logger.info(f"Incremental pull for account {account_id}: pulling {DAILY_PULL_DAYS} days")
 
                 try:
-                    # Run standard ETL pipeline with progress callbacks (simple approach)
-                    # For now we update manually around the main stages since run() doesn't know about user_id
-                    
-                    # 1. Extraction (Done internally, but we can update before transform)
-                    # We can't easily hook into run() without passing user_id everywhere.
-                    # Instead, we will wrap the steps manually or trust run() to be fast enough between stages?
-                    # Better: Pass user_id to run() optionally.
-                    self.run(start_date, end_date, user_id=user_id)
-                    self.logger.info(f"✅ ETL completed for user {user_id}, account {account_id}")
+                    if is_first_pull:
+                        # FIRST PULL: Two-phase sync
+                        if sync_mode in ("auto", "quick"):
+                            # Phase 1: Quick sync (30 days, no breakdowns)
+                            quick_start = end_date - timedelta(days=QUICK_PULL_DAYS)
+                            self.logger.info(f"📦 Phase 1: Quick sync for account {account_id} ({QUICK_PULL_DAYS} days, no breakdowns)")
+                            self.run(quick_start, end_date, user_id=user_id, skip_breakdowns=True)
+                            self.logger.info(f"✅ Quick sync completed for account {account_id}")
+
+                            # Phase 2: Trigger full sync in background (if auto mode)
+                            if sync_mode == "auto":
+                                self.logger.info(f"🚀 Triggering full sync in background for account {account_id}")
+                                self._trigger_full_sync_background(
+                                    user_id=user_id,
+                                    account_id=account_id,
+                                    access_token=access_token
+                                )
+
+                        elif sync_mode == "full":
+                            # Full sync only (no quick phase)
+                            self._run_full_sync(user_id, account_id, access_token, end_date)
+
+                    else:
+                        # INCREMENTAL PULL: Just last 7 days with breakdowns
+                        start_date = end_date - timedelta(days=DAILY_PULL_DAYS)
+                        self.logger.info(f"🔄 Incremental sync for account {account_id}: {DAILY_PULL_DAYS} days")
+                        self.run(start_date, end_date, user_id=user_id, skip_breakdowns=False)
+                        self.logger.info(f"✅ Incremental sync completed for account {account_id}")
+
                 except Exception as e:
                     self.logger.error(f"❌ ETL failed for user {user_id}, account {account_id}: {e}")
                     update_sync_status(user_id, "failed", 0, str(e))
-                    # Continue with next account even if one fails
                     continue
+
+    def _run_full_sync(self, user_id: int, account_id: int, access_token: str, end_date: date):
+        """Run full sync: 365 days core metrics + 90 days breakdowns"""
+
+        # Recreate extractor (needed for background thread)
+        self.extractor = FacebookExtractor(
+            access_token=access_token,
+            account_id=str(account_id),
+            user_id=user_id
+        )
+
+        # Phase 1: Full core metrics (365 days, no breakdowns)
+        core_start = end_date - timedelta(days=FULL_PULL_DAYS)
+        self.logger.info(f"📦 Full sync - Core metrics: {FULL_PULL_DAYS} days")
+        self.run(core_start, end_date, user_id=user_id, skip_breakdowns=True)
+
+        # Phase 2: Breakdowns only (90 days)
+        breakdown_start = end_date - timedelta(days=BREAKDOWN_PULL_DAYS)
+        self.logger.info(f"📦 Full sync - Breakdowns: {BREAKDOWN_PULL_DAYS} days")
+        self.run(breakdown_start, end_date, user_id=user_id, skip_breakdowns=False)
+
+        self.logger.info(f"✅ Full sync completed for account {account_id}")
+
+    def _trigger_full_sync_background(self, user_id: int, account_id: int, access_token: str):
+        """Trigger full sync in a background thread"""
+
+        def background_task():
+            try:
+                self.logger.info(f"🔄 Background full sync started for account {account_id}")
+                end_date = date.today() - timedelta(days=1)
+
+                # Create new pipeline instance for background thread
+                bg_pipeline = ETLPipeline()
+                bg_pipeline._run_full_sync(user_id, account_id, access_token, end_date)
+
+                self.logger.info(f"✅ Background full sync completed for account {account_id}")
+            except Exception as e:
+                self.logger.error(f"❌ Background full sync failed for account {account_id}: {e}")
+
+        # Start background thread
+        thread = threading.Thread(target=background_task, daemon=True)
+        thread.start()
+        self.logger.info(f"🚀 Background sync thread started for account {account_id}")
 
     def _ensure_schema(self):
         """Create database schema if it doesn't exist"""
@@ -233,13 +298,19 @@ class ETLPipeline:
         for table_name in UNKNOWN_MEMBER_DEFAULTS.keys():
             ensure_unknown_members(self.engine, table_name, UNKNOWN_MEMBER_DEFAULTS[table_name])
     
-    def _extract_data(self, start_date: date, end_date: date) -> Dict[str, pd.DataFrame]:
+    def _extract_data(self, start_date: date, end_date: date, skip_breakdowns: bool = False) -> Dict[str, pd.DataFrame]:
         """
         Extract data from Facebook API
+
+        Args:
+            start_date: Start date for data pull
+            end_date: End date for data pull
+            skip_breakdowns: If True, skip breakdown data for faster sync
+
         Returns:
             Dictionary with keys: 'core', 'breakdowns', 'metadata', 'creatives', 'account_info'
         """
-        self.logger.info("STEP 2: Extracting data from Facebook API...")
+        self.logger.info(f"STEP 2: Extracting data from Facebook API... (skip_breakdowns={skip_breakdowns})")
 
         days_to_pull = (end_date - start_date).days + 1
 
@@ -264,18 +335,21 @@ class ETLPipeline:
             self.logger.warning("No core data retrieved")
             return {}
         
-        # 2.2: Extract breakdowns
-        self.logger.info("2.2: Extracting breakdown data...")
+        # 2.2: Extract breakdowns (skip in quick mode for faster sync)
         breakdowns = {}
-        for breakdown_group in ACTIVE_BREAKDOWN_GROUPS:
-            df_breakdown = self.extractor.get_breakdown_data(
-                breakdown_group['breakdowns'],
-                start_date,
-                end_date
-            )
-            if not df_breakdown.empty:
-                self.logger.info(f"Breakdown '{breakdown_group['type']}' sample:\n{df_breakdown.head(3)}")
-                breakdowns[breakdown_group['type']] = df_breakdown
+        if skip_breakdowns:
+            self.logger.info("2.2: SKIPPING breakdown data (quick sync mode)")
+        else:
+            self.logger.info("2.2: Extracting breakdown data...")
+            for breakdown_group in ACTIVE_BREAKDOWN_GROUPS:
+                df_breakdown = self.extractor.get_breakdown_data(
+                    breakdown_group['breakdowns'],
+                    start_date,
+                    end_date
+                )
+                if not df_breakdown.empty:
+                    self.logger.info(f"Breakdown '{breakdown_group['type']}' sample:\n{df_breakdown.head(3)}")
+                    breakdowns[breakdown_group['type']] = df_breakdown
         
         # 2.3: Extract metadata
         self.logger.info("2.3: Extracting metadata (campaign/adset/ad names & statuses)...")
@@ -814,16 +888,16 @@ class ETLPipeline:
 
 
 def main():
-    """Main entry point"""
-    
+    """Main entry point for standalone ETL runs"""
+
     # Get date range
     engine = get_db_engine()
     latest_date_str = get_latest_date_in_db(engine, MAIN_FACT_TABLE)
     end_date = date.today() - timedelta(days=1)  # Yesterday
-    
+
     import os
     force_historical = os.getenv("FORCE_HISTORICAL_PULL", "false").lower() == "true"
-    
+
     if latest_date_str and not force_historical:
         try:
             start_date = datetime.strptime(latest_date_str, '%Y-%m-%d').date() + timedelta(days=1)
@@ -831,14 +905,14 @@ def main():
                 logger.info("Database is up to date. No data to pull.")
                 return
         except ValueError:
-            start_date = end_date - timedelta(days=FIRST_PULL_DAYS)
+            start_date = end_date - timedelta(days=FULL_PULL_DAYS)
     else:
-        # First run or forced re-pull - pull 3 years
-        start_date = end_date - timedelta(days=FIRST_PULL_DAYS)
-    
+        # First run or forced re-pull - use full pull days
+        start_date = end_date - timedelta(days=FULL_PULL_DAYS)
+
     logger.info(f"📅 Pull range: {start_date} to {end_date} (Forced: {force_historical})")
-    
-    # Run ETL
+
+    # Run ETL (standalone mode uses full sync)
     pipeline = ETLPipeline()
     pipeline.run(start_date, end_date)
 

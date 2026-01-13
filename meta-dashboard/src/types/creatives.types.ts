@@ -10,6 +10,7 @@ export interface CreativeMetrics {
     title?: string;
     body?: string;
     is_video: boolean;
+    is_carousel?: boolean;
     video_length_seconds?: number;
     image_url?: string;
     video_url?: string;
@@ -26,6 +27,11 @@ export interface CreativeMetrics {
     conversion_value: number;
     roas: number;
     cpa: number;
+    // Status fields
+    ad_status?: string | null;
+    adset_status?: string | null;
+    campaign_status?: string | null;
+    effective_status: string;
     // Fatigue detection fields
     fatigue_severity?: string | null;  // "none" | "low" | "medium" | "high"
     ctr_decline_pct?: number | null;

@@ -12,6 +12,7 @@ import { CreativeMetrics } from '../../types/creatives.types';
 import { DateRange } from '../../types/dashboard.types';
 import FatigueBadge from './FatigueBadge';
 import CTRTrendChart from './CTRTrendChart';
+import { useAccount } from '../../context/AccountContext';
 
 type SortKey = keyof CreativeMetrics | 'ctr' | 'cpc' | 'cpa' | 'roas';
 
@@ -42,6 +43,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
   onSelectionChange,
 }) => {
   const t = useTranslations();
+  const { hasROAS } = useAccount();
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'spend',
     direction: 'desc',
@@ -49,10 +51,8 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
   const [selectedCreative, setSelectedCreative] = useState<{ id: number; name: string } | null>(null);
   const [showCTRTrendModal, setShowCTRTrendModal] = useState(false);
 
-  // Check if any creative has conversion value
-  const hasConversionValue = useMemo(() => {
-    return creatives.some(creative => (creative.conversion_value || 0) > 0);
-  }, [creatives]);
+  // Use account-level hasROAS from context (with fallback to local check)
+  const hasConversionValue = hasROAS ?? creatives.some(creative => (creative.conversion_value || 0) > 0);
 
   // Sort creatives
   const sortedCreatives = useMemo(() => {
@@ -113,6 +113,16 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+
+  // Format currency with 1 decimal (CPC, CPA)
+  const formatCurrencyDecimal = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(value);
+  };
   };
 
   // Format number
@@ -154,11 +164,18 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
   const someSelected = selectedCreativeIds.length > 0 && selectedCreativeIds.length < sortedCreatives.length;
 
   // Render type badge
-  const renderTypeBadge = (isVideo: boolean) => {
-    if (isVideo) {
+  const renderTypeBadge = (creative: CreativeMetrics) => {
+    if (creative.is_video) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-md border bg-purple-900/30 text-purple-400 border-purple-600">
           Video
+        </span>
+      );
+    }
+    if (creative.is_carousel) {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-md border bg-orange-900/30 text-orange-400 border-orange-600">
+          Carousel
         </span>
       );
     }
@@ -392,7 +409,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
                   {/* Type */}
                   <td className="px-6 py-5">
-                    {renderTypeBadge(creative.is_video)}
+                    {renderTypeBadge(creative)}
                   </td>
 
                   {/* Fatigue */}
@@ -428,7 +445,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
                   {/* CPC */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                    {formatCurrency(cpc)}
+                    {formatCurrencyDecimal(cpc)}
                   </td>
 
                   {/* Conversions */}
@@ -438,7 +455,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
                   {/* CPA */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                    {formatCurrency(creative.cpa)}
+                    {formatCurrencyDecimal(creative.cpa)}
                   </td>
 
                   {/* ROAS */}

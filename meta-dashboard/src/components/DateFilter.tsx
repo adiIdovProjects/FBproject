@@ -222,15 +222,6 @@ const DateFilter: React.FC<DateFilterProps> = ({
                         </div>
                     </div>
 
-                    {/* Footer Actions */}
-                    <div className="p-2 bg-black/40 border-t border-white/[0.05]">
-                        <button
-                            onClick={handleClear}
-                            className="w-full py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
-                        >
-                            {t('date.reset_default')}
-                        </button>
-                    </div>
                 </div>
             )}
         </div>

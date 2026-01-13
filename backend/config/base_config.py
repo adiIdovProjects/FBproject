@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     FACEBOOK_APP_SECRET: Optional[str] = None
     FACEBOOK_ACCESS_TOKEN: Optional[str] = None
     FACEBOOK_AD_ACCOUNT_ID: Optional[str] = None
-    FB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/facebook/callback"
+    FB_REDIRECT_URI: str = "http://localhost:8002/api/v1/auth/facebook/callback"
     
     # Security Settings
     JWT_SECRET_KEY: str = "b4070a2575ed271033235339f40391d4e4125b2d28711e74f85e13298a58711b"
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 1 week
     
     # CORS Settings
-    CORS_ORIGINS: Any = ["http://localhost:3000", "http://localhost:3001"]
+    CORS_ORIGINS: Any = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     # OAuth Redirect URLs (different for dashboard vs website)
     FRONTEND_URL: str = "http://localhost:3000"
     GOOGLE_OAUTH_REDIRECT_URL: str = "http://localhost:3000/en/connect"  # Website front with locale
-    FACEBOOK_OAUTH_REDIRECT_URL: str = "http://localhost:3000/en/select-accounts"  # Direct to account selection
+    FACEBOOK_OAUTH_REDIRECT_URL: str = "http://localhost:3000/en/callback"  # OAuth callback handler
 
     # AI Settings
     GEMINI_API_KEY: Optional[str] = None

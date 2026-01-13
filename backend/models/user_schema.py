@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .schema import Base, DimAccount
@@ -31,6 +31,14 @@ class User(Base):
     years_experience = Column(String(50), nullable=True)
     referral_source = Column(String(100), nullable=True)
 
+    # Onboarding tracking
+    email_verified = Column(Boolean, default=False)
+    onboarding_completed = Column(Boolean, default=False)
+    onboarding_step = Column(String(50))  # 'connect_facebook', 'select_accounts', 'complete_profile', 'completed'
+
+    # Admin access
+    is_admin = Column(Boolean, default=False)
+
     # Metadata
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
@@ -42,15 +50,17 @@ class User(Base):
 class UserAdAccount(Base):
     """
     Junction table linking Users to Ad Accounts.
-    Enables multi-tenant access (User A can access Account X and Y, 
+    Enables multi-tenant access (User A can access Account X and Y,
     while User B can also access Account X if shared).
     """
     __tablename__ = 'user_ad_account'
-    
+
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     account_id = Column(BigInteger, ForeignKey('dim_account.account_id'), primary_key=True)
     permission_level = Column(String(50), default='admin') # e.g., admin, viewer
-    
+    page_id = Column(String(100), nullable=True)  # Default Facebook Page ID for this account
+    page_name = Column(String(255), nullable=True)  # Facebook Page name for display
+
     # Relationships
     user = relationship("User", back_populates="ad_accounts")
     account = relationship("DimAccount")

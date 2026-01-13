@@ -15,8 +15,11 @@ import google.genai as genai
 from google.genai import types
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from backend.api.repositories.account_repository import AccountRepository
 
 from backend.api.repositories.metrics_repository import MetricsRepository
+from backend.api.repositories.campaign_repository import CampaignRepository
+from backend.api.repositories.timeseries_repository import TimeSeriesRepository
 from backend.api.schemas.responses import AIQueryResponse, ChartConfig
 from backend.api.services.budget_optimizer import SmartBudgetOptimizer
 from backend.api.services.comparison_service import ComparisonService
@@ -105,10 +108,14 @@ SYSTEM_INSTRUCTION = (
 class AIService:
     """Service for AI-powered data investigation"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: Optional[int] = None):
         self.db = db
+        self.user_id = user_id
         self.repository = MetricsRepository(db)
-        self.budget_optimizer = SmartBudgetOptimizer(db)
+        self.campaign_repo = CampaignRepository(db)
+        self.timeseries_repo = TimeSeriesRepository(db)
+        # Budget optimizer will be initialized with account_ids when needed
+        self.budget_optimizer = None
 
         # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
@@ -123,9 +130,17 @@ class AIService:
                 logger.error(f"Failed to initialize Gemini: {e}")
                 self.client = None
 
+    def _get_user_account_ids(self) -> Optional[List[int]]:
+        """Get account IDs for current user (for data filtering)"""
+        if not self.user_id:
+            return None
+        from backend.api.repositories.user_repository import UserRepository
+        user_repo = UserRepository(self.db)
+        return user_repo.get_user_account_ids(self.user_id)
+
     def _get_cache_key(self, question: str, start_date: date, end_date: date) -> str:
-        """Generate cache key from query parameters"""
-        key_str = f"{question}:{start_date}:{end_date}"
+        """Generate cache key from query parameters (includes user_id for isolation)"""
+        key_str = f"{self.user_id}:{question}:{start_date}:{end_date}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def _is_budget_optimization_query(self, question: str) -> bool:
@@ -138,11 +153,13 @@ class AIService:
         question_lower = question.lower()
         return any(keyword in question_lower for keyword in budget_keywords)
 
-    async def _generate_budget_recommendations(self, start_date: date, end_date: date) -> str:
+    async def _generate_budget_recommendations(self, start_date: date, end_date: date, account_ids: Optional[List[int]] = None) -> str:
         """Generate smart budget optimization recommendations with comparative analysis"""
         try:
+            # Initialize budget optimizer with account filtering
+            budget_optimizer = SmartBudgetOptimizer(self.db, account_ids=account_ids)
             # Generate smart recommendations
-            analysis = self.budget_optimizer.generate_smart_recommendations(start_date, end_date)
+            analysis = budget_optimizer.generate_smart_recommendations(start_date, end_date)
 
             # Check for errors
             if 'error' in analysis:
@@ -244,9 +261,10 @@ class AIService:
             logger.error(f"Error generating smart budget recommendations: {e}")
             return f"I encountered an error while analyzing your budget optimization: {str(e)}"
 
-    async def query_data(self, question: str) -> AIQueryResponse:
+    async def query_data(self, question: str, account_id: Optional[str] = None) -> AIQueryResponse:
         """
         Processes a natural language query about the ads data.
+        SECURITY: Only queries data from accounts the user has access to.
         """
         if not self.client:
             return AIQueryResponse(
@@ -255,10 +273,33 @@ class AIService:
             )
 
         try:
+            # SECURITY: Get user's allowed account IDs
+            user_account_ids = self._get_user_account_ids() or []
+
+            # SECURITY: Validate account_id if provided, otherwise use all user accounts
+            if account_id:
+                account_id_int = int(account_id)
+                if account_id_int not in user_account_ids:
+                    logger.warning(f"User {self.user_id} attempted to access unauthorized account {account_id}")
+                    return AIQueryResponse(
+                        answer="Access denied. You don't have permission to access this account's data.",
+                        data=None
+                    )
+                filtered_account_ids = [account_id_int]
+            else:
+                filtered_account_ids = user_account_ids
+
+            # Check if user has any accounts
+            if not filtered_account_ids:
+                return AIQueryResponse(
+                    answer="No ad accounts found. Please connect your Facebook ad accounts first.",
+                    data=None
+                )
+
             # Check cache first
             end_date = date.today()
             start_date = end_date - timedelta(days=30)
-            cache_key = self._get_cache_key(question, start_date, end_date)
+            cache_key = self._get_cache_key(f"{question}:{account_id}", start_date, end_date)
 
             if cache_key in QUERY_CACHE:
                 cached_time, cached_response = QUERY_CACHE[cache_key]
@@ -272,7 +313,8 @@ class AIService:
             # Check if this is a budget optimization query
             if self._is_budget_optimization_query(question):
                 logger.info("Budget optimization query detected")
-                budget_answer = await self._generate_budget_recommendations(start_date, end_date)
+                # SECURITY FIX: Pass account_ids for filtering
+                budget_answer = await self._generate_budget_recommendations(start_date, end_date, account_ids=filtered_account_ids)
                 ai_response = AIQueryResponse(answer=budget_answer, data=None)
                 # Cache the response
                 QUERY_CACHE[cache_key] = (time.time(), ai_response)
@@ -283,27 +325,50 @@ class AIService:
             # Use default to last 30 days or calculate from daily_trends if needed
             end_date = date.today()
             start_date = end_date - timedelta(days=30)
-            
+
             # Determine comparison period
             prev_start, prev_end = ComparisonService.calculate_previous_period(start_date, end_date)
 
-            # Fetch campaign-level breakdown
-            campaign_data = self.repository.get_campaign_breakdown(
+            # SECURITY FIX: Fetch campaign-level breakdown with account filtering
+            campaign_data = self.campaign_repo.get_campaign_breakdown(
                 start_date=start_date,
                 end_date=end_date,
-                limit=50
+                limit=50,
+                account_ids=filtered_account_ids
             )
 
-            # Fetch aggregated overview for both periods
-            overview = self.repository.get_aggregated_metrics(start_date, end_date)
-            prev_overview = self.repository.get_aggregated_metrics(prev_start, prev_end)
+            # SECURITY FIX: Fetch aggregated overview for both periods with account filtering
+            overview = self.repository.get_aggregated_metrics(start_date, end_date, account_ids=filtered_account_ids)
+            prev_overview = self.repository.get_aggregated_metrics(prev_start, prev_end, account_ids=filtered_account_ids)
 
-            # Fetch time-series data
-            daily_trends = self.repository.get_time_series(
+            # SECURITY FIX: Fetch time-series data with account filtering
+            daily_trends = self.timeseries_repo.get_time_series(
                 start_date=start_date,
                 end_date=end_date,
-                granularity='day'
+                granularity='day',
+                account_ids=filtered_account_ids
             )
+
+            # SECURITY FIX: Fetch Account Context only if authorized
+            account_context_str = ""
+            if account_id and int(account_id) in user_account_ids:
+                try:
+                    account_repo = AccountRepository(self.db)
+                    quiz = account_repo.get_account_quiz(int(account_id))
+                    if quiz:
+                        parts = []
+                        if quiz.get('business_description'):
+                            parts.append(f"Business Description: {quiz['business_description']}")
+                        if quiz.get('primary_goal'):
+                            parts.append(f"Priority Goal: {quiz['primary_goal']}")
+                        if quiz.get('industry'):
+                            parts.append(f"Industry: {quiz['industry']}")
+                        
+                        if parts:
+                            account_context_str = "**BUSINESS CONTEXT**:\n" + "\n".join(parts) + "\n"
+                except Exception as ex:
+                    logger.warning(f"Failed to fetch account context: {ex}")
+
 
             # 2. Prepare context for Gemini
             data_context = {
@@ -318,6 +383,8 @@ class AIService:
             context_json = json.dumps(data_context, indent=2)
             
             prompt = (
+                f"You are analyzing data for a specific Facebook Ad Account.\n"
+                f"{account_context_str}\n"
                 f"Based on the following Facebook Ads data for the period {start_date} to {end_date}, "
                 f"answer this question: '{question}'\n\n"
                 f"Data Context:\n{context_json}\n\n"
@@ -357,6 +424,7 @@ class AIService:
     async def get_suggested_questions(self) -> Dict[str, List[str]]:
         """
         Generate dynamic suggested questions based on available data.
+        SECURITY: Only checks data from user's accounts.
         """
         suggestions = [
             "What are my top performing campaigns this week?",
@@ -367,14 +435,27 @@ class AIService:
         ]
 
         try:
-            # Check if we have video data
-            has_video = self.db.execute(text("""
+            # SECURITY FIX: Get user's account IDs for filtering
+            user_account_ids = self._get_user_account_ids() or []
+
+            # Build account filter
+            if user_account_ids:
+                placeholders = ', '.join([f':acc_id_{i}' for i in range(len(user_account_ids))])
+                account_filter = f"AND f.account_id IN ({placeholders})"
+                params = {f'acc_id_{i}': acc_id for i, acc_id in enumerate(user_account_ids)}
+            else:
+                # No accounts - skip checks
+                return {"suggestions": suggestions[:12]}
+
+            # Check if user has video data
+            has_video = self.db.execute(text(f"""
                 SELECT EXISTS(
-                    SELECT 1 FROM fact_core_metrics
-                    WHERE video_plays > 0
+                    SELECT 1 FROM fact_core_metrics f
+                    WHERE f.video_plays > 0
+                    {account_filter}
                     LIMIT 1
                 )
-            """)).scalar()
+            """), params).scalar()
 
             if has_video:
                 suggestions.extend([
@@ -383,14 +464,15 @@ class AIService:
                     "What's the average watch time for my videos?"
                 ])
 
-            # Check for demographic data
-            has_demographics = self.db.execute(text("""
+            # Check for demographic data in user's accounts
+            has_demographics = self.db.execute(text(f"""
                 SELECT EXISTS(
-                    SELECT 1 FROM fact_core_metrics
-                    WHERE age IS NOT NULL
+                    SELECT 1 FROM fact_age_gender_metrics f
+                    WHERE f.age_range IS NOT NULL
+                    {account_filter}
                     LIMIT 1
                 )
-            """)).scalar()
+            """), params).scalar()
 
             if has_demographics:
                 suggestions.append("Which age group has the best performance?")

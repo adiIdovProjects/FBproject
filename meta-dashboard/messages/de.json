@@ -24,17 +24,39 @@
     "monthly_trend": "Monatlicher Trend",
     "compare_periods": "Vergleich der Zeiträume",
     "saving": "Speichern...",
-    "saved_successfully": "Erfolgreich gespeichert"
+    "saved_successfully": "Erfolgreich gespeichert",
+    "actions": "Aktionen",
+    "loading": "Laden..."
   },
   "nav": {
     "dashboard": "Armaturenbrett",
+    "performance": "Leistung",
     "campaigns": "Kampagnen",
+    "targeting": "Zielsetzung",
     "creatives": "Kreative",
+    "manage": "Verwalten",
     "insights": "Einblicke",
     "reports": "Berichte",
     "ai_investigator": "KI-Ermittler",
     "settings": "Einstellungen",
-    "manage_account": "Konto verwalten"
+    "manage_account": "Konto verwalten",
+    "uploader": "Uploader",
+    "analytics": "Analytik",
+    "account_performance": "Kontoleistung",
+    "campaigns_performance": "Kampagnenleistung",
+    "targeting_performance": "Targeting-Leistung",
+    "creative_performance": "Kreativleistung",
+    "campaign_control": "Kampagnensteuerung",
+    "intelligence": "Intelligenz",
+    "custom_reports": "Benutzerdefinierte Berichte"
+  },
+  "manage": {
+    "title": "Kampagnen verwalten",
+    "page_title": "Konto verwalten",
+    "subtitle": "Kampagnen, Anzeigengruppen und Anzeigen pausieren, fortsetzen und überwachen",
+    "daily_budget": "Tagesbudget",
+    "edit_budget": "Budget bearbeiten",
+    "invalid_budget": "Bitte geben Sie einen gültigen Budgetbetrag ein"
   },
   "metrics": {
     "spend": "Ausgaben",
@@ -89,7 +111,10 @@
     "country": "Land",
     "click_tab_to_load": "Klicken Sie auf einen Tab, um die Aufschlüsselungsdaten zu laden.",
     "breakdown_lazy_load": "Die Daten werden geladen, sobald Sie einen Aufschlüsselungstyp auswählen.",
-    "leads": "Leads"
+    "leads": "Leads",
+    "filter_group_name": "Kampagnenfilter",
+    "filter_group_status": "Statusfilter",
+    "filter_group_delivery": "Lieferfilter"
   },
   "reports": {
     "title": "Erweiterte Berichte",
@@ -137,6 +162,21 @@
     "avg_watch_time": "Durchschn. Wiedergabezeit",
     "avg_completion": "Durchschn. Abschluss"
   },
+  "targeting": {
+    "title": "Zielgruppenanalyse",
+    "subtitle": "Anzeigengruppen-Performance mit Targeting-Einblicken und Aufschlüsselungen analysieren",
+    "table_title": "Anzeigengruppen",
+    "search_placeholder": "Anzeigengruppen durchsuchen...",
+    "no_data": "Keine Anzeigengruppen gefunden",
+    "loading": "Anzeigengruppen werden geladen...",
+    "adset_name": "Anzeigengruppen-Name",
+    "targeting_type": "Targeting-Typ",
+    "targeting_summary": "Targeting-Details",
+    "broad_targeting": "Breites Targeting",
+    "lookalike_targeting": "Lookalike-Targeting",
+    "interest_targeting": "Interessen-Targeting",
+    "custom_audience_targeting": "Benutzerdefiniertes Zielgruppen-Targeting"
+  },
   "actions": {
     "export": "Exportieren",
     "download_excel": "Als Excel herunterladen",
@@ -150,7 +190,13 @@
     "export_to_google_sheets": "Nach Google Tabellen exportieren",
     "exporting": "Exportieren...",
     "select_all": "Alle auswählen",
-    "clear_all": "Alles löschen"
+    "clear_all": "Alles löschen",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "update_budget": "Budget aktualisieren"
+  },
+  "errors": {
+    "failed_to_update": "Aktualisierung fehlgeschlagen. Bitte erneut versuchen."
   },
   "date": {
     "label": "Datum",
@@ -163,6 +209,8 @@
     "last_7_days": "Letzte 7 Tage",
     "last_14_days": "Letzte 14 Tage",
     "last_30_days": "Letzte 30 Tage",
+    "last_60_days": "Letzte 60 Tage",
+    "last_90_days": "Letzte 90 Tage",
     "last_month": "Letzter Monat",
     "this_month": "Dieser Monat",
     "today_yesterday": "Heute & Gestern",
@@ -213,7 +261,9 @@
     "generated_at": "Generiert am",
     "high_priority": "Hohe Priorität",
     "medium_priority": "Mittlere Priorität",
-    "test_and_learn": "Testen und Lernen"
+    "test_and_learn": "Testen und Lernen",
+    "campaign_analysis": "Kampagnenanalyse",
+    "campaign_analysis_desc": "Portfoliooptimierung & Budget"
   },
   "auth": {
     "login_title": "Melden Sie sich bei Ihrem Konto an",
@@ -380,5 +430,11 @@
     "conversion_types": "Konvertierungstypen",
     "industry": "Industrie",
     "optimization_priority": "Optimierungspriorität"
+  },
+  "status": {
+    "ACTIVE": "Aktiv",
+    "PAUSED": "Angehalten",
+    "ARCHIVED": "Archiviert",
+    "UNKNOWN": "Unbekannt"
   }
 }

@@ -300,6 +300,98 @@ class MetricsService:
 
         return comparison_results
 
+    def compare_campaigns(
+        self,
+        campaign_ids: List[int],
+        start_date: date,
+        end_date: date,
+        metrics: List[str],
+        account_ids: Optional[List[int]] = None
+    ) -> Any:
+        """
+        Compare multiple campaigns side-by-side.
+
+        Args:
+            campaign_ids: List of campaign IDs (2-5)
+            start_date: Start date
+            end_date: End date
+            metrics: List of metrics to compare
+            account_ids: Optional list of account IDs
+
+        Returns:
+            CampaignComparisonResponse with comparison data
+        """
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        # Get comparison data from repository
+        campaign_data = self.campaign_repo.get_campaign_comparison(
+            campaign_ids, start_date, end_date, filtered_account_ids
+        )
+
+        if not campaign_data:
+            return None
+
+        # Calculate derived metrics for each campaign
+        calculated_data = {}
+        for campaign_id, data in campaign_data.items():
+            ctr = self.calculator.ctr(data['clicks'], data['impressions'])
+            cpc = self.calculator.cpc(data['spend'], data['clicks'])
+            cpa = self.calculator.cpa(data['spend'], data['conversions'])
+            roas = self.calculator.roas(data['conversion_value'], data['spend'], data['conversions'])
+
+            calculated_data[campaign_id] = {
+                'spend': data['spend'],
+                'impressions': data['impressions'],
+                'clicks': data['clicks'],
+                'conversions': data['conversions'],
+                'ctr': ctr,
+                'cpc': cpc,
+                'cpa': cpa,
+                'roas': roas
+            }
+
+        # Build comparison metrics
+        from backend.api.schemas.responses import ComparisonMetric, CampaignComparisonResponse
+
+        comparisons = []
+        for metric_name in metrics:
+            values = {}
+            winner_id = None
+            winner_value = None
+
+            # Lower is better for: cpc, cpa
+            # Higher is better for: spend, roas, ctr, conversions
+            is_higher_better = metric_name not in ['cpc', 'cpa']
+
+            for campaign_id, data in calculated_data.items():
+                value = data.get(metric_name)
+                if value is not None:
+                    values[campaign_id] = value
+
+                    if winner_value is None:
+                        winner_value = value
+                        winner_id = campaign_id
+                    else:
+                        if is_higher_better and value > winner_value:
+                            winner_value = value
+                            winner_id = campaign_id
+                        elif not is_higher_better and value < winner_value and value > 0:
+                            winner_value = value
+                            winner_id = campaign_id
+
+            comparison = ComparisonMetric(
+                metric_name=metric_name,
+                values=values,
+                winner_id=winner_id
+            )
+            comparisons.append(comparison)
+
+        return CampaignComparisonResponse(
+            campaign_ids=campaign_ids,
+            comparisons=comparisons
+        )
+
     def get_time_series(
         self,
         start_date: date,
@@ -307,7 +399,9 @@ class MetricsService:
         granularity: str = "day",
         metrics: List[str] = None,
         campaign_id: Optional[int] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[TimeSeriesDataPoint]:
         """
         Get time series data with calculated metrics.
@@ -319,6 +413,8 @@ class MetricsService:
             metrics: List of metrics to include (optional, returns all)
             campaign_id: Optional campaign filter
             account_ids: Optional list of account IDs to filter by
+            creative_ids: Optional list of creative IDs to filter by
+            campaign_ids: Optional list of campaign IDs to filter by
 
         Returns:
             List of TimeSeriesDataPoint
@@ -327,7 +423,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         time_series = self.timeseries_repo.get_time_series(
-            start_date, end_date, granularity, campaign_id, filtered_account_ids
+            start_date, end_date, granularity, campaign_id, filtered_account_ids, creative_ids, campaign_ids
         )
 
         # Calculate derived metrics for each data point
@@ -357,7 +453,8 @@ class MetricsService:
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
-        creative_id: Optional[int] = None
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[AgeGenderBreakdown]:
         """
         Get demographic breakdown with calculated metrics.
@@ -368,7 +465,8 @@ class MetricsService:
             campaign_id: Optional campaign filter
             group_by: 'age', 'gender', or 'both'
             account_ids: Optional list of account IDs
-            creative_id: Optional creative filter
+            creative_ids: Optional list of creative IDs
+            campaign_ids: Optional list of campaign IDs
 
         Returns:
             List of AgeGenderBreakdown
@@ -377,7 +475,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_age_gender_breakdown(
-            start_date, end_date, campaign_id, group_by, campaign_status, search_query, filtered_account_ids, creative_id
+            start_date, end_date, campaign_id, group_by, campaign_status, search_query, filtered_account_ids, creative_ids, campaign_ids
         )
 
         # Calculate derived metrics for each breakdown
@@ -411,7 +509,8 @@ class MetricsService:
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
-        creative_id: Optional[int] = None
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[PlacementBreakdown]:
         """
         Get placement breakdown with calculated metrics.
@@ -420,6 +519,7 @@ class MetricsService:
             start_date: Start date
             end_date: End date
             campaign_id: Optional campaign filter
+            campaign_ids: Optional list of campaign IDs
 
         Returns:
             List of PlacementBreakdown
@@ -428,7 +528,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_placement_breakdown(
-            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids, creative_id
+            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids, creative_ids, campaign_ids
         )
 
         # Calculate derived metrics for each breakdown
@@ -460,7 +560,8 @@ class MetricsService:
         campaign_id: Optional[int] = None,
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[PlacementBreakdown]:
         """
         Get platform breakdown with calculated metrics.
@@ -469,6 +570,7 @@ class MetricsService:
             start_date: Start date
             end_date: End date
             campaign_id: Optional campaign filter
+            campaign_ids: Optional list of campaign IDs
 
         Returns:
             List of PlacementBreakdown (reusing structure as it fits)
@@ -477,7 +579,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_platform_breakdown(
-            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids
+            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids, campaign_ids
         )
 
         # Calculate derived metrics for each breakdown
@@ -590,6 +692,7 @@ class MetricsService:
                 title=creative['title'],
                 body=creative['body'],
                 is_video=creative['is_video'],
+                is_carousel=creative.get('is_carousel', False),
                 video_length_seconds=creative['video_length_seconds'],
                 image_url=creative['image_url'],
                 video_url=creative['video_url'],
@@ -608,6 +711,10 @@ class MetricsService:
                 purchase_value=creative['purchase_value'],
                 roas=self.calculator.roas(creative['conversion_value'], creative['spend'], creative['conversions']),
                 cpa=self.calculator.cpa(creative['spend'], creative['conversions']),
+                ad_status=creative.get('ad_status'),
+                adset_status=creative.get('adset_status'),
+                campaign_status=creative.get('campaign_status'),
+                effective_status=creative.get('effective_status', 'UNKNOWN'),
                 fatigue_severity=fatigue_severity,
                 ctr_decline_pct=ctr_decline_pct,
                 days_active=days_active
@@ -654,7 +761,8 @@ class MetricsService:
         campaign_id: Optional[int] = None,
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[AdsetBreakdown]:
         """
         Get adset-level breakdown with calculated metrics.
@@ -663,7 +771,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         adsets = self.adset_repo.get_adset_breakdown(
-            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids
+            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids, campaign_ids
         )
 
         adset_metrics = []
@@ -698,7 +806,8 @@ class MetricsService:
         campaign_status: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
-        creative_id: Optional[int] = None
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[CountryBreakdown]:
         """
         Get country breakdown with calculated metrics.
@@ -708,6 +817,7 @@ class MetricsService:
             end_date: End date
             campaign_id: Optional campaign filter
             top_n: Number of top countries
+            campaign_ids: Optional list of campaign IDs
 
         Returns:
             List of CountryBreakdown
@@ -716,7 +826,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         breakdowns = self.breakdown_repo.get_country_breakdown(
-            start_date, end_date, campaign_id, top_n, campaign_status, search_query, filtered_account_ids, creative_id
+            start_date, end_date, campaign_id, top_n, campaign_status, search_query, filtered_account_ids, creative_ids, campaign_ids
         )
 
         # Calculate derived metrics for each breakdown
@@ -989,7 +1099,8 @@ class MetricsService:
                 completion_rate=video['completion_rate'],
                 hold_rate=None,
                 conversions=0,
-                roas=None
+                roas=None,
+                effective_status='UNKNOWN'
             )
             top_videos.append(creative)
 

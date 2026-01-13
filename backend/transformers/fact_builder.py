@@ -9,7 +9,7 @@ from typing import Dict
 
 logger = logging.getLogger(__name__)
 
-from backend.config.settings import UNKNOWN_MEMBER_ID, MISSING_DIM_VALUE
+from backend.config.settings import UNKNOWN_MEMBER_ID, MISSING_DIM_VALUE, TOP_COUNTRIES_LIMIT
 
 
 class FactBuilder:
@@ -235,43 +235,81 @@ class FactBuilder:
         return df_fact
     
     def _build_fact_country(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Build fact_country_metrics"""
-        
+        """Build fact_country_metrics with top N countries optimization"""
+
         required_cols = [
             'date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
             'country'
         ]
-        
+
         metric_cols = ['spend', 'impressions', 'clicks']
-        
+
         # Filter to rows with country
         # CRITICAL: Filter only geographic breakdown data
         df_country = df[
-            (df['country'].notna()) & 
+            (df['country'].notna()) &
             (df['country'] != MISSING_DIM_VALUE) &
             (df['country'] != 'N/A') &
             (df.get('_data_source') == 'geographic')
         ].copy()
-        
+
         if df_country.empty:
             return pd.DataFrame()
-        
+
         cols_to_select = required_cols + metric_cols
         df_fact = df_country[cols_to_select].copy()
-        
+
         # Fill missing metrics
         for col in metric_cols:
             if col not in df_fact.columns:
                 df_fact[col] = 0.0 if col == 'spend' else 0
-        
-        # Group and aggregate
+
+        # Group and aggregate first
         df_fact = df_fact.groupby(required_cols, as_index=False).agg({
             'spend': 'sum',
             'impressions': 'sum',
             'clicks': 'sum',
         })
-        
+
+        # OPTIMIZATION: Keep only top N countries per (ad_id, date_id) by spend
+        # Aggregate remaining countries into "Other"
+        if TOP_COUNTRIES_LIMIT and TOP_COUNTRIES_LIMIT > 0:
+            df_fact = self._filter_top_countries(df_fact, TOP_COUNTRIES_LIMIT)
+
         return df_fact
+
+    def _filter_top_countries(self, df: pd.DataFrame, top_n: int) -> pd.DataFrame:
+        """Keep top N countries by spend per (ad_id, date_id), aggregate rest as 'Other'"""
+
+        if df.empty:
+            return df
+
+        group_cols = ['date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id']
+
+        # Rank countries by spend within each ad/date group
+        df['_rank'] = df.groupby(group_cols)['spend'].rank(method='first', ascending=False)
+
+        # Split into top N and "other"
+        df_top = df[df['_rank'] <= top_n].copy()
+        df_other = df[df['_rank'] > top_n].copy()
+
+        # Aggregate "other" countries
+        if not df_other.empty:
+            df_other_agg = df_other.groupby(group_cols, as_index=False).agg({
+                'spend': 'sum',
+                'impressions': 'sum',
+                'clicks': 'sum',
+            })
+            df_other_agg['country'] = 'Other'
+
+            # Combine top N + aggregated "Other"
+            df_result = pd.concat([df_top.drop(columns=['_rank']), df_other_agg], ignore_index=True)
+        else:
+            df_result = df_top.drop(columns=['_rank'])
+
+        self.logger.info(f"Country optimization: {len(df)} rows → {len(df_result)} rows (top {top_n} + Other)")
+
+        return df_result
 
 
 def build_fact_tables(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:

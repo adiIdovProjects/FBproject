@@ -276,6 +276,8 @@ class InsightsService:
             parts.append(f"Primary Goal: {context['goal']}")
         if context.get('priority'):
             parts.append(f"Optimization Priority: {context['priority']}")
+        if context.get('business_description'):
+            parts.append(f"Business Description: {context['business_description']}")
             
         if not parts:
             return ""

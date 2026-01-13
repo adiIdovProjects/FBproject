@@ -15,6 +15,7 @@ from backend.api.dependencies import get_db, get_current_user
 from backend.api.services.insights_service import InsightsService
 from backend.api.services.historical_insights_service import HistoricalInsightsService
 from backend.api.services.creative_insights_service import CreativeInsightsService
+from backend.api.services.campaign_insights_service import CampaignInsightsService
 from backend.api.services.proactive_analysis_service import ProactiveAnalysisService
 
 router = APIRouter(
@@ -136,6 +137,34 @@ async def get_campaign_deep_dive(
         result = await service.get_campaign_deep_dive(
             campaign_id=campaign_id,
             lookback_days=lookback_days
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate campaign analysis: {str(e)}")
+
+
+@router.get("/campaign-analysis")
+async def get_campaign_analysis(
+    start_date: date = Query(..., description="Start date for analysis"),
+    end_date: date = Query(..., description="End date for analysis"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Analyze campaign performance portfolio.
+
+    Returns:
+    - Campaign categorization (Scale, Maintain, Fix)
+    - Budget allocation recommendations
+    - Structural insights
+    """
+    try:
+        service = CampaignInsightsService(db, current_user.id)
+        account_ids = [acc.account_id for acc in current_user.ad_accounts] if current_user.ad_accounts else []
+        result = await service.analyze_campaign_performance(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids
         )
         return result
     except Exception as e:

@@ -12,7 +12,9 @@ class TimeSeriesRepository(BaseRepository):
         end_date: date,
         granularity: str = "day",
         campaign_id: Optional[int] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        creative_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get time series metrics data.
@@ -37,6 +39,24 @@ class TimeSeriesRepository(BaseRepository):
             account_filter = f"AND f.account_id IN ({placeholders})"
             for i, acc_id in enumerate(account_ids):
                 param_account_ids[f'acc_id_{i}'] = acc_id
+
+        # Build creative filter
+        creative_filter = ""
+        param_creative_ids = {}
+        if creative_ids:
+            placeholders = ', '.join([f":creative_id_{i}" for i in range(len(creative_ids))])
+            creative_filter = f"AND f.creative_id IN ({placeholders})"
+            for i, creative_id in enumerate(creative_ids):
+                param_creative_ids[f'creative_id_{i}'] = creative_id
+
+        # Build campaign_ids filter
+        campaign_ids_filter = ""
+        param_campaign_ids = {}
+        if campaign_ids:
+            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
+            for i, cid in enumerate(campaign_ids):
+                param_campaign_ids[f'campaign_ids_{i}'] = cid
 
         query = text(f"""
             SELECT
@@ -74,6 +94,8 @@ class TimeSeriesRepository(BaseRepository):
                 AND d.date <= :end_date
                 {campaign_filter}
                 {account_filter}
+                {creative_filter}
+                {campaign_ids_filter}
             GROUP BY {date_trunc}
             ORDER BY date ASC
         """)
@@ -81,7 +103,9 @@ class TimeSeriesRepository(BaseRepository):
         params = {
             'start_date': start_date,
             'end_date': end_date,
-            **param_account_ids
+            **param_account_ids,
+            **param_creative_ids,
+            **param_campaign_ids
         }
 
         if campaign_id is not None:

@@ -141,6 +141,7 @@ class AdsetBreakdown(BaseModel):
     """Adset breakdown metrics with targeting info"""
     adset_id: int
     adset_name: str
+    adset_status: str = "ACTIVE"
     targeting_type: str
     targeting_summary: str
     spend: float
@@ -179,6 +180,7 @@ class CreativeMetrics(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
     is_video: bool
+    is_carousel: bool = False
     video_length_seconds: Optional[int] = None
     image_url: Optional[str] = None
     video_url: Optional[str] = None
@@ -197,6 +199,11 @@ class CreativeMetrics(BaseModel):
     purchase_value: float = 0.0
     roas: Optional[float] = None
     cpa: float = 0.0
+    # Status fields
+    ad_status: Optional[str] = None
+    adset_status: Optional[str] = None
+    campaign_status: Optional[str] = None
+    effective_status: str
     # Fatigue detection fields
     fatigue_severity: Optional[str] = None  # "none" | "low" | "medium" | "high"
     ctr_decline_pct: Optional[float] = None
@@ -209,6 +216,7 @@ class CreativeDetailResponse(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
     is_video: bool
+    is_carousel: bool = False
     video_length_seconds: Optional[int] = None
     image_url: Optional[str] = None
     video_url: Optional[str] = None
@@ -362,3 +370,16 @@ class AccountCollaboratorResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ComparisonMetric(BaseModel):
+    """Single metric comparison across campaigns"""
+    metric_name: str = Field(..., description="Name of the metric")
+    values: dict[int, float] = Field(..., description="Campaign ID to value mapping")
+    winner_id: Optional[int] = Field(None, description="ID of campaign with best value for this metric")
+
+
+class CampaignComparisonResponse(BaseModel):
+    """Response for campaign comparison"""
+    campaign_ids: List[int] = Field(..., description="List of campaign IDs being compared")
+    comparisons: List[ComparisonMetric] = Field(..., description="Metric comparisons")

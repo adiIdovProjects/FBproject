@@ -27,6 +27,8 @@ class AdAccountSchema(BaseModel):
     account_id: str
     name: str
     currency: str
+    page_id: Optional[str] = None  # Default page for this ad account
+    page_name: Optional[str] = None  # Page name for display
 
 class RegisterRequest(BaseModel):
     email: EmailStr
@@ -44,6 +46,39 @@ class MagicLinkVerifyResponse(BaseModel):
     access_token: str
     token_type: str
     onboarding_status: dict
+
+def _sync_facebook_pages(db: Session, user, access_token: str):
+    """
+    Helper to sync Facebook pages for linked accounts.
+    Returns the number of updated accounts.
+    """
+    try:
+        from backend.utils.logging_utils import get_logger
+        logger = get_logger(__name__)
+        # Automatically update page_id for all existing linked accounts
+        fb_accounts = fb_service.get_managed_accounts(access_token)
+        fb_account_map = {
+            int(acc["account_id"].replace("act_", "") if acc["account_id"].startswith("act_") else acc["account_id"]): acc["page_id"]
+            for acc in fb_accounts
+        }
+
+        updated_count = 0
+        for user_acc in user.ad_accounts:
+            account_id = user_acc.account_id
+            if account_id in fb_account_map:
+                new_page_id = fb_account_map[account_id]
+                if new_page_id and user_acc.page_id != new_page_id:
+                    user_acc.page_id = new_page_id
+                    updated_count += 1
+
+        if updated_count > 0:
+            db.commit()
+            logger.info(f"Auto-updated {updated_count} accounts with page_id during sync")
+        
+        return updated_count
+    except Exception as e:
+        logger.error(f"Failed to sync Facebook pages: {e}")
+        return 0
 
 @router.get("/facebook/login")
 def login_facebook(state: str):
@@ -119,14 +154,17 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
                 user.fb_access_token = access_token
                 user.fb_token_expires_at = expires_at
                 db.commit()
-                
+
+                # Automatically update page_id for all existing linked accounts
+                updated_count = _sync_facebook_pages(db, user, access_token)
+
                 # Audit log
                 AuditService.log_event(
                     db=db,
                     user_id=str(user.id),
                     event_type="ACCOUNT_LINKED",
-                    description=f"User {user.email} connected Facebook Account {fb_user.get('name')}",
-                    metadata={"fb_user_id": fb_user["id"]}
+                    description=f"User {user.email} reconnected Facebook Account {fb_user.get('name')} - Updated {updated_count} accounts",
+                    metadata={"fb_user_id": fb_user["id"], "updated_accounts": updated_count}
                 )
         else:
             # LOGIN FLOW: Create or Get User
@@ -159,6 +197,8 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
                     is_new_user = True
             else:
                 repo.update_fb_token(user.id, access_token, expires_at)
+                # Sync pages for existing user logging in
+                _sync_facebook_pages(db, user, access_token)
 
             # Audit log successful login
             AuditService.log_event(
@@ -178,11 +218,10 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         # If FACEBOOK_OAUTH_REDIRECT_URL is http://localhost:3000, we append
         
         if is_connect_flow:
-            # Redirect to settings with success flag
-            separator = "&" if "?" in frontend_redirect_path else "?"
-            return RedirectResponse(f"{settings.FRONTEND_URL}{frontend_redirect_path}{separator}connect_success=true")
+            # Connect flow always goes to select-accounts to add/manage accounts
+            return RedirectResponse(f"{settings.FRONTEND_URL}/en/callback?token={app_token}&redirect=select-accounts")
         else:
-             # Normal login redirect
+             # Normal login redirect - go through callback
             return RedirectResponse(f"{settings.FACEBOOK_OAUTH_REDIRECT_URL}?token={app_token}&state={state}")
         
     except Exception as e:
@@ -199,9 +238,49 @@ async def get_facebook_accounts(current_user=Depends(get_current_user), db: Sess
     """Fetch available ad accounts from Facebook for the current user"""
     if not current_user.fb_access_token:
         raise HTTPException(status_code=401, detail="Facebook not connected")
-    
+
     accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
     return accounts
+
+@router.post("/facebook/reconnect")
+async def reconnect_facebook(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """Reconnect Facebook and update page_id for all existing linked accounts"""
+    if not current_user.fb_access_token:
+        raise HTTPException(status_code=401, detail="Facebook not connected")
+
+    repo = UserRepository(db)
+
+    # Fetch fresh account data from Facebook (including page_id)
+    fb_accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+
+    # Create a map of account_id -> page_id
+    fb_account_map = {
+        int(acc["account_id"].replace("act_", "") if acc["account_id"].startswith("act_") else acc["account_id"]): acc["page_id"]
+        for acc in fb_accounts
+    }
+
+    # Get user's currently linked accounts
+    linked_accounts = current_user.ad_accounts
+    updated_count = 0
+
+    for user_acc in linked_accounts:
+        account_id = user_acc.account_id
+        # Update page_id if we found it in Facebook data
+        if account_id in fb_account_map:
+            new_page_id = fb_account_map[account_id]
+            if new_page_id and user_acc.page_id != new_page_id:
+                user_acc.page_id = new_page_id
+                updated_count += 1
+
+    db.commit()
+
+    logger.info(f"User {current_user.id} reconnected Facebook, updated {updated_count} accounts with page_id")
+
+    return {
+        "success": True,
+        "message": f"Updated {updated_count} accounts with Facebook Page info",
+        "updated_count": updated_count
+    }
 
 class LinkAccountsRequest(BaseModel):
     accounts: List[AdAccountSchema]
@@ -252,6 +331,8 @@ async def link_accounts(
                 user_id=current_user.id,
                 account_id=acc_id,
                 name=account.name,
+                page_id=account.page_id,  # Store page_id
+                page_name=account.page_name,  # Store page_name
                 currency=account.currency
             )
             linked_accounts.append(link)

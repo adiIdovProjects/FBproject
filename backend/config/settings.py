@@ -114,9 +114,21 @@ IGNORED_ACTION_TYPES = [
 # ETL CONFIGURATION
 # ==============================================================================
 
-FIRST_PULL_DAYS = 365  # 1 year initially
-DAILY_PULL_DAYS = 7  # Last 7 days for attribution updates
-CHUNK_DAYS = 90  # API call chunking
+# Two-phase sync strategy:
+# Phase 1 (Quick): Pull QUICK_PULL_DAYS of core metrics only (no breakdowns)
+# Phase 2 (Full): Pull FULL_PULL_DAYS of core metrics + BREAKDOWN_PULL_DAYS of breakdowns
+
+QUICK_PULL_DAYS = 30   # Fast initial pull - core metrics only, no breakdowns
+FULL_PULL_DAYS = 365   # Full core metrics history (1 year)
+BREAKDOWN_PULL_DAYS = 90  # Breakdowns only for recent data (3 months)
+DAILY_PULL_DAYS = 7    # Last 7 days for attribution updates (incremental sync)
+CHUNK_DAYS = 14        # API call chunking
+
+# Country optimization - only store top N countries per ad to reduce storage
+TOP_COUNTRIES_LIMIT = 10  # Keep top 10 countries by spend, aggregate rest as "Other"
+
+# Legacy alias for backward compatibility
+FIRST_PULL_DAYS = QUICK_PULL_DAYS
 
 # ==============================================================================
 # DATABASE CONSTANTS
@@ -216,6 +228,7 @@ UNKNOWN_MEMBER_DEFAULTS = {
         'video_url': None,
         'video_length_seconds': None,
         'is_video': False,
+        'is_carousel': False,
     },
     'dim_ad': {
         'ad_id': 0,

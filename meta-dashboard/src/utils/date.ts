@@ -25,32 +25,33 @@ export const formatDate = (date: Date | null | undefined): string | null => {
 /**
  * מחשב טווח תאריכים קבוע על בסיס מפתח קבוע מראש.
  */
-export const calculateDateRange = (key: QuickSelectKey): DateRange => { 
+export const calculateDateRange = (key: QuickSelectKey): DateRange => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // יום סיום (חצות)
+    today.setHours(0, 0, 0, 0);
 
-    // הגדרת תחילת שבוע ליום ראשון (0), שנה את זה ל-1 אם אתה רוצה יום שני
-    const dateFnsOptions = { weekStartsOn: 0 as const }; 
+    // Use yesterday as end date since Facebook data is only available up to yesterday
+    const yesterday = subDays(today, 1);
 
     switch (key) {
-        case 'yesterday': 
-            const yesterday = subDays(today, 1);
+        case 'yesterday':
             return { start: yesterday, end: yesterday };
-        case 'last_7_days': 
-            return { start: subDays(today, 6), end: today };
-        case 'last_14_days': 
-            return { start: subDays(today, 13), end: today };
-        case 'last_30_days': 
-            return { start: subDays(today, 29), end: today };
-        case 'this_month': 
-            // החודש הנוכחי: מה-1 לחודש ועד היום
-            return { start: startOfMonth(today), end: today };
+        case 'last_7_days':
+            return { start: subDays(yesterday, 6), end: yesterday };
+        case 'last_14_days':
+            return { start: subDays(yesterday, 13), end: yesterday };
+        case 'last_30_days':
+            return { start: subDays(yesterday, 29), end: yesterday };
+        case 'last_60_days':
+            return { start: subDays(yesterday, 59), end: yesterday };
+        case 'last_90_days':
+            return { start: subDays(yesterday, 89), end: yesterday };
+        case 'this_month':
+            return { start: startOfMonth(today), end: yesterday };
         case 'last_month':
-            // חודש שעבר: מה-1 לחודש שעבר ועד היום האחרון בחודש שעבר
             const startOfPreviousMonth = startOfMonth(subMonths(today, 1));
             const endOfPreviousMonth = endOfMonth(subMonths(today, 1));
-            return { start: startOfPreviousMonth, end: endOfPreviousMonth };    
-        case 'maximum': return { start: new Date(2020, 0, 1), end: today };
+            return { start: startOfPreviousMonth, end: endOfPreviousMonth };
+        case 'maximum': return { start: new Date(2020, 0, 1), end: yesterday };
         case 'custom': default: return { start: null, end: null };
     }
 }

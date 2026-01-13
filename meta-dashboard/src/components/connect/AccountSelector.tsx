@@ -138,6 +138,11 @@ export function AccountSelector({ accounts, onLink, isLoading = false }: Account
                                         <span className="text-sm text-gray-400">
                                             Currency: {account.currency}
                                         </span>
+                                        {account.page_id && (
+                                            <span className="text-sm text-green-400/80 bg-green-900/20 px-2 py-0.5 rounded border border-green-700/30">
+                                                Page Connected
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

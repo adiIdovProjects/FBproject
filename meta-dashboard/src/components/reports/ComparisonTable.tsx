@@ -87,9 +87,17 @@ export default function ComparisonTable({
 
     switch (metric) {
       case 'spend':
+        return currency === 'ILS' ? `₪${Math.round(value).toLocaleString()}` :
+          currency === 'EUR' ? `€${Math.round(value).toLocaleString()}` :
+            currency === 'GBP' ? `£${Math.round(value).toLocaleString()}` :
+              `$${Math.round(value).toLocaleString()}`;
       case 'cpc':
-      case 'cpm':
       case 'cpa':
+        return currency === 'ILS' ? `₪${value.toFixed(1)}` :
+          currency === 'EUR' ? `€${value.toFixed(1)}` :
+            currency === 'GBP' ? `£${value.toFixed(1)}` :
+              `$${value.toFixed(1)}`;
+      case 'cpm':
       case 'conversion_value':
         return currency === 'ILS' ? `₪${value.toFixed(2)}` :
           currency === 'EUR' ? `€${value.toFixed(2)}` :

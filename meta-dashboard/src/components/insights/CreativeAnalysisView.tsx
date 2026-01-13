@@ -7,11 +7,13 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Palette, Target, TrendingUp, AlertCircle } from 'lucide-react';
+import { Palette, Target, TrendingUp, AlertCircle, AlertTriangle, TrendingDown, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
   fetchCreativeAnalysis,
-  CreativeAnalysisResponse
+  fetchCreativeFatigue,
+  CreativeAnalysisResponse,
+  CreativeFatigueResponse
 } from '../../services/insights.service';
 
 interface CreativeAnalysisViewProps {
@@ -26,9 +28,16 @@ export default function CreativeAnalysisView({
   isRTL
 }: CreativeAnalysisViewProps) {
   const locale = useLocale();
-  const [data, setData] = useState<CreativeAnalysisResponse | null>(null);
+  const [analysisData, setAnalysisData] = useState<CreativeAnalysisResponse | null>(null);
+  const [fatigueData, setFatigueData] = useState<CreativeFatigueResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Calculate lookback days for fatigue (default 30 or derived)
+  const lookbackDays = Math.min(
+    Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)),
+    90
+  ) || 30;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,8 +45,12 @@ export default function CreativeAnalysisView({
       setError(null);
 
       try {
-        const result = await fetchCreativeAnalysis({ startDate, endDate }, undefined, locale);
-        setData(result);
+        const [analysisResult, fatigueResult] = await Promise.all([
+          fetchCreativeAnalysis({ startDate, endDate }, undefined, locale),
+          fetchCreativeFatigue(lookbackDays, locale)
+        ]);
+        setAnalysisData(analysisResult);
+        setFatigueData(fatigueResult);
       } catch (err: any) {
         console.error('[Creative Analysis] Error:', err);
         setError(err.message || 'Failed to load creative analysis');
@@ -47,7 +60,7 @@ export default function CreativeAnalysisView({
     };
 
     fetchData();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, locale, lookbackDays]);
 
   // Loading state
   if (isLoading) {
@@ -81,7 +94,7 @@ export default function CreativeAnalysisView({
   }
 
   // No data state
-  if (!data) {
+  if (!analysisData) {
     return (
       <div className="text-center py-12">
         <Palette className="w-16 h-16 text-gray-600 mx-auto mb-4" />
@@ -99,36 +112,36 @@ export default function CreativeAnalysisView({
           <h2 className="text-2xl font-bold text-purple-200">Creative Performance Analysis</h2>
         </div>
         <div className={`prose prose-invert max-w-none ${isRTL ? 'text-right' : 'text-left'}`}>
-          <ReactMarkdown>{data.analysis}</ReactMarkdown>
+          <ReactMarkdown>{analysisData.analysis}</ReactMarkdown>
         </div>
       </div>
 
       {/* Summary Stats */}
-      {data.data && (
+      {analysisData.data && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
             <div className="text-sm text-gray-400 mb-1">Total Creatives Analyzed</div>
-            <div className="text-2xl font-bold">{data.data.total_creatives || 0}</div>
+            <div className="text-2xl font-bold">{analysisData.data.total_creatives || 0}</div>
           </div>
 
           <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
             <div className="text-sm text-gray-400 mb-1">Themes Detected</div>
             <div className="text-2xl font-bold">
-              {Object.keys(data.data.theme_performance || {}).length}
+              {Object.keys(analysisData.data.theme_performance || {}).length}
             </div>
           </div>
 
           <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
             <div className="text-sm text-gray-400 mb-1">Fatigued Creatives</div>
             <div className="text-2xl font-bold text-red-400">
-              {data.data.fatigued_creatives_count || 0}
+              {analysisData.data.fatigued_creatives_count || 0}
             </div>
           </div>
         </div>
       )}
 
       {/* Theme Performance */}
-      {data.data && data.data.theme_performance && Object.keys(data.data.theme_performance).length > 0 && (
+      {analysisData.data && analysisData.data.theme_performance && Object.keys(analysisData.data.theme_performance).length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Target className="w-5 h-5 text-purple-400" />
@@ -147,7 +160,7 @@ export default function CreativeAnalysisView({
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(data.data.theme_performance)
+                {Object.entries(analysisData.data.theme_performance)
                   .sort(([, a], [, b]) => b.overall_roas - a.overall_roas)
                   .map(([theme, stats]) => (
                     <tr key={theme} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
@@ -179,7 +192,7 @@ export default function CreativeAnalysisView({
       )}
 
       {/* CTA Performance */}
-      {data.data && data.data.cta_performance && data.data.cta_performance.length > 0 && (
+      {analysisData.data && analysisData.data.cta_performance && analysisData.data.cta_performance.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-blue-400" />
@@ -197,7 +210,7 @@ export default function CreativeAnalysisView({
                 </tr>
               </thead>
               <tbody>
-                {data.data.cta_performance.map((cta) => (
+                {analysisData.data.cta_performance.map((cta) => (
                   <tr key={cta.cta_type} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
                     <td className="py-3 px-4 text-sm font-medium">
                       {cta.cta_type.replace(/_/g, ' ')}
@@ -224,11 +237,11 @@ export default function CreativeAnalysisView({
       )}
 
       {/* Top Performers */}
-      {data.data && data.data.top_performers && data.data.top_performers.length > 0 && (
+      {analysisData.data && analysisData.data.top_performers && analysisData.data.top_performers.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <h3 className="text-lg font-bold mb-4">Top Performing Creatives</h3>
           <div className="space-y-3">
-            {data.data.top_performers.map((creative) => (
+            {analysisData.data.top_performers.map((creative) => (
               <div
                 key={creative.creative_id}
                 className="bg-card-bg/60 border border-border-subtle rounded-lg p-4 hover:bg-card-bg/80 transition-colors"
@@ -269,11 +282,125 @@ export default function CreativeAnalysisView({
         </div>
       )}
 
+      {/* --- Ad Fatigue Sections (Merged) --- */}
+
+      {/* Fatigue Summary */}
+      {fatigueData?.summary && fatigueData.summary.total_fatigued > 0 && (
+        <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 border border-orange-500/30 rounded-xl p-6 shadow-lg">
+          <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+            <AlertTriangle className="w-6 h-6 text-orange-400" />
+            <h2 className="text-2xl font-bold text-orange-200">Ad Fatigue Alert Summary</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-card-bg/40 rounded-lg p-4">
+              <div className="text-sm text-gray-400 mb-1">Total Fatigued</div>
+              <div className="text-3xl font-bold">{fatigueData.summary.total_fatigued}</div>
+            </div>
+            <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4">
+              <div className="text-sm text-gray-400 mb-1">Critical</div>
+              <div className="text-3xl font-bold text-red-400">{fatigueData.summary.critical_count}</div>
+              <div className="text-xs text-gray-400 mt-1">&gt;30% decline</div>
+            </div>
+            <div className="bg-orange-900/30 border border-orange-500/30 rounded-lg p-4">
+              <div className="text-sm text-gray-400 mb-1">Warning</div>
+              <div className="text-3xl font-bold text-orange-400">{fatigueData.summary.warning_count}</div>
+              <div className="text-xs text-gray-400 mt-1">20-30% decline</div>
+            </div>
+            <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-4">
+              <div className="text-sm text-gray-400 mb-1">Monitor</div>
+              <div className="text-3xl font-bold text-yellow-400">{fatigueData.summary.monitor_count}</div>
+              <div className="text-xs text-gray-400 mt-1">15-20% decline</div>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          {fatigueData.recommendations && fatigueData.recommendations.length > 0 && (
+            <div className="mt-6 bg-card-bg/40 border border-border-subtle rounded-lg p-4">
+              <h3 className="text-lg font-bold mb-3 text-orange-100">Recommended Actions</h3>
+              <div className="space-y-2">
+                {fatigueData.recommendations.map((rec, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <span className="text-gray-400 mt-1">•</span>
+                    <p className="text-sm text-gray-200">{rec}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Critical Refreshes List */}
+      {fatigueData?.critical_refreshes && fatigueData.critical_refreshes.length > 0 && (
+        <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <h3 className="text-lg font-bold text-white">Critical: Urgent Refresh Needed</h3>
+            <span className="ml-auto text-sm text-gray-400">
+              {fatigueData.critical_refreshes.length} creatives
+            </span>
+          </div>
+          <div className="space-y-3">
+            {fatigueData.critical_refreshes.map((creative) => (
+              <div key={creative.creative_id} className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-red-400">CRITICAL</span>
+                      <span className="text-xs text-gray-500">#{creative.creative_id}</span>
+                    </div>
+                    <div className="text-sm font-semibold mb-2 truncate text-gray-200">{creative.title || 'Untitled'}</div>
+                    <div className="flex gap-6 text-xs text-gray-400">
+                      <div>Initial CTR: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
+                      <div>Recent CTR: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
+                      <div>Decline: <span className="text-red-400 font-bold">{creative.fatigue_pct.toFixed(1)}%</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Warning Refreshes List */}
+      {fatigueData?.warning_refreshes && fatigueData.warning_refreshes.length > 0 && (
+        <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingDown className="w-5 h-5 text-orange-400" />
+            <h3 className="text-lg font-bold text-white">Warning: Plan Refresh Soon</h3>
+            <span className="ml-auto text-sm text-gray-400">
+              {fatigueData.warning_refreshes.length} creatives
+            </span>
+          </div>
+          <div className="space-y-3">
+            {fatigueData.warning_refreshes.map((creative) => (
+              <div key={creative.creative_id} className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-orange-400">WARNING</span>
+                      <span className="text-xs text-gray-500">#{creative.creative_id}</span>
+                    </div>
+                    <div className="text-sm font-semibold mb-2 truncate text-gray-200">{creative.title || 'Untitled'}</div>
+                    <div className="flex gap-6 text-xs text-gray-400">
+                      <div>Initial CTR: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
+                      <div>Recent CTR: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
+                      <div>Decline: <span className="text-orange-400 font-bold">{creative.fatigue_pct.toFixed(1)}%</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Metadata */}
-      {data.metadata && (
+      {analysisData.metadata && (
         <div className="text-center text-xs text-gray-500">
           ✨ Analyzed {startDate} to {endDate} • Generated at{' '}
-          {new Date(data.metadata.generated_at).toLocaleString()}
+          {new Date(analysisData.metadata.generated_at).toLocaleString()}
         </div>
       )}
     </div>

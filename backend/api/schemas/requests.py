@@ -155,12 +155,14 @@ class AccountQuizRequest(BaseModel):
     primary_conversions: List[str] = Field(..., min_items=1, description="List of primary conversion types")
     industry: str = Field(..., min_length=1, max_length=100, description="Business industry")
     optimization_priority: str = Field(..., min_length=1, max_length=100, description="Optimization priority")
+    business_description: Optional[str] = Field(None, max_length=2000, description="Free text description of business activity for AI context")
 
 
 class ConversionTypesResponse(BaseModel):
     """Response for conversion types endpoint"""
     conversion_types: List[str] = Field(..., description="List of available conversion types")
     is_syncing: bool = Field(..., description="Whether account data is still syncing")
+    has_purchase_value: bool = Field(False, description="Whether account has purchase conversions with value (for ROAS display)")
 
 
 class ShareAccountRequest(BaseModel):
@@ -169,4 +171,10 @@ class ShareAccountRequest(BaseModel):
     permission_level: str = Field(default='viewer', pattern='^(admin|viewer)$', description="Permission level (admin or viewer)")
 
 
+class CampaignComparisonRequest(BaseModel):
+    """Request parameters for comparing multiple campaigns"""
+    campaign_ids: List[int] = Field(..., min_items=2, max_items=5, description="List of 2-5 campaign IDs to compare")
+    start_date: date = Field(..., description="Start date (YYYY-MM-DD)")
+    end_date: date = Field(..., description="End date (YYYY-MM-DD)")
+    metrics: List[str] = Field(default=['spend', 'roas', 'ctr', 'cpc', 'conversions', 'cpa'], description="Metrics to compare")
 

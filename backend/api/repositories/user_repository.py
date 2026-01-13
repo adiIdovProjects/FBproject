@@ -59,23 +59,27 @@ class UserRepository:
             self.db.commit()
         return user
 
-    def link_ad_account(self, user_id: int, account_id: int, name: str, currency: str):
+    def link_ad_account(self, user_id: int, account_id: int, name: str, currency: str, page_id: str = None, page_name: str = None):
         # 1. Ensure DimAccount exists
         account = self.db.query(DimAccount).filter(DimAccount.account_id == account_id).first()
         if not account:
             account = DimAccount(account_id=account_id, account_name=name, currency=currency)
             self.db.add(account)
-        
+
         # 2. Check if link already exists
         link = self.db.query(UserAdAccount).filter(
-            UserAdAccount.user_id == user_id, 
+            UserAdAccount.user_id == user_id,
             UserAdAccount.account_id == account_id
         ).first()
-        
+
         if not link:
-            link = UserAdAccount(user_id=user_id, account_id=account_id)
+            link = UserAdAccount(user_id=user_id, account_id=account_id, page_id=page_id, page_name=page_name)
             self.db.add(link)
-        
+        else:
+            # Update page info if link exists
+            link.page_id = page_id
+            link.page_name = page_name
+
         self.db.commit()
         return link
 
@@ -113,43 +117,6 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def share_account(self, account_id: int, target_user_id: int, permission_level: str = 'viewer'):
-        """Share an ad account with another user"""
-        # Check if already shared
-        existing = self.db.query(UserAdAccount).filter_by(
-            user_id=target_user_id,
-            account_id=account_id
-        ).first()
-
-        if existing:
-            raise ValueError("Account already shared with this user")
-
-        # Create new sharing record
-        share = UserAdAccount(
-            user_id=target_user_id,
-            account_id=account_id,
-            permission_level=permission_level
-        )
-        self.db.add(share)
-        self.db.commit()
-        return share
-
-    def unshare_account(self, account_id: int, target_user_id: int):
-        """Remove user access to an ad account"""
-        self.db.query(UserAdAccount).filter_by(
-            user_id=target_user_id,
-            account_id=account_id
-        ).delete()
-        self.db.commit()
-
-    def get_account_collaborators(self, account_id: int):
-        """Get all users who have access to this account"""
-        return (
-            self.db.query(User, UserAdAccount.permission_level)
-            .join(UserAdAccount, User.id == UserAdAccount.user_id)
-            .filter(UserAdAccount.account_id == account_id)
-            .all()
-        )
 
     # Magic Link & Onboarding Methods
 

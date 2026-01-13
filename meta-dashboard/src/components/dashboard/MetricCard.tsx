@@ -28,11 +28,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     switch (format) {
       case 'currency':
         const isSpend = title.toLowerCase().includes('spend') || title.toLowerCase().includes('הוצאה');
+        const isCpcCpa = title.toLowerCase().includes('cpc') || title.toLowerCase().includes('cpa');
+        const decimals = isSpend ? 0 : (isCpcCpa ? 1 : 2);
         return new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: currency,
-          minimumFractionDigits: isSpend ? 0 : 2,
-          maximumFractionDigits: isSpend ? 0 : 2,
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
         }).format(val);
 
       case 'percentage':

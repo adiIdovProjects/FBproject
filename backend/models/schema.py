@@ -74,8 +74,6 @@ class DimAd(Base):
     __tablename__ = 'dim_ad'
     
     ad_id = Column(BigInteger, primary_key=True)
-    adset_id = Column(BigInteger, ForeignKey('dim_adset.ad_id'), nullable=False)
-    # Wait, the FK was dim_adset.adset_id. Fixed below.
     adset_id = Column(BigInteger, ForeignKey('dim_adset.adset_id'), nullable=False)
     creative_id = Column(BigInteger, ForeignKey('dim_creative.creative_id'))
     ad_name = Column(String(255), nullable=False)
@@ -99,6 +97,7 @@ class DimCreative(Base):
     video_url = Column(String(2048))
     video_length_seconds = Column(Integer)
     is_video = Column(Boolean, default=False)
+    is_carousel = Column(Boolean, default=False)
 
 
 class DimPlacement(Base):
@@ -344,6 +343,9 @@ class AccountQuizResponses(Base):
 
     # Q4: Optimization priority
     optimization_priority = Column(String(100))
+
+    # Free text context for AI
+    business_description = Column(Text)
 
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

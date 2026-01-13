@@ -18,11 +18,15 @@ class FacebookAuthService:
     def get_login_url(self, state: str) -> str:
         """Generate the Facebook OAuth login URL"""
         scopes = [
-            'ads_read', 
-            'read_insights', 
+            'ads_read',
+            'read_insights',
             'ads_management',
             'public_profile',
-            'email'
+            'email',
+            'pages_show_list',
+            'pages_read_engagement',
+            'pages_manage_ads',
+            'pages_manage_metadata'
         ]
         scope_str = ','.join(scopes)
         return (
@@ -30,7 +34,8 @@ class FacebookAuthService:
             f"client_id={self.app_id}&"
             f"redirect_uri={self.redirect_uri}&"
             f"state={state}&"
-            f"scope={scope_str}"
+            f"scope={scope_str}&"
+            f"auth_type=rerequest"
         )
 
     async def get_access_token(self, code: str) -> Dict[str, Any]:
@@ -77,7 +82,7 @@ class FacebookAuthService:
         return user.export_all_data()
 
     def get_managed_accounts(self, access_token: str) -> List[Dict[str, Any]]:
-        """List ad accounts reachable by the given user token"""
+        """List ad accounts reachable by the given user token with page info"""
         FacebookAdsApi.init(access_token=access_token)
         me = FBUser(fbid='me')
         accounts = me.get_ad_accounts(fields=[
@@ -85,12 +90,32 @@ class FacebookAuthService:
             AdAccount.Field.name,
             AdAccount.Field.currency,
         ])
-        
+
         results = []
         for account in accounts:
-            results.append({
+            account_data = {
                 "account_id": account[AdAccount.Field.account_id],
                 "name": account[AdAccount.Field.name],
                 "currency": account[AdAccount.Field.currency],
-            })
+                "page_id": None,
+                "page_name": None
+            }
+
+            # Try to fetch the first page associated with this ad account
+            try:
+                # Get pages that this ad account promotes
+                account_obj = AdAccount(f"act_{account[AdAccount.Field.account_id]}")
+                pages = account_obj.get_promote_pages(fields=['id', 'name'])
+
+                if pages and len(pages) > 0:
+                    # Use the first page as default
+                    account_data["page_id"] = pages[0]['id']
+                    account_data["page_name"] = pages[0].get('name', None)
+            except Exception as e:
+                # If we can't fetch pages, just log and continue
+                import logging
+                logging.warning(f"Could not fetch pages for account {account[AdAccount.Field.account_id]}: {e}")
+
+            results.append(account_data)
+
         return results

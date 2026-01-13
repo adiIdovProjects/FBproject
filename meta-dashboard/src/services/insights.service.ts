@@ -183,6 +183,21 @@ export interface CreativeAnalysisResponse {
   };
 }
 
+export interface CampaignAnalysisResponse {
+  analysis: string;
+  data: {
+    total_analyzed: number;
+    scale_candidates: Array<any>;
+    fix_candidates: Array<any>;
+    all_campaigns: Array<any>;
+  };
+  metadata: {
+    start_date: string;
+    end_date: string;
+    generated_at: string;
+  };
+}
+
 export interface CreativeFatigueResponse {
   summary: {
     total_fatigued: number;
@@ -267,6 +282,35 @@ export async function fetchCreativeAnalysis(
     return response.data;
   } catch (error) {
     console.error('[Insights Service] Error fetching creative analysis:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch campaign portfolio analysis
+ */
+export async function fetchCampaignAnalysis(
+  dateRange: DateRange,
+  accountId?: string | null,
+  locale?: string
+): Promise<CampaignAnalysisResponse> {
+  try {
+    const params: any = {
+      start_date: dateRange.startDate,
+      end_date: dateRange.endDate,
+      locale: locale || 'en'
+    };
+    if (accountId) {
+      params.account_id = accountId;
+    }
+
+    const response = await apiClient.get<CampaignAnalysisResponse>(
+      '/api/v1/insights/campaign-analysis',
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('[Insights Service] Error fetching campaign analysis:', error);
     throw error;
   }
 }

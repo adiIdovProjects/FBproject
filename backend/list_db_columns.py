@@ -16,9 +16,9 @@ def list_columns():
     engine = create_engine(DATABASE_URL)
     
     inspector = inspect(engine)
-    columns = inspector.get_columns('fact_core_metrics')
+    columns = inspector.get_columns('dim_creative')
     
-    print("Columns in fact_core_metrics:")
+    print("Columns in dim_creative:")
     for column in columns:
         print(f" - {column['name']}")
 

@@ -230,7 +230,7 @@ class CoreTransformer:
             ('campaign_id', ['campaign_name', 'campaign_status', 'objective']),
             ('adset_id', ['adset_name', 'adset_status', 'targeting']),
             ('ad_id', ['ad_name', 'ad_status', 'creative_id']),
-            ('creative_id', ['title', 'body', 'image_url', 'video_url', 'is_video'])
+            ('creative_id', ['title', 'body', 'image_url', 'video_url', 'is_video', 'is_carousel'])
         ]
 
         for id_col, meta_cols in entities:

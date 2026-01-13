@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AdAccount, fetchLinkedAccounts } from '@/services/accounts.service';
+import { AdAccount, fetchLinkedAccounts, accountsService } from '@/services/accounts.service';
 
 interface AccountContextType {
     selectedAccountId: string | null;
@@ -9,6 +9,7 @@ interface AccountContextType {
     linkedAccounts: AdAccount[];
     isLoading: boolean;
     refreshAccounts: () => Promise<void>;
+    hasROAS: boolean | null; // null = loading, true = account has purchase value, false = no purchase value
 }
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [selectedAccountId, setSelectedAccountIdState] = useState<string | null>(null);
     const [linkedAccounts, setLinkedAccounts] = useState<AdAccount[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasROAS, setHasROAS] = useState<boolean | null>(null);
 
     // Initial load
     useEffect(() => {
@@ -35,9 +37,37 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, []);
 
+    // Fetch hasROAS when selectedAccountId changes
+    useEffect(() => {
+        const fetchHasROAS = async () => {
+            if (!selectedAccountId) {
+                setHasROAS(null);
+                return;
+            }
+            try {
+                const response = await accountsService.getConversionTypes(selectedAccountId);
+                setHasROAS(response.data.has_purchase_value);
+            } catch (error) {
+                console.error('Failed to fetch account ROAS status:', error);
+                setHasROAS(false); // Default to false on error
+            }
+        };
+        fetchHasROAS();
+    }, [selectedAccountId]);
+
     const loadAccounts = async () => {
         try {
             setIsLoading(true);
+
+            // Skip loading if no auth token exists (e.g., on login page)
+            if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
             const accounts = await fetchLinkedAccounts();
             setLinkedAccounts(accounts);
 
@@ -89,7 +119,8 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
             setSelectedAccountId,
             linkedAccounts,
             isLoading,
-            refreshAccounts
+            refreshAccounts,
+            hasROAS
         }}>
             {children}
         </AccountContext.Provider>

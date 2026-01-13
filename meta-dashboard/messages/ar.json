@@ -24,17 +24,39 @@
     "monthly_trend": "الاتجاه الشهري",
     "compare_periods": "مقارنة الفترات",
     "saving": "توفير...",
-    "saved_successfully": "تم الحفظ بنجاح"
+    "saved_successfully": "تم الحفظ بنجاح",
+    "actions": "إجراءات",
+    "loading": "جارٍ التحميل..."
   },
   "nav": {
     "dashboard": "لوحة التحكم",
+    "performance": "الأداء",
     "campaigns": "الحملات",
+    "targeting": "الاستهداف",
     "creatives": "الإبداعات",
+    "manage": "إدارة",
     "insights": "رؤى",
     "reports": "التقارير",
     "ai_investigator": "محقق الذكاء الاصطناعي",
     "settings": "الإعدادات",
-    "manage_account": "إدارة الحساب"
+    "manage_account": "إدارة الحساب",
+    "uploader": "رافع الملف",
+    "analytics": "التحليلات",
+    "account_performance": "أداء الحساب",
+    "campaigns_performance": "أداء الحملات",
+    "targeting_performance": "أداء الاستهداف",
+    "creative_performance": "أداء الإبداعات",
+    "campaign_control": "التحكم بالحملات",
+    "intelligence": "الذكاء",
+    "custom_reports": "تقارير مخصصة"
+  },
+  "manage": {
+    "title": "إدارة الحملات",
+    "page_title": "إدارة الحساب",
+    "subtitle": "إيقاف واستئناف ومراقبة حملاتك ومجموعاتك الإعلانية وإعلاناتك",
+    "daily_budget": "الميزانية اليومية",
+    "edit_budget": "تعديل الميزانية",
+    "invalid_budget": "يرجى إدخال مبلغ ميزانية صالح"
   },
   "metrics": {
     "spend": "الإنفاق",
@@ -89,7 +111,10 @@
     "country": "دولة",
     "click_tab_to_load": "انقر فوق علامة تبويب لتحميل بيانات تفصيلية",
     "breakdown_lazy_load": "سيتم تحميل البيانات عند تحديد نوع التقسيم",
-    "leads": "العملاء المحتملين"
+    "leads": "العملاء المحتملين",
+    "filter_group_name": "فلتر الحملات",
+    "filter_group_status": "فلتر الحالة",
+    "filter_group_delivery": "فلتر التوصيل"
   },
   "reports": {
     "title": "تقارير متقدمة",
@@ -137,6 +162,21 @@
     "avg_watch_time": "متوسط وقت المشاهدة",
     "avg_completion": "متوسط الإكمال"
   },
+  "targeting": {
+    "title": "تحليل الاستهداف",
+    "subtitle": "تحليل أداء مجموعة الإعلانات مع رؤى الاستهداف والتفصيلات",
+    "table_title": "مجموعات الإعلانات",
+    "search_placeholder": "البحث في مجموعات الإعلانات...",
+    "no_data": "لم يتم العثور على مجموعات إعلانات",
+    "loading": "جارٍ تحميل مجموعات الإعلانات...",
+    "adset_name": "اسم مجموعة الإعلانات",
+    "targeting_type": "نوع الاستهداف",
+    "targeting_summary": "تفاصيل الاستهداف",
+    "broad_targeting": "استهداف واسع",
+    "lookalike_targeting": "استهداف الجمهور المشابه",
+    "interest_targeting": "استهداف الاهتمامات",
+    "custom_audience_targeting": "استهداف الجمهور المخصص"
+  },
   "actions": {
     "export": "تصدير",
     "download_excel": "تحميل كـ Excel",
@@ -150,7 +190,13 @@
     "export_to_google_sheets": "تصدير إلى جداول بيانات جوجل",
     "exporting": "جارٍ التصدير...",
     "select_all": "حدد الكل",
-    "clear_all": "مسح الكل"
+    "clear_all": "مسح الكل",
+    "pause": "إيقاف مؤقت",
+    "resume": "استئناف",
+    "update_budget": "تحديث الميزانية"
+  },
+  "errors": {
+    "failed_to_update": "فشل التحديث. حاول مرة أخرى."
   },
   "date": {
     "label": "التاريخ",
@@ -163,6 +209,8 @@
     "last_7_days": "آخر 7 أيام",
     "last_14_days": "آخر 14 يومًا",
     "last_30_days": "آخر 30 يومًا",
+    "last_60_days": "آخر 60 يومًا",
+    "last_90_days": "آخر 90 يومًا",
     "last_month": "الشهر الماضي",
     "this_month": "هذا الشهر",
     "today_yesterday": "اليوم والأمس",
@@ -213,7 +261,9 @@
     "generated_at": "تم الإنشاء في",
     "high_priority": "أولوية عالية",
     "medium_priority": "أولوية متوسطة",
-    "test_and_learn": "اختبر وتعلم"
+    "test_and_learn": "اختبر وتعلم",
+    "campaign_analysis": "تحليل الحملة",
+    "campaign_analysis_desc": "تحسين المحفظة والميزانية"
   },
   "auth": {
     "login_title": "تسجيل الدخول إلى حسابك",
@@ -380,5 +430,11 @@
     "conversion_types": "أنواع التحويل",
     "industry": "صناعة",
     "optimization_priority": "أولوية التحسين"
+  },
+  "status": {
+    "ACTIVE": "نشيط",
+    "PAUSED": "توقف مؤقتًا",
+    "ARCHIVED": "مؤرشف",
+    "UNKNOWN": "مجهول"
   }
 }
