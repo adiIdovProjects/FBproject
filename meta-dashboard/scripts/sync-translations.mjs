@@ -10,9 +10,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env.local
-const envPath = path.join(__dirname, '../.env.local');
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath });
+// Load environment variables from .env.local and .env
+const envPaths = [
+  path.join(__dirname, '../.env.local'),
+  path.join(__dirname, '../.env'),
+  path.join(__dirname, '../../.env')
+];
+
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    // console.log(chalk.gray(`Loading env from ${envPath}`));
+    dotenv.config({ path: envPath });
+  }
 }
 
 /**

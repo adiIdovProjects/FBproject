@@ -47,7 +47,6 @@ export default function ComparisonChart({
       clicks: t('metrics.clicks'),
       ctr: t('metrics.ctr'),
       cpc: t('metrics.cpc'),
-      cpm: t('metrics.cpm'),
       conversions: t('metrics.conversions'),
       conversion_value: t('metrics.conversion_value'),
       roas: t('metrics.roas'),
@@ -63,7 +62,6 @@ export default function ComparisonChart({
     switch (metric) {
       case 'spend':
       case 'cpc':
-      case 'cpm':
       case 'cpa':
       case 'conversion_value':
         return currency === 'ILS' ? `₪${value.toFixed(2)}` :

@@ -16,7 +16,10 @@ from backend.api.schemas.responses import (
     AgeGenderBreakdown,
     PlacementBreakdown,
     CountryBreakdown,
-    AdsetBreakdown
+    AdsetBreakdown,
+    EntityPlacementBreakdown,
+    EntityDemographicsBreakdown,
+    EntityCountryBreakdown
 )
 
 router = APIRouter(
@@ -142,3 +145,90 @@ def get_adset_breakdown(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get adset breakdown: {str(e)}")
+
+
+@router.get(
+    "/placement/by-entity",
+    response_model=List[EntityPlacementBreakdown],
+    summary="Get placement breakdown by entity",
+    description="Returns placement metrics grouped by campaign, adset, or ad"
+)
+def get_placement_by_entity(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
+    search_query: Optional[str] = Query(None, description="Filter by entity name"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get placement breakdown grouped by entity.
+    Returns rows like: "Campaign A - Instagram Feed", "Campaign A - Stories"
+    """
+    try:
+        service = MetricsService(db)
+        return service.get_placement_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            search_query=search_query
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get placement by entity: {str(e)}")
+
+
+@router.get(
+    "/demographics/by-entity",
+    response_model=List[EntityDemographicsBreakdown],
+    summary="Get demographics breakdown by entity",
+    description="Returns age-gender metrics grouped by campaign, adset, or ad"
+)
+def get_demographics_by_entity(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
+    search_query: Optional[str] = Query(None, description="Filter by entity name"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get demographics breakdown grouped by entity.
+    Returns rows like: "Campaign A - Male 25-34"
+    """
+    try:
+        service = MetricsService(db)
+        return service.get_demographics_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            search_query=search_query
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get demographics by entity: {str(e)}")
+
+
+@router.get(
+    "/country/by-entity",
+    response_model=List[EntityCountryBreakdown],
+    summary="Get country breakdown by entity",
+    description="Returns country metrics grouped by campaign, adset, or ad"
+)
+def get_country_by_entity(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
+    search_query: Optional[str] = Query(None, description="Filter by entity name"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get country breakdown grouped by entity.
+    Returns rows like: "Campaign A - United States"
+    """
+    try:
+        service = MetricsService(db)
+        return service.get_country_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            search_query=search_query
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get country by entity: {str(e)}")

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AccountSelector } from '@/components/connect/AccountSelector';
 import { fetchAvailableAccounts, linkAccounts, AdAccount } from '@/services/accounts.service';
@@ -9,6 +10,8 @@ import { apiClient } from '@/services/apiClient';
 
 export default function SelectAccountsPage() {
     const router = useRouter();
+    const { locale } = useParams();
+    const t = useTranslations();
     const [accounts, setAccounts] = useState<AdAccount[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export default function SelectAccountsPage() {
             // Check if user has auth token
             const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
             if (!token) {
-                router.push('/en/login');
+                router.push(`/${locale}/login`);
                 return;
             }
 
@@ -54,10 +57,10 @@ export default function SelectAccountsPage() {
             const onboardingStatus = await apiClient.get('/api/v1/auth/onboarding/status');
             if (onboardingStatus.data.onboarding_completed) {
                 // Already completed quiz - go to dashboard
-                router.push('/en/account-dashboard');
+                router.push(`/${locale}/account-dashboard`);
             } else {
                 // First time - go to quiz
-                router.push('/en/quiz');
+                router.push(`/${locale}/quiz`);
             }
         } catch (err: any) {
             console.error('Error linking accounts:', err);
@@ -75,10 +78,10 @@ export default function SelectAccountsPage() {
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-black text-white mb-4">
-                        Link Your Ad Accounts
+                        {t('accounts.link_your_accounts')}
                     </h1>
                     <p className="text-gray-400 text-lg">
-                        Select the Facebook ad accounts you want to track and analyze
+                        {t('accounts.select_accounts_desc')}
                     </p>
                 </div>
 
@@ -88,14 +91,14 @@ export default function SelectAccountsPage() {
                         <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-xl flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                             <div className="flex-1">
-                                <p className="text-red-200 font-medium">Error</p>
+                                <p className="text-red-200 font-medium">{t('accounts.error')}</p>
                                 <p className="text-red-300/80 text-sm mt-1">{error}</p>
                             </div>
                             <button
                                 onClick={handleRetry}
                                 className="text-sm px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-colors"
                             >
-                                Retry
+                                {t('accounts.retry')}
                             </button>
                         </div>
                     )}
@@ -110,12 +113,12 @@ export default function SelectAccountsPage() {
                 {/* Footer Help Text */}
                 <div className="mt-8 text-center">
                     <p className="text-gray-500 text-sm">
-                        Don't see your accounts?{' '}
+                        {t('accounts.dont_see_accounts')}{' '}
                         <button
-                            onClick={() => router.push('/en/connect')}
+                            onClick={() => router.push(`/${locale}/connect`)}
                             className="text-accent hover:text-accent/80 underline"
                         >
-                            Reconnect your Facebook account
+                            {t('accounts.reconnect_facebook')}
                         </button>
                     </p>
                 </div>

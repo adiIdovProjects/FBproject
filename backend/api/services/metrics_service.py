@@ -34,7 +34,10 @@ from backend.api.schemas.responses import (
     CreativeComparisonMetrics,
     AdsetBreakdown,
     AdsetComparisonMetrics,
-    DayOfWeekBreakdown
+    DayOfWeekBreakdown,
+    EntityPlacementBreakdown,
+    EntityDemographicsBreakdown,
+    EntityCountryBreakdown
 )
 import logging
 
@@ -1391,4 +1394,107 @@ class MetricsService:
                 roas=row['roas']
             )
             for row in raw_data
+        ]
+
+    def get_placement_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
+    ) -> List[EntityPlacementBreakdown]:
+        """
+        Get placement breakdown grouped by entity (campaign/adset/ad).
+        """
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        breakdowns = self.breakdown_repo.get_placement_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            account_ids=filtered_account_ids,
+            search_query=search_query
+        )
+
+        return [
+            EntityPlacementBreakdown(
+                entity_name=b['entity_name'],
+                placement_name=b['placement_name'],
+                spend=b['spend'],
+                impressions=b['impressions'],
+                clicks=b['clicks'],
+                ctr=b['ctr'],
+                cpc=b['cpc']
+            )
+            for b in breakdowns
+        ]
+
+    def get_demographics_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
+    ) -> List[EntityDemographicsBreakdown]:
+        """
+        Get demographics breakdown grouped by entity (campaign/adset/ad).
+        """
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        breakdowns = self.breakdown_repo.get_demographics_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            account_ids=filtered_account_ids,
+            search_query=search_query
+        )
+
+        return [
+            EntityDemographicsBreakdown(
+                entity_name=b['entity_name'],
+                age_group=b['age_group'],
+                gender=b['gender'],
+                spend=b['spend'],
+                impressions=b['impressions'],
+                clicks=b['clicks'],
+                ctr=b['ctr'],
+                cpc=b['cpc']
+            )
+            for b in breakdowns
+        ]
+
+    def get_country_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None
+    ) -> List[EntityCountryBreakdown]:
+        """
+        Get country breakdown grouped by entity (campaign/adset/ad).
+        """
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        breakdowns = self.breakdown_repo.get_country_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            account_ids=filtered_account_ids,
+            search_query=search_query
+        )
+
+        return [
+            EntityCountryBreakdown(
+                entity_name=b['entity_name'],
+                country=b['country'],
+                spend=b['spend'],
+                impressions=b['impressions'],
+                clicks=b['clicks'],
+                ctr=b['ctr'],
+                cpc=b['cpc']
+            )
+            for b in breakdowns
         ]

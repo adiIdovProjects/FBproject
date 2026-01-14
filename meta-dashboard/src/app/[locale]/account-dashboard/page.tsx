@@ -311,7 +311,7 @@ export default function PerformanceDashboard() {
       {/* Quick Insights - Removed */}
 
       {/* Performance Chart */}
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 flex items-center justify-start">
         <TimeGranularityToggle
           selected={granularity}
           onChange={setGranularity}

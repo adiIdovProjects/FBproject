@@ -174,6 +174,40 @@ class CountryBreakdown(BaseModel):
     cpa: float = 0.0
 
 
+class EntityPlacementBreakdown(BaseModel):
+    """Placement breakdown grouped by entity (campaign/adset/ad)"""
+    entity_name: str
+    placement_name: str
+    spend: float
+    impressions: int
+    clicks: int
+    ctr: float
+    cpc: float = 0.0
+
+
+class EntityDemographicsBreakdown(BaseModel):
+    """Demographics breakdown grouped by entity (campaign/adset/ad)"""
+    entity_name: str
+    age_group: str
+    gender: str
+    spend: float
+    impressions: int
+    clicks: int
+    ctr: float
+    cpc: float = 0.0
+
+
+class EntityCountryBreakdown(BaseModel):
+    """Country breakdown grouped by entity (campaign/adset/ad)"""
+    entity_name: str
+    country: str
+    spend: float
+    impressions: int
+    clicks: int
+    ctr: float
+    cpc: float = 0.0
+
+
 class CreativeMetrics(BaseModel):
     """Metrics for a single creative"""
     creative_id: int

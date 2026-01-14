@@ -271,9 +271,9 @@ export default function CampaignsPage() {
                 className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
               >
                 <option value="" className="bg-gray-900 text-white">{t('common.all_statuses')}</option>
-                <option value="ACTIVE" className="bg-gray-900 text-white">ACTIVE</option>
-                <option value="PAUSED" className="bg-gray-900 text-white">PAUSED</option>
-                <option value="ARCHIVED" className="bg-gray-900 text-white">ARCHIVED</option>
+                <option value="ACTIVE" className="bg-gray-900 text-white">{t('status.ACTIVE')}</option>
+                <option value="PAUSED" className="bg-gray-900 text-white">{t('status.PAUSED')}</option>
+                <option value="ARCHIVED" className="bg-gray-900 text-white">{t('status.ARCHIVED')}</option>
               </select>
               <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,7 +325,7 @@ export default function CampaignsPage() {
           )}
 
           {/* Comparison Toggle */}
-          <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5">
+          <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
             <span className="text-sm text-gray-400">{t('common.compare_periods') || 'Compare Periods'}</span>
             <button
               onClick={() => setShowComparison(!showComparison)}
@@ -381,7 +381,7 @@ export default function CampaignsPage() {
 
       {/* Performance Chart */}
       <div className="mb-8">
-        <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.chart_title')}</h2>
             {isFilterActive && (

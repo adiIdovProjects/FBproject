@@ -28,7 +28,7 @@ export const TimeGranularityToggle: React.FC<TimeGranularityToggleProps> = ({
   ];
 
   return (
-    <div className={`inline-flex rounded-lg border border-gray-600 bg-gray-700 p-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className="inline-flex rounded-lg border border-gray-600 bg-gray-700 p-1">
       {options.map((option) => (
         <button
           key={option.value}

@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { verifyMagicLink } from '@/services/auth.service';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function VerifyMagicLinkPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { locale } = useParams();
+    const t = useTranslations();
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
     const [error, setError] = useState('');
 
@@ -37,20 +40,20 @@ export default function VerifyMagicLinkPage() {
 
                         switch (nextStep) {
                             case 'connect_facebook':
-                                router.push('/en/onboard/connect-facebook');
+                                router.push(`/${locale}/onboard/connect-facebook`);
                                 break;
                             case 'select_accounts':
-                                router.push('/en/select-accounts');
+                                router.push(`/${locale}/select-accounts`);
                                 break;
                             case 'complete_profile':
-                                router.push('/en/quiz');
+                                router.push(`/${locale}/quiz`);
                                 break;
                             default:
-                                router.push('/en/account-dashboard');
+                                router.push(`/${locale}/account-dashboard`);
                         }
                     } else {
                         // User is fully onboarded
-                        router.push('/en/account-dashboard');
+                        router.push(`/${locale}/account-dashboard`);
                     }
                 }, 1500);
             })
@@ -70,8 +73,8 @@ export default function VerifyMagicLinkPage() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/20 mb-6">
                                 <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Verifying...</h2>
-                            <p className="text-gray-400">Please wait while we verify your magic link</p>
+                            <h2 className="text-2xl font-bold text-white mb-2">{t('auth.verifying')}</h2>
+                            <p className="text-gray-400">{t('auth.please_wait_verifying')}</p>
                         </>
                     )}
 
@@ -80,8 +83,8 @@ export default function VerifyMagicLinkPage() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-6">
                                 <CheckCircle className="w-8 h-8 text-green-400" />
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Success!</h2>
-                            <p className="text-gray-400">You're being redirected...</p>
+                            <h2 className="text-2xl font-bold text-white mb-2">{t('auth.success')}</h2>
+                            <p className="text-gray-400">{t('auth.being_redirected')}</p>
                         </>
                     )}
 
@@ -90,13 +93,13 @@ export default function VerifyMagicLinkPage() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 mb-6">
                                 <AlertCircle className="w-8 h-8 text-red-400" />
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Verification Failed</h2>
+                            <h2 className="text-2xl font-bold text-white mb-2">{t('auth.verification_failed')}</h2>
                             <p className="text-red-400 mb-6">{error}</p>
                             <button
-                                onClick={() => router.push('/en/login')}
+                                onClick={() => router.push(`/${locale}/login`)}
                                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-xl transition-all"
                             >
-                                Back to Login
+                                {t('auth.back_to_login')}
                             </button>
                         </>
                     )}

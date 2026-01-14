@@ -74,7 +74,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
       setError(null);
 
       try {
-        const data = await fetchBreakdown(dateRange, activeTab, demographicSubTab, statusFilter, searchQuery, accountId);
+        const data = await fetchBreakdown(dateRange, activeTab, demographicSubTab, statusFilter, searchQuery, accountId, null, campaignIds);
         setBreakdownData(data);
       } catch (err: any) {
         console.error('[BreakdownTabs] Error fetching breakdown:', err);
@@ -85,7 +85,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
     };
 
     loadBreakdownData();
-  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, statusFilter, searchQuery, accountId]);
+  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, statusFilter, searchQuery, accountId, campaignIds]);
 
   // Load data on first tab click
   const handleTabClick = (tabId: BreakdownType) => {
@@ -116,10 +116,10 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   };
 
   return (
-    <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl">
+    <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Tabs Header */}
       <div className="bg-black/20 border-b border-border-subtle">
-        <div className={`flex items-end px-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className="flex items-end px-2">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -190,7 +190,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
 
         {!isLoading && !error && hasLoadedOnce && breakdownData.length === 0 && (
           <div className="flex items-center justify-center h-64 text-gray-400">
-            {t('no_data_available')}
+            {t('common.no_data_available')}
           </div>
         )}
 
@@ -199,7 +199,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
             <table className="w-full">
               <thead className="bg-gray-750 border-b border-gray-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                  <th className={`px-4 py-3 text-xs font-medium text-gray-400 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
                     {activeTab === 'adset' && t('breakdown.ad_set_name')}
                     {activeTab === 'platform' && t('campaigns.platform')}
                     {activeTab === 'placement' && t('campaigns.placement')}
@@ -207,14 +207,9 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     {activeTab === 'country' && t('campaigns.country')}
                   </th>
                   {activeTab === 'adset' && (
-                    <>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        {t('breakdown.targeting_type')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        {t('breakdown.targeting_summary')}
-                      </th>
-                    </>
+                    <th className={`px-4 py-3 text-xs font-medium text-gray-400 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t('breakdown.targeting_type')}
+                    </th>
                   )}
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase font-mono">
                     {t('metrics.spend')}
@@ -246,33 +241,28 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     className="hover:bg-gray-750 transition-colors duration-150"
                   >
                     {/* Name */}
-                    <td className="px-4 py-4 text-sm text-gray-200 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                    <td className={`px-4 py-4 text-sm text-gray-200 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>
                       {row.name}
                     </td>
 
                     {/* Adset Specific Columns */}
                     {activeTab === 'adset' && (
-                      <>
-                        <td className="px-4 py-4 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            row.targeting_type === 'Broad' ? 'bg-blue-900/40 text-blue-300' :
-                            row.targeting_type === 'Lookalike' ? 'bg-purple-900/40 text-purple-300' :
-                            row.targeting_type === 'Interest' ? 'bg-green-900/40 text-green-300' :
-                            row.targeting_type === 'Custom Audience' ? 'bg-orange-900/40 text-orange-300' :
-                            row.targeting_type === 'List Audience' ? 'bg-amber-900/40 text-amber-300' :
-                            row.targeting_type === 'Remarketing' ? 'bg-cyan-900/40 text-cyan-300' :
-                            row.targeting_type === 'Interest Audience' ? 'bg-green-900/40 text-green-300' :
-                            row.targeting_type === 'Mix Audience' ? 'bg-indigo-900/40 text-indigo-300' :
-                            row.targeting_type === 'Advantage+' ? 'bg-teal-900/40 text-teal-300' :
-                            'bg-gray-700 text-gray-300'
-                          }`}>
-                            {row.targeting_type || 'Broad'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-400 max-w-[300px] truncate">
-                          {row.targeting_summary}
-                        </td>
-                      </>
+                      <td className="px-4 py-4 text-sm">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          row.targeting_type === 'Broad' ? 'bg-blue-900/40 text-blue-300' :
+                          row.targeting_type === 'Lookalike' ? 'bg-purple-900/40 text-purple-300' :
+                          row.targeting_type === 'Interest' ? 'bg-green-900/40 text-green-300' :
+                          row.targeting_type === 'Custom Audience' ? 'bg-orange-900/40 text-orange-300' :
+                          row.targeting_type === 'List Audience' ? 'bg-amber-900/40 text-amber-300' :
+                          row.targeting_type === 'Remarketing' ? 'bg-cyan-900/40 text-cyan-300' :
+                          row.targeting_type === 'Interest Audience' ? 'bg-green-900/40 text-green-300' :
+                          row.targeting_type === 'Mix Audience' ? 'bg-indigo-900/40 text-indigo-300' :
+                          row.targeting_type === 'Advantage+' ? 'bg-teal-900/40 text-teal-300' :
+                          'bg-gray-700 text-gray-300'
+                        }`}>
+                          {row.targeting_type || 'Broad'}
+                        </span>
+                      </td>
                     )}
 
                     {/* Spend */}

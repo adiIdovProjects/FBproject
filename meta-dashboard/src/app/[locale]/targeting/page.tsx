@@ -299,9 +299,9 @@ export default function TargetingPage() {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
                             >
-                                <option value="" className="bg-gray-900 text-white">All Status</option>
-                                <option value="ACTIVE" className="bg-gray-900 text-white">Active</option>
-                                <option value="PAUSED" className="bg-gray-900 text-white">Paused</option>
+                                <option value="" className="bg-gray-900 text-white">{t('common.all_statuses')}</option>
+                                <option value="ACTIVE" className="bg-gray-900 text-white">{t('status.ACTIVE')}</option>
+                                <option value="PAUSED" className="bg-gray-900 text-white">{t('status.PAUSED')}</option>
                             </select>
                             <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,8 +343,8 @@ export default function TargetingPage() {
                     )}
 
                     {/* Comparison Toggle */}
-                    <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5">
-                        <span className="text-sm text-gray-400">Compare Periods</span>
+                    <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
+                        <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
                         <button
                             onClick={() => setShowComparison(!showComparison)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showComparison ? 'bg-accent' : 'bg-gray-700'}`}
@@ -583,7 +583,7 @@ export default function TargetingPage() {
 
             {/* Performance Chart */}
             <div className="mb-8">
-                <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <h2 className="text-2xl font-bold text-gray-100">Performance Over Time</h2>
                         {isFilterActive && (
@@ -611,8 +611,8 @@ export default function TargetingPage() {
 
             {/* Breakdown Tabs */}
             <div className="mb-8" ref={breakdownRef}>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-100">Breakdown Analysis</h2>
+                <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.breakdown_title')}</h2>
                     {isFilterActive && (
                         <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             Filtered ({filteredAdsetIds.length} ad sets)

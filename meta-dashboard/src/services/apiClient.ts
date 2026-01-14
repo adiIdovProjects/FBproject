@@ -42,8 +42,11 @@ apiClient.interceptors.response.use(
                 if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
                     // Clear invalid token
                     localStorage.removeItem('token');
-                    // Redirect to login (or show login modal)
-                    window.location.href = '/en/login';
+                    // Extract locale from current URL path (e.g., /he/dashboard -> he)
+                    const pathParts = window.location.pathname.split('/');
+                    const locale = pathParts[1] || 'en';
+                    // Redirect to login preserving locale
+                    window.location.href = `/${locale}/login`;
                     console.warn('Unauthorized: Token expired or invalid');
                 }
             }

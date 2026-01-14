@@ -98,7 +98,7 @@ export const AccountSettings: React.FC = () => {
             newUrl.searchParams.delete('reconnect_success');
             window.history.replaceState({}, '', newUrl.toString());
             // Show success message
-            alert('Successfully reconnected! Facebook Page information has been updated.');
+            alert(t('settings.reconnect_success'));
         }
         if (searchParams.get('error')) {
             alert(searchParams.get('error'));
@@ -217,8 +217,8 @@ export const AccountSettings: React.FC = () => {
                                                         <p className="text-sm font-bold text-white">{account.name}</p>
                                                         <p className="text-xs text-gray-500">
                                                             ID: {account.account_id} • {account.currency}
-                                                            {account.page_id && <span className="ml-2 text-green-500">✓ Page Connected</span>}
-                                                            {!account.page_id && <span className="ml-2 text-yellow-500">⚠ No Page</span>}
+                                                            {account.page_id && <span className="ml-2 text-green-500">✓ {t('accounts.page_connected')}</span>}
+                                                            {!account.page_id && <span className="ml-2 text-yellow-500">⚠ {t('settings.no_page')}</span>}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -230,7 +230,7 @@ export const AccountSettings: React.FC = () => {
                                                             title="Reconnect to fetch Page ID"
                                                         >
                                                             <RefreshCw className="w-4 h-4" />
-                                                            Reconnect
+                                                            {t('settings.reconnect')}
                                                         </button>
                                                     )}
                                                     <button
@@ -271,12 +271,12 @@ export const AccountSettings: React.FC = () => {
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <Users className="w-5 h-5 text-accent" />
-                                    Personal Information
+                                    {t('settings.personal_information')}
                                 </h3>
                                 {profileSaveSuccess && (
                                     <span className="text-green-400 text-sm font-bold animate-in fade-in flex items-center gap-1">
                                         <CheckCircle className="w-4 h-4" />
-                                        Saved!
+                                        {t('settings.saved')}
                                     </span>
                                 )}
                             </div>
@@ -285,56 +285,56 @@ export const AccountSettings: React.FC = () => {
                                 {/* Username (Full Name) */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                                        Username
+                                        {t('settings.username')}
                                     </label>
                                     <input
                                         type="text"
                                         value={userProfile.full_name}
                                         onChange={(e) => setUserProfile({ ...userProfile, full_name: e.target.value })}
                                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                                        placeholder="Enter your name"
+                                        placeholder={t('settings.enter_name_placeholder')}
                                     />
                                 </div>
 
                                 {/* Email (Read-only) */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                                        Email
+                                        {t('settings.email_address')}
                                     </label>
                                     <input
                                         type="email"
                                         value={userProfile.email}
                                         disabled
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-400 cursor-not-allowed"
-                                        placeholder="Email address"
+                                        placeholder={t('settings.email_placeholder')}
                                     />
                                 </div>
 
                                 {/* Job Title */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                                        Job Title
+                                        {t('settings.job_title')}
                                     </label>
                                     <input
                                         type="text"
                                         value={userProfile.job_title}
                                         onChange={(e) => setUserProfile({ ...userProfile, job_title: e.target.value })}
                                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                                        placeholder="e.g., Marketing Manager"
+                                        placeholder={t('settings.job_title_placeholder')}
                                     />
                                 </div>
 
                                 {/* Years of Experience */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                                        Years of Experience
+                                        {t('settings.years_experience')}
                                     </label>
                                     <input
                                         type="text"
                                         value={userProfile.years_experience}
                                         onChange={(e) => setUserProfile({ ...userProfile, years_experience: e.target.value })}
                                         className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                                        placeholder="e.g., 3-5 years"
+                                        placeholder={t('settings.experience_placeholder')}
                                     />
                                 </div>
                             </div>
@@ -359,12 +359,12 @@ export const AccountSettings: React.FC = () => {
                             {isSavingProfile ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                                    Saving...
+                                    {t('common.saving')}
                                 </>
                             ) : (
                                 <>
                                     <Save className="w-4 h-4" />
-                                    Save Changes
+                                    {t('common.save_changes')}
                                 </>
                             )}
                         </button>
@@ -379,7 +379,7 @@ export const AccountSettings: React.FC = () => {
                             </div>
                             <div className="relative z-10">
                                 <h3 className="text-xl font-black text-white mb-1">{t('settings.current_plan')}</h3>
-                                <p className="text-accent font-bold text-sm uppercase tracking-widest mb-4">Pro Plan - $49/mo</p>
+                                <p className="text-accent font-bold text-sm uppercase tracking-widest mb-4">{t('settings.pro_plan')}</p>
                                 <button className="bg-white text-black font-black py-2 px-6 rounded-lg text-sm hover:bg-gray-200 transition-all">
                                     {t('settings.upgrade_plan')}
                                 </button>
@@ -389,13 +389,13 @@ export const AccountSettings: React.FC = () => {
                             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.payment_method')}</h4>
                             <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="w-12 h-8 bg-gray-800 rounded border border-white/5 flex items-center justify-center">
-                                    <span className="text-[10px] font-bold text-white">VISA</span>
+                                    <span className="text-[10px] font-bold text-white">{t('settings.visa')}</span>
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white">•••• •••• •••• 4242</p>
-                                    <p className="text-[10px] text-gray-500">Expires 12/26</p>
+                                    <p className="text-[10px] text-gray-500">{t('settings.expires')} 12/26</p>
                                 </div>
-                                <button className="text-xs font-bold text-accent hover:underline">Edit</button>
+                                <button className="text-xs font-bold text-accent hover:underline">{t('settings.edit')}</button>
                             </div>
                         </div>
                     </div>
@@ -416,7 +416,7 @@ export const AccountSettings: React.FC = () => {
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div>
                                     <p className="text-sm font-bold text-white">{t('settings.change_password')}</p>
-                                    <p className="text-xs text-gray-500">{t('settings.change_password_desc')} 3 months ago.</p>
+                                    <p className="text-xs text-gray-500">{t('settings.last_changed')} 3 months ago.</p>
                                 </div>
                                 <button className="text-xs font-bold text-accent hover:underline">{t('settings.update')}</button>
                             </div>

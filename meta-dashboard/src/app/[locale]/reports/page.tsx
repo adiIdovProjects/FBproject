@@ -25,6 +25,12 @@ import {
   ComparisonItem,
   exportToExcel,
   exportToGoogleSheets,
+  fetchBreakdownReport,
+  isSpecialBreakdown,
+  isEntityBreakdown,
+  getEntityType,
+  getSpecialBreakdownType,
+  fetchEntityBreakdownReport,
 } from '../../../services/reports.service';
 import { useAccount } from '../../../context/AccountContext';
 
@@ -73,6 +79,24 @@ export default function ReportsPage() {
   const hasConversionValue = useMemo(() => {
     return displayData.some(item => (item.period1.conversion_value || 0) > 0);
   }, [displayData]);
+
+  // Metrics that require conversion data (not available for special breakdowns)
+  const CONVERSION_METRICS: MetricKey[] = ['conversions', 'conversion_value', 'roas', 'cpa', 'conversion_rate'];
+  const SPECIAL_BREAKDOWNS = ['placement', 'platform', 'age-gender', 'country'];
+  const isCurrentBreakdownSpecial = SPECIAL_BREAKDOWNS.includes(breakdown);
+  // Also check if secondary breakdown is special (entity + special combination)
+  const hasSpecialSecondary = SPECIAL_BREAKDOWNS.includes(secondaryBreakdown);
+  const shouldHideConversionMetrics = isCurrentBreakdownSpecial || hasSpecialSecondary;
+
+  // Remove conversion metrics when switching to special breakdown
+  useEffect(() => {
+    if (shouldHideConversionMetrics) {
+      const filteredMetrics = selectedMetrics.filter(m => !CONVERSION_METRICS.includes(m));
+      if (filteredMetrics.length !== selectedMetrics.length) {
+        setSelectedMetrics(filteredMetrics);
+      }
+    }
+  }, [breakdown, secondaryBreakdown]);
 
   // Remove ROAS from selectedMetrics if there's no conversion value
   useEffect(() => {
@@ -150,25 +174,132 @@ export default function ReportsPage() {
     setError(null);
 
     try {
-      const data = await fetchComparisonData({
-        period1Start,
-        period1End,
-        dimension,
-        breakdown,
-        secondaryBreakdown,
-        campaignFilter: campaignFilter || undefined,
-        adSetFilter: adSetFilter || undefined,
-        adFilter: adFilter || undefined,
-        accountId: selectedAccountId || undefined,
-      });
+      // Check if this is entity + special breakdown combination (e.g., Campaign + Placement)
+      if (isEntityBreakdown(breakdown as any) && isSpecialBreakdown(secondaryBreakdown as any)) {
+        const entityType = getEntityType(breakdown as any);
+        const specialType = getSpecialBreakdownType(secondaryBreakdown as any);
 
-      setComparisonData(data);
+        if (entityType && specialType) {
+          const breakdownData = await fetchEntityBreakdownReport(
+            period1Start,
+            period1End,
+            entityType,
+            specialType,
+            campaignFilter || undefined
+          );
 
-      // Set display data based on dimension
-      if (data.dimension === 'overview' && data.overview) {
-        setDisplayData([data.overview]);
+          // Convert to ComparisonItem format for display
+          const items: ComparisonItem[] = breakdownData.map((row, idx) => ({
+            id: `${breakdown}-${secondaryBreakdown}-${idx}`,
+            name: row.name,
+            period1: {
+              spend: row.spend,
+              impressions: row.impressions,
+              clicks: row.clicks,
+              ctr: row.ctr,
+              cpc: row.cpc,
+              conversions: row.conversions,
+              conversion_value: row.conversion_value,
+              roas: row.roas,
+              cpa: row.cpa,
+              conversion_rate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
+            },
+            period2: {
+              spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0,
+              conversions: 0, conversion_value: 0, roas: 0, cpa: 0, conversion_rate: 0,
+            },
+            change_pct: {
+              spend: null, impressions: null, clicks: null, ctr: null, cpc: null,
+              conversions: null, conversion_value: null, roas: null, cpa: null, conversion_rate: null,
+            },
+            change_abs: {},
+          }));
+
+          setComparisonData({
+            dimension: `${breakdown}_${secondaryBreakdown}`,
+            period1_start: period1Start,
+            period1_end: period1End,
+            period2_start: null,
+            period2_end: null,
+            overview: null,
+            items,
+            currency: 'USD',
+          } as ReportsComparisonResponse);
+
+          setDisplayData(items);
+        }
+      }
+      // Check if this is a special breakdown (placement, demographics, country) as primary
+      else if (isSpecialBreakdown(breakdown as any)) {
+        const breakdownData = await fetchBreakdownReport(
+          period1Start,
+          period1End,
+          breakdown as 'placement' | 'platform' | 'age-gender' | 'country',
+          selectedAccountId || undefined
+        );
+
+        // Convert to ComparisonItem format for display
+        const items: ComparisonItem[] = breakdownData.map((row, idx) => ({
+          id: `${breakdown}-${idx}`,
+          name: row.name,
+          period1: {
+            spend: row.spend,
+            impressions: row.impressions,
+            clicks: row.clicks,
+            ctr: row.ctr,
+            cpc: row.cpc,
+            conversions: row.conversions,
+            conversion_value: row.conversion_value,
+            roas: row.roas,
+            cpa: row.cpa,
+            conversion_rate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
+          },
+          period2: {
+            spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0,
+            conversions: 0, conversion_value: 0, roas: 0, cpa: 0, conversion_rate: 0,
+          },
+          change_pct: {
+            spend: null, impressions: null, clicks: null, ctr: null, cpc: null,
+            conversions: null, conversion_value: null, roas: null, cpa: null, conversion_rate: null,
+          },
+          change_abs: {},
+        }));
+
+        // Create a mock response for consistency
+        setComparisonData({
+          dimension: breakdown,
+          period1_start: period1Start,
+          period1_end: period1End,
+          period2_start: null,
+          period2_end: null,
+          overview: null,
+          items,
+          currency: 'USD',
+        } as ReportsComparisonResponse);
+
+        setDisplayData(items);
       } else {
-        setDisplayData(data.items);
+        // Standard comparison data fetch
+        const data = await fetchComparisonData({
+          period1Start,
+          period1End,
+          dimension,
+          breakdown,
+          secondaryBreakdown,
+          campaignFilter: campaignFilter || undefined,
+          adSetFilter: adSetFilter || undefined,
+          adFilter: adFilter || undefined,
+          accountId: selectedAccountId || undefined,
+        });
+
+        setComparisonData(data);
+
+        // Set display data based on dimension
+        if (data.dimension === 'overview' && data.overview) {
+          setDisplayData([data.overview]);
+        } else {
+          setDisplayData(data.items);
+        }
       }
     } catch (err: any) {
       console.error('[Reports Page] Error fetching comparison data:', err);

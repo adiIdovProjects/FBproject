@@ -37,10 +37,10 @@ class AdSetRepository(BaseRepository):
              placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
              account_filter = f"AND f.account_id IN ({placeholders})"
             
-        # Build search filter - search by adset name
+        # Build search filter - search by campaign name (not adset name)
         search_filter = ""
         if search_query:
-            search_filter = "AND LOWER(a.adset_name) LIKE :search_query"
+            search_filter = "AND LOWER(c.campaign_name) LIKE :search_query"
 
         # Build campaign_ids filter
         campaign_ids_filter = ""

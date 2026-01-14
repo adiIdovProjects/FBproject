@@ -91,6 +91,9 @@ export async function fetchCurrentUser(): Promise<UserProfile> {
 export function logout() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
-        window.location.href = '/en/login';
+        // Extract locale from current URL path (e.g., /he/dashboard -> he)
+        const pathParts = window.location.pathname.split('/');
+        const locale = pathParts[1] || 'en';
+        window.location.href = `/${locale}/login`;
     }
 }

@@ -1,87 +1,103 @@
 # Project Tasks & Progress
 
-## 🔨 CURRENT TASK: Add Compare Periods to Targeting Page
+## ✅ COMPLETED TASK: Reports Page - Entity + Special Breakdown Combinations
 
 ### Overview
-Add period comparison functionality to the targeting page (`/targeting`), similar to how it's implemented in the creatives page. This includes:
-1. Compare toggle in the "Targeting Type Comparison Table" (the summary table at the top)
-2. Compare toggle for the "TargetingTable" (the ad sets table)
+Enabled 2-dimensional reports combining entity breakdowns (Campaign, Ad Set, Ad) with special breakdowns (Placement, Demographics, Country). Previously these were treated as mutually exclusive.
 
-### Implementation Plan
+### Changes Made
 
-#### 1. Backend Changes
-- [x] Add `/api/v1/metrics/breakdowns/adset/comparison` endpoint in `metrics.py` router
-- [x] Add `get_adset_breakdown_comparison()` method in `MetricsService`
-- [x] Add `AdsetComparisonMetrics` schema in `responses.py`
+#### 1. Frontend (FilterPanel.tsx)
+- Modified `getSecondaryOptions()` to show special breakdowns as secondary options for entity breakdowns
+- Added Placement, Demographics, Country as secondary options when Campaign/Ad Set/Ad is selected
+- Simplified secondary prompt label to generic "Add grouping"
+- Updated conversion metric hiding to work with entity + special combinations
 
-#### 2. Frontend Service Layer
-- [x] Add `fetchBreakdownWithComparison()` function in `campaigns.service.ts`
+#### 2. Backend Repository (breakdown_repository.py)
+- Added `get_placement_by_entity()` - GROUP BY entity + placement
+- Added `get_demographics_by_entity()` - GROUP BY entity + age/gender
+- Added `get_country_by_entity()` - GROUP BY entity + country
 
-#### 3. Frontend Types
-- [x] Extend `TargetingRow` type with comparison fields (previous_*, *_change_pct)
-- [x] Extend `BreakdownRow` type with comparison fields
+#### 3. Backend Router (breakdowns.py)
+- Added `GET /breakdowns/placement/by-entity` endpoint
+- Added `GET /breakdowns/demographics/by-entity` endpoint
+- Added `GET /breakdowns/country/by-entity` endpoint
 
-#### 4. Targeting Page Changes
-- [x] Add `showComparison` state
-- [x] Add Compare Periods toggle button
-- [x] Conditionally call comparison endpoint when toggle is on
-- [x] Update "Targeting Type Comparison Table" to show VS PREV columns
-- [x] Update `formatMetrics` calculation to include previous period data
-- [x] Add Total row to the Type Comparison Table
+#### 4. Backend Service (metrics_service.py)
+- Added service methods to call the new repository methods
+- Added response schema imports
 
-#### 5. TargetingTable Component Changes
-- [x] Add `showComparison` prop
-- [x] Add VS PREV columns conditionally
-- [x] Add `renderChangeBadge` helper function
+#### 5. Backend Schemas (responses.py)
+- Added `EntityPlacementBreakdown` schema
+- Added `EntityDemographicsBreakdown` schema
+- Added `EntityCountryBreakdown` schema
 
-### Files to Modify
-1. `backend/api/routers/metrics.py` - Add endpoint
-2. `backend/api/services/metrics_service.py` - Add service method
-3. `backend/api/schemas/responses.py` - Add schema
-4. `meta-dashboard/src/services/campaigns.service.ts` - Add service function
-5. `meta-dashboard/src/types/targeting.types.ts` - Extend types
-6. `meta-dashboard/src/app/[locale]/targeting/page.tsx` - Add toggle & comparison UI
-7. `meta-dashboard/src/components/targeting/TargetingTable.tsx` - Add comparison columns
+#### 6. Frontend Service (reports.service.ts)
+- Added `fetchEntityBreakdownReport()` function
+- Added helper functions: `isEntityBreakdown()`, `getEntityType()`, `getSpecialBreakdownType()`
 
-### Notes
-- The comparison calculates previous period as same duration before the selected date range
-- CTR higher = better (green), CPC/CPA lower = better (green)
-- Spend uses grey/neutral color (not red/green since higher/lower isn't inherently good/bad)
-- Follows same pattern as creatives comparison implementation
+#### 7. Frontend Page (reports/page.tsx)
+- Updated `fetchData()` to detect entity + special combinations
+- Routes to new API endpoints when combination is detected
+- Updated conversion metric hiding logic for combinations
+
+#### 8. Translations (en.json)
+- Added `reports.builder.add_grouping` key
+
+### Example Usage
+- Select "Campaign" → click "Placement" in secondary → Shows "Campaign × Placement"
+- Data displays as: "Campaign A - Instagram Feed", "Campaign A - Stories", etc.
 
 ---
 
-## Review
+## ✅ COMPLETED TASK: Internationalize Hardcoded English Text
+
+### Overview
+Converted all hardcoded English text in pages and components to use the i18n translation system.
 
 ### Changes Made
-1. **Backend** (`backend/api/schemas/responses.py`): Added `AdsetComparisonMetrics` schema extending `AdsetBreakdown` with comparison fields
-2. **Backend** (`backend/api/services/metrics_service.py`): Added `get_adset_breakdown_comparison()` method that fetches current period data, calculates previous period, and computes change percentages
-3. **Backend** (`backend/api/routers/metrics.py`): Added `/api/v1/metrics/breakdowns/adset/comparison` endpoint
-4. **Frontend Service** (`campaigns.service.ts`): Added `fetchBreakdownWithComparison()` function
-5. **Frontend Types** (`targeting.types.ts`, `campaigns.types.ts`): Extended types with comparison fields
-6. **Targeting Page** (`targeting/page.tsx`):
-   - Added `showComparison` state and Compare Periods toggle
-   - Updated data loading to use comparison endpoint when enabled
-   - Updated Type Comparison Table with VS PREV columns
-   - Added Total row to the Type Comparison Table
-7. **TargetingTable Component** (`TargetingTable.tsx`):
-   - Added `showComparison` prop
-   - Added VS PREV columns for Spend, CTR, CPC, Conversions, CPA
-   - Added `renderChangeBadge` helper with color coding
 
-### Color Coding
-- **Spend**: Grey/neutral (↑/↓ shown but no red/green)
-- **CTR, Conversions**: Green for increase, Red for decrease (higher = better)
-- **CPC, CPA**: Green for decrease, Red for increase (lower = better)
+#### 1. Translation File (en.json)
+- Added `auth.*` keys for login/magic link flow
+- Added `onboarding.*` keys for Facebook connect flow
+- Added `accounts.*` keys for account selection
+- Added `quiz.*` keys for profile quiz (including nested job_titles, experience, referral)
+- Added `settings.*` keys for account settings page
+
+#### 2. Files Updated
+
+| File | Changes |
+|------|---------|
+| [login/page.tsx](meta-dashboard/src/app/[locale]/login/page.tsx) | Passwordless login, magic link UI, social buttons, notes |
+| [auth/verify/page.tsx](meta-dashboard/src/app/[locale]/auth/verify/page.tsx) | Verification states, error messages |
+| [callback/page.tsx](meta-dashboard/src/app/[locale]/callback/page.tsx) | Login status messages |
+| [select-accounts/page.tsx](meta-dashboard/src/app/[locale]/select-accounts/page.tsx) | Page title, error states, help text |
+| [onboard/connect-facebook/page.tsx](meta-dashboard/src/app/[locale]/onboard/connect-facebook/page.tsx) | Step indicator, access info, button text |
+| [quiz/page.tsx](meta-dashboard/src/app/[locale]/quiz/page.tsx) | All questions, options, sync status, completion |
+| [AccountSelector.tsx](meta-dashboard/src/components/connect/AccountSelector.tsx) | Loading, empty state, selection UI |
+| [AccountSettings.tsx](meta-dashboard/src/components/AccountSettings.tsx) | Profile form, billing, reconnect |
+
+#### 3. Translation Sync
+Ran `node scripts/sync-translations.mjs` to propagate all new keys to:
+- Arabic (ar): 101 new translations
+- German (de): 115 new translations
+- French (fr): 127 new translations
+- Hebrew (he): 112 new translations
+
+### Summary
+- **~70+ hardcoded strings** converted to dynamic translations
+- All 5 languages now fully supported for auth, onboarding, and settings flows
+- Uses `useTranslations()` hook consistently across all updated components
 
 ---
 
 ## Previous Tasks
 
+### ✅ Add Compare Periods to Targeting Page (COMPLETED)
+- Added period comparison functionality to the targeting page
+
 ### ✅ Make Optimization Preferences Editable (COMPLETED)
 - Added edit functionality to the Optimization tab in AdAccountSettings.tsx
 
 ### ✅ Fix Creatives Page 500 Error (COMPLETED)
-- Changed `COALESCE(cr.is_carousel, 0)` to `COALESCE(cr.is_carousel, FALSE)` in creative_repository.py
-- Fixed type mismatch between boolean and integer in PostgreSQL
-
+- Fixed type mismatch in creative_repository.py

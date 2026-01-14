@@ -50,6 +50,14 @@ export default function ComparisonTable({
         return t('reports.by_week');
       case 'month':
         return t('reports.by_month');
+      case 'placement':
+        return t('breakdown.placement');
+      case 'platform':
+        return t('breakdown.platform');
+      case 'age-gender':
+        return t('breakdown.demographics');
+      case 'country':
+        return t('breakdown.country');
       default:
         return t('common.name');
     }
@@ -127,7 +135,6 @@ export default function ComparisonTable({
           currency === 'EUR' ? `€${value.toFixed(1)}` :
             currency === 'GBP' ? `£${value.toFixed(1)}` :
               `$${value.toFixed(1)}`;
-      case 'cpm':
       case 'conversion_value':
         return currency === 'ILS' ? `₪${value.toFixed(2)}` :
           currency === 'EUR' ? `€${value.toFixed(2)}` :
@@ -150,8 +157,8 @@ export default function ComparisonTable({
   const getChangeColor = (metric: MetricKey, changePct: number | null): string => {
     if (changePct === null || changePct === 0) return 'text-gray-400';
 
-    // For cost metrics (CPC, CPA, CPM), negative is good
-    const costMetrics: MetricKey[] = ['cpc', 'cpa', 'cpm'];
+    // For cost metrics (CPC, CPA), negative is good
+    const costMetrics: MetricKey[] = ['cpc', 'cpa'];
     const isPositiveGood = !costMetrics.includes(metric);
 
     if (isPositiveGood) {
@@ -168,7 +175,6 @@ export default function ComparisonTable({
       clicks: t('metrics.clicks'),
       ctr: t('metrics.ctr'),
       cpc: t('metrics.cpc'),
-      cpm: t('metrics.cpm'),
       conversions: t('metrics.conversions'),
       conversion_value: t('metrics.conversion_value'),
       roas: t('metrics.roas'),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { CheckCircle, Circle, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { accountsService, type AccountQuizData } from '@/services/accounts.service';
 
@@ -35,6 +35,7 @@ const OPTIMIZATION_PRIORITIES = [
 export default function AccountQuizPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { locale } = useParams();
     const accountId = searchParams.get('account_id');
 
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -53,7 +54,7 @@ export default function AccountQuizPage() {
     // Fetch conversion types on mount
     useEffect(() => {
         if (!accountId) {
-            router.push('/en/account-dashboard');
+            router.push(`/${locale}/account-dashboard`);
             return;
         }
 
@@ -118,7 +119,7 @@ export default function AccountQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push('/en/account-dashboard');
+        router.push(`/${locale}/account-dashboard`);
     };
 
     if (!accountId) {

@@ -56,8 +56,16 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
             try {
                 const response = await accountsService.getConversionTypes(selectedAccountId);
                 setHasROAS(response.data.has_purchase_value);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to fetch account ROAS status:', error);
+
+                // If 403 Forbidden, it means the user no longer has access to this account
+                // (stale localStorage data). We should clear it.
+                if (error.response && error.response.status === 403) {
+                    console.warn(`Access denied to account ${selectedAccountId}. Clearing selection.`);
+                    setSelectedAccountId(null);
+                }
+
                 setHasROAS(false); // Default to false on error
             }
         };

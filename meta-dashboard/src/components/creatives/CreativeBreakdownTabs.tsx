@@ -123,7 +123,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Tab Navigation */}
       <div className="flex items-center gap-2 border-b border-border-subtle">
         {TABS.map((tab) => (
@@ -190,8 +190,8 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-black/20 border-b border-border-subtle">
-                  <th className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                    {activeTab === 'platform' ? 'Platform' : activeTab === 'placement' ? 'Placement' : activeTab === 'country' ? 'Country' : 'Segment'}
+                  <th className={`px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {activeTab === 'platform' ? t('campaigns.platform') : activeTab === 'placement' ? t('campaigns.placement') : activeTab === 'country' ? t('campaigns.country') : t('campaigns.demographics')}
                   </th>
                   <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.spend')}
@@ -224,7 +224,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
                     key={index}
                     className="group hover:bg-white/[0.02] transition-colors duration-150"
                   >
-                    <td className="px-6 py-5 text-sm text-white font-medium">
+                    <td className={`px-6 py-5 text-sm text-white font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
                       {row.name || 'Unknown'}
                     </td>
                     <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">

@@ -308,7 +308,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -324,7 +324,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -340,7 +340,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -356,7 +356,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -372,7 +372,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 

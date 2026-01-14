@@ -145,7 +145,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
 
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-md border ${colorClass}`}>
-        {status}
+        {t(`status.${status.toUpperCase()}`) || status}
       </span>
     );
   };
@@ -283,7 +283,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -299,7 +299,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -315,7 +315,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -331,7 +331,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 
@@ -346,7 +346,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               </th>
               {showComparison && (
                 <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                  VS PREV
+                  {t('common.vs_previous')}
                 </th>
               )}
 

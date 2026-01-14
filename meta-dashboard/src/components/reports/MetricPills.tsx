@@ -12,7 +12,6 @@ export type MetricKey =
   | 'clicks'
   | 'ctr'
   | 'cpc'
-  | 'cpm'
   | 'conversions'
   | 'conversion_value'
   | 'roas'
@@ -23,7 +22,6 @@ export const ALL_METRICS: MetricKey[] = [
   'spend',
   'ctr',
   'cpc',
-  'cpm',
   'impressions',
   'clicks',
   'conversions',
@@ -33,11 +31,15 @@ export const ALL_METRICS: MetricKey[] = [
   'conversion_rate',
 ];
 
+// Metrics that require conversion data (not available for special breakdowns)
+const CONVERSION_METRICS: MetricKey[] = ['conversions', 'conversion_value', 'roas', 'cpa', 'conversion_rate'];
+
 interface MetricPillsProps {
   selectedMetrics: MetricKey[];
   onMetricsChange: (metrics: MetricKey[]) => void;
   isRTL?: boolean;
   hasConversionValue?: boolean; // Hide ROAS if no conversion value
+  isSpecialBreakdown?: boolean; // Hide all conversion metrics for placement/demographics/country
 }
 
 export default function MetricPills({
@@ -45,13 +47,21 @@ export default function MetricPills({
   onMetricsChange,
   isRTL = false,
   hasConversionValue = true,
+  isSpecialBreakdown = false,
 }: MetricPillsProps) {
   const t = useTranslations();
 
-  // Filter out ROAS if there's no conversion value
-  const availableMetrics = hasConversionValue
-    ? ALL_METRICS
-    : ALL_METRICS.filter(m => m !== 'roas');
+  // Filter metrics based on breakdown type
+  let availableMetrics = ALL_METRICS;
+
+  // Special breakdowns (placement, demographics, country) don't have conversion data from Facebook
+  if (isSpecialBreakdown) {
+    availableMetrics = ALL_METRICS.filter(m => !CONVERSION_METRICS.includes(m));
+  }
+  // If no conversion value, just hide ROAS
+  else if (!hasConversionValue) {
+    availableMetrics = ALL_METRICS.filter(m => m !== 'roas');
+  }
 
   const toggleMetric = (metric: MetricKey) => {
     if (selectedMetrics.includes(metric)) {

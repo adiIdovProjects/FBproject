@@ -84,10 +84,10 @@ export default function LoginPage() {
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-2">
                                     <Sparkles className="w-3.5 h-3.5" />
-                                    <span>Passwordless Login</span>
+                                    <span>{t('auth.passwordless_login')}</span>
                                 </div>
                                 <p className="text-gray-400 text-xs">
-                                    No password needed - we'll send you a magic link
+                                    {t('auth.no_password_needed')}
                                 </p>
                             </div>
 
@@ -125,7 +125,7 @@ export default function LoginPage() {
                                 ) : (
                                     <>
                                         <Mail className="w-4 h-4" />
-                                        <span>Send Magic Link</span>
+                                        <span>{t('auth.send_magic_link')}</span>
                                     </>
                                 )}
                             </button>
@@ -136,12 +136,12 @@ export default function LoginPage() {
                                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/20 mb-4">
                                     <CheckCircle className="w-6 h-6 text-green-400" />
                                 </div>
-                                <h3 className="text-green-400 font-bold text-lg mb-2">Check your email!</h3>
+                                <h3 className="text-green-400 font-bold text-lg mb-2">{t('auth.check_your_email')}</h3>
                                 <p className="text-gray-300 text-sm mb-1">
-                                    We've sent a magic link to <strong>{email}</strong>
+                                    {t('auth.magic_link_sent_to')} <strong>{email}</strong>
                                 </p>
                                 <p className="text-gray-400 text-xs mt-3">
-                                    Click the link in your email to sign in. The link expires in 15 minutes.
+                                    {t('auth.magic_link_expires')}
                                 </p>
                             </div>
 
@@ -152,7 +152,7 @@ export default function LoginPage() {
                                 }}
                                 className="w-full bg-white/5 hover:bg-white/10 text-white font-medium py-3 px-4 rounded-xl transition-colors"
                             >
-                                Try different email
+                                {t('auth.try_different_email')}
                             </button>
                         </div>
                     )}
@@ -175,7 +175,7 @@ export default function LoginPage() {
                             className="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#1864D2] text-white font-bold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             <Facebook className="w-5 h-5 fill-current" />
-                            <span>Continue with Facebook</span>
+                            <span>{t('auth.continue_with_facebook')}</span>
                         </button>
 
                         {/* Google Login Button */}
@@ -190,13 +190,13 @@ export default function LoginPage() {
                                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
-                            <span>Continue with Google</span>
+                            <span>{t('auth.continue_with_google')}</span>
                         </button>
                     </div>
 
                     <div className="mt-6 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg">
                         <p className="text-xs text-gray-400 text-center">
-                            <strong className="text-blue-400">Note:</strong> All users must connect their Facebook account to access ad data
+                            <strong className="text-blue-400">{t('auth.note')}</strong> {t('auth.facebook_required_note')}
                         </p>
                     </div>
 

@@ -8,7 +8,7 @@ export class LLMTranslationService {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         this.model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.0-flash",
             generationConfig: {
                 responseMimeType: "application/json"
             }
@@ -17,7 +17,7 @@ export class LLMTranslationService {
         // Separate model instance for simple text if needed, 
         // but for consistency we can use JSON mode for everything or just plain text for single items.
         // Actually, for single text, plain text is better.
-        this.textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        this.textModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     }
 
     /**

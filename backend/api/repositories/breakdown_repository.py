@@ -564,3 +564,344 @@ class BreakdownRepository(BaseRepository):
             })
 
         return breakdowns
+
+    def get_placement_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,  # 'campaign', 'adset', or 'ad'
+        account_ids: Optional[List[int]] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get placement breakdown grouped by entity (campaign/adset/ad).
+        Returns rows like: "Campaign A - Instagram Feed", "Campaign A - Stories"
+        """
+        # Determine entity join and select
+        entity_join = ""
+        entity_select = ""
+        entity_group = ""
+
+        if entity_type == 'campaign':
+            entity_join = "JOIN dim_campaign c ON f.campaign_id = c.campaign_id"
+            entity_select = "c.campaign_name as entity_name"
+            entity_group = "c.campaign_name"
+        elif entity_type == 'adset':
+            entity_join = """
+                JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+                JOIN dim_adset ads ON f.adset_id = ads.adset_id
+            """
+            entity_select = "ads.adset_name as entity_name"
+            entity_group = "ads.adset_name"
+        elif entity_type == 'ad':
+            entity_join = """
+                JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+                JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            """
+            entity_select = "ad.ad_name as entity_name"
+            entity_group = "ad.ad_name"
+        else:
+            return []
+
+        # Build filters
+        account_filter = ""
+        if account_ids is not None:
+            if len(account_ids) == 0:
+                return []
+            placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+
+        search_filter = ""
+        if search_query:
+            search_filter = f"AND LOWER({entity_group}) LIKE :search_query"
+
+        query = text(f"""
+            SELECT
+                {entity_select},
+                p.placement_name,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks
+            FROM fact_placement_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_placement p ON f.placement_id = p.placement_id
+            {entity_join}
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {account_filter}
+                {status_filter}
+                {search_filter}
+            GROUP BY {entity_group}, p.placement_name
+            ORDER BY {entity_group}, spend DESC
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        if account_ids:
+            for i, aid in enumerate(account_ids):
+                params[f'account_id_{i}'] = aid
+
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        results = self.db.execute(query, params).fetchall()
+
+        breakdowns = []
+        for row in results:
+            spend = float(row.spend or 0)
+            clicks = int(row.clicks or 0)
+            impressions = int(row.impressions or 0)
+            ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
+            cpc = (spend / clicks) if clicks > 0 else 0.0
+
+            breakdowns.append({
+                'entity_name': str(row.entity_name),
+                'placement_name': str(row.placement_name),
+                'spend': spend,
+                'impressions': impressions,
+                'clicks': clicks,
+                'ctr': ctr,
+                'cpc': cpc
+            })
+
+        return breakdowns
+
+    def get_demographics_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,  # 'campaign', 'adset', or 'ad'
+        account_ids: Optional[List[int]] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get age-gender breakdown grouped by entity (campaign/adset/ad).
+        Returns rows like: "Campaign A - Male 25-34"
+        """
+        entity_join = ""
+        entity_select = ""
+        entity_group = ""
+
+        if entity_type == 'campaign':
+            entity_join = "JOIN dim_campaign c ON f.campaign_id = c.campaign_id"
+            entity_select = "c.campaign_name as entity_name"
+            entity_group = "c.campaign_name"
+        elif entity_type == 'adset':
+            entity_join = """
+                JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+                JOIN dim_adset ads ON f.adset_id = ads.adset_id
+            """
+            entity_select = "ads.adset_name as entity_name"
+            entity_group = "ads.adset_name"
+        elif entity_type == 'ad':
+            entity_join = """
+                JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+                JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            """
+            entity_select = "ad.ad_name as entity_name"
+            entity_group = "ad.ad_name"
+        else:
+            return []
+
+        account_filter = ""
+        if account_ids is not None:
+            if len(account_ids) == 0:
+                return []
+            placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+
+        search_filter = ""
+        if search_query:
+            search_filter = f"AND LOWER({entity_group}) LIKE :search_query"
+
+        query = text(f"""
+            SELECT
+                {entity_select},
+                a.age_group,
+                g.gender,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks
+            FROM fact_age_gender_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_age a ON f.age_id = a.age_id
+            JOIN dim_gender g ON f.gender_id = g.gender_id
+            {entity_join}
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {account_filter}
+                {status_filter}
+                {search_filter}
+            GROUP BY {entity_group}, a.age_group, g.gender
+            ORDER BY {entity_group}, spend DESC
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        if account_ids:
+            for i, aid in enumerate(account_ids):
+                params[f'account_id_{i}'] = aid
+
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        results = self.db.execute(query, params).fetchall()
+
+        breakdowns = []
+        for row in results:
+            spend = float(row.spend or 0)
+            clicks = int(row.clicks or 0)
+            impressions = int(row.impressions or 0)
+            ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
+            cpc = (spend / clicks) if clicks > 0 else 0.0
+
+            breakdowns.append({
+                'entity_name': str(row.entity_name),
+                'age_group': str(row.age_group),
+                'gender': str(row.gender),
+                'spend': spend,
+                'impressions': impressions,
+                'clicks': clicks,
+                'ctr': ctr,
+                'cpc': cpc
+            })
+
+        return breakdowns
+
+    def get_country_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,  # 'campaign', 'adset', or 'ad'
+        account_ids: Optional[List[int]] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get country breakdown grouped by entity (campaign/adset/ad).
+        Returns rows like: "Campaign A - United States"
+        """
+        entity_join = ""
+        entity_select = ""
+        entity_group = ""
+
+        if entity_type == 'campaign':
+            entity_join = "JOIN dim_campaign cmp ON f.campaign_id = cmp.campaign_id"
+            entity_select = "cmp.campaign_name as entity_name"
+            entity_group = "cmp.campaign_name"
+        elif entity_type == 'adset':
+            entity_join = """
+                JOIN dim_campaign cmp ON f.campaign_id = cmp.campaign_id
+                JOIN dim_adset ads ON f.adset_id = ads.adset_id
+            """
+            entity_select = "ads.adset_name as entity_name"
+            entity_group = "ads.adset_name"
+        elif entity_type == 'ad':
+            entity_join = """
+                JOIN dim_campaign cmp ON f.campaign_id = cmp.campaign_id
+                JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            """
+            entity_select = "ad.ad_name as entity_name"
+            entity_group = "ad.ad_name"
+        else:
+            return []
+
+        account_filter = ""
+        if account_ids is not None:
+            if len(account_ids) == 0:
+                return []
+            placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND cmp.campaign_status IN ({placeholders})"
+
+        search_filter = ""
+        if search_query:
+            search_filter = f"AND LOWER({entity_group}) LIKE :search_query"
+
+        query = text(f"""
+            SELECT
+                {entity_select},
+                c.country,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks
+            FROM fact_country_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_country c ON f.country_id = c.country_id
+            {entity_join}
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {account_filter}
+                {status_filter}
+                {search_filter}
+            GROUP BY {entity_group}, c.country
+            ORDER BY {entity_group}, spend DESC
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        if account_ids:
+            for i, aid in enumerate(account_ids):
+                params[f'account_id_{i}'] = aid
+
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        results = self.db.execute(query, params).fetchall()
+
+        breakdowns = []
+        for row in results:
+            spend = float(row.spend or 0)
+            clicks = int(row.clicks or 0)
+            impressions = int(row.impressions or 0)
+            ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
+            cpc = (spend / clicks) if clicks > 0 else 0.0
+
+            breakdowns.append({
+                'entity_name': str(row.entity_name),
+                'country': str(row.country),
+                'spend': spend,
+                'impressions': impressions,
+                'clicks': clicks,
+                'ctr': ctr,
+                'cpc': cpc
+            })
+
+        return breakdowns

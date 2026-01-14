@@ -435,6 +435,101 @@ export function isSpecialBreakdown(breakdown: ReportBreakdown): boolean {
 }
 
 /**
+ * Fetch entity-grouped breakdown report (e.g., Campaign x Placement)
+ * This is for 2-dimensional reports: Entity + Special Breakdown
+ */
+export async function fetchEntityBreakdownReport(
+  startDate: string,
+  endDate: string,
+  entityType: 'campaign' | 'adset' | 'ad',
+  breakdownType: 'placement' | 'age-gender' | 'country',
+  searchQuery?: string
+): Promise<BreakdownRow[]> {
+  const endpointMap: Record<string, string> = {
+    'placement': '/api/v1/breakdowns/placement/by-entity',
+    'age-gender': '/api/v1/breakdowns/demographics/by-entity',
+    'country': '/api/v1/breakdowns/country/by-entity',
+  };
+
+  const endpoint = endpointMap[breakdownType];
+  const params: Record<string, string> = {
+    start_date: startDate,
+    end_date: endDate,
+    entity_type: entityType,
+  };
+
+  if (searchQuery) {
+    params.search_query = searchQuery;
+  }
+
+  try {
+    const response = await apiClient.get(endpoint, { params });
+    const data = response.data;
+
+    return data.map((item: any) => {
+      // Build name combining entity + breakdown value
+      let breakdownValue = 'Unknown';
+      if (breakdownType === 'placement') {
+        breakdownValue = item.placement_name || 'Unknown';
+      } else if (breakdownType === 'age-gender') {
+        const age = item.age_group || 'Unknown';
+        const gender = item.gender || 'Unknown';
+        breakdownValue = `${age} | ${gender}`;
+      } else if (breakdownType === 'country') {
+        breakdownValue = item.country || 'Unknown';
+      }
+
+      const name = `${item.entity_name} - ${breakdownValue}`;
+
+      return {
+        name,
+        spend: item.spend || 0,
+        clicks: item.clicks || 0,
+        impressions: item.impressions || 0,
+        ctr: item.ctr || 0,
+        cpc: item.cpc || 0,
+        conversions: 0, // Not available for special breakdowns
+        conversion_value: 0,
+        roas: 0,
+        cpa: 0,
+      };
+    });
+  } catch (error) {
+    console.error('[Reports Service] Error fetching entity breakdown report:', error);
+    throw error;
+  }
+}
+
+/**
+ * Helper to determine if entity type
+ */
+export function isEntityBreakdown(breakdown: ReportBreakdown): boolean {
+  return ['campaign_name', 'ad_set_name', 'ad_name'].includes(breakdown);
+}
+
+/**
+ * Get entity type from breakdown
+ */
+export function getEntityType(breakdown: ReportBreakdown): 'campaign' | 'adset' | 'ad' | null {
+  const map: Record<string, 'campaign' | 'adset' | 'ad'> = {
+    'campaign_name': 'campaign',
+    'ad_set_name': 'adset',
+    'ad_name': 'ad',
+  };
+  return map[breakdown] || null;
+}
+
+/**
+ * Get special breakdown type
+ */
+export function getSpecialBreakdownType(breakdown: ReportBreakdown): 'placement' | 'age-gender' | 'country' | null {
+  if (breakdown === 'placement' || breakdown === 'platform') return 'placement';
+  if (breakdown === 'age-gender') return 'age-gender';
+  if (breakdown === 'country') return 'country';
+  return null;
+}
+
+/**
  * Pre-built report templates
  */
 export const REPORT_TEMPLATES: ReportTemplate[] = [

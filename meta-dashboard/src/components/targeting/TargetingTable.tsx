@@ -254,7 +254,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* CTR */}
               <th
@@ -266,7 +266,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* CPC */}
               <th
@@ -278,7 +278,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* Conversions */}
               <th
@@ -290,7 +290,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* CPA */}
               <th
@@ -302,7 +302,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* ROAS - Conditional */}
               {hasConversionValue && (

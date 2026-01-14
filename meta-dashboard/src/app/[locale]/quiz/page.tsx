@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { CheckCircle, Circle, Loader2, ArrowRight } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
@@ -20,33 +21,35 @@ interface QuizAnswers {
     referral_source: string;
 }
 
-const JOB_TITLES = [
-    { value: 'marketing_manager', label: 'Marketing Manager' },
-    { value: 'cmo', label: 'CMO / Marketing Director' },
-    { value: 'founder', label: 'Founder / CEO' },
-    { value: 'agency_manager', label: 'Agency Manager' },
-    { value: 'freelancer', label: 'Freelance Marketer' },
-    { value: 'other', label: 'Other' }
+const JOB_TITLE_KEYS = [
+    { value: 'marketing_manager', key: 'quiz.job_titles.marketing_manager' },
+    { value: 'cmo', key: 'quiz.job_titles.cmo' },
+    { value: 'founder', key: 'quiz.job_titles.founder' },
+    { value: 'agency_manager', key: 'quiz.job_titles.agency_manager' },
+    { value: 'freelancer', key: 'quiz.job_titles.freelancer' },
+    { value: 'other', key: 'quiz.job_titles.other' }
 ];
 
-const YEARS_EXPERIENCE = [
-    { value: 'less_than_1', label: 'Less than 1 year' },
-    { value: '1_3_years', label: '1-3 years' },
-    { value: '3_5_years', label: '3-5 years' },
-    { value: '5_plus_years', label: '5+ years' }
+const YEARS_EXPERIENCE_KEYS = [
+    { value: 'less_than_1', key: 'quiz.experience.less_than_1' },
+    { value: '1_3_years', key: 'quiz.experience.1_3_years' },
+    { value: '3_5_years', key: 'quiz.experience.3_5_years' },
+    { value: '5_plus_years', key: 'quiz.experience.5_plus_years' }
 ];
 
-const REFERRAL_SOURCES = [
-    { value: 'google_search', label: 'Google Search' },
-    { value: 'facebook_ad', label: 'Facebook Ad' },
-    { value: 'friend_referral', label: 'Friend / Colleague Referral' },
-    { value: 'linkedin', label: 'Linkedin' },
-    { value: 'ai_tool', label: 'AI Recommendation' },
-    { value: 'other', label: 'Other' }
+const REFERRAL_SOURCE_KEYS = [
+    { value: 'google_search', key: 'quiz.referral.google_search' },
+    { value: 'facebook_ad', key: 'quiz.referral.facebook_ad' },
+    { value: 'friend_referral', key: 'quiz.referral.friend_referral' },
+    { value: 'linkedin', key: 'quiz.referral.linkedin' },
+    { value: 'ai_tool', key: 'quiz.referral.ai_tool' },
+    { value: 'other', key: 'quiz.referral.other' }
 ];
 
 export default function UserProfileQuizPage() {
     const router = useRouter();
+    const { locale } = useParams();
+    const t = useTranslations();
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState<QuizAnswers>({
         full_name: '',
@@ -120,7 +123,7 @@ export default function UserProfileQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push('/en/account-dashboard');
+        router.push(`/${locale}/account-dashboard`);
     };
 
     const progressPercent = ((currentQuestion + 1) / 4) * 100;
@@ -131,14 +134,14 @@ export default function UserProfileQuizPage() {
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
-                            What should we call you?
+                            {t('quiz.what_should_we_call_you')}
                         </h2>
                         <input
                             type="text"
                             value={answers.full_name}
                             onChange={(e) => setAnswers({ ...answers, full_name: e.target.value })}
                             onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
-                            placeholder="Enter your name"
+                            placeholder={t('quiz.enter_your_name')}
                             className="w-full p-4 rounded-xl bg-gray-800 border-2 border-gray-700 text-white text-lg focus:border-blue-500 focus:outline-none"
                             autoFocus
                         />
@@ -147,7 +150,7 @@ export default function UserProfileQuizPage() {
                             disabled={!answers.full_name.trim()}
                             className="mt-4 px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all flex items-center gap-2"
                         >
-                            Continue
+                            {t('auth.continue')}
                             <ArrowRight className="w-5 h-5" />
                         </button>
                     </div>
@@ -157,10 +160,10 @@ export default function UserProfileQuizPage() {
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
-                            What's your role?
+                            {t('quiz.whats_your_role')}
                         </h2>
                         <div className="space-y-3">
-                            {JOB_TITLES.map((option) => {
+                            {JOB_TITLE_KEYS.map((option) => {
                                 const isSelected = answers.job_title === option.value;
                                 return (
                                     <button
@@ -182,7 +185,7 @@ export default function UserProfileQuizPage() {
                                                 <Circle className="w-6 h-6 text-gray-500 group-hover:text-gray-400" />
                                             )}
                                         </div>
-                                        <span className="text-lg text-white font-medium">{option.label}</span>
+                                        <span className="text-lg text-white font-medium">{t(option.key)}</span>
                                     </button>
                                 );
                             })}
@@ -194,10 +197,10 @@ export default function UserProfileQuizPage() {
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
-                            How long have you been running ads?
+                            {t('quiz.how_long_running_ads')}
                         </h2>
                         <div className="space-y-3">
-                            {YEARS_EXPERIENCE.map((option) => {
+                            {YEARS_EXPERIENCE_KEYS.map((option) => {
                                 const isSelected = answers.years_experience === option.value;
                                 return (
                                     <button
@@ -219,7 +222,7 @@ export default function UserProfileQuizPage() {
                                                 <Circle className="w-6 h-6 text-gray-500 group-hover:text-gray-400" />
                                             )}
                                         </div>
-                                        <span className="text-lg text-white font-medium">{option.label}</span>
+                                        <span className="text-lg text-white font-medium">{t(option.key)}</span>
                                     </button>
                                 );
                             })}
@@ -231,10 +234,10 @@ export default function UserProfileQuizPage() {
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
-                            How did you hear about us?
+                            {t('quiz.how_did_you_hear')}
                         </h2>
                         <div className="space-y-3">
-                            {REFERRAL_SOURCES.map((option) => {
+                            {REFERRAL_SOURCE_KEYS.map((option) => {
                                 const isSelected = answers.referral_source === option.value;
                                 return (
                                     <button
@@ -258,7 +261,7 @@ export default function UserProfileQuizPage() {
                                                 <Circle className="w-6 h-6 text-gray-500 group-hover:text-gray-400" />
                                             )}
                                         </div>
-                                        <span className="text-lg text-white font-medium">{option.label}</span>
+                                        <span className="text-lg text-white font-medium">{t(option.key)}</span>
                                     </button>
                                 );
                             })}
@@ -270,7 +273,7 @@ export default function UserProfileQuizPage() {
                                     type="text"
                                     value={customReferralSource}
                                     onChange={(e) => setCustomReferralSource(e.target.value)}
-                                    placeholder="Please specify..."
+                                    placeholder={t('quiz.please_specify')}
                                     className="w-full p-4 rounded-xl bg-gray-800 border-2 border-gray-700 text-white text-lg focus:border-blue-500 focus:outline-none mb-4"
                                     autoFocus
                                 />
@@ -279,14 +282,14 @@ export default function UserProfileQuizPage() {
                                     disabled={!customReferralSource.trim() || isSaving}
                                     className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {isSaving ? <Loader2 className="animate-spin" /> : 'Complete Profile'} <ArrowRight className="w-5 h-5" />
+                                    {isSaving ? <Loader2 className="animate-spin" /> : t('quiz.complete_profile')} <ArrowRight className="w-5 h-5" />
                                 </button>
                             </div>
                         )}
                         {isSaving && (
                             <div className="mt-4 flex items-center justify-center gap-2 text-gray-400">
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <span>Saving your profile...</span>
+                                <span>{t('quiz.saving_profile')}</span>
                             </div>
                         )}
                     </div>
@@ -306,8 +309,8 @@ export default function UserProfileQuizPage() {
                         <div className="flex items-center gap-3 mb-2">
                             <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
                             <div className="flex-1">
-                                <p className="text-white font-semibold">Syncing Your Ad Data</p>
-                                <p className="text-gray-400 text-sm">We're importing your campaigns and performance metrics...</p>
+                                <p className="text-white font-semibold">{t('quiz.syncing_data')}</p>
+                                <p className="text-gray-400 text-sm">{t('quiz.importing_campaigns')}</p>
                             </div>
                             <span className="text-blue-400 font-bold">{syncStatus.progress_percent}%</span>
                         </div>
@@ -325,8 +328,8 @@ export default function UserProfileQuizPage() {
                         <div className="flex items-center gap-3">
                             <CheckCircle className="w-5 h-5 text-green-400" />
                             <div>
-                                <p className="text-white font-semibold">Data Sync Complete!</p>
-                                <p className="text-gray-400 text-sm">Your ad accounts are ready to view</p>
+                                <p className="text-white font-semibold">{t('quiz.sync_complete')}</p>
+                                <p className="text-gray-400 text-sm">{t('quiz.accounts_ready')}</p>
                             </div>
                         </div>
                     </div>
@@ -340,7 +343,7 @@ export default function UserProfileQuizPage() {
                             <div className="mb-8">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-gray-400">
-                                        Question {currentQuestion + 1} of 4
+                                        {t('quiz.question_of', { current: currentQuestion + 1, total: 4 })}
                                     </span>
                                     <span className="text-sm text-gray-400">{Math.round(progressPercent)}%</span>
                                 </div>
@@ -361,7 +364,7 @@ export default function UserProfileQuizPage() {
                                     onClick={() => setCurrentQuestion(currentQuestion - 1)}
                                     className="mt-6 text-gray-400 hover:text-gray-300 transition-colors text-sm"
                                 >
-                                    ← Back to previous question
+                                    ← {t('quiz.back_to_previous')}
                                 </button>
                             )}
                         </>
@@ -371,16 +374,16 @@ export default function UserProfileQuizPage() {
                             <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle className="w-10 h-10" />
                             </div>
-                            <h2 className="text-3xl font-bold text-white mb-4">Profile Complete!</h2>
+                            <h2 className="text-3xl font-bold text-white mb-4">{t('quiz.profile_complete')}</h2>
                             <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                                Thanks for completing your profile. You're all set to explore your dashboard!
+                                {t('quiz.thanks_completing')}
                             </p>
 
                             <button
                                 onClick={handleFinish}
                                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-xl flex items-center gap-2 mx-auto"
                             >
-                                Go to Dashboard
+                                {t('quiz.go_to_dashboard')}
                                 <ArrowRight className="w-5 h-5" />
                             </button>
                         </div>

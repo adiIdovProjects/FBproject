@@ -1,36 +1,42 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function CallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [message, setMessage] = useState('Completing login...');
+  const { locale } = useParams();
+  const t = useTranslations();
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const token = searchParams.get('token');
     const redirect = searchParams.get('redirect');
 
+    // Set initial message
+    setMessage(t('auth.completing_login'));
+
     // Handle login/connect flow
     if (token) {
-      setMessage('Setting up your account...');
+      setMessage(t('auth.setting_up_account'));
 
       // Store token
       localStorage.setItem('token', token);
       document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
 
       // Redirect based on redirect param or default to select-accounts
-      const redirectPath = redirect === 'select-accounts' ? '/select-accounts' :
-                          redirect === 'settings' ? '/settings?tab=accounts' :
-                          '/select-accounts';
+      const redirectPath = redirect === 'select-accounts' ? `/${locale}/select-accounts` :
+                          redirect === 'settings' ? `/${locale}/settings?tab=accounts` :
+                          `/${locale}/select-accounts`;
       setTimeout(() => router.push(redirectPath), 500);
     } else {
       // No token - error occurred
-      setMessage('Login failed. Redirecting...');
-      setTimeout(() => router.push('/login?error=auth_failed'), 2000);
+      setMessage(t('auth.login_failed_redirecting'));
+      setTimeout(() => router.push(`/${locale}/login?error=auth_failed`), 2000);
     }
-  }, [router, searchParams]);
+  }, [router, searchParams, locale, t]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

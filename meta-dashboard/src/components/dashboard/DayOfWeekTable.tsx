@@ -69,7 +69,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
 
         {!isLoading && data.length === 0 && (
           <div className="flex items-center justify-center h-48 text-gray-400">
-            {t('no_data_available')}
+            {t('common.no_data_available')}
           </div>
         )}
 
@@ -123,7 +123,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
 
                     {/* Spend */}
                     <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatCurrency(row.spend)}
+                      {formatCurrency(row.spend, 0)}
                     </td>
 
                     {/* Impressions */}
@@ -143,7 +143,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
 
                     {/* CPC */}
                     <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatCurrency(row.cpc)}
+                      {formatCurrency(row.cpc, 1)}
                     </td>
 
                     {/* Conversions */}
@@ -153,7 +153,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
 
                     {/* CPA */}
                     <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatCurrency(row.cpa)}
+                      {formatCurrency(row.cpa, 1)}
                     </td>
 
                     {/* ROAS */}
