@@ -210,6 +210,26 @@ class CreativeMetrics(BaseModel):
     days_active: Optional[int] = None
 
 
+class CreativeComparisonMetrics(CreativeMetrics):
+    """Creative metrics with side-by-side period comparison"""
+    # Previous period values
+    previous_spend: Optional[float] = None
+    previous_clicks: Optional[int] = None
+    previous_impressions: Optional[int] = None
+    previous_conversions: Optional[int] = None
+    previous_ctr: Optional[float] = None
+    previous_cpc: Optional[float] = None
+    previous_cpa: Optional[float] = None
+
+    # Percentage changes
+    spend_change_pct: Optional[float] = None
+    clicks_change_pct: Optional[float] = None
+    conversions_change_pct: Optional[float] = None
+    ctr_change_pct: Optional[float] = None
+    cpc_change_pct: Optional[float] = None
+    cpa_change_pct: Optional[float] = None
+
+
 class CreativeDetailResponse(BaseModel):
     """Detailed response for a single creative"""
     creative_id: int
@@ -383,3 +403,36 @@ class CampaignComparisonResponse(BaseModel):
     """Response for campaign comparison"""
     campaign_ids: List[int] = Field(..., description="List of campaign IDs being compared")
     comparisons: List[ComparisonMetric] = Field(..., description="Metric comparisons")
+
+
+class DayOfWeekBreakdown(BaseModel):
+    """Performance breakdown by day of week"""
+    day_of_week: str = Field(..., description="Day name (Monday, Tuesday, etc.)")
+    spend: float = Field(0.0, description="Average daily spend")
+    impressions: int = Field(0, description="Average daily impressions")
+    clicks: int = Field(0, description="Average daily clicks")
+    conversions: int = Field(0, description="Average daily conversions")
+    ctr: float = Field(0.0, description="Average CTR (%)")
+    cpc: float = Field(0.0, description="Average CPC")
+    cpa: float = Field(0.0, description="Average CPA")
+    roas: Optional[float] = Field(None, description="Average ROAS")
+
+
+class AdsetComparisonMetrics(AdsetBreakdown):
+    """Adset breakdown metrics with side-by-side period comparison"""
+    # Previous period values
+    previous_spend: Optional[float] = None
+    previous_clicks: Optional[int] = None
+    previous_impressions: Optional[int] = None
+    previous_conversions: Optional[int] = None
+    previous_ctr: Optional[float] = None
+    previous_cpc: Optional[float] = None
+    previous_cpa: Optional[float] = None
+
+    # Percentage changes
+    spend_change_pct: Optional[float] = None
+    clicks_change_pct: Optional[float] = None
+    conversions_change_pct: Optional[float] = None
+    ctr_change_pct: Optional[float] = None
+    cpc_change_pct: Optional[float] = None
+    cpa_change_pct: Optional[float] = None

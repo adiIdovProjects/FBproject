@@ -25,7 +25,8 @@ import {
     Upload,
     Shield,
     TrendingUp,
-    FileText
+    FileText,
+    GraduationCap
 } from 'lucide-react';
 import { useAccount } from '@/context/AccountContext';
 import { useLocale, useTranslations } from 'next-intl';
@@ -66,7 +67,7 @@ export const Sidebar: React.FC = () => {
     // Auto-expand section if nested item is active
     React.useEffect(() => {
         const analyticsRoutes = ['/account-dashboard', '/campaigns', '/targeting', '/creatives'];
-        const manageRoutes = ['/campaign-control', '/uploader'];
+        const manageRoutes = ['/campaign-control', '/uploader', '/learning'];
         const intelligenceRoutes = ['/insights', '/reports', '/ai-investigator'];
 
         const isAnalyticsActive = analyticsRoutes.some(route => pathname.includes(route));
@@ -146,6 +147,7 @@ export const Sidebar: React.FC = () => {
             items: [
                 { name: t('nav.campaign_control'), href: `/${locale}/campaign-control`, icon: Sliders },
                 { name: t('nav.uploader'), href: `/${locale}/uploader`, icon: Upload },
+                { name: t('nav.learning_center'), href: `/${locale}/learning`, icon: GraduationCap },
             ]
         },
         {
@@ -258,31 +260,7 @@ export const Sidebar: React.FC = () => {
             <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
                 <div className="mb-4">
                     <p className="px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Main Menu</p>
-                    {navStructure.map((item, index) => {
-                        if (item.type === 'item') {
-                            const isActive = pathname === item.href;
-                            const Icon = item.icon;
-
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${item.highlight
-                                        ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 text-white font-semibold'
-                                        : isActive
-                                            ? 'bg-accent/15 text-accent font-black shadow-sm'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                        }`}
-                                >
-                                    <Icon className={`w-5 h-5 ${item.highlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
-                                    <span className="text-sm">{item.name}</span>
-                                    {isActive && !item.highlight && (
-                                        <div className={`w-1.5 h-1.5 rounded-full bg-accent ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
-                                    )}
-                                </Link>
-                            );
-                        }
-
+                    {navStructure.map((item) => {
                         // Section rendering
                         if (item.type === 'section') {
                             const isExpanded = expandedSections[item.id];

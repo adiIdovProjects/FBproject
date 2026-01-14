@@ -49,11 +49,18 @@ class CreativeAnalysisRepository(BaseRepository):
         query = text(f"""
             SELECT
                 cr.creative_id,
+                ad.ad_name,
                 cr.title,
                 cr.body,
                 cr.call_to_action_type,
                 cr.is_video,
+                cr.is_carousel,
                 cr.video_length_seconds,
+                CASE
+                    WHEN cr.is_video = TRUE THEN 'Video'
+                    WHEN cr.is_carousel = TRUE THEN 'Carousel'
+                    ELSE 'Image'
+                END as format_type,
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks,
@@ -78,6 +85,7 @@ class CreativeAnalysisRepository(BaseRepository):
                      ELSE 0 END as completion_rate
             FROM dim_creative cr
             JOIN fact_core_metrics f ON cr.creative_id = f.creative_id
+            JOIN dim_ad ad ON f.ad_id = ad.ad_id
             JOIN dim_date d ON f.date_id = d.date_id
             LEFT JOIN (
                 SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
@@ -97,8 +105,8 @@ class CreativeAnalysisRepository(BaseRepository):
                 AND d.date <= :end_date
                 {campaign_filter}
                 {account_filter}
-            GROUP BY cr.creative_id, cr.title, cr.body, cr.call_to_action_type,
-                     cr.is_video, cr.video_length_seconds
+            GROUP BY cr.creative_id, ad.ad_name, cr.title, cr.body, cr.call_to_action_type,
+                     cr.is_video, cr.is_carousel, cr.video_length_seconds
             HAVING SUM(f.impressions) >= :min_impressions
             ORDER BY CASE WHEN SUM(f.spend) > 0 AND SUM(f.purchases) > 0
                           THEN SUM(f.purchase_value) / SUM(f.spend)
@@ -119,10 +127,13 @@ class CreativeAnalysisRepository(BaseRepository):
         return [
             {
                 'creative_id': row.creative_id,
+                'ad_name': row.ad_name or '',
                 'title': row.title or '',
                 'body': row.body or '',
                 'call_to_action_type': row.call_to_action_type or '',
                 'is_video': row.is_video or False,
+                'is_carousel': row.is_carousel or False,
+                'format_type': row.format_type or 'Image',
                 'video_length_seconds': row.video_length_seconds or 0,
                 'spend': float(row.spend or 0),
                 'impressions': int(row.impressions or 0),
@@ -331,7 +342,8 @@ class CreativeAnalysisRepository(BaseRepository):
         self,
         lookback_days: int = 30,
         fatigue_threshold: float = -20.0,
-        min_impressions: int = 5000
+        min_impressions: int = 5000,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Find all creatives showing signs of fatigue.
@@ -340,14 +352,25 @@ class CreativeAnalysisRepository(BaseRepository):
             lookback_days: Days to analyze
             fatigue_threshold: CTR decline % threshold (default -20%)
             min_impressions: Minimum total impressions (default 5000)
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             List of fatigued creatives with details
         """
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
         # Simpler approach: Get active creatives first, then check each for fatigue
         query = text(f"""
             SELECT
                 f.creative_id,
+                ad.ad_name,
                 cr.title,
                 cr.body,
                 cr.call_to_action_type,
@@ -355,15 +378,16 @@ class CreativeAnalysisRepository(BaseRepository):
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
             JOIN dim_creative cr ON f.creative_id = cr.creative_id
+            JOIN dim_ad ad ON f.ad_id = ad.ad_id
             WHERE d.date >= CURRENT_DATE - INTERVAL '{lookback_days} days'
-            GROUP BY f.creative_id, cr.title, cr.body, cr.call_to_action_type
+                {account_filter}
+            GROUP BY f.creative_id, ad.ad_name, cr.title, cr.body, cr.call_to_action_type
             HAVING SUM(f.impressions) >= :min_impressions
             ORDER BY SUM(f.impressions) DESC
         """)
 
-        result = self.db.execute(query, {
-            'min_impressions': min_impressions
-        }).fetchall()
+        params = {'min_impressions': min_impressions, **param_account_ids}
+        result = self.db.execute(query, params).fetchall()
 
         # Check each creative for fatigue
         fatigued_creatives = []
@@ -377,6 +401,7 @@ class CreativeAnalysisRepository(BaseRepository):
                 fatigue_data['fatigue_pct'] <= fatigue_threshold):
                 fatigued_creatives.append({
                     'creative_id': row.creative_id,
+                    'ad_name': row.ad_name or '',
                     'title': row.title or '',
                     'body': row.body or '',
                     'call_to_action_type': row.call_to_action_type or '',
@@ -390,3 +415,95 @@ class CreativeAnalysisRepository(BaseRepository):
         fatigued_creatives.sort(key=lambda x: x['fatigue_pct'])
 
         return fatigued_creatives
+
+    def get_format_performance(
+        self,
+        start_date: date,
+        end_date: date,
+        account_ids: Optional[List[int]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get performance breakdown by creative format (Image, Video, Carousel).
+
+        Args:
+            start_date: Start date for analysis
+            end_date: End date for analysis
+            account_ids: Optional account filter
+
+        Returns:
+            List of dicts with format performance metrics
+        """
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
+        query = text(f"""
+            SELECT
+                CASE
+                    WHEN cr.is_video = TRUE THEN 'Video'
+                    WHEN cr.is_carousel = TRUE THEN 'Carousel'
+                    ELSE 'Image'
+                END as format_type,
+                COUNT(DISTINCT cr.creative_id) as creative_count,
+                SUM(f.spend) as total_spend,
+                SUM(f.impressions) as total_impressions,
+                SUM(f.clicks) as total_clicks,
+                COALESCE(SUM(conv.action_count), 0) as total_conversions,
+                CASE WHEN SUM(f.impressions) > 0
+                     THEN (SUM(f.clicks)::float / SUM(f.impressions)) * 100
+                     ELSE 0 END as avg_ctr,
+                CASE WHEN SUM(f.video_plays) > 0
+                     THEN (SUM(f.video_p25_watched)::float / SUM(f.video_plays)) * 100
+                     ELSE 0 END as avg_hook_rate,
+                CASE WHEN SUM(f.video_plays) > 0
+                     THEN (SUM(f.video_p100_watched)::float / SUM(f.video_plays)) * 100
+                     ELSE 0 END as avg_completion_rate
+            FROM dim_creative cr
+            JOIN fact_core_metrics f ON cr.creative_id = f.creative_id
+            JOIN dim_date d ON f.date_id = d.date_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id
+                  AND f.account_id = conv.account_id
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {account_filter}
+            GROUP BY format_type
+            ORDER BY total_spend DESC
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date,
+            **param_account_ids
+        }
+
+        result = self.db.execute(query, params).fetchall()
+
+        return [
+            {
+                'format_type': row.format_type,
+                'creative_count': int(row.creative_count or 0),
+                'total_spend': float(row.total_spend or 0),
+                'total_impressions': int(row.total_impressions or 0),
+                'total_clicks': int(row.total_clicks or 0),
+                'total_conversions': int(row.total_conversions or 0),
+                'avg_ctr': float(row.avg_ctr or 0),
+                'avg_hook_rate': float(row.avg_hook_rate or 0),
+                'avg_completion_rate': float(row.avg_completion_rate or 0)
+            }
+            for row in result
+        ]

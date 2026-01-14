@@ -141,6 +141,19 @@ export interface BackendTimeSeriesPoint {
 export type OverviewMetrics = BackendOverviewResponse;
 export type MetricTrend = BackendTimeSeriesPoint;
 
+// Day of Week Breakdown
+export interface DayOfWeekBreakdown {
+  day_of_week: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ctr: number;
+  cpc: number;
+  cpa: number;
+  roas: number | null;
+}
+
 // AI Investigator Types
 export interface AIQueryResponse {
   answer: string;

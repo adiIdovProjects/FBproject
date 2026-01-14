@@ -117,7 +117,7 @@ export default function CampaignAnalysisView({
                             <tr className="border-b border-border-subtle">
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">Campaign</th>
                                 <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Spend</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">ROAS</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CTR</th>
                                 <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CPA</th>
                                 <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conv</th>
                             </tr>
@@ -125,9 +125,9 @@ export default function CampaignAnalysisView({
                         <tbody>
                             {campaigns.map((c, idx) => (
                                 <tr key={idx} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
-                                    <td className="py-3 px-4 text-sm font-medium">{c.name}</td>
+                                    <td className="py-3 px-4 text-sm font-medium">{c.name || c.campaign_name || `Campaign #${c.campaign_id || idx + 1}`}</td>
                                     <td className="py-3 px-4 text-sm text-right">${(c.spend || 0).toFixed(2)}</td>
-                                    <td className={`py-3 px-4 text-sm text-right font-bold ${(c.roas || 0) > 2 ? 'text-green-400' : (c.roas || 0) < 1 ? 'text-red-400' : 'text-yellow-400'}`}>{(c.roas || 0).toFixed(2)}x</td>
+                                    <td className={`py-3 px-4 text-sm text-right font-bold ${(c.ctr || 0) > 2 ? 'text-green-400' : (c.ctr || 0) < 1 ? 'text-yellow-400' : 'text-gray-200'}`}>{(c.ctr || 0).toFixed(2)}%</td>
                                     <td className="py-3 px-4 text-sm text-right">${(c.cpa || 0).toFixed(2)}</td>
                                     <td className="py-3 px-4 text-sm text-right">{c.conversions || 0}</td>
                                 </tr>
@@ -145,7 +145,7 @@ export default function CampaignAnalysisView({
             <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border border-blue-500/30 rounded-xl p-6 shadow-lg">
                 <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                     <Activity className="w-6 h-6 text-blue-400" />
-                    <h2 className="text-2xl font-bold text-blue-200">Portfolio Optimization Strategy</h2>
+                    <h2 className="text-2xl font-bold text-blue-200">Campaign Insights</h2>
                 </div>
                 <div className={`prose prose-invert max-w-none ${isRTL ? 'text-right' : 'text-left'}`}>
                     <ReactMarkdown>{data.analysis}</ReactMarkdown>
@@ -157,14 +157,14 @@ export default function CampaignAnalysisView({
                 <>
                     {renderCampaignTable(
                         data.data.scale_candidates,
-                        "🚀 Candidates for Scaling (High ROAS)",
+                        "🚀 Top Performing Campaigns",
                         <TrendingUp className="w-5 h-5 text-green-400" />,
                         'scale'
                     )}
 
                     {renderCampaignTable(
                         data.data.fix_candidates,
-                        "⚠️ Candidates for Refactoring (Low Efficiency)",
+                        "⚠️ Campaigns Needing Attention",
                         <AlertCircle className="w-5 h-5 text-red-400" />,
                         'fix'
                     )}

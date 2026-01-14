@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowUpDown, Loader2 } from 'lucide-react';
+import { ArrowUpDown, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import { TargetingRow } from '../../types/targeting.types';
 import { useAccount } from '../../context/AccountContext';
 
@@ -25,6 +25,7 @@ interface TargetingTableProps {
   isRTL?: boolean;
   selectedAdsetIds?: number[];
   onSelectionChange?: (selectedIds: number[]) => void;
+  showComparison?: boolean;
 }
 
 export const TargetingTable: React.FC<TargetingTableProps> = ({
@@ -34,6 +35,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
   isRTL = false,
   selectedAdsetIds = [],
   onSelectionChange,
+  showComparison = false,
 }) => {
   const t = useTranslations();
   const { hasROAS } = useAccount();
@@ -106,6 +108,28 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
   // Format percentage
   const formatPercentage = (value: number): string => {
     return `${value.toFixed(2)}%`;
+  };
+
+  // Render change badge for comparison
+  const renderChangeBadge = (changePct: number | null | undefined, metricType: 'cost' | 'performance' | 'neutral', prevValue?: number | null, formatter?: (v: number) => string) => {
+    if (changePct === null || changePct === undefined) return <span className="text-gray-500 text-sm">-</span>;
+    const isPositive = changePct > 0;
+    const isNegative = changePct < 0;
+    let colorClass = 'text-gray-400'; // neutral
+    if (metricType === 'cost') {
+      colorClass = isNegative ? 'text-green-400' : 'text-red-400';
+    } else if (metricType === 'performance') {
+      colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+    }
+    const Icon = isPositive ? TrendingUp : TrendingDown;
+    const tooltip = prevValue !== null && prevValue !== undefined && formatter
+      ? `Previous: ${formatter(prevValue)}` : undefined;
+    return (
+      <div className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass} cursor-help`} title={tooltip}>
+        <Icon className="w-3 h-3" />
+        <span>{Math.abs(changePct).toFixed(1)}%</span>
+      </div>
+    );
   };
 
   // Handle checkbox toggle
@@ -230,28 +254,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-
-              {/* Impressions */}
-              <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
-                onClick={() => handleSort('impressions')}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  <span>{t('metrics.impressions')}</span>
-                  <ArrowUpDown className="w-3 h-3 opacity-50" />
-                </div>
-              </th>
-
-              {/* Clicks */}
-              <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
-                onClick={() => handleSort('clicks')}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  <span>{t('metrics.clicks')}</span>
-                  <ArrowUpDown className="w-3 h-3 opacity-50" />
-                </div>
-              </th>
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
 
               {/* CTR */}
               <th
@@ -263,6 +266,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
 
               {/* CPC */}
               <th
@@ -274,6 +278,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
 
               {/* Conversions */}
               <th
@@ -285,6 +290,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
 
               {/* CPA */}
               <th
@@ -296,6 +302,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">VS PREV</th>}
 
               {/* ROAS - Conditional */}
               {hasConversionValue && (
@@ -362,36 +369,51 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatCurrency(adset.spend)}
                   </td>
-
-                  {/* Impressions */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                    {formatNumber(adset.impressions)}
-                  </td>
-
-                  {/* Clicks */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
-                    {formatNumber(adset.clicks)}
-                  </td>
+                  {showComparison && (
+                    <td className="px-4 py-5 text-right">
+                      {renderChangeBadge(adset.spend_change_pct, 'neutral', adset.previous_spend, (v) => formatCurrency(v))}
+                    </td>
+                  )}
 
                   {/* CTR */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatPercentage(adset.ctr)}
                   </td>
+                  {showComparison && (
+                    <td className="px-4 py-5 text-right">
+                      {renderChangeBadge(adset.ctr_change_pct, 'performance', adset.previous_ctr, (v) => formatPercentage(v))}
+                    </td>
+                  )}
 
                   {/* CPC */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(adset.cpc)}
                   </td>
+                  {showComparison && (
+                    <td className="px-4 py-5 text-right">
+                      {renderChangeBadge(adset.cpc_change_pct, 'cost', adset.previous_cpc, (v) => formatCurrencyDecimal(v))}
+                    </td>
+                  )}
 
                   {/* Conversions */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatNumber(adset.conversions)}
                   </td>
+                  {showComparison && (
+                    <td className="px-4 py-5 text-right">
+                      {renderChangeBadge(adset.conversions_change_pct, 'performance', adset.previous_conversions, (v) => formatNumber(v))}
+                    </td>
+                  )}
 
                   {/* CPA */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(adset.cpa)}
                   </td>
+                  {showComparison && (
+                    <td className="px-4 py-5 text-right">
+                      {renderChangeBadge(adset.cpa_change_pct, 'cost', adset.previous_cpa, (v) => formatCurrencyDecimal(v))}
+                    </td>
+                  )}
 
                   {/* ROAS */}
                   {hasConversionValue && (

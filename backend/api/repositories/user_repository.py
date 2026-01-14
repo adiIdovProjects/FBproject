@@ -20,6 +20,13 @@ class UserRepository:
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         return self.db.query(User).filter(User.id == user_id).first()
 
+    def get_user_by_any_email(self, email: str) -> Optional[User]:
+        """Find user by either primary or secondary email"""
+        from sqlalchemy import or_
+        return self.db.query(User).filter(
+            or_(User.email == email, User.secondary_email == email)
+        ).first()
+
     def create_user(self, email: str, fb_user_id: str, full_name: str, access_token: str, expires_at: datetime) -> User:
         user = User(
             email=email,

@@ -106,7 +106,7 @@ export default function ReportsPage() {
 
       if (pendingExport) {
         try {
-          const { timestamp, reportData } = JSON.parse(pendingExport);
+          const { timestamp, reportData, exportOptions } = JSON.parse(pendingExport);
           const age = Date.now() - timestamp;
           console.log('[Reports] Pending export age:', age, 'ms');
 
@@ -115,8 +115,8 @@ export default function ReportsPage() {
             console.log('[Reports] Auto-retrying export...');
             localStorage.removeItem('pendingGoogleSheetsExport');
 
-            // Auto-retry the export
-            exportToGoogleSheets(reportData)
+            // Auto-retry the export with saved options
+            exportToGoogleSheets(reportData, exportOptions)
               .then(url => {
                 console.log('[Reports] Auto-retry successful:', url);
                 alert(`Successfully exported to Google Sheets: ${url}`);
@@ -224,7 +224,11 @@ export default function ReportsPage() {
     if (!comparisonData) return;
 
     try {
-      await exportToExcel(comparisonData);
+      await exportToExcel(comparisonData, {
+        breakdown,
+        secondaryBreakdown,
+        selectedMetrics,
+      });
       alert('Export to Excel successful!');
     } catch (error) {
       console.error('Export to Excel failed:', error);
@@ -243,7 +247,11 @@ export default function ReportsPage() {
 
     try {
       console.log('[Reports] Calling exportToGoogleSheets...');
-      const url = await exportToGoogleSheets(comparisonData);
+      const url = await exportToGoogleSheets(comparisonData, {
+        breakdown,
+        secondaryBreakdown,
+        selectedMetrics,
+      });
       console.log('[Reports] Export successful:', url);
       alert(`Exported to Google Sheets: ${url}`);
       window.open(url, '_blank');
@@ -269,7 +277,12 @@ export default function ReportsPage() {
     // Save pending export to localStorage (for auto-retry after OAuth)
     const exportData = {
       timestamp: Date.now(),
-      reportData: comparisonData
+      reportData: comparisonData,
+      exportOptions: {
+        breakdown,
+        secondaryBreakdown,
+        selectedMetrics,
+      }
     };
     localStorage.setItem('pendingGoogleSheetsExport', JSON.stringify(exportData));
     console.log('[Reports] Saved pending export to localStorage:', exportData);
@@ -422,6 +435,7 @@ export default function ReportsPage() {
                     data={displayData}
                     selectedMetrics={selectedMetrics}
                     breakdown={breakdown}
+                    secondaryBreakdown={secondaryBreakdown}
                     currency={comparisonData?.currency}
                     isRTL={isRTL}
                   />

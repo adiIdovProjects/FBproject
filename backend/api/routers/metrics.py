@@ -22,9 +22,12 @@ from backend.api.schemas.responses import (
     PlacementBreakdown,
     CountryBreakdown,
     CreativeMetrics,
+    CreativeComparisonMetrics,
     ErrorResponse,
     AdsetBreakdown,
-    CampaignComparisonResponse
+    AdsetComparisonMetrics,
+    CampaignComparisonResponse,
+    DayOfWeekBreakdown
 )
 from backend.api.utils.exceptions import DatabaseError
 
@@ -403,6 +406,37 @@ def get_country_breakdown(
 
 
 @router.get(
+    "/breakdowns/day-of-week",
+    response_model=List[DayOfWeekBreakdown],
+    summary="Get day of week breakdown",
+    description="Returns metrics broken down by day of week"
+)
+def get_day_of_week_breakdown(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get performance breakdown by day of week.
+
+    Returns metrics aggregated by day (Monday through Sunday).
+    """
+    try:
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
+        return service.get_day_of_week_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids
+        )
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to get day of week breakdown: {str(e)}")
+
+
+@router.get(
     "/breakdowns/adset",
     response_model=List[AdsetBreakdown],
     summary="Get adset breakdown",
@@ -439,6 +473,82 @@ def get_adset_breakdown(
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get adset breakdown: {str(e)}")
+
+
+@router.get(
+    "/breakdowns/adset/comparison",
+    response_model=List[AdsetComparisonMetrics],
+    summary="Get adset breakdown with period comparison",
+    description="Returns adset metrics with side-by-side period comparison"
+)
+def get_adset_breakdown_comparison(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by campaign name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get adset performance breakdown with period comparison.
+
+    Returns adset metrics with comparison to the previous period.
+    """
+    try:
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
+        return service.get_adset_breakdown_comparison(
+            start_date=start_date,
+            end_date=end_date,
+            campaign_id=campaign_id,
+            campaign_status=status,
+            search_query=search,
+            account_ids=account_ids,
+            campaign_ids=campaign_ids
+        )
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to get adset breakdown comparison: {str(e)}")
+
+
+@router.get(
+    "/creatives/comparison",
+    response_model=List[CreativeComparisonMetrics],
+    summary="Get creative performance metrics with comparison",
+    description="Returns creative metrics with side-by-side period comparison"
+)
+def get_creatives_comparison(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    is_video: Optional[bool] = Query(None, description="Filter by video/image creatives"),
+    min_spend: float = Query(0, ge=0, description="Minimum spend threshold"),
+    sort_by: str = Query("spend", description="Metric to sort by"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get creative-level performance metrics with period comparison.
+
+    Returns all creatives with their metrics including comparison with the previous period.
+    """
+    try:
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
+        return service.get_creative_metrics_comparison(
+            start_date=start_date,
+            end_date=end_date,
+            is_video=is_video,
+            min_spend=min_spend,
+            sort_by=sort_by,
+            account_ids=account_ids
+        )
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to get creative comparison: {str(e)}")
 
 
 @router.get(

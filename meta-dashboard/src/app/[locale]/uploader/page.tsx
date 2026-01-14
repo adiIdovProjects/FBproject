@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { PlusCircle, Layers, ArrowRight } from 'lucide-react';
+import { PlusCircle, Layers, ArrowRight, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '../../../components/MainLayout';
 
@@ -17,9 +17,9 @@ export default function CampaignChoicePage() {
             title={t('nav.uploader')}
             description=""
         >
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {/* Choice Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Option 1: Create New Campaign */}
                     <div className="p-8 rounded-2xl border-2 border-gray-700 bg-gray-800/50 hover:border-blue-500 transition-all">
                         <div className="flex flex-col items-center text-center gap-6">
@@ -65,6 +65,32 @@ export default function CampaignChoicePage() {
                             <button
                                 onClick={() => router.push(`/${locale}/uploader/add-creative`)}
                                 className="w-full mt-4 px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                            >
+                                Continue
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Option 3: Edit Existing */}
+                    <div className="p-8 rounded-2xl border-2 border-gray-700 bg-gray-800/50 hover:border-orange-500 transition-all">
+                        <div className="flex flex-col items-center text-center gap-6">
+                            <div className="p-4 rounded-full bg-orange-500/10">
+                                <Pencil className="w-12 h-12 text-orange-400" />
+                            </div>
+
+                            <div>
+                                <h2 className="text-2xl font-bold text-white mb-3">
+                                    Edit Ad Set or Ad
+                                </h2>
+                                <p className="text-gray-400">
+                                    Modify targeting (location, age, budget) on an ad set, or update ad copy, media, and lead forms. Fine-tune your existing campaigns.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => router.push(`/${locale}/uploader/edit`)}
+                                className="w-full mt-4 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
                             >
                                 Continue
                                 <ArrowRight className="w-5 h-5" />

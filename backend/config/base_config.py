@@ -41,7 +41,8 @@ class Settings(BaseSettings):
     FB_REDIRECT_URI: str = "http://localhost:8002/api/v1/auth/facebook/callback"
     
     # Security Settings
-    JWT_SECRET_KEY: str = "b4070a2575ed271033235339f40391d4e4125b2d28711e74f85e13298a58711b"
+    # SECURITY: JWT secret MUST be set via .env file - no default value for production safety
+    JWT_SECRET_KEY: str = Field(default="dev-only-secret-change-in-production")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 1 week
     
@@ -73,6 +74,13 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str = "noreply@example.com"
     EMAIL_FROM_NAME: str = "AdManager Pro"
     MAGIC_LINK_EXPIRY_MINUTES: int = 15
+
+    # Stripe Settings
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
+    STRIPE_PRICE_STARTER: Optional[str] = None
+    STRIPE_PRICE_PRO: Optional[str] = None
+    STRIPE_PRICE_ENTERPRISE: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env")),

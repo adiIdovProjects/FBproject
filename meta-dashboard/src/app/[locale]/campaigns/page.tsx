@@ -5,7 +5,7 @@
  * Shows campaign-level metrics with period comparisons and breakdowns
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { DollarSign, ShoppingCart, TrendingUp, Search, Filter, X } from 'lucide-react';
 
@@ -20,7 +20,7 @@ import TimeGranularityToggle from '../../../components/campaigns/TimeGranularity
 import CampaignsTable from '../../../components/campaigns/CampaignsTable';
 import BreakdownTabs from '../../../components/campaigns/BreakdownTabs';
 import CampaignComparisonModal from '../../../components/campaigns/CampaignComparisonModal';
-// Output removed by refactor
+import { useInView } from '../../../hooks/useInView';
 
 
 // Services & Types
@@ -77,6 +77,9 @@ export default function CampaignsPage() {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<number[]>([]);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [filteredCampaignIds, setFilteredCampaignIds] = useState<number[]>([]);
+
+  // Viewport-based lazy loading for breakdown section
+  const [breakdownRef, isBreakdownVisible] = useInView();
   const [showComparisonModal, setShowComparisonModal] = useState(false);
 
   // Insights state
@@ -405,7 +408,7 @@ export default function CampaignsPage() {
       </div>
 
       {/* Breakdown Analysis */}
-      <div className="mb-8">
+      <div className="mb-8" ref={breakdownRef}>
         <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('campaigns.breakdown_title')}</h2>
         <BreakdownTabs
           dateRange={{ startDate, endDate }}
@@ -415,6 +418,7 @@ export default function CampaignsPage() {
           searchQuery={searchQuery}
           accountId={selectedAccountId}
           campaignIds={isFilterActive ? filteredCampaignIds : null}
+          isVisible={isBreakdownVisible}
         />
       </div>
 

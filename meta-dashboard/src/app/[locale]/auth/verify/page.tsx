@@ -46,11 +46,11 @@ export default function VerifyMagicLinkPage() {
                                 router.push('/en/quiz');
                                 break;
                             default:
-                                router.push('/en/dashboard');
+                                router.push('/en/account-dashboard');
                         }
                     } else {
                         // User is fully onboarded
-                        router.push('/en/dashboard');
+                        router.push('/en/account-dashboard');
                     }
                 }, 1500);
             })

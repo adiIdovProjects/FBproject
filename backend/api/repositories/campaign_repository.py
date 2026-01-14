@@ -1,7 +1,10 @@
+import logging
 from datetime import date
 from typing import List, Dict, Any, Optional
 from sqlalchemy import text
 from backend.api.repositories.base_repository import BaseRepository
+
+logger = logging.getLogger(__name__)
 
 class CampaignRepository(BaseRepository):
     """Repository for campaign metrics."""
@@ -39,6 +42,9 @@ class CampaignRepository(BaseRepository):
             account_filter = f"AND f.account_id IN ({placeholders})"
             for i, acc_id in enumerate(account_ids):
                 param_account_ids[f'acc_id_{i}'] = acc_id
+            logger.debug(f"[CampaignRepository.get_campaign_breakdown] account_filter: {account_filter}")
+        else:
+            logger.debug(f"[CampaignRepository.get_campaign_breakdown] No account_ids provided")
 
         # Validate sort column
         valid_sort_cols = ['spend', 'impressions', 'clicks', 'purchases', 'purchase_value']
@@ -53,6 +59,7 @@ class CampaignRepository(BaseRepository):
         query = text(f"""
             SELECT
                 c.campaign_id,
+                c.account_id,
                 c.campaign_name,
                 c.campaign_status,
                 SUM(f.spend) as spend,
@@ -67,7 +74,7 @@ class CampaignRepository(BaseRepository):
                 SUM(f.lead_form) as lead_form
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
-            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id AND f.account_id = c.account_id
             LEFT JOIN (
                 SELECT fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id,
                        SUM(fam.action_count) as action_count,
@@ -79,8 +86,8 @@ class CampaignRepository(BaseRepository):
                     AND d2.date >= :start_date
                     AND d2.date <= :end_date
                 GROUP BY 1, 2, 3, 4, 5, 6
-            ) conv ON f.date_id = conv.date_id 
-                  AND f.account_id = conv.account_id 
+            ) conv ON f.date_id = conv.date_id
+                  AND f.account_id = conv.account_id
                   AND f.campaign_id = conv.campaign_id
                   AND f.adset_id = conv.adset_id
                   AND f.ad_id = conv.ad_id
@@ -90,7 +97,7 @@ class CampaignRepository(BaseRepository):
                 {status_filter}
                 {search_filter}
                 {account_filter}
-            GROUP BY c.campaign_id, c.campaign_name, c.campaign_status
+            GROUP BY c.campaign_id, c.account_id, c.campaign_name, c.campaign_status
             ORDER BY {sort_by} {sort_direction}
             LIMIT :limit
         """)
@@ -114,22 +121,40 @@ class CampaignRepository(BaseRepository):
 
         campaigns = []
         for row in results:
+            spend = float(row.spend or 0)
+            impressions = int(row.impressions or 0)
+            clicks = int(row.clicks or 0)
+            conversions = int(row.conversions or 0)
+            purchase_value = float(row.purchase_value or 0)
+
+            # Calculate derived metrics
+            ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
+            cpc = (spend / clicks) if clicks > 0 else 0.0
+            cpa = (spend / conversions) if conversions > 0 else 0.0
+            roas = (purchase_value / spend) if spend > 0 else 0.0
+
             campaigns.append({
                 'campaign_id': int(row.campaign_id),
+                'account_id': int(row.account_id),
                 'campaign_name': str(row.campaign_name),
                 'campaign_status': str(row.campaign_status),
-                'spend': float(row.spend or 0),
-                'impressions': int(row.impressions or 0),
-                'clicks': int(row.clicks or 0),
-                'conversions': int(row.conversions or 0),
+                'spend': spend,
+                'impressions': impressions,
+                'clicks': clicks,
+                'ctr': ctr,
+                'cpc': cpc,
+                'conversions': conversions,
+                'cpa': cpa,
                 'conversion_value': float(row.conversion_value or 0),
                 'purchases': int(row.purchases or 0),
-                'purchase_value': float(row.purchase_value or 0),
+                'purchase_value': purchase_value,
+                'roas': roas,
                 'leads': int(row.leads or 0),
                 'lead_website': int(row.lead_website or 0),
                 'lead_form': int(row.lead_form or 0)
             })
 
+        logger.debug(f"[CampaignRepository.get_campaign_breakdown] Returning {len(campaigns)} campaigns")
         return campaigns
 
     def get_campaign_comparison(
@@ -253,7 +278,7 @@ class CampaignRepository(BaseRepository):
                 COALESCE(SUM(conv.action_value), 0) as conversion_value
             FROM fact_core_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
-            JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+            JOIN dim_campaign c ON f.campaign_id = c.campaign_id AND f.account_id = c.account_id
             LEFT JOIN (
                 SELECT fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id,
                        SUM(fam.action_count) as action_count,
@@ -274,7 +299,7 @@ class CampaignRepository(BaseRepository):
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {account_filter}
-            GROUP BY c.campaign_id, c.campaign_name, c.campaign_status
+            GROUP BY c.campaign_id, c.account_id, c.campaign_name, c.campaign_status
             ORDER BY spend DESC
         """)
 

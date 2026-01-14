@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowUpDown, Loader2, TrendingUp, ExternalLink } from 'lucide-react';
+import { ArrowUpDown, Loader2, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import { CreativeMetrics } from '../../types/creatives.types';
 import { DateRange } from '../../types/dashboard.types';
 import FatigueBadge from './FatigueBadge';
@@ -30,6 +30,7 @@ interface CreativesTableProps {
   accountId?: string | null;
   selectedCreativeIds?: number[];
   onSelectionChange?: (selectedIds: number[]) => void;
+  showComparison?: boolean;
 }
 
 export const CreativesTable: React.FC<CreativesTableProps> = ({
@@ -41,6 +42,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
   accountId,
   selectedCreativeIds = [],
   onSelectionChange,
+  showComparison = false,
 }) => {
   const t = useTranslations();
   const { hasROAS } = useAccount();
@@ -113,6 +115,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
 
   // Format currency with 1 decimal (CPC, CPA)
   const formatCurrencyDecimal = (value: number): string => {
@@ -123,7 +126,6 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
       maximumFractionDigits: 1,
     }).format(value);
   };
-  };
 
   // Format number
   const formatNumber = (value: number): string => {
@@ -133,6 +135,49 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
   // Format percentage
   const formatPercentage = (value: number): string => {
     return `${value.toFixed(2)}%`;
+  };
+
+  // Render trend badge for comparison with tooltip
+  const renderTrendBadge = (
+    changePercent?: number | null,
+    metricType: 'cost' | 'performance' | 'neutral' = 'performance',
+    previousValue?: number | null,
+    formatFn?: (value: number) => string
+  ) => {
+    if (changePercent === undefined || changePercent === null || isNaN(changePercent)) {
+      return <span className="text-gray-500 text-sm">-</span>;
+    }
+
+    const isPositive = changePercent > 0;
+    const isNegative = changePercent < 0;
+
+    // Determine color based on metric type
+    let colorClass = 'text-gray-400'; // neutral default
+    if (metricType === 'cost') {
+      // For cost metrics (CPA, CPC), down is good
+      colorClass = isNegative ? 'text-green-400' : 'text-red-400';
+    } else if (metricType === 'performance') {
+      // For performance metrics (Conversions, CTR), up is good
+      colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+    }
+    // 'neutral' keeps gray color - no judgment on good/bad
+
+    const Icon = isPositive ? TrendingUp : TrendingDown;
+
+    // Build tooltip text
+    const tooltipText = previousValue !== undefined && previousValue !== null && formatFn
+      ? `Previous: ${formatFn(previousValue)}`
+      : undefined;
+
+    return (
+      <div
+        className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass} cursor-help`}
+        title={tooltipText}
+      >
+        <Icon className="w-3 h-3" />
+        <span>{Math.abs(changePercent).toFixed(1)}%</span>
+      </div>
+    );
   };
 
   // Handle checkbox toggle
@@ -261,6 +306,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
 
               {/* CTR */}
               <th
@@ -272,6 +322,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
 
               {/* CPC */}
               <th
@@ -283,6 +338,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
 
               {/* Conversions */}
               <th
@@ -294,6 +354,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
 
               {/* CPA */}
               <th
@@ -305,6 +370,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
+              {showComparison && (
+                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  VS PREV
+                </th>
+              )}
 
               {/* ROAS - Conditional */}
               {hasConversionValue && (
@@ -425,6 +495,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatCurrency(creative.spend)}
                   </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(creative.spend_change_pct, 'neutral', creative.previous_spend, formatCurrency)}
+                    </td>
+                  )}
 
                   {/* CTR */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
@@ -442,21 +517,41 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                       <TrendingUp className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(creative.ctr_change_pct, 'performance', creative.previous_ctr, formatPercentage)}
+                    </td>
+                  )}
 
                   {/* CPC */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(cpc)}
                   </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(creative.cpc_change_pct, 'cost', creative.previous_cpc, formatCurrencyDecimal)}
+                    </td>
+                  )}
 
                   {/* Conversions */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatNumber(creative.conversions)}
                   </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(creative.conversions_change_pct, 'performance', creative.previous_conversions, formatNumber)}
+                    </td>
+                  )}
 
                   {/* CPA */}
                   <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(creative.cpa)}
                   </td>
+                  {showComparison && (
+                    <td className="px-6 py-5 text-right">
+                      {renderTrendBadge(creative.cpa_change_pct, 'cost', creative.previous_cpa, formatCurrencyDecimal)}
+                    </td>
+                  )}
 
                   {/* ROAS */}
                   {hasConversionValue && (

@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Palette, Target, TrendingUp, AlertCircle, AlertTriangle, TrendingDown, Clock } from 'lucide-react';
+import { Palette, Target, TrendingUp, AlertCircle, AlertTriangle, TrendingDown, Clock, Image, Video, LayoutGrid } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
   fetchCreativeAnalysis,
@@ -20,12 +20,14 @@ interface CreativeAnalysisViewProps {
   startDate: string;
   endDate: string;
   isRTL: boolean;
+  accountId?: string;
 }
 
 export default function CreativeAnalysisView({
   startDate,
   endDate,
-  isRTL
+  isRTL,
+  accountId
 }: CreativeAnalysisViewProps) {
   const locale = useLocale();
   const [analysisData, setAnalysisData] = useState<CreativeAnalysisResponse | null>(null);
@@ -46,8 +48,8 @@ export default function CreativeAnalysisView({
 
       try {
         const [analysisResult, fatigueResult] = await Promise.all([
-          fetchCreativeAnalysis({ startDate, endDate }, undefined, locale),
-          fetchCreativeFatigue(lookbackDays, locale)
+          fetchCreativeAnalysis({ startDate, endDate }, undefined, locale, accountId),
+          fetchCreativeFatigue(lookbackDays, locale, accountId)
         ]);
         setAnalysisData(analysisResult);
         setFatigueData(fatigueResult);
@@ -60,7 +62,7 @@ export default function CreativeAnalysisView({
     };
 
     fetchData();
-  }, [startDate, endDate, locale, lookbackDays]);
+  }, [startDate, endDate, locale, lookbackDays, accountId]);
 
   // Loading state
   if (isLoading) {
@@ -103,13 +105,17 @@ export default function CreativeAnalysisView({
     );
   }
 
+  // Check if we have ROAS data (any top performer or theme with ROAS > 0)
+  const hasRoas = analysisData.data?.top_performers?.some((c: any) => c.roas > 0) ||
+    Object.values(analysisData.data?.theme_performance || {}).some((t: any) => t.overall_roas > 0);
+
   return (
     <div className="space-y-6">
       {/* AI Analysis Card */}
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border border-purple-500/30 rounded-xl p-6 shadow-lg">
         <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <Palette className="w-6 h-6 text-purple-400" />
-          <h2 className="text-2xl font-bold text-purple-200">Creative Performance Analysis</h2>
+          <h2 className="text-2xl font-bold text-purple-200">Creative Insights</h2>
         </div>
         <div className={`prose prose-invert max-w-none ${isRTL ? 'text-right' : 'text-left'}`}>
           <ReactMarkdown>{analysisData.analysis}</ReactMarkdown>
@@ -143,25 +149,30 @@ export default function CreativeAnalysisView({
       {/* Theme Performance */}
       {analysisData.data && analysisData.data.theme_performance && Object.keys(analysisData.data.theme_performance).length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <Target className="w-5 h-5 text-purple-400" />
             <h3 className="text-lg font-bold">Theme Performance</h3>
           </div>
+          <p className="text-sm text-gray-400 mb-4">
+            Themes are categories detected from your ad copy (e.g., "urgency", "social proof", "discount", "benefit-focused").
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border-subtle">
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">Theme</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Creatives</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Ads</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Spend</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conversions</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">ROAS</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CTR</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conv</th>
+                  {hasRoas && (
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">ROAS</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(analysisData.data.theme_performance)
-                  .sort(([, a], [, b]) => b.overall_roas - a.overall_roas)
+                  .sort(([, a], [, b]) => b.avg_ctr - a.avg_ctr)
                   .map(([theme, stats]) => (
                     <tr key={theme} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
                       <td className="py-3 px-4 text-sm font-medium capitalize">
@@ -173,16 +184,17 @@ export default function CreativeAnalysisView({
                       <td className="py-3 px-4 text-sm text-right">
                         ${stats.total_spend.toFixed(2)}
                       </td>
+                      <td className={`py-3 px-4 text-sm text-right font-semibold ${stats.avg_ctr >= 2 ? 'text-green-400' : stats.avg_ctr >= 1 ? 'text-yellow-400' : 'text-gray-200'}`}>
+                        {stats.avg_ctr.toFixed(2)}%
+                      </td>
                       <td className="py-3 px-4 text-sm text-right">
                         {stats.total_conversions}
                       </td>
-                      <td className={`py-3 px-4 text-sm text-right font-semibold ${stats.overall_roas >= 2 ? 'text-green-400' : stats.overall_roas >= 1 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
-                        {stats.overall_roas.toFixed(2)}x
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right">
-                        {stats.avg_ctr.toFixed(2)}%
-                      </td>
+                      {hasRoas && (
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${stats.overall_roas >= 2 ? 'text-green-400' : stats.overall_roas >= 1 ? 'text-yellow-400' : 'text-red-400'}`}>
+                          {stats.overall_roas.toFixed(2)}x
+                        </td>
+                      )}
                     </tr>
                   ))}
               </tbody>
@@ -191,47 +203,57 @@ export default function CreativeAnalysisView({
         </div>
       )}
 
-      {/* CTA Performance */}
-      {analysisData.data && analysisData.data.cta_performance && analysisData.data.cta_performance.length > 0 && (
+      {/* Format Performance (Image vs Video vs Carousel) */}
+      {analysisData.data && analysisData.data.format_performance && analysisData.data.format_performance.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-bold">CTA Effectiveness</h3>
+            <LayoutGrid className="w-5 h-5 text-cyan-400" />
+            <h3 className="text-lg font-bold">Format Performance</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border-subtle">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">CTA Type</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Creatives</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CTR</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">ROAS</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conversions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analysisData.data.cta_performance.map((cta) => (
-                  <tr key={cta.cta_type} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
-                    <td className="py-3 px-4 text-sm font-medium">
-                      {cta.cta_type.replace(/_/g, ' ')}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      {cta.creative_count}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      {cta.avg_ctr.toFixed(2)}%
-                    </td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${cta.avg_roas >= 2 ? 'text-green-400' : cta.avg_roas >= 1 ? 'text-yellow-400' : 'text-red-400'
-                      }`}>
-                      {cta.avg_roas.toFixed(2)}x
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      {cta.total_conversions}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {analysisData.data.format_performance.map((format: any) => {
+              const FormatIcon = format.format_type === 'Video' ? Video : format.format_type === 'Carousel' ? LayoutGrid : Image;
+              return (
+                <div
+                  key={format.format_type}
+                  className="bg-card-bg/60 border border-border-subtle rounded-lg p-4"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <FormatIcon className="w-5 h-5 text-cyan-400" />
+                    <span className="font-semibold">{format.format_type}</span>
+                    <span className="ml-auto text-xs text-gray-400">{format.creative_count} ads</span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">CTR</span>
+                      <span className={`font-semibold ${format.avg_ctr >= 2 ? 'text-green-400' : format.avg_ctr >= 1 ? 'text-yellow-400' : 'text-gray-200'}`}>
+                        {format.avg_ctr.toFixed(2)}%
+                      </span>
+                    </div>
+                    {format.format_type === 'Video' && format.avg_hook_rate > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Hook Rate</span>
+                        <span className="font-semibold">{format.avg_hook_rate.toFixed(1)}%</span>
+                      </div>
+                    )}
+                    {format.format_type === 'Video' && format.avg_completion_rate > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">View Rate</span>
+                        <span className="font-semibold">{format.avg_completion_rate.toFixed(1)}%</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Conversions</span>
+                      <span className="font-semibold">{format.total_conversions}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Spend</span>
+                      <span className="font-semibold">${format.total_spend.toFixed(0)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -239,45 +261,70 @@ export default function CreativeAnalysisView({
       {/* Top Performers */}
       {analysisData.data && analysisData.data.top_performers && analysisData.data.top_performers.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Top Performing Creatives</h3>
+          <h3 className="text-lg font-bold mb-4">Top Performing Ads</h3>
           <div className="space-y-3">
-            {analysisData.data.top_performers.map((creative) => (
-              <div
-                key={creative.creative_id}
-                className="bg-card-bg/60 border border-border-subtle rounded-lg p-4 hover:bg-card-bg/80 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold mb-1 truncate">
-                      {creative.title || `Creative #${creative.creative_id}`}
-                    </div>
-                    <div className="text-xs text-gray-400 line-clamp-2 mb-2">
-                      {creative.body}
-                    </div>
-                  </div>
-                  <div className="flex gap-4 text-right flex-shrink-0">
-                    <div>
-                      <div className="text-xs text-gray-400">ROAS</div>
-                      <div className="text-sm font-bold text-green-400">
-                        {creative.roas.toFixed(2)}x
+            {analysisData.data.top_performers.map((creative: any) => {
+              const FormatIcon = creative.format_type === 'Video' ? Video : creative.format_type === 'Carousel' ? LayoutGrid : Image;
+              return (
+                <div
+                  key={creative.creative_id}
+                  className="bg-card-bg/60 border border-border-subtle rounded-lg p-4 hover:bg-card-bg/80 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FormatIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-xs text-gray-500 capitalize">{creative.format_type || 'Image'}</span>
+                      </div>
+                      <div className="text-sm font-semibold mb-1 truncate">
+                        {creative.ad_name || creative.title || `Ad #${creative.creative_id}`}
+                      </div>
+                      <div className="text-xs text-gray-400 line-clamp-2 mb-2">
+                        {creative.body}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-xs text-gray-400">CTR</div>
-                      <div className="text-sm font-bold">
-                        {creative.ctr.toFixed(2)}%
+                    <div className="flex gap-4 text-right flex-shrink-0">
+                      <div>
+                        <div className="text-xs text-gray-400">CTR</div>
+                        <div className={`text-sm font-bold ${creative.ctr >= 2 ? 'text-green-400' : creative.ctr >= 1 ? 'text-yellow-400' : 'text-gray-200'}`}>
+                          {creative.ctr.toFixed(2)}%
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-400">Conv</div>
-                      <div className="text-sm font-bold">
-                        {creative.conversions}
+                      {creative.format_type === 'Video' && creative.hook_rate > 0 && (
+                        <div>
+                          <div className="text-xs text-gray-400">Hook</div>
+                          <div className="text-sm font-bold">
+                            {creative.hook_rate.toFixed(1)}%
+                          </div>
+                        </div>
+                      )}
+                      {creative.format_type === 'Video' && creative.completion_rate > 0 && (
+                        <div>
+                          <div className="text-xs text-gray-400">View</div>
+                          <div className="text-sm font-bold">
+                            {creative.completion_rate.toFixed(1)}%
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-xs text-gray-400">Conv</div>
+                        <div className="text-sm font-bold">
+                          {creative.conversions}
+                        </div>
                       </div>
+                      {hasRoas && creative.roas > 0 && (
+                        <div>
+                          <div className="text-xs text-gray-400">ROAS</div>
+                          <div className="text-sm font-bold text-green-400">
+                            {creative.roas.toFixed(2)}x
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -337,19 +384,20 @@ export default function CreativeAnalysisView({
             <AlertTriangle className="w-5 h-5 text-red-400" />
             <h3 className="text-lg font-bold text-white">Critical: Urgent Refresh Needed</h3>
             <span className="ml-auto text-sm text-gray-400">
-              {fatigueData.critical_refreshes.length} creatives
+              {fatigueData.critical_refreshes.length} ads
             </span>
           </div>
           <div className="space-y-3">
-            {fatigueData.critical_refreshes.map((creative) => (
+            {fatigueData.critical_refreshes.map((creative: any) => (
               <div key={creative.creative_id} className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-bold text-red-400">CRITICAL</span>
-                      <span className="text-xs text-gray-500">#{creative.creative_id}</span>
                     </div>
-                    <div className="text-sm font-semibold mb-2 truncate text-gray-200">{creative.title || 'Untitled'}</div>
+                    <div className="text-sm font-semibold mb-2 truncate text-gray-200">
+                      {creative.ad_name || creative.title || 'Untitled Ad'}
+                    </div>
                     <div className="flex gap-6 text-xs text-gray-400">
                       <div>Initial CTR: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
                       <div>Recent CTR: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
@@ -370,19 +418,20 @@ export default function CreativeAnalysisView({
             <TrendingDown className="w-5 h-5 text-orange-400" />
             <h3 className="text-lg font-bold text-white">Warning: Plan Refresh Soon</h3>
             <span className="ml-auto text-sm text-gray-400">
-              {fatigueData.warning_refreshes.length} creatives
+              {fatigueData.warning_refreshes.length} ads
             </span>
           </div>
           <div className="space-y-3">
-            {fatigueData.warning_refreshes.map((creative) => (
+            {fatigueData.warning_refreshes.map((creative: any) => (
               <div key={creative.creative_id} className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-bold text-orange-400">WARNING</span>
-                      <span className="text-xs text-gray-500">#{creative.creative_id}</span>
                     </div>
-                    <div className="text-sm font-semibold mb-2 truncate text-gray-200">{creative.title || 'Untitled'}</div>
+                    <div className="text-sm font-semibold mb-2 truncate text-gray-200">
+                      {creative.ad_name || creative.title || 'Untitled Ad'}
+                    </div>
                     <div className="flex gap-6 text-xs text-gray-400">
                       <div>Initial CTR: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
                       <div>Recent CTR: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>

@@ -18,9 +18,10 @@ interface CreativeBreakdownTabsProps {
   isRTL?: boolean;
   accountId?: string | null;
   creativeIds?: number[] | null;  // Optional: filter by specific creatives
+  isVisible?: boolean; // Triggers initial load when section enters viewport
 }
 
-type CreativeBreakdownType = 'placement' | 'age-gender' | 'country';
+type CreativeBreakdownType = 'platform' | 'placement' | 'age-gender' | 'country';
 
 type Tab = {
   id: CreativeBreakdownType;
@@ -28,6 +29,7 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
+  { id: 'platform', labelKey: 'campaigns.platform' },
   { id: 'placement', labelKey: 'campaigns.placement' },
   { id: 'age-gender', labelKey: 'campaigns.demographics' },
   { id: 'country', labelKey: 'campaigns.country' },
@@ -39,10 +41,11 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
   isRTL = false,
   accountId = null,
   creativeIds = null,
+  isVisible = false,
 }) => {
   const t = useTranslations();
   const { hasROAS } = useAccount();
-  const [activeTab, setActiveTab] = useState<CreativeBreakdownType>('placement');
+  const [activeTab, setActiveTab] = useState<CreativeBreakdownType>('platform');
   const [demographicSubTab, setDemographicSubTab] = useState<'age' | 'gender' | 'both'>('both');
   const [breakdownData, setBreakdownData] = useState<BreakdownRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +56,13 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
 
   // Use account-level hasROAS from context (with fallback to local check)
   const hasConversionValue = hasROAS ?? breakdownData.some(row => (row.conversion_value || 0) > 0);
+
+  // Auto-load when section becomes visible in viewport
+  useEffect(() => {
+    if (isVisible && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [isVisible, hasLoadedOnce]);
 
   // Fetch breakdown data when tab changes or date range changes
   useEffect(() => {
@@ -181,7 +191,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
               <thead>
                 <tr className="bg-black/20 border-b border-border-subtle">
                   <th className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                    {activeTab === 'placement' ? 'Placement' : activeTab === 'country' ? 'Country' : 'Segment'}
+                    {activeTab === 'platform' ? 'Platform' : activeTab === 'placement' ? 'Placement' : activeTab === 'country' ? 'Country' : 'Segment'}
                   </th>
                   <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.spend')}

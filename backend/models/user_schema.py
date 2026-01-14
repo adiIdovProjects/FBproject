@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime, Boolean, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .schema import Base, DimAccount
@@ -12,6 +12,7 @@ class User(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(255), unique=True, nullable=False)
+    secondary_email = Column(String(255), unique=True, nullable=True, index=True)
     full_name = Column(String(255))
     password_hash = Column(String(255), nullable=True) # Null if only FB login
     
@@ -64,3 +65,73 @@ class UserAdAccount(Base):
     # Relationships
     user = relationship("User", back_populates="ad_accounts")
     account = relationship("DimAccount")
+
+
+class UserSubscription(Base):
+    """
+    Tracks user subscription status and Stripe integration.
+    """
+    __tablename__ = 'user_subscription'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+
+    # Stripe identifiers
+    stripe_customer_id = Column(String(255), index=True)
+    stripe_subscription_id = Column(String(255))
+
+    # Subscription state
+    status = Column(String(50), nullable=False, default='free')  # free, trialing, active, cancelled, past_due
+    plan_type = Column(String(50), default='free')  # free, starter, pro, enterprise
+
+    # Trial tracking
+    trial_start = Column(DateTime)
+    trial_end = Column(DateTime)
+
+    # Subscription dates
+    current_period_start = Column(DateTime)
+    current_period_end = Column(DateTime)
+    cancelled_at = Column(DateTime)
+
+    # Metadata
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", backref="subscription")
+
+
+class SubscriptionHistory(Base):
+    """
+    Tracks subscription events (upgrades, downgrades, cancellations, etc.)
+    """
+    __tablename__ = 'subscription_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    subscription_id = Column(Integer, ForeignKey('user_subscription.id'))
+
+    event_type = Column(String(50), nullable=False)  # trial_start, activated, upgraded, downgraded, cancelled, renewed
+    from_plan = Column(String(50))
+    to_plan = Column(String(50))
+    metadata_json = Column(Text)
+
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+
+
+class PageView(Base):
+    """
+    Tracks user page views for analytics.
+    """
+    __tablename__ = 'page_view'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+
+    page_path = Column(String(255), nullable=False, index=True)
+    page_title = Column(String(255))
+    referrer = Column(String(500))
+    session_id = Column(String(100))
+    user_agent = Column(Text)
+
+    created_at = Column(DateTime, server_default=func.now(), index=True)

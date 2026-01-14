@@ -50,6 +50,40 @@ export async function fetchCreatives(filter: CreativesFilter, accountId?: string
 }
 
 /**
+ * Fetch creatives with period comparison
+ */
+export async function fetchCreativesWithComparison(filter: CreativesFilter, accountId?: string | null): Promise<CreativeMetrics[]> {
+    const { dateRange, is_video, min_spend, sort_by } = filter;
+    const { startDate, endDate } = dateRange;
+
+    const params: any = {
+        start_date: startDate,
+        end_date: endDate,
+        sort_by: sort_by
+    };
+
+    if (accountId) {
+        params.account_id = accountId;
+    }
+
+    if (is_video !== undefined) {
+        params.is_video = is_video;
+    }
+
+    if (min_spend !== undefined) {
+        params.min_spend = min_spend;
+    }
+
+    try {
+        const response = await apiClient.get<CreativeMetrics[]>('/api/v1/metrics/creatives/comparison', { params });
+        return response.data;
+    } catch (error) {
+        console.error('[Creatives Service] Error fetching creatives with comparison:', error);
+        throw error;
+    }
+}
+
+/**
  * Fetch video insights and patterns
  */
 export async function fetchVideoInsights(dateRange: DateRange, accountId?: string | null): Promise<VideoInsightsResponse> {

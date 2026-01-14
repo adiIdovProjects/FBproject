@@ -15,24 +15,29 @@ interface ComparisonTableProps {
   data: ComparisonItem[];
   selectedMetrics: MetricKey[];
   breakdown?: string;
+  secondaryBreakdown?: string;
   currency?: string;
   isRTL?: boolean;
 }
 
-type SortKey = MetricKey | 'name';
+type SortKey = MetricKey | 'name' | 'primary' | 'secondary';
 type SortDirection = 'asc' | 'desc';
 
 export default function ComparisonTable({
   data,
   selectedMetrics,
   breakdown = 'none',
+  secondaryBreakdown = 'none',
   currency = 'USD',
   isRTL = false,
 }: ComparisonTableProps) {
   const t = useTranslations();
 
-  const getNameColumnLabel = (): string => {
-    switch (breakdown) {
+  // Check if we have multi-dimensional breakdown
+  const hasSecondaryBreakdown = secondaryBreakdown !== 'none';
+
+  const getBreakdownLabel = (type: string): string => {
+    switch (type) {
       case 'campaign_name':
         return t('campaigns.campaign_name');
       case 'ad_set_name':
@@ -40,12 +45,30 @@ export default function ComparisonTable({
       case 'ad_name':
         return t('breakdown.ad_name');
       case 'date':
+        return t('reports.by_date');
       case 'week':
+        return t('reports.by_week');
       case 'month':
-        return t('date.label');
+        return t('reports.by_month');
       default:
         return t('common.name');
     }
+  };
+
+  const getNameColumnLabel = (): string => {
+    return getBreakdownLabel(breakdown);
+  };
+
+  // Parse name into primary and secondary parts
+  const parseItemName = (name: string): { primary: string; secondary: string } => {
+    if (hasSecondaryBreakdown && name.includes(' - ')) {
+      const parts = name.split(' - ');
+      return {
+        primary: parts[0] || name,
+        secondary: parts.slice(1).join(' - ') || ''
+      };
+    }
+    return { primary: name, secondary: '' };
   };
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -64,12 +87,19 @@ export default function ComparisonTable({
       let aValue: any;
       let bValue: any;
 
-      if (sortKey === 'name') {
-        aValue = a.name;
-        bValue = b.name;
+      if (sortKey === 'name' || sortKey === 'primary') {
+        const aParsed = parseItemName(a.name);
+        const bParsed = parseItemName(b.name);
+        aValue = aParsed.primary;
+        bValue = bParsed.primary;
+      } else if (sortKey === 'secondary') {
+        const aParsed = parseItemName(a.name);
+        const bParsed = parseItemName(b.name);
+        aValue = aParsed.secondary;
+        bValue = bParsed.secondary;
       } else {
-        aValue = a.period1[sortKey];
-        bValue = b.period1[sortKey];
+        aValue = a.period1[sortKey as MetricKey];
+        bValue = b.period1[sortKey as MetricKey];
       }
 
       if (typeof aValue === 'string') {
@@ -80,7 +110,7 @@ export default function ComparisonTable({
 
       return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
     });
-  }, [data, sortKey, sortDirection]);
+  }, [data, sortKey, sortDirection, hasSecondaryBreakdown]);
 
   const formatValue = (metric: MetricKey, value: number | null): string => {
     if (value === null || value === undefined) return '-';
@@ -161,9 +191,9 @@ export default function ComparisonTable({
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-gray-800/50">
-            {/* Name column */}
+            {/* Primary breakdown column */}
             <th
-              onClick={() => handleSort('name')}
+              onClick={() => handleSort('primary')}
               className={`
                 px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors
                 sticky left-0 bg-gray-800/50 z-10
@@ -172,11 +202,29 @@ export default function ComparisonTable({
             >
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 <span>{getNameColumnLabel()}</span>
-                {sortKey === 'name' && (
+                {(sortKey === 'name' || sortKey === 'primary') && (
                   sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
                 )}
               </div>
             </th>
+
+            {/* Secondary breakdown column (if applicable) */}
+            {hasSecondaryBreakdown && (
+              <th
+                onClick={() => handleSort('secondary')}
+                className={`
+                  px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors
+                  ${isRTL ? 'text-right' : 'text-left'}
+                `}
+              >
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <span>{getBreakdownLabel(secondaryBreakdown)}</span>
+                  {sortKey === 'secondary' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  )}
+                </div>
+              </th>
+            )}
 
             {/* Metric columns */}
             {selectedMetrics.map((metric) => (
@@ -199,41 +247,52 @@ export default function ComparisonTable({
         </thead>
 
         <tbody>
-          {sortedData.map((item, idx) => (
-            <tr
-              key={item.id}
-              className={`
-                border-t border-gray-700 hover:bg-gray-800/30 transition-colors
-                ${idx % 2 === 0 ? 'bg-gray-900/20' : ''}
-              `}
-            >
-              {/* Name */}
-              <td
+          {sortedData.map((item, idx) => {
+            const parsedName = parseItemName(item.name);
+            return (
+              <tr
+                key={item.id}
                 className={`
-                  px-4 py-3 text-sm text-gray-200 font-medium
-                  sticky left-0 bg-inherit z-10
-                  ${isRTL ? 'text-right' : 'text-left'}
+                  border-t border-gray-700 hover:bg-gray-800/30 transition-colors
+                  ${idx % 2 === 0 ? 'bg-gray-900/20' : ''}
                 `}
               >
-                {item.name}
-              </td>
+                {/* Primary breakdown value */}
+                <td
+                  className={`
+                    px-4 py-3 text-sm text-gray-200 font-medium
+                    sticky left-0 bg-inherit z-10
+                    ${isRTL ? 'text-right' : 'text-left'}
+                  `}
+                >
+                  {parsedName.primary}
+                </td>
 
-              {/* Metrics */}
-              {selectedMetrics.map((metric) => {
-                const period1Value = item.period1[metric];
-                const period2Value = item.period2[metric];
-                const changePct = item.change_pct[metric];
+                {/* Secondary breakdown value (if applicable) */}
+                {hasSecondaryBreakdown && (
+                  <td
+                    className={`
+                      px-4 py-3 text-sm text-gray-300
+                      ${isRTL ? 'text-right' : 'text-left'}
+                    `}
+                  >
+                    {parsedName.secondary}
+                  </td>
+                )}
 
-                return (
-                  <React.Fragment key={`${item.id}-${metric}`}>
-                    <td className="px-4 py-3 text-sm text-gray-300 text-center">
+                {/* Metrics */}
+                {selectedMetrics.map((metric) => {
+                  const period1Value = item.period1[metric];
+
+                  return (
+                    <td key={`${item.id}-${metric}`} className="px-4 py-3 text-sm text-gray-300 text-center">
                       {formatValue(metric, period1Value)}
                     </td>
-                  </React.Fragment>
-                );
-              })}
-            </tr>
-          ))}
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 

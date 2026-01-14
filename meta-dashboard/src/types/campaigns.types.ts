@@ -55,9 +55,26 @@ export interface BreakdownRow {
   lead_website?: number;
   lead_form?: number;
   adset_id?: number;
+  adset_name?: string;
   adset_status?: string;
   targeting_type?: string;
   targeting_summary?: string;
+  purchases?: number;
+  purchase_value?: number;
+  // Comparison fields (optional, only present when comparing periods)
+  previous_spend?: number | null;
+  previous_clicks?: number | null;
+  previous_impressions?: number | null;
+  previous_conversions?: number | null;
+  previous_ctr?: number | null;
+  previous_cpc?: number | null;
+  previous_cpa?: number | null;
+  spend_change_pct?: number | null;
+  clicks_change_pct?: number | null;
+  conversions_change_pct?: number | null;
+  ctr_change_pct?: number | null;
+  cpc_change_pct?: number | null;
+  cpa_change_pct?: number | null;
 }
 
 // Time granularity options

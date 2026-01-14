@@ -36,6 +36,20 @@ export interface CreativeMetrics {
     fatigue_severity?: string | null;  // "none" | "low" | "medium" | "high"
     ctr_decline_pct?: number | null;
     days_active?: number | null;
+    // Comparison fields (optional, only present when comparing periods)
+    previous_spend?: number | null;
+    previous_clicks?: number | null;
+    previous_impressions?: number | null;
+    previous_conversions?: number | null;
+    previous_ctr?: number | null;
+    previous_cpc?: number | null;
+    previous_cpa?: number | null;
+    spend_change_pct?: number | null;
+    clicks_change_pct?: number | null;
+    conversions_change_pct?: number | null;
+    ctr_change_pct?: number | null;
+    cpc_change_pct?: number | null;
+    cpa_change_pct?: number | null;
 }
 
 export interface VideoInsight {

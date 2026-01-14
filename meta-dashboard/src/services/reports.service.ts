@@ -1,9 +1,63 @@
 /**
  * Reports API Service
- * Handles API calls for reports comparison endpoints
+ * Handles API calls for reports comparison endpoints and custom reports
  */
 
 import { apiClient } from './apiClient';
+import { BreakdownRow } from '../types/campaigns.types';
+
+// ============================================================
+// Report Breakdown Types
+// ============================================================
+
+export type ReportBreakdown =
+  | 'none'
+  | 'date'
+  | 'week'
+  | 'month'
+  | 'campaign_name'
+  | 'ad_set_name'
+  | 'ad_name'
+  | 'placement'
+  | 'platform'
+  | 'age-gender'
+  | 'country';
+
+export type ReportTemplateId =
+  | 'daily'
+  | 'weekly'
+  | 'campaign'
+  | 'adset'
+  | 'placement'
+  | 'demographics'
+  | 'geographic';
+
+export interface ReportTemplate {
+  id: ReportTemplateId;
+  labelKey: string;
+  icon: string;
+  primaryBreakdown: ReportBreakdown;
+  secondaryBreakdown: ReportBreakdown;
+}
+
+export interface ReportConfig {
+  primaryBreakdown: ReportBreakdown;
+  secondaryBreakdown: ReportBreakdown;
+  campaignFilter?: string;
+  adSetFilter?: string;
+  adFilter?: string;
+}
+
+export interface SavedReport {
+  id: string;
+  name: string;
+  config: ReportConfig;
+  created_at: string;
+}
+
+// ============================================================
+// Existing Types (unchanged)
+// ============================================================
 
 export interface MetricsPeriod {
   spend: number;
@@ -118,22 +172,99 @@ export async function fetchComparisonData(
   }
 }
 
+// Helper to parse item name into primary/secondary breakdown values
+function parseItemName(name: string, hasSecondaryBreakdown: boolean): { primary: string; secondary: string } {
+  if (hasSecondaryBreakdown && name.includes(' - ')) {
+    const parts = name.split(' - ');
+    return {
+      primary: parts[0] || name,
+      secondary: parts.slice(1).join(' - ') || ''
+    };
+  }
+  return { primary: name, secondary: '' };
+}
+
+// Helper to get breakdown column header label
+function getBreakdownLabel(type: string): string {
+  const labels: Record<string, string> = {
+    'campaign_name': 'Campaign',
+    'ad_set_name': 'Ad Set',
+    'ad_name': 'Ad',
+    'date': 'Date',
+    'week': 'Week',
+    'month': 'Month',
+    'none': 'Name'
+  };
+  return labels[type] || 'Name';
+}
+
+// Helper to get metric label
+function getMetricLabel(metric: string): string {
+  const labels: Record<string, string> = {
+    'spend': 'Spend',
+    'impressions': 'Impressions',
+    'clicks': 'Clicks',
+    'ctr': 'CTR (%)',
+    'cpc': 'CPC',
+    'cpm': 'CPM',
+    'conversions': 'Conversions',
+    'conversion_value': 'Conv. Value',
+    'roas': 'ROAS',
+    'cpa': 'CPA',
+    'conversion_rate': 'Conv. Rate (%)'
+  };
+  return labels[metric] || metric;
+}
+
+export interface ExportOptions {
+  breakdown?: string;
+  secondaryBreakdown?: string;
+  selectedMetrics?: string[];
+}
+
 /**
  * Export comparison data to Excel
  */
 export async function exportToExcel(
   data: ReportsComparisonResponse,
+  options?: ExportOptions,
   filename?: string
 ): Promise<void> {
   const exportFilename = filename || `reports_${new Date().toISOString().split('T')[0]}.xlsx`;
+  const breakdown = options?.breakdown || 'none';
+  const secondaryBreakdown = options?.secondaryBreakdown || 'none';
+  const selectedMetrics = options?.selectedMetrics || ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'conversions', 'cpa', 'roas'];
+  const hasSecondaryBreakdown = secondaryBreakdown !== 'none';
+
+  // Get items to export
+  const items = data.dimension === 'overview' && data.overview ? [data.overview] : data.items;
+
+  // Build flat data with proper columns
+  const flatData = items.map(item => {
+    const parsed = parseItemName(item.name, hasSecondaryBreakdown);
+    const row: Record<string, any> = {};
+
+    // Add primary breakdown column
+    row[getBreakdownLabel(breakdown)] = parsed.primary;
+
+    // Add secondary breakdown column if applicable
+    if (hasSecondaryBreakdown) {
+      row[getBreakdownLabel(secondaryBreakdown)] = parsed.secondary;
+    }
+
+    // Add only the selected metrics
+    selectedMetrics.forEach(metric => {
+      const value = item.period1[metric as keyof typeof item.period1];
+      row[getMetricLabel(metric)] = value ?? 0;
+    });
+
+    return row;
+  });
 
   // Prepare data for export
   const exportData = {
-    title: 'Period Comparison Report',
-    period1: `${data.period1_start} to ${data.period1_end}`,
-    period2: `${data.period2_start} to ${data.period2_end}`,
-    dimension: data.dimension,
-    data: data.dimension === 'overview' && data.overview ? [data.overview] : data.items,
+    title: `Report (${data.period1_start} to ${data.period1_end})`,
+    data: flatData,
   };
 
   try {
@@ -162,42 +293,36 @@ export async function exportToExcel(
  */
 export async function exportToGoogleSheets(
   data: ReportsComparisonResponse,
+  options?: ExportOptions,
   sheetName?: string
 ): Promise<string> {
   const exportSheetName = sheetName || `Reports ${new Date().toISOString().split('T')[0]}`;
+  const breakdown = options?.breakdown || 'none';
+  const secondaryBreakdown = options?.secondaryBreakdown || 'none';
+  const selectedMetrics = options?.selectedMetrics || ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'conversions', 'cpa', 'roas'];
+  const hasSecondaryBreakdown = secondaryBreakdown !== 'none';
 
-  // Transform comparison data into flat rows (just Period 1 data, no comparison)
+  // Get items to export
   const items = data.dimension === 'overview' && data.overview ? [data.overview] : data.items;
 
+  // Build flat data with proper columns (matching table structure)
   const flatData = items.map(item => {
-    const row: any = {};
+    const parsed = parseItemName(item.name, hasSecondaryBreakdown);
+    const row: Record<string, any> = {};
 
-    // Add ID and Name if available
-    if (item.id) row.id = item.id;
-    if (item.name) row.name = item.name;
+    // Add primary breakdown column
+    row[getBreakdownLabel(breakdown)] = parsed.primary;
 
-    // Add all metrics from period1 (current period)
-    const metrics = item.period1;
+    // Add secondary breakdown column if applicable
+    if (hasSecondaryBreakdown) {
+      row[getBreakdownLabel(secondaryBreakdown)] = parsed.secondary;
+    }
 
-    // Core metrics
-    if (metrics.spend !== undefined) row.spend = metrics.spend;
-    if (metrics.impressions !== undefined) row.impressions = metrics.impressions;
-    if (metrics.clicks !== undefined) row.clicks = metrics.clicks;
-    if (metrics.conversions !== undefined) row.conversions = metrics.conversions;
-    if (metrics.conversion_value !== undefined) row.conversion_value = metrics.conversion_value;
-
-    // Calculated metrics
-    if (metrics.ctr !== undefined) row.ctr = metrics.ctr;
-    if (metrics.cpc !== undefined) row.cpc = metrics.cpc;
-    if (metrics.cpm !== undefined) row.cpm = metrics.cpm;
-    if (metrics.roas !== undefined) row.roas = metrics.roas;
-
-    // Additional metrics
-    if (metrics.purchases !== undefined) row.purchases = metrics.purchases;
-    if (metrics.purchase_value !== undefined) row.purchase_value = metrics.purchase_value;
-    if (metrics.leads !== undefined) row.leads = metrics.leads;
-    if (metrics.add_to_cart !== undefined) row.add_to_cart = metrics.add_to_cart;
-    if (metrics.video_plays !== undefined) row.video_plays = metrics.video_plays;
+    // Add only the selected metrics
+    selectedMetrics.forEach(metric => {
+      const value = item.period1[metric as keyof typeof item.period1];
+      row[getMetricLabel(metric)] = value ?? 0;
+    });
 
     return row;
   });
@@ -225,4 +350,122 @@ export async function exportToGoogleSheets(
 
     throw error;
   }
+}
+
+// ============================================================
+// Custom Reports Functions
+// ============================================================
+
+/**
+ * Fetch breakdown report for placement, platform, demographics, or country
+ * These use separate breakdown endpoints
+ */
+export async function fetchBreakdownReport(
+  startDate: string,
+  endDate: string,
+  breakdownType: 'placement' | 'platform' | 'age-gender' | 'country',
+  accountId?: string,
+  groupBy: 'age' | 'gender' | 'both' = 'both'
+): Promise<BreakdownRow[]> {
+  const endpointMap: Record<string, string> = {
+    'placement': '/api/v1/metrics/breakdowns/placement',
+    'platform': '/api/v1/metrics/breakdowns/platform',
+    'age-gender': '/api/v1/metrics/breakdowns/age-gender',
+    'country': '/api/v1/metrics/breakdowns/country',
+  };
+
+  const endpoint = endpointMap[breakdownType];
+  const params: Record<string, string> = {
+    start_date: startDate,
+    end_date: endDate,
+  };
+
+  if (accountId) {
+    params.account_id = accountId;
+  }
+
+  if (breakdownType === 'age-gender') {
+    params.group_by = groupBy;
+  }
+
+  try {
+    const response = await apiClient.get(endpoint, { params });
+    const data = response.data;
+
+    return data.map((item: any) => {
+      let name = 'Unknown';
+      if (breakdownType === 'platform') {
+        name = item.platform || item.placement_name || 'Unknown';
+      } else if (breakdownType === 'placement') {
+        name = item.placement_name || 'Unknown';
+      } else if (breakdownType === 'age-gender') {
+        const age = item.age_group || item.age;
+        const gender = item.gender;
+        name = (age && gender && gender !== 'All' && age !== 'All')
+          ? `${age} | ${gender}`
+          : (age !== 'All' ? age : (gender !== 'All' ? gender : 'Unknown'));
+      } else if (breakdownType === 'country') {
+        name = item.country || 'Unknown';
+      }
+
+      return {
+        name,
+        spend: item.spend || 0,
+        clicks: item.clicks || 0,
+        impressions: item.impressions || 0,
+        ctr: item.ctr || 0,
+        cpc: item.cpc || 0,
+        conversions: item.conversions || 0,
+        conversion_value: item.conversion_value || 0,
+        roas: item.roas || 0,
+        cpa: item.cpa || 0,
+      };
+    });
+  } catch (error) {
+    console.error('[Reports Service] Error fetching breakdown report:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if breakdown type uses special breakdown endpoints
+ */
+export function isSpecialBreakdown(breakdown: ReportBreakdown): boolean {
+  return ['placement', 'platform', 'age-gender', 'country'].includes(breakdown);
+}
+
+/**
+ * Pre-built report templates
+ */
+export const REPORT_TEMPLATES: ReportTemplate[] = [
+  { id: 'daily', labelKey: 'reports.templates.daily', icon: 'calendar', primaryBreakdown: 'date', secondaryBreakdown: 'none' },
+  { id: 'weekly', labelKey: 'reports.templates.weekly', icon: 'calendar-range', primaryBreakdown: 'week', secondaryBreakdown: 'none' },
+  { id: 'campaign', labelKey: 'reports.templates.campaign', icon: 'target', primaryBreakdown: 'campaign_name', secondaryBreakdown: 'week' },
+  { id: 'adset', labelKey: 'reports.templates.adset', icon: 'layers', primaryBreakdown: 'ad_set_name', secondaryBreakdown: 'none' },
+  { id: 'placement', labelKey: 'reports.templates.placement', icon: 'layout', primaryBreakdown: 'placement', secondaryBreakdown: 'none' },
+  { id: 'demographics', labelKey: 'reports.templates.demographics', icon: 'users', primaryBreakdown: 'age-gender', secondaryBreakdown: 'none' },
+  { id: 'geographic', labelKey: 'reports.templates.geographic', icon: 'globe', primaryBreakdown: 'country', secondaryBreakdown: 'none' },
+];
+
+// ============================================================
+// Saved Reports (placeholder - backend to be implemented)
+// ============================================================
+
+export async function getSavedReports(): Promise<SavedReport[]> {
+  try {
+    const response = await apiClient.get<SavedReport[]>('/api/v1/saved-reports');
+    return response.data;
+  } catch (error) {
+    // Return empty array until backend is implemented
+    return [];
+  }
+}
+
+export async function createSavedReport(name: string, config: ReportConfig): Promise<SavedReport> {
+  const response = await apiClient.post<SavedReport>('/api/v1/saved-reports', { name, config });
+  return response.data;
+}
+
+export async function deleteSavedReport(id: string): Promise<void> {
+  await apiClient.delete(`/api/v1/saved-reports/${id}`);
 }

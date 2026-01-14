@@ -49,7 +49,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     }
   };
 
-  // Determine if trend is favorable (green) or unfavorable (red)
+  // Determine trend style - Spend is neutral (no good/bad judgment), others have color coding
   const getTrendStyle = (): { color: string; bgColor: string; icon: 'up' | 'down'; isGood: boolean } => {
     if (trend === undefined || trend === null || trend === 0) {
       return { color: 'text-gray-400', bgColor: 'bg-gray-700', icon: 'up', isGood: false };
@@ -62,12 +62,19 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     const isSpendMetric = title.includes('Spend') || title.toLowerCase().includes('הוצאה');
     const isEfficiencyMetric = title.includes('CPC') || title.includes('CPA');
 
+    // Spend is neutral - no judgment on whether up/down is good or bad
+    if (isSpendMetric) {
+      return {
+        color: 'text-gray-400',
+        bgColor: 'bg-gray-700',
+        icon: isPositive ? 'up' : 'down',
+        isGood: false
+      };
+    }
+
     let isGood = false;
 
-    if (isSpendMetric) {
-      // For Spend: up is good (more investment), down is bad (less investment)
-      isGood = isPositive;
-    } else if (isEfficiencyMetric) {
+    if (isEfficiencyMetric) {
       // For efficiency metrics (CPC, CPA): down is good (lower cost), up is bad (higher cost)
       isGood = isNegative;
     } else {

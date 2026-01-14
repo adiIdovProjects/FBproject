@@ -13,7 +13,7 @@ export default function AddCreativePage() {
     const router = useRouter();
     const params = useParams();
     const locale = params.locale as string;
-    const { selectedAccountId, linkedAccounts } = useAccount();
+    const { selectedAccountId, linkedAccounts, isLoading: isAccountLoading } = useAccount();
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
     // Data Loading State
@@ -40,6 +40,9 @@ export default function AddCreativePage() {
     const [leadForms, setLeadForms] = useState<any[]>([]);
     const [selectedFormId, setSelectedFormId] = useState<string>('');
     const [isLoadingForms, setIsLoadingForms] = useState(false);
+
+    // Custom Ad Name
+    const [adName, setAdName] = useState('');
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -229,7 +232,8 @@ export default function AddCreativePage() {
                     lead_form_id: destinationType === 'LEAD_FORM' ? selectedFormId : undefined,
                     image_hash: imageHash,
                     video_id: videoId
-                }
+                },
+                ad_name: adName || undefined
             };
 
             const result = await mutationsService.addCreativeToAdSet(payload);
@@ -289,8 +293,8 @@ export default function AddCreativePage() {
                     <h1 className="text-2xl font-bold">Add Creative to Existing Campaign</h1>
                 </div>
 
-                {/* Page ID Warning */}
-                {!selectedAccount?.page_id && (
+                {/* Page ID Warning - only show after accounts have loaded */}
+                {!isAccountLoading && selectedAccount && !selectedAccount.page_id && (
                     <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                         <div className="flex items-start gap-3">
                             <div className="text-2xl">⚠️</div>
@@ -358,6 +362,17 @@ export default function AddCreativePage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Left: Inputs */}
                             <div className="space-y-4">
+                                {/* Ad Name (Optional) - Above file upload */}
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500">Ad Name (Optional)</label>
+                                    <input
+                                        placeholder="Leave blank for auto-generated name"
+                                        value={adName}
+                                        onChange={(e) => setAdName(e.target.value)}
+                                        className="w-full bg-black border border-gray-700 rounded-lg p-3"
+                                    />
+                                </div>
+
                                 {/* File */}
                                 <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-blue-500 relative">
                                     <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />

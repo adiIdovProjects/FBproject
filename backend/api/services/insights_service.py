@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.repositories.insights_repository import InsightsRepository
 from backend.api.repositories.user_repository import UserRepository
+from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.services.comparison_service import ComparisonService
 from backend.config.settings import GEMINI_MODEL
 
@@ -90,6 +91,45 @@ Format:
 
 Be specific with numbers, percentages, and dollar amounts. Focus on practical insights and actionability."""
 
+# New simplified overview prompt for daily/weekly/monthly insights
+OVERVIEW_INSIGHT_PROMPT = """Analyze this Facebook Ads performance data and provide ONE short insight.
+Respond in {target_lang}.
+
+Period: {period_type} ({period_label})
+Comparison: {comparison_label}
+
+{no_roas_instruction}
+
+Data:
+{data}
+
+Rules:
+- Write exactly 1-2 sentences
+- Be specific with numbers and percentages
+- Focus on the most important change
+- Use simple language (for non-marketing experts)
+- Suggest what to do if there's an issue
+
+Your insight:"""
+
+# Prompt for generating TL;DR summary
+SUMMARY_TLDR_PROMPT = """Based on this account data, provide a TL;DR summary for a non-marketing expert.
+Respond in {target_lang}.
+
+{no_roas_instruction}
+
+Data Summary:
+{data}
+
+Rules:
+- Write 3-5 bullet points maximum
+- Only mention things that actually matter
+- If everything is healthy, just say so
+- Use simple language, avoid jargon
+- Each bullet should be actionable or informative
+
+Your summary (bullet points):"""
+
 
 class InsightsService:
     """Service for generating AI-powered insights"""
@@ -99,6 +139,7 @@ class InsightsService:
         self.db = db
         self.user_id = user_id
         self.repository = InsightsRepository(db)
+        self.adset_repository = AdSetRepository(db)
 
         # Initialize Gemini
         api_key = os.getenv("GEMINI_API_KEY")
@@ -1150,3 +1191,396 @@ class InsightsService:
             ],
             'generated_at': datetime.utcnow().isoformat()
         }
+
+    def get_overview_summary(
+        self,
+        user_id: Optional[int] = None,
+        account_id: Optional[str] = None,
+        locale: str = "en"
+    ) -> Dict[str, Any]:
+        """
+        Generate overview summary with daily/weekly/monthly insights,
+        improvement checks, and TL;DR summary.
+
+        No date filter needed - uses fixed comparison periods.
+        """
+        today = date.today()
+
+        # Get linked accounts
+        if user_id:
+            user_accounts = self._get_user_account_ids(user_id)
+            if account_id:
+                account_ids = [account_id] if account_id in user_accounts else []
+            else:
+                account_ids = user_accounts
+        else:
+            account_ids = None
+
+        # Check cache
+        cache_key = self._get_cache_key(
+            today - timedelta(days=30), today, "overview_summary",
+            user_id=user_id, account_id=account_id, locale=locale
+        )
+        if cache_key in INSIGHTS_CACHE:
+            cached = INSIGHTS_CACHE[cache_key]
+            if time.time() - cached['timestamp'] < 300:  # 5 min cache
+                logger.info("Returning cached overview summary")
+                return cached['data']
+
+        # Generate all insights
+        daily_insight = self._generate_period_insight(
+            period_type="daily",
+            current_start=today - timedelta(days=1),
+            current_end=today - timedelta(days=1),
+            compare_start=today - timedelta(days=8),
+            compare_end=today - timedelta(days=2),
+            account_ids=account_ids,
+            locale=locale
+        )
+
+        weekly_insight = self._generate_period_insight(
+            period_type="weekly",
+            current_start=today - timedelta(days=7),
+            current_end=today - timedelta(days=1),
+            compare_start=today - timedelta(days=35),
+            compare_end=today - timedelta(days=8),
+            account_ids=account_ids,
+            locale=locale
+        )
+
+        monthly_insight = self._generate_period_insight(
+            period_type="monthly",
+            current_start=today - timedelta(days=30),
+            current_end=today - timedelta(days=1),
+            compare_start=today - timedelta(days=120),
+            compare_end=today - timedelta(days=31),
+            account_ids=account_ids,
+            locale=locale
+        )
+
+        # Get improvement checks
+        improvement_checks = self._get_improvement_checks(account_ids, locale)
+
+        # Generate TL;DR summary
+        summary = self._generate_tldr_summary(
+            daily_insight, weekly_insight, monthly_insight,
+            improvement_checks, account_ids, locale
+        )
+
+        result = {
+            'daily': daily_insight,
+            'weekly': weekly_insight,
+            'monthly': monthly_insight,
+            'improvement_checks': improvement_checks,
+            'summary': summary,
+            'generated_at': datetime.utcnow().isoformat()
+        }
+
+        # Cache result
+        INSIGHTS_CACHE[cache_key] = {'data': result, 'timestamp': time.time()}
+
+        return result
+
+    def _generate_period_insight(
+        self,
+        period_type: str,
+        current_start: date,
+        current_end: date,
+        compare_start: date,
+        compare_end: date,
+        account_ids: Optional[List[int]],
+        locale: str
+    ) -> Dict[str, Any]:
+        """Generate insight for a specific period comparison."""
+
+        # Fetch data for current and comparison periods
+        current_data = self.repository.get_insights_data(
+            start_date=current_start,
+            end_date=current_end,
+            account_ids=account_ids
+        )
+
+        compare_data = self.repository.get_insights_data(
+            start_date=compare_start,
+            end_date=compare_end,
+            account_ids=account_ids
+        )
+
+        current_overview = current_data.get('overview', {})
+        compare_overview = compare_data.get('overview', {})
+
+        # Check if we have data
+        if not current_overview or current_overview.get('spend', 0) == 0:
+            return {
+                'status': 'no_data',
+                'insight': 'No data available for this period',
+                'color': 'gray'
+            }
+
+        # Calculate metrics
+        curr_metrics = self._calculate_metrics(current_overview)
+        prev_metrics = self._calculate_metrics(compare_overview) if compare_overview else None
+
+        # Check for ROAS
+        has_roas = curr_metrics.get('purchase_value', 0) > 0
+
+        # Determine status color based on performance
+        status_color = self._determine_status_color(curr_metrics, prev_metrics, has_roas)
+
+        # Build period labels
+        period_labels = {
+            'daily': ('Yesterday', 'previous 7-day average'),
+            'weekly': ('This week', 'previous 4 weeks average'),
+            'monthly': ('This month', 'previous 3 months average')
+        }
+        period_label, comparison_label = period_labels.get(period_type, ('Period', 'Previous period'))
+
+        # Generate insight with AI or fallback
+        if self.client:
+            insight_text = self._generate_ai_period_insight(
+                curr_metrics, prev_metrics, period_type, period_label,
+                comparison_label, has_roas, locale
+            )
+        else:
+            insight_text = self._generate_fallback_period_insight(
+                curr_metrics, prev_metrics, period_type, has_roas
+            )
+
+        return {
+            'status': 'ok',
+            'insight': insight_text,
+            'color': status_color,
+            'period_label': period_label,
+            'metrics': {
+                'spend': curr_metrics['spend'],
+                'conversions': curr_metrics['conversions'],
+                'cpa': curr_metrics['cpa'] if curr_metrics['conversions'] > 0 else None,
+                'roas': curr_metrics['roas'] if has_roas else None
+            }
+        }
+
+    def _determine_status_color(
+        self,
+        curr: Dict,
+        prev: Optional[Dict],
+        has_roas: bool
+    ) -> str:
+        """Determine status color based on performance changes."""
+        if not prev:
+            return 'gray'
+
+        # Calculate key changes
+        conv_change = ComparisonService.calculate_change_percentage(
+            curr['conversions'], prev['conversions']
+        ) or 0
+
+        cpa_change = ComparisonService.calculate_change_percentage(
+            curr['cpa'], prev['cpa']
+        ) or 0 if prev.get('cpa', 0) > 0 else 0
+
+        # Determine color
+        if conv_change > 10 and cpa_change < 0:
+            return 'green'
+        elif conv_change < -15 or cpa_change > 20:
+            return 'red'
+        else:
+            return 'yellow'
+
+    def _generate_ai_period_insight(
+        self,
+        curr: Dict,
+        prev: Optional[Dict],
+        period_type: str,
+        period_label: str,
+        comparison_label: str,
+        has_roas: bool,
+        locale: str
+    ) -> str:
+        """Generate period insight using AI."""
+
+        # Build data summary
+        data_lines = []
+        data_lines.append(f"Spend: ${curr['spend']:.2f}")
+        data_lines.append(f"Conversions: {curr['conversions']}")
+        data_lines.append(f"CTR: {curr['ctr']:.2f}%")
+        data_lines.append(f"CPC: ${curr['cpc']:.2f}")
+        if curr['conversions'] > 0:
+            data_lines.append(f"CPA: ${curr['cpa']:.2f}")
+        if has_roas:
+            data_lines.append(f"ROAS: {curr['roas']:.2f}x")
+
+        if prev:
+            data_lines.append("\nPrevious period:")
+            data_lines.append(f"Spend: ${prev['spend']:.2f}")
+            data_lines.append(f"Conversions: {prev['conversions']}")
+            if prev['conversions'] > 0:
+                data_lines.append(f"CPA: ${prev['cpa']:.2f}")
+            if has_roas and prev.get('roas', 0) > 0:
+                data_lines.append(f"ROAS: {prev['roas']:.2f}x")
+
+        data_str = "\n".join(data_lines)
+
+        # Build no-ROAS instruction
+        no_roas_instruction = ""
+        if not has_roas:
+            no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS. Focus on conversions, CPA, CTR instead."
+
+        # Map locale
+        lang_map = {'en': 'English', 'he': 'Hebrew', 'fr': 'French', 'de': 'German', 'ar': 'Arabic'}
+        target_lang = lang_map.get(locale, 'English')
+
+        prompt = OVERVIEW_INSIGHT_PROMPT.format(
+            target_lang=target_lang,
+            period_type=period_type,
+            period_label=period_label,
+            comparison_label=comparison_label,
+            no_roas_instruction=no_roas_instruction,
+            data=data_str
+        )
+
+        try:
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.3)
+            )
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"AI period insight generation failed: {e}")
+            return self._generate_fallback_period_insight(curr, prev, period_type, has_roas)
+
+    def _generate_fallback_period_insight(
+        self,
+        curr: Dict,
+        prev: Optional[Dict],
+        period_type: str,
+        has_roas: bool
+    ) -> str:
+        """Generate fallback insight without AI."""
+        if not prev:
+            if has_roas:
+                return f"${curr['spend']:.0f} spent with {curr['conversions']} conversions at {curr['roas']:.1f}x ROAS."
+            return f"${curr['spend']:.0f} spent with {curr['conversions']} conversions."
+
+        conv_change = ComparisonService.calculate_change_percentage(
+            curr['conversions'], prev['conversions']
+        ) or 0
+
+        if conv_change > 10:
+            return f"Conversions up {conv_change:.0f}% - performance is improving."
+        elif conv_change < -10:
+            return f"Conversions down {abs(conv_change):.0f}% - check what changed."
+        else:
+            return "Performance is stable compared to previous period."
+
+    def _get_improvement_checks(
+        self,
+        account_ids: Optional[List[int]],
+        locale: str
+    ) -> List[Dict[str, Any]]:
+        """Get improvement checks (learning phase, ads per adset, pixel)."""
+        checks = []
+        today = date.today()
+        week_ago = today - timedelta(days=7)
+
+        # Get adset data for the past week
+        try:
+            adsets = self.adset_repository.get_adset_breakdown(
+                start_date=week_ago,
+                end_date=today,
+                account_ids=account_ids
+            )
+        except Exception as e:
+            logger.error(f"Failed to get adset data for improvement checks: {e}")
+            adsets = []
+
+        # Learning phase checks
+        for adset in adsets[:10]:  # Check top 10 by spend
+            if adset.get('adset_status') != 'ACTIVE':
+                continue
+
+            conversions = adset.get('conversions', 0)
+            adset_name = adset.get('adset_name', 'Unknown')
+
+            if conversions < 25:
+                checks.append({
+                    'type': 'learning_phase',
+                    'status': 'warning',
+                    'icon': '⚠️',
+                    'message': f"Ad set '{adset_name[:30]}...' needs more conversions to exit learning ({conversions}/week, aim for 25-50)",
+                    'adset_id': adset.get('adset_id')
+                })
+            elif 25 <= conversions < 50:
+                checks.append({
+                    'type': 'learning_phase',
+                    'status': 'good',
+                    'icon': '✅',
+                    'message': f"Ad set '{adset_name[:30]}...' is doing well! Facebook can optimize at {conversions}/week",
+                    'adset_id': adset.get('adset_id')
+                })
+            elif conversions >= 50:
+                checks.append({
+                    'type': 'learning_phase',
+                    'status': 'excellent',
+                    'icon': '🎉',
+                    'message': f"Great job! '{adset_name[:30]}...' has {conversions} conversions/week - excellent data for Facebook to optimize",
+                    'adset_id': adset.get('adset_id')
+                })
+
+        # Check for pixel/conversion issues
+        total_spend = sum(a.get('spend', 0) for a in adsets)
+        total_conversions = sum(a.get('conversions', 0) for a in adsets)
+
+        if total_spend > 100 and total_conversions == 0:
+            checks.append({
+                'type': 'pixel',
+                'status': 'critical',
+                'icon': '🔴',
+                'message': f"No conversions detected in the past week (${total_spend:.0f} spent) - check your pixel setup"
+            })
+
+        return checks
+
+    def _generate_tldr_summary(
+        self,
+        daily: Dict,
+        weekly: Dict,
+        monthly: Dict,
+        checks: List[Dict],
+        account_ids: Optional[List[int]],
+        locale: str
+    ) -> List[str]:
+        """Generate TL;DR summary bullets."""
+        bullets = []
+
+        # Add insights based on period performance
+        if daily.get('color') == 'red':
+            bullets.append("⚠️ Yesterday's performance dropped - investigate soon")
+        elif daily.get('color') == 'green':
+            bullets.append("✅ Yesterday was a good day!")
+
+        if weekly.get('color') == 'red':
+            bullets.append("⚠️ This week is underperforming - review campaigns")
+        elif weekly.get('color') == 'green':
+            bullets.append("✅ Strong week so far")
+
+        if monthly.get('color') == 'red':
+            bullets.append("⚠️ Monthly trend is declining - needs attention")
+        elif monthly.get('color') == 'green':
+            bullets.append("✅ Great month overall")
+
+        # Add critical checks
+        critical_checks = [c for c in checks if c.get('status') in ['warning', 'critical']]
+        excellent_checks = [c for c in checks if c.get('status') == 'excellent']
+
+        if critical_checks:
+            bullets.append(f"⚠️ {len(critical_checks)} ad set(s) need more conversions for optimal learning")
+
+        if excellent_checks:
+            bullets.append(f"🎉 {len(excellent_checks)} ad set(s) have excellent conversion data")
+
+        # If everything is good
+        if not bullets:
+            bullets.append("✅ Account looks healthy - keep monitoring")
+
+        return bullets[:5]  # Max 5 bullets

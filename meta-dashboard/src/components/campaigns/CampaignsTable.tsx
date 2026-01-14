@@ -150,8 +150,13 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     );
   };
 
-  // Render trend badge
-  const renderTrendBadge = (changePercent?: number, metricType: 'cost' | 'performance' = 'performance') => {
+  // Render trend badge with tooltip
+  const renderTrendBadge = (
+    changePercent?: number,
+    metricType: 'cost' | 'performance' | 'neutral' = 'performance',
+    previousValue?: number,
+    formatFn?: (value: number) => string
+  ) => {
     if (changePercent === undefined || changePercent === null || isNaN(changePercent)) {
       return <span className="text-gray-500 text-sm">-</span>;
     }
@@ -159,21 +164,30 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     const isPositive = changePercent > 0;
     const isNegative = changePercent < 0;
 
-    // For cost metrics (CPA, Spend, CPC), down is good
-    // For performance metrics (ROAS, Conversions, CTR, Conv Rate), up is good
-    let isGood = false;
+    // Determine color based on metric type
+    let colorClass = 'text-gray-400'; // neutral default
 
     if (metricType === 'cost') {
-      isGood = isNegative;
-    } else {
-      isGood = isPositive;
+      // For cost metrics (CPA, CPC), down is good
+      colorClass = isNegative ? 'text-green-400' : 'text-red-400';
+    } else if (metricType === 'performance') {
+      // For performance metrics (ROAS, Conversions, CTR, Conv Rate), up is good
+      colorClass = isPositive ? 'text-green-400' : 'text-red-400';
     }
+    // 'neutral' keeps gray color - no judgment on good/bad (used for Spend)
 
-    const colorClass = isGood ? 'text-green-400' : 'text-red-400';
     const Icon = isPositive ? TrendingUp : TrendingDown;
 
+    // Build tooltip text
+    const tooltipText = previousValue !== undefined && previousValue !== null && formatFn
+      ? `Previous: ${formatFn(previousValue)}`
+      : undefined;
+
     return (
-      <div className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass}`}>
+      <div
+        className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass} cursor-help`}
+        title={tooltipText}
+      >
         <Icon className="w-3 h-3" />
         <span>{Math.abs(changePercent).toFixed(1)}%</span>
       </div>
@@ -363,11 +377,13 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
             {sortedCampaigns.map((campaign) => {
               const isSelected = (selectedCampaignIds || []).includes(campaign.campaign_id);
 
-              // Calculate Conv Rate Change
-              let convRateChange = undefined;
+              // Calculate Conv Rate Change and previous value for tooltip
+              let convRateChange: number | undefined = undefined;
+              let previousConvRate: number | undefined = undefined;
               if (showComparison && campaign.previous_clicks && campaign.previous_conversions !== undefined) {
                 const currentRate = campaign.clicks > 0 ? (campaign.conversions / campaign.clicks) : 0;
                 const prevRate = campaign.previous_clicks > 0 ? (campaign.previous_conversions / campaign.previous_clicks) : 0;
+                previousConvRate = prevRate * 100; // Convert to percentage for display
 
                 if (prevRate > 0) {
                   convRateChange = ((currentRate - prevRate) / prevRate) * 100;
@@ -410,7 +426,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">
-                      {renderTrendBadge(campaign.spend_change_pct, 'cost')}
+                      {renderTrendBadge(campaign.spend_change_pct, 'neutral', campaign.previous_spend, formatCurrency)}
                     </td>
                   )}
 
@@ -420,7 +436,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">
-                      {renderTrendBadge(campaign.ctr_change_pct, 'performance')}
+                      {renderTrendBadge(campaign.ctr_change_pct, 'performance', campaign.previous_ctr, formatPercentage)}
                     </td>
                   )}
 
@@ -430,7 +446,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">
-                      {renderTrendBadge(campaign.cpc_change_pct, 'cost')}
+                      {renderTrendBadge(campaign.cpc_change_pct, 'cost', campaign.previous_cpc, formatCurrencyDecimal)}
                     </td>
                   )}
 
@@ -440,7 +456,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
                   {showComparison && (
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {renderTrendBadge(campaign.conversions_change_pct, 'performance')}
+                      {renderTrendBadge(campaign.conversions_change_pct, 'performance', campaign.previous_conversions, formatNumber)}
                     </td>
                   )}
 
@@ -450,7 +466,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">
-                      {renderTrendBadge(campaign.cpa_change_pct, 'cost')}
+                      {renderTrendBadge(campaign.cpa_change_pct, 'cost', campaign.previous_cpa, formatCurrencyDecimal)}
                     </td>
                   )}
 
@@ -460,7 +476,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
                   {showComparison && (
                     <td className="px-6 py-5 text-right">
-                      {renderTrendBadge(convRateChange, 'performance')}
+                      {renderTrendBadge(convRateChange, 'performance', previousConvRate, formatPercentage)}
                     </td>
                   )}
 
@@ -481,7 +497,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                       {showComparison && (
                         <td className="px-6 py-5 text-right">
                           {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 &&
-                            renderTrendBadge(campaign.roas_change_pct, 'performance')}
+                            renderTrendBadge(campaign.roas_change_pct, 'performance', campaign.previous_roas, (v) => `x${v.toFixed(2)}`)}
                         </td>
                       )}
                     </>

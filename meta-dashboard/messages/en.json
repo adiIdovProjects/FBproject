@@ -54,7 +54,8 @@
     "creative_performance": "Creative Performance",
     "campaign_control": "Campaign Control",
     "intelligence": "Intelligence",
-    "custom_reports": "Custom Reports"
+    "custom_reports": "Custom Reports",
+    "learning_center": "Beginner Guide"
   },
   "manage": {
     "title": "Manage Campaigns",
@@ -96,7 +97,18 @@
     "subtitle": "Displaying time trends for a selected metric by granularity.",
     "chart_title": "Dynamic Trend Chart",
     "quick_insights": "Quick Insights",
-    "view_full_analysis": "View Full Analysis"
+    "view_full_analysis": "View Full Analysis",
+    "day_of_week_performance": "Performance by Day of Week",
+    "day": "Day"
+  },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
   },
   "campaigns": {
     "title": "Campaign Performance",
@@ -125,10 +137,23 @@
   "reports": {
     "title": "Advanced Reports",
     "subtitle": "Interactive analytics and data comparison",
+    "description": "Build custom reports with flexible breakdowns",
     "filters_panel": "Filters",
     "metric_select": "Select Metrics",
     "dimension": "Dimension",
-    "breakdown": "Breakdown",
+    "breakdown": {
+      "none": "None",
+      "date": "By Date",
+      "week": "By Week",
+      "month": "By Month",
+      "campaign": "By Campaign",
+      "adset": "By Ad Set",
+      "ad": "By Ad",
+      "placement": "By Placement",
+      "platform": "By Platform",
+      "demographics": "Demographics",
+      "country": "By Country"
+    },
     "primary_breakdown": "Primary Breakdown",
     "secondary_breakdown": "Secondary Breakdown (Optional)",
     "none_optional": "None",
@@ -153,7 +178,28 @@
     "by_date": "By Date",
     "by_week": "By Week",
     "by_month": "By Month",
-    "no_metrics_selected": "No metrics selected. Please choose at least one metric."
+    "no_metrics_selected": "No metrics selected. Please choose at least one metric.",
+    "quick_templates": "Quick Templates",
+    "templates_title": "Report Templates",
+    "custom_options": "Custom Options",
+    "generate": "Generate Report",
+    "export_excel": "Export Excel",
+    "export_sheets": "Google Sheets",
+    "no_data": "No data available. Try adjusting your filters.",
+    "google_not_connected": "Please connect your Google account first",
+    "filter_campaign": "Campaign Filter",
+    "filter_adset": "Ad Set Filter",
+    "filter_ad": "Ad Filter",
+    "filter_placeholder": "Type to filter...",
+    "templates": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "campaign": "Campaign",
+      "adset": "Ad Set",
+      "placement": "Placement",
+      "demographics": "Demographics",
+      "geographic": "Geographic"
+    }
   },
   "creatives": {
     "title": "Creative Insights",
@@ -235,15 +281,15 @@
     "suggested_questions": "Suggested Questions",
     "gemini_analysis": "Gemini Analysis",
     "questions": {
-      "compare_weeks": "How this week compare to last week?",
-      "best_ad": "What is the best ad?",
-      "ad_performance": "How this ad works this week?",
+      "compare_weeks": "How does this week compare to last week?",
+      "best_ad": "Which campaigns should I scale?",
+      "ad_performance": "Which campaigns are underperforming?",
       "best_country_cpc": "Which country has the best CPC?",
-      "spend_by_age": "What is the spend distribution by age?",
-      "ig_vs_feed": "How do Instagram Stories perform vs Feed?",
-      "avg_roas": "What is our average ROAS this month?",
-      "creative_effectiveness": "Which creative title is most effective?",
-      "leads_overview": "Show me an overview of leads this week."
+      "spend_by_age": "Which age group converts best?",
+      "ig_vs_feed": "How do Stories perform vs Feed?",
+      "avg_roas": "How is my ROAS trending?",
+      "creative_effectiveness": "What's causing my CPA to increase?",
+      "leads_overview": "How should I reallocate my budget?"
     }
   },
   "insights": {
@@ -269,7 +315,9 @@
     "opportunities": "Opportunities",
     "no_insights": "No insights available for this period",
     "error_loading": "Error Loading Insights",
-    "generated_at": "Generated at"
+    "generated_at": "Generated at",
+    "what_can_improve": "What Can Be Improved?",
+    "summary": "Summary"
   },
   "auth": {
     "login_title": "Sign in to your account",
@@ -291,7 +339,8 @@
     "redirecting": "Redirecting to dashboard...",
     "connection_failed": "Connection Failed",
     "return_to_login": "Return to Login",
-    "continue": "Continue"
+    "continue": "Continue",
+    "fbAlreadyLinked": "This Facebook account is already linked to another account. Please login with the email you originally used."
   },
   "settings": {
     "profile": "Profile",
@@ -378,6 +427,94 @@
     "industry": "Industry",
     "optimization_priority": "Optimization Priority"
   },
+  "learning": {
+    "title": "Beginner Guide",
+    "subtitle": "Everything you need to succeed with Facebook Ads",
+    "ads_structure": "Facebook Ads Structure",
+    "ads_structure_desc": "Understanding Campaign, Ad Set, and Ad",
+    "best_practices": "Best Practices",
+    "best_practices_desc": "Tips for better ad performance",
+    "pixel_setup": "Pixel Setup Guide",
+    "pixel_setup_desc": "Track conversions on your website",
+    "lead_forms": "Lead Form Setup",
+    "lead_forms_desc": "Collect leads directly on Facebook",
+    "common_mistakes": "Common Mistakes",
+    "common_mistakes_desc": "Avoid these beginner errors",
+    "campaign_definition": "The container that holds your objective (Sales, Leads, Traffic) and budget strategy",
+    "adset_definition": "The targeting settings - who sees your ads, when, and where",
+    "ad_definition": "The creative - what people actually see (image/video + text)",
+    "ads_per_adset": "3-5 ads per ad set is recommended. This lets Facebook optimize delivery without diluting your budget.",
+    "new_campaign_vs_adset": "Create a new campaign for different objectives (Sales vs Leads). Create a new ad set for different audiences (US vs UK, or different ages).",
+    "budget_testing": "Start with $5-20/day per ad set for testing",
+    "budget_scaling": "When scaling, increase budget by 20% every 2-3 days if performing well",
+    "when_to_pause": "Consider pausing ads with CTR below 1%, CPA 2x your target, or no conversions in 3+ days",
+    "objective_title": "Choose the Right Campaign Objective",
+    "objective_tip": "Your campaign objective tells Facebook what action you want users to take. Always select the objective that matches your actual business goal - if you want purchases, choose Sales; if you want leads, choose Leads.",
+    "objective_tip_box": "Target what you really want the user to do - Facebook optimizes for exactly what you ask for",
+    "ads_per_adset_title": "How many ads per ad set?",
+    "campaign_vs_adset_title": "New Campaign vs New Ad Set?",
+    "budget_title": "Budget Recommendations",
+    "when_to_pause_title": "When to Pause Ads",
+    "pixel_step_1": "Go to Facebook Events Manager",
+    "pixel_step_2": "Click \"Connect Data Sources\" then select \"Web\"",
+    "pixel_step_3": "Name your pixel and enter your website URL",
+    "pixel_step_4": "Choose installation method (Partner integration or manual code)",
+    "pixel_step_5": "Test your pixel is firing correctly using the Pixel Helper browser extension",
+    "pixel_link": "Open Events Manager",
+    "pixel_youtube": "Watch Tutorial",
+    "pixel_youtube_query": "Facebook Pixel Setup Tutorial",
+    "lead_step_1": "Go to Facebook Ads Manager and create a new campaign",
+    "lead_step_2": "Select \"Leads\" as your campaign objective",
+    "lead_step_3": "Set up your ad set (budget, audience, placements)",
+    "lead_step_4": "At the Ad level, select \"Instant Form\" as your lead method",
+    "lead_step_5": "Click \"Create Form\" - add your questions (name, email, phone, custom)",
+    "lead_step_6": "Set up your thank you screen, then publish your campaign",
+    "lead_link": "Create Lead Campaign",
+    "lead_youtube": "Watch Tutorial",
+    "lead_youtube_query": "How To Create Facebook Instant Forms",
+    "mistake_too_many_ads": "Too many ads in one ad set dilutes your budget across too many variations",
+    "mistake_narrow_targeting": "Too narrow targeting (audience under 100k) limits Facebook's optimization",
+    "mistake_learning_phase": "Changing ads during learning phase resets the optimization process",
+    "mistake_no_testing": "Not testing creative variations means you might miss better performing options"
+  },
+  "tips": {
+    "budget_testing": "Start with $10-20/day for testing new audiences",
+    "audience_size": "Keep audience size 500k-2M for best results",
+    "ad_variations": "Use 3-5 ad variations to let Facebook find winners",
+    "budget_increase": "Increase budget by max 20% at a time to avoid resetting the learning phase",
+    "pause_criteria": "Consider pausing ads with CTR below 1% or no conversions in 3 days"
+  },
+  "wizard": {
+    "step_of": "Step {current} of {total}",
+    "objective_sales": "Best for e-commerce. Tracks purchases via your pixel.",
+    "objective_leads": "Collect contact info via forms. Great for services.",
+    "objective_traffic": "Drive visitors to your website. Good for awareness.",
+    "objective_engagement": "Get likes, comments, shares. Build social proof.",
+    "audience_targeting": "Audience Targeting",
+    "advantage_plus": "Advantage+ Audience",
+    "advantage_plus_desc": "Let Facebook AI find the best users for you automatically",
+    "custom_audience": "Custom Audience",
+    "custom_audience_desc": "Target your saved audiences or lookalikes",
+    "recommended": "Recommended",
+    "select_audiences": "Select Audiences",
+    "loading_audiences": "Loading audiences...",
+    "no_audiences": "No custom audiences found. Create lookalikes or custom audiences in Facebook Ads Manager first.",
+    "exclude_audiences": "Exclude Audiences (Optional)",
+    "interest_targeting": "Interest Targeting (Optional)",
+    "interest_hint": "Target users based on their interests, hobbies, and behaviors",
+    "interest_placeholder": "Search interests (e.g., fitness, cooking, travel...)"
+  },
+  "ai_panel": {
+    "title": "Ask AI Assistant",
+    "subtitle": "Get insights about your campaigns",
+    "placeholder": "Ask a question about your campaigns...",
+    "thinking": "Analyzing your data...",
+    "error": "Something went wrong. Please try again.",
+    "q_high_cpa": "Why is my CPA high?",
+    "q_what_pause": "What should I pause?",
+    "q_improve_ctr": "How can I improve CTR?",
+    "q_best_performing": "What's performing best?"
+  },
   "breakdown": {
     "platform": "Platform",
     "placement": "Placement",
@@ -407,36 +544,5 @@
     "ad": {
       "label": "Ad Filter"
     }
-  },
-  "token": "(MISSING: token)",
-  "state": "(MISSING: state)",
-  "step": "(MISSING: step)",
-  "T": "(MISSING: T)",
-  "tab": "(MISSING: tab)",
-  "connect_success": "(MISSING: connect_success)",
-  "error": "(MISSING: error)",
-  "both": "(MISSING: both)",
-  "age": "(MISSING: age)",
-  "gender": "(MISSING: gender)",
-  "no_data_available": "(MISSING: no_data_available)",
-  "ad_set_name": "(MISSING: ad_set_name)",
-  "targeting_type": "(MISSING: targeting_type)",
-  "targeting_summary": "(MISSING: targeting_summary)",
-  "spend": "(MISSING: spend)",
-  "impressions": "(MISSING: impressions)",
-  "clicks": "(MISSING: clicks)",
-  "ctr": "(MISSING: ctr)",
-  "cpc": "(MISSING: cpc)",
-  "conversions": "(MISSING: conversions)",
-  "roas": "(MISSING: roas)",
-  "cpa": "(MISSING: cpa)",
-  "broad": "(MISSING: broad)",
-  "campaign_name": "(MISSING: campaign_name)",
-  "campaign_status": "(MISSING: campaign_status)",
-  "a": "(MISSING: a)",
-  "-": "(MISSING: -)",
-  "": {
-    "language-switcher": "(MISSING: .language-switcher)"
-  },
-  "name": "(MISSING: name)"
+  }
 }

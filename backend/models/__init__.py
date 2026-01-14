@@ -1,5 +1,5 @@
 from .schema import Base, DimAccount, DimCampaign, DimAdset, DimAd, DimCreative, FactCoreMetrics, create_schema
-from .user_schema import User, UserAdAccount
+from .user_schema import User, UserAdAccount, UserSubscription, SubscriptionHistory, PageView
 
 __all__ = [
     'Base',
@@ -11,5 +11,8 @@ __all__ = [
     'FactCoreMetrics',
     'User',
     'UserAdAccount',
+    'UserSubscription',
+    'SubscriptionHistory',
+    'PageView',
     'create_schema'
 ]

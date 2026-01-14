@@ -8,7 +8,7 @@ from backend.api.dependencies import get_db, get_current_user
 from backend.api.repositories.campaign_repository import CampaignRepository
 from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.repositories.ad_repository import AdRepository
-from backend.api.schemas.mutations import SmartCampaignRequest, AddCreativeRequest, StatusUpdateRequest, BudgetUpdateRequest
+from backend.api.schemas.mutations import SmartCampaignRequest, AddCreativeRequest, StatusUpdateRequest, BudgetUpdateRequest, UpdateAdSetTargetingRequest, UpdateAdCreativeRequest
 from backend.models.user_schema import User
 from backend.api.services.ad_mutation_service import AdMutationService
 
@@ -75,16 +75,30 @@ def get_campaigns_list(
 @router.get("/adsets-list")
 def get_adsets_list(
     campaign_id: int,
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """List active/paused adsets for a campaign (from Local DB)."""
+    """List active/paused adsets for a campaign (from Local DB).
+    Filters by user's accounts for data isolation."""
     repo = AdSetRepository(db)
+
+    # Get account filter
+    account_ids = None
+    if account_id:
+        account_ids = [int(account_id.replace("act_", ""))]
+    else:
+        # Get user's account IDs for filtering
+        from backend.api.repositories.user_repository import UserRepository
+        user_repo = UserRepository(db)
+        account_ids = user_repo.get_user_account_ids(user.id)
+
     adsets = repo.get_adset_breakdown(
         start_date=date.today() - timedelta(days=90),
         end_date=date.today(),
         campaign_id=campaign_id,
-        campaign_status=['ACTIVE', 'PAUSED']
+        campaign_status=['ACTIVE', 'PAUSED'],
+        account_ids=account_ids
     )
     return [
         {"id": a['adset_id'], "name": a['adset_name']}
@@ -168,6 +182,23 @@ def get_pixels(
         logger.error(f"Failed to fetch pixels for account {account_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/custom-audiences")
+def get_custom_audiences(
+    account_id: str,
+    service: AdMutationService = Depends(get_mutation_service)
+):
+    """Get Custom Audiences (lookalikes, saved audiences) for an ad account."""
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        logger.info(f"Fetching custom audiences for account {account_id}")
+        result = service.get_custom_audiences(account_id)
+        logger.info(f"Found {len(result)} custom audiences for account {account_id}")
+        return result
+    except Exception as e:
+        logger.error(f"Failed to fetch custom audiences for account {account_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/targeting/search")
 def search_targeting_locations(
     q: str = Query(..., min_length=2, description="Search query for location"),
@@ -178,6 +209,18 @@ def search_targeting_locations(
     try:
         types_list = [t.strip() for t in location_types.split(",")]
         return service.search_targeting_locations(q, types_list)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/targeting/interests")
+def search_interests(
+    q: str = Query(..., min_length=2, description="Search query for interests"),
+    service: AdMutationService = Depends(get_mutation_service)
+):
+    """Search for interest targeting options via Facebook API."""
+    try:
+        return service.search_interests(q)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -411,3 +454,120 @@ def get_ads_for_adset(
         end_date=end_date,
         account_ids=[clean_account_id]
     )
+
+
+# --- Ads List for Dropdown ---
+
+@router.get("/ads-list")
+def get_ads_list(
+    adset_id: int,
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """List ads for an adset (from Local DB).
+    Filters by user's accounts for data isolation."""
+    repo = AdRepository(db)
+
+    # Get account filter
+    account_ids = None
+    if account_id:
+        account_ids = [int(account_id.replace("act_", ""))]
+    else:
+        # Get user's account IDs for filtering
+        from backend.api.repositories.user_repository import UserRepository
+        user_repo = UserRepository(db)
+        account_ids = user_repo.get_user_account_ids(user.id)
+
+    ads = repo.get_ads_for_adset(
+        adset_id=adset_id,
+        start_date=date.today() - timedelta(days=90),
+        end_date=date.today(),
+        account_ids=account_ids
+    )
+    return [
+        {"id": a['ad_id'], "name": a['ad_name']}
+        for a in ads
+    ]
+
+
+# --- Edit Endpoints ---
+
+@router.get("/adsets/{adset_id}/targeting")
+def get_adset_targeting(
+    adset_id: str,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Fetch current ad set targeting settings (locations, age range) from Facebook."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} fetching adset {adset_id} targeting")
+        result = service.get_adset_targeting(adset_id)
+        return result
+    except Exception as e:
+        logger.error(f"User {user.id} failed to fetch adset {adset_id} targeting: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ads/{ad_id}/creative")
+def get_ad_creative(
+    ad_id: str,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Fetch current ad creative details (copy, media, form) from Facebook."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} fetching ad {ad_id} creative")
+        result = service.get_ad_creative(ad_id)
+        return result
+    except Exception as e:
+        logger.error(f"User {user.id} failed to fetch ad {ad_id} creative: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/adsets/{adset_id}/targeting")
+def update_adset_targeting(
+    adset_id: str,
+    request: UpdateAdSetTargetingRequest,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Update ad set targeting (locations, age range, budget)."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} updating adset {adset_id} targeting")
+        result = service.update_adset_targeting(adset_id, request)
+        logger.info(f"User {user.id} successfully updated adset {adset_id} targeting")
+        return result
+    except Exception as e:
+        logger.error(f"User {user.id} failed to update adset {adset_id} targeting: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/ads/{ad_id}/creative")
+def update_ad_creative(
+    ad_id: str,
+    request: UpdateAdCreativeRequest,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Update ad creative (copy, media, form)."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} updating ad {ad_id} creative")
+        result = service.update_ad_creative(ad_id, request)
+        logger.info(f"User {user.id} successfully updated ad {ad_id} creative")
+        return result
+    except Exception as e:
+        logger.error(f"User {user.id} failed to update ad {ad_id} creative: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

@@ -210,6 +210,52 @@ class AdMutationService:
             logger.error(f"Failed to fetch pixels for account {account_id}: {e}")
             raise e
 
+    def get_custom_audiences(self, account_id: str) -> List[Dict[str, Any]]:
+        """Fetch Custom Audiences (lookalikes, saved audiences) for an ad account"""
+        import requests
+
+        try:
+            # Handle both "act_123" and "123" formats
+            clean_id = account_id.replace("act_", "")
+
+            # Use direct API call instead of SDK (more reliable)
+            url = f"https://graph.facebook.com/v24.0/act_{clean_id}/customaudiences"
+            params = {
+                'access_token': self.access_token,
+                'fields': 'id,name,subtype,approximate_count_lower_bound,approximate_count_upper_bound'
+            }
+            logger.info(f"Fetching custom audiences from: {url}")
+            response = requests.get(url, params=params)
+            data = response.json()
+            logger.info(f"Custom audiences API response: {data}")
+
+            if 'error' in data:
+                error_info = data['error']
+                logger.warning(f"Facebook API error fetching custom audiences: {error_info.get('message')}")
+                return []  # Return empty list instead of failing
+
+            results = []
+            for audience in data.get('data', []):
+                subtype = audience.get('subtype', '')
+                # Use average of lower and upper bounds for approximate count
+                lower = audience.get('approximate_count_lower_bound', 0) or 0
+                upper = audience.get('approximate_count_upper_bound', 0) or 0
+                approx_count = (lower + upper) // 2 if (lower or upper) else None
+
+                results.append({
+                    'id': audience.get('id'),
+                    'name': audience.get('name'),
+                    'subtype': subtype,  # LOOKALIKE, CUSTOM, etc.
+                    'approximate_count': approx_count,
+                    'type_label': 'Lookalike' if subtype == 'LOOKALIKE' else 'Custom Audience'
+                })
+
+            logger.info(f"Found {len(results)} custom audiences for account {account_id}")
+            return results
+        except Exception as e:
+            logger.error(f"Failed to fetch custom audiences for account {account_id}: {e}")
+            return []  # Return empty list instead of crashing
+
     def search_targeting_locations(self, query: str, location_types: List[str] = None) -> List[Dict[str, Any]]:
         """Search for targeting locations (countries, cities, regions) via Facebook API."""
         import requests
@@ -260,6 +306,42 @@ class AdMutationService:
         except Exception as e:
             logger.error(f"Failed to search targeting locations: {str(e)}", exc_info=True)
             raise ValueError(f"Unable to search locations: {str(e)}")
+
+    def search_interests(self, query: str) -> List[Dict[str, Any]]:
+        """Search for interest targeting options via Facebook API."""
+        import requests
+
+        try:
+            url = "https://graph.facebook.com/v24.0/search"
+            params = {
+                'access_token': self.access_token,
+                'type': 'adinterest',
+                'q': query
+            }
+            response = requests.get(url, params=params)
+            data = response.json()
+
+            if 'error' in data:
+                error_info = data['error']
+                logger.warning(f"Facebook API error searching interests: {error_info.get('message')}")
+                return []
+
+            results = []
+            for item in data.get('data', []):
+                results.append({
+                    'id': item.get('id'),
+                    'name': item.get('name'),
+                    'audience_size_lower_bound': item.get('audience_size_lower_bound', 0),
+                    'audience_size_upper_bound': item.get('audience_size_upper_bound', 0),
+                    'path': item.get('path', []),
+                    'topic': item.get('topic', '')
+                })
+
+            logger.info(f"Found {len(results)} interests for query '{query}'")
+            return results
+        except Exception as e:
+            logger.error(f"Failed to search interests: {str(e)}", exc_info=True)
+            return []
 
     def create_smart_campaign(self, request: SmartCampaignRequest) -> Dict[str, Any]:
         """
@@ -317,18 +399,40 @@ class AdMutationService:
         logger.info(f"Geo targeting: {geo_targeting}")
 
         # 2. Map Objective -> AdSet Params
+        adset_name = request.adset_name or f"{request.campaign_name} - AdSet"
+
+        # Build targeting dict
+        targeting = {
+            "geo_locations": geo_targeting,
+            "age_min": request.age_min,
+            "age_max": request.age_max,
+        }
+
+        # Add custom audiences if provided (lookalikes, saved audiences)
+        if request.custom_audiences and len(request.custom_audiences) > 0:
+            targeting["custom_audiences"] = [{"id": aud_id} for aud_id in request.custom_audiences]
+            logger.info(f"Adding {len(request.custom_audiences)} custom audiences to targeting")
+
+        # Add excluded audiences if provided
+        if request.excluded_audiences and len(request.excluded_audiences) > 0:
+            targeting["excluded_custom_audiences"] = [{"id": aud_id} for aud_id in request.excluded_audiences]
+            logger.info(f"Excluding {len(request.excluded_audiences)} custom audiences from targeting")
+
+        # Add interests if provided
+        if request.interests and len(request.interests) > 0:
+            targeting["flexible_spec"] = [{
+                "interests": [{"id": interest.id, "name": interest.name} for interest in request.interests]
+            }]
+            logger.info(f"Adding {len(request.interests)} interests to targeting")
+
         adset_params = {
-            AdSet.Field.name: f"{request.campaign_name} - AdSet",
+            AdSet.Field.name: adset_name,
             AdSet.Field.campaign_id: campaign_id,
             AdSet.Field.status: AdSet.Status.paused,
             AdSet.Field.daily_budget: request.daily_budget_cents,
             AdSet.Field.billing_event: "IMPRESSIONS",
-            # Targeting with geo_locations
-            AdSet.Field.targeting: {
-                "geo_locations": geo_targeting,
-                "age_min": request.age_min,
-                "age_max": request.age_max,
-            },
+            # Targeting with geo_locations and optional custom audiences
+            AdSet.Field.targeting: targeting,
             # Placements: Default is Auto (Advantage+)
         }
 
@@ -376,8 +480,9 @@ class AdMutationService:
         logger.info(f"Creative created successfully: {creative_id}")
 
         # 4. Create Ad
+        ad_name = request.ad_name or f"{request.campaign_name} - Ad"
         ad_params = {
-            Ad.Field.name: f"{request.campaign_name} - Ad",
+            Ad.Field.name: ad_name,
             Ad.Field.adset_id: adset_id,
             Ad.Field.creative: {"creative_id": creative_id},
             Ad.Field.status: Ad.Status.paused
@@ -413,8 +518,9 @@ class AdMutationService:
         creative_id = creative[AdCreative.Field.id]
 
         # 2. Create Ad
+        ad_name = request.ad_name or f"Ad - {request.creative.title[:20]}"
         ad_params = {
-            Ad.Field.name: f"Ad - {request.creative.title[:20]}",
+            Ad.Field.name: ad_name,
             Ad.Field.adset_id: request.adset_id,
             Ad.Field.creative: {"creative_id": creative_id},
             Ad.Field.status: Ad.Status.paused
@@ -625,3 +731,380 @@ class AdMutationService:
                 result[adset_id] = {"daily_budget_cents": None, "lifetime_budget_cents": None}
 
         return result
+
+    # --- Edit Methods ---
+
+    def update_adset_targeting(self, adset_id: str, request: Any) -> Dict[str, Any]:
+        """
+        Update ad set targeting (locations, age range, budget).
+        Only updates fields that are provided (not None).
+        """
+        try:
+            logger.info(f"Updating adset {adset_id} targeting")
+            adset = AdSet(adset_id)
+
+            update_params = {}
+
+            # Fetch existing adset data including DSA fields (required for EU compliance)
+            existing = adset.api_get(fields=[
+                AdSet.Field.targeting,
+                AdSet.Field.dsa_beneficiary,
+                AdSet.Field.dsa_payor
+            ])
+            existing_targeting = existing.get(AdSet.Field.targeting, {})
+
+            # Preserve DSA fields if they exist (required for EU ad accounts)
+            dsa_beneficiary = existing.get(AdSet.Field.dsa_beneficiary)
+            dsa_payor = existing.get(AdSet.Field.dsa_payor)
+            if dsa_beneficiary:
+                update_params[AdSet.Field.dsa_beneficiary] = dsa_beneficiary
+            if dsa_payor:
+                update_params[AdSet.Field.dsa_payor] = dsa_payor
+
+            # Update geo_locations if provided
+            if request.geo_locations:
+                geo_targeting = {}
+                countries = []
+                regions = []
+                cities = []
+
+                for loc in request.geo_locations:
+                    if loc.type == "country":
+                        countries.append(loc.country_code or loc.key)
+                    elif loc.type == "region":
+                        regions.append({"key": loc.key})
+                    elif loc.type == "city":
+                        cities.append({"key": loc.key})
+
+                if countries:
+                    geo_targeting["countries"] = countries
+                if regions:
+                    geo_targeting["regions"] = regions
+                if cities:
+                    geo_targeting["cities"] = cities
+
+                new_targeting = {
+                    "geo_locations": geo_targeting,
+                    "age_min": request.age_min or existing_targeting.get("age_min", 18),
+                    "age_max": request.age_max or existing_targeting.get("age_max", 65),
+                }
+                update_params[AdSet.Field.targeting] = new_targeting
+
+            # Update age range if provided (and geo_locations not provided)
+            elif request.age_min is not None or request.age_max is not None:
+                new_targeting = existing_targeting.copy()
+                if request.age_min is not None:
+                    new_targeting["age_min"] = request.age_min
+                if request.age_max is not None:
+                    new_targeting["age_max"] = request.age_max
+                update_params[AdSet.Field.targeting] = new_targeting
+
+            # Update budget if provided
+            if request.daily_budget_cents is not None:
+                update_params[AdSet.Field.daily_budget] = request.daily_budget_cents
+
+            if update_params:
+                adset.api_update(params=update_params)
+                logger.info(f"AdSet {adset_id} targeting updated successfully")
+
+            return {"status": "success", "adset_id": adset_id}
+        except Exception as e:
+            logger.error(f"Failed to update adset {adset_id} targeting: {str(e)}")
+            raise
+
+    def update_ad_creative(self, ad_id: str, request: Any) -> Dict[str, Any]:
+        """
+        Update an ad's creative by creating a new creative and linking it.
+        Facebook doesn't allow editing creatives, so we create a new one.
+        """
+        try:
+            logger.info(f"Updating ad {ad_id} creative")
+
+            # Get the ad to find its account
+            ad = Ad(ad_id)
+            ad_data = ad.api_get(fields=[Ad.Field.account_id, Ad.Field.creative])
+            account_id = ad_data.get(Ad.Field.account_id)
+            old_creative_id = ad_data.get(Ad.Field.creative, {}).get('id')
+
+            # If no new content provided, nothing to do
+            if not any([request.title, request.body, request.call_to_action,
+                       request.image_hash, request.video_id, request.link_url, request.lead_form_id]):
+                return {"status": "no_changes", "ad_id": ad_id}
+
+            # Fetch old creative to get existing values
+            old_spec = {}
+            old_link_data = {}
+            old_creative_type = 'link_data'  # default
+
+            if old_creative_id:
+                old_creative = AdCreative(old_creative_id)
+                old_data = old_creative.api_get(fields=[
+                    AdCreative.Field.name,
+                    AdCreative.Field.object_story_spec
+                ])
+                old_spec = old_data.get(AdCreative.Field.object_story_spec, {})
+
+                # Detect creative type and get the right data
+                if 'template_data' in old_spec:
+                    old_creative_type = 'template_data'
+                    old_link_data = old_spec.get('template_data', {})
+                elif 'video_data' in old_spec:
+                    old_creative_type = 'video_data'
+                    old_link_data = old_spec.get('video_data', {})
+                else:
+                    old_creative_type = 'link_data'
+                    old_link_data = old_spec.get('link_data', {})
+
+                logger.info(f"Old creative type: {old_creative_type}, data keys: {old_link_data.keys() if old_link_data else 'None'}")
+
+            # Build new creative with merged values
+            account = AdAccount(f"act_{request.account_id}")
+
+            # Determine lead form ID (location varies by creative type)
+            lead_form_id = request.lead_form_id or old_link_data.get('lead_gen_form_id')
+            # For video_data, lead form is nested in call_to_action.value
+            if old_creative_type == 'video_data' and not lead_form_id:
+                cta = old_link_data.get('call_to_action', {})
+                lead_form_id = cta.get('value', {}).get('lead_gen_form_id')
+
+            if old_creative_type == 'video_data':
+                # Video creative - must use video_data structure, NOT template_data
+                old_cta = old_link_data.get('call_to_action', {})
+                cta_type = request.call_to_action or old_cta.get('type', 'LEARN_MORE')
+
+                new_spec = {
+                    "page_id": request.page_id,
+                    "video_data": {
+                        "message": request.body or old_link_data.get('message', ''),
+                        "title": request.title or old_link_data.get('title', ''),
+                        "video_id": request.video_id or old_link_data.get('video_id'),
+                        "call_to_action": {
+                            "type": cta_type,
+                            "value": {}
+                        }
+                    }
+                }
+                # Add lead form in call_to_action.value (required for video lead ads)
+                if lead_form_id:
+                    new_spec["video_data"]["call_to_action"]["value"]["lead_gen_form_id"] = lead_form_id
+                    # Facebook requires a link even for lead forms
+                    new_spec["video_data"]["call_to_action"]["value"]["link"] = old_cta.get('value', {}).get('link', 'http://fb.me/')
+                elif request.link_url or old_cta.get('value', {}).get('link'):
+                    link_val = str(request.link_url) if request.link_url else old_cta.get('value', {}).get('link', '')
+                    new_spec["video_data"]["call_to_action"]["value"]["link"] = link_val
+
+                # Preserve image_hash (thumbnail)
+                if old_link_data.get('image_hash'):
+                    new_spec["video_data"]["image_hash"] = old_link_data['image_hash']
+
+                # Copy instagram_user_id if present in old spec
+                if old_spec.get('instagram_user_id'):
+                    new_spec["instagram_user_id"] = old_spec['instagram_user_id']
+
+            elif old_creative_type == 'template_data' or lead_form_id:
+                # Lead form / template creative structure (non-video)
+                new_spec = {
+                    "page_id": request.page_id,
+                    "template_data": {
+                        "description": request.body or old_link_data.get('description', '') or old_link_data.get('message', ''),
+                        "name": request.title or old_link_data.get('name', '') or old_link_data.get('title', ''),
+                        "call_to_action": {"type": request.call_to_action or old_link_data.get('call_to_action', {}).get('type', 'LEARN_MORE')}
+                    }
+                }
+                # Add link if present
+                link_value = str(request.link_url) if request.link_url else old_link_data.get('link', '')
+                if link_value:
+                    new_spec["template_data"]["link"] = link_value
+
+                # Add lead form if present
+                if lead_form_id:
+                    new_spec["template_data"]["lead_gen_form_id"] = lead_form_id
+
+                # Add media
+                if request.image_hash:
+                    new_spec["template_data"]["image_hash"] = request.image_hash
+                elif request.video_id:
+                    new_spec["template_data"]["video_id"] = request.video_id
+                elif old_link_data.get('image_hash'):
+                    new_spec["template_data"]["image_hash"] = old_link_data['image_hash']
+                elif old_link_data.get('video_id'):
+                    new_spec["template_data"]["video_id"] = old_link_data['video_id']
+            else:
+                # Standard link creative structure - requires a link
+                link_value = str(request.link_url) if request.link_url else old_link_data.get('link', '')
+                if not link_value:
+                    raise ValueError("Link URL is required for link ads. Please provide a website URL.")
+
+                new_spec = {
+                    "page_id": request.page_id,
+                    "link_data": {
+                        "message": request.body or old_link_data.get('message', ''),
+                        "link": link_value,
+                        "name": request.title or old_link_data.get('name', ''),
+                        "call_to_action": {"type": request.call_to_action or old_link_data.get('call_to_action', {}).get('type', 'LEARN_MORE')}
+                    }
+                }
+                # Add media
+                if request.image_hash:
+                    new_spec["link_data"]["image_hash"] = request.image_hash
+                elif request.video_id:
+                    new_spec["link_data"]["video_id"] = request.video_id
+                elif old_link_data.get('image_hash'):
+                    new_spec["link_data"]["image_hash"] = old_link_data['image_hash']
+                elif old_link_data.get('video_id'):
+                    new_spec["link_data"]["video_id"] = old_link_data['video_id']
+
+            creative_params = {
+                AdCreative.Field.name: f"Updated Creative - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                AdCreative.Field.object_story_spec: new_spec
+            }
+
+            logger.info(f"Creating new AdCreative with spec: {new_spec}")
+            new_creative = account.create_ad_creative(params=creative_params)
+            new_creative_id = new_creative[AdCreative.Field.id]
+
+            # Update ad to use new creative
+            ad.api_update(params={Ad.Field.creative: {"creative_id": new_creative_id}})
+            logger.info(f"Ad {ad_id} updated with new creative {new_creative_id}")
+
+            return {
+                "status": "success",
+                "ad_id": ad_id,
+                "new_creative_id": new_creative_id,
+                "old_creative_id": old_creative_id
+            }
+        except Exception as e:
+            logger.error(f"Failed to update ad {ad_id} creative: {str(e)}")
+            raise
+
+    def get_adset_targeting(self, adset_id: str) -> Dict[str, Any]:
+        """
+        Fetch current targeting settings for an ad set from Facebook API.
+        Returns geo_locations, age_min, age_max.
+        """
+        try:
+            logger.info(f"Fetching targeting for adset {adset_id}")
+            adset = AdSet(adset_id)
+            data = adset.api_get(fields=[AdSet.Field.targeting])
+            targeting = data.get(AdSet.Field.targeting, {})
+
+            # Parse geo_locations into a simpler format
+            geo_locations = targeting.get("geo_locations", {})
+            locations = []
+
+            # Countries
+            for country_code in geo_locations.get("countries", []):
+                locations.append({
+                    "key": country_code,
+                    "type": "country",
+                    "name": country_code,
+                    "country_code": country_code,
+                    "display_name": country_code
+                })
+
+            # Regions
+            for region in geo_locations.get("regions", []):
+                locations.append({
+                    "key": region.get("key"),
+                    "type": "region",
+                    "name": region.get("name", ""),
+                    "country_code": region.get("country"),
+                    "display_name": f"{region.get('name', '')} ({region.get('country', '')})"
+                })
+
+            # Cities
+            for city in geo_locations.get("cities", []):
+                locations.append({
+                    "key": city.get("key"),
+                    "type": "city",
+                    "name": city.get("name", ""),
+                    "country_code": city.get("country"),
+                    "display_name": f"{city.get('name', '')}, {city.get('region', '')} ({city.get('country', '')})"
+                })
+
+            return {
+                "locations": locations,
+                "age_min": targeting.get("age_min", 18),
+                "age_max": targeting.get("age_max", 65)
+            }
+        except Exception as e:
+            logger.error(f"Failed to fetch adset {adset_id} targeting: {str(e)}")
+            raise
+
+    def get_ad_creative(self, ad_id: str) -> Dict[str, Any]:
+        """
+        Fetch current creative details for an ad from Facebook API.
+        Returns title, body, link_url, call_to_action, lead_form_id, image_url, video_url.
+        """
+        try:
+            logger.info(f"Fetching creative for ad {ad_id}")
+            ad = Ad(ad_id)
+            ad_data = ad.api_get(fields=[Ad.Field.creative])
+            creative_ref = ad_data.get(Ad.Field.creative, {})
+            creative_id = creative_ref.get('id')
+
+            if not creative_id:
+                logger.warning(f"No creative ID found for ad {ad_id}")
+                return {}
+
+            creative = AdCreative(creative_id)
+            creative_data = creative.api_get(fields=[
+                AdCreative.Field.object_story_spec,
+                AdCreative.Field.thumbnail_url,
+                AdCreative.Field.title,
+                AdCreative.Field.body,
+                AdCreative.Field.link_url
+            ])
+
+            logger.info(f"Creative data for ad {ad_id}: {creative_data}")
+
+            spec = creative_data.get(AdCreative.Field.object_story_spec, {})
+
+            # Try different data structures - link_data, template_data, or video_data
+            link_data = spec.get('link_data', {}) or spec.get('template_data', {}) or spec.get('video_data', {}) or {}
+
+            logger.info(f"Link data for ad {ad_id}: {link_data}")
+
+            # Get image/video URL
+            image_url = None
+            video_url = None
+            if link_data.get('picture'):
+                image_url = link_data.get('picture')
+            elif creative_data.get(AdCreative.Field.thumbnail_url):
+                image_url = creative_data.get(AdCreative.Field.thumbnail_url)
+
+            # Get CTA type
+            cta = link_data.get('call_to_action', {})
+            cta_type = cta.get('type', 'LEARN_MORE') if isinstance(cta, dict) else 'LEARN_MORE'
+
+            # Try multiple field names for title/body/link
+            title = (
+                link_data.get('name', '') or
+                link_data.get('title', '') or
+                creative_data.get(AdCreative.Field.title, '') or
+                ''
+            )
+            body = (
+                link_data.get('message', '') or
+                link_data.get('description', '') or
+                creative_data.get(AdCreative.Field.body, '') or
+                ''
+            )
+            link_url = (
+                link_data.get('link', '') or
+                creative_data.get(AdCreative.Field.link_url, '') or
+                ''
+            )
+
+            return {
+                "title": title,
+                "body": body,
+                "link_url": link_url,
+                "call_to_action": cta_type,
+                "lead_form_id": link_data.get('lead_gen_form_id', ''),
+                "image_url": image_url,
+                "video_url": video_url
+            }
+        except Exception as e:
+            logger.error(f"Failed to fetch ad {ad_id} creative: {str(e)}")
+            raise

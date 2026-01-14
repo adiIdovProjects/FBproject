@@ -137,7 +137,7 @@ class ProactiveAnalysisService:
                 'changes': changes
             }
 
-            context_json = json.dumps(context, indent=2, default=str)
+            context_json = json.dumps(context, indent=2, default=str, ensure_ascii=False)
 
             # Call Gemini
             response = self.client.generate_content(
@@ -226,7 +226,7 @@ class ProactiveAnalysisService:
                 'week_over_week_changes': changes
             }
 
-            context_json = json.dumps(context, indent=2, default=str)
+            context_json = json.dumps(context, indent=2, default=str, ensure_ascii=False)
 
             # Call Gemini
             response = self.client.models.generate_content(
@@ -377,15 +377,21 @@ class ProactiveAnalysisService:
             priority: Filter by priority ('critical', 'warning', 'opportunity', 'info')
             limit: Max number of insights to return
             unread_only: Only return unread insights
-            account_id: Filter by account
+            account_id: Filter by specific account
 
         Returns:
-            List of insights
+            List of insights (filtered by user's accounts)
         """
         query = self.db.query(DimInsightHistory)
 
+        # Filter by user's accounts for data isolation
         if account_id:
             query = query.filter(DimInsightHistory.account_id == account_id)
+        else:
+            # Get user's account IDs and filter
+            user_account_ids = self._get_user_account_ids()
+            if user_account_ids:
+                query = query.filter(DimInsightHistory.account_id.in_(user_account_ids))
 
         if priority:
             query = query.filter(DimInsightHistory.priority == priority)
@@ -410,11 +416,20 @@ class ProactiveAnalysisService:
         ]
 
     def mark_as_read(self, insight_id: int) -> bool:
-        """Mark an insight as read"""
+        """Mark an insight as read (only if it belongs to user's accounts)"""
         try:
-            insight = self.db.query(DimInsightHistory).filter(
+            # Get user's account IDs for validation
+            user_account_ids = self._get_user_account_ids()
+
+            query = self.db.query(DimInsightHistory).filter(
                 DimInsightHistory.insight_id == insight_id
-            ).first()
+            )
+
+            # Filter by user's accounts for security
+            if user_account_ids:
+                query = query.filter(DimInsightHistory.account_id.in_(user_account_ids))
+
+            insight = query.first()
 
             if insight:
                 insight.is_read = True

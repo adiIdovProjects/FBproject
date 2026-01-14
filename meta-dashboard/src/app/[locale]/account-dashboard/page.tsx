@@ -24,11 +24,10 @@ import DateFilter from '../../../components/DateFilter';
 import MetricCard from '../../../components/dashboard/MetricCard';
 import SkeletonMetricCard from '../../../components/dashboard/SkeletonMetricCard';
 import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsChart';
-// Output removed by refactor
-
+import DayOfWeekTable from '../../../components/dashboard/DayOfWeekTable';
 
 // Services & Types
-import { fetchMetricsWithTrends } from '../../../services/dashboard.service';
+import { fetchMetricsWithTrends, fetchDayOfWeekBreakdown } from '../../../services/dashboard.service';
 // Output removed by refactor
 
 import { MetricType, DateRange } from '../../../types/dashboard.types';
@@ -77,6 +76,8 @@ export default function PerformanceDashboard() {
     status: 'not_started' | 'in_progress' | 'completed' | 'failed';
     progress_percent: number;
   } | null>(null);
+  // Track if user saw sync in progress (only show completed banner after waiting)
+  const [sawSyncInProgress, setSawSyncInProgress] = useState(false);
 
   // Poll sync status every 2 seconds
   useEffect(() => {
@@ -89,6 +90,10 @@ export default function PerformanceDashboard() {
         });
         if (response.ok) {
           const data = await response.json();
+          // Track if we ever saw in_progress state
+          if (data.status === 'in_progress') {
+            setSawSyncInProgress(true);
+          }
           setSyncStatus(data);
         }
       } catch (error) {
@@ -134,7 +139,16 @@ export default function PerformanceDashboard() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Output removed by refactor
+  // React Query: Fetch Day of Week Breakdown
+  const {
+    data: dayOfWeekData,
+    isLoading: isDayOfWeekLoading,
+  } = useQuery({
+    queryKey: ['day-of-week-breakdown', startDate, endDate, selectedAccountId],
+    queryFn: () => fetchDayOfWeekBreakdown({ startDate, endDate }, selectedAccountId),
+    enabled: !!startDate && !!endDate,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
 
   const isLoading = isMetricsLoading;
@@ -181,8 +195,8 @@ export default function PerformanceDashboard() {
         </div>
       )}
 
-      {/* Sync Completed Banner */}
-      {syncStatus && syncStatus.status === 'completed' && (
+      {/* Sync Completed Banner - only show if user waited for sync */}
+      {syncStatus && syncStatus.status === 'completed' && sawSyncInProgress && (
         <div className="mb-6 bg-green-900/20 border border-green-500/30 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-green-400" />
@@ -313,6 +327,17 @@ export default function PerformanceDashboard() {
         currency={currency}
         granularity={granularity}
       />
+
+      {/* Day of Week Performance Table */}
+      <div className="mt-8">
+        <DayOfWeekTable
+          data={dayOfWeekData || []}
+          isLoading={isDayOfWeekLoading}
+          currency={currency}
+          isRTL={isRTL}
+          hasROAS={hasROAS ?? undefined}
+        />
+      </div>
     </MainLayout>
   );
 }

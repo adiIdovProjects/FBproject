@@ -238,3 +238,275 @@ class AdminRepository:
         """))
 
         return [{"job_title": row[0], "count": row[1]} for row in result]
+
+    # ==================== Revenue Metrics ====================
+
+    def get_paying_customers_count(self) -> int:
+        """Count users with active paid subscriptions"""
+        result = self.db.execute(text("""
+            SELECT COUNT(DISTINCT user_id)
+            FROM user_subscription
+            WHERE status = 'active' AND plan_type != 'free'
+        """))
+        return result.scalar() or 0
+
+    def get_subscription_stats(self) -> Dict[str, Any]:
+        """Get subscription counts by status and plan"""
+        # By status
+        status_result = self.db.execute(text("""
+            SELECT status, COUNT(*) as count
+            FROM user_subscription
+            GROUP BY status
+        """))
+        by_status = {row[0]: row[1] for row in status_result}
+
+        # By plan
+        plan_result = self.db.execute(text("""
+            SELECT plan_type, COUNT(*) as count
+            FROM user_subscription
+            GROUP BY plan_type
+        """))
+        by_plan = {row[0]: row[1] for row in plan_result}
+
+        # Trials ending soon (next 7 days)
+        trials_ending = self.db.execute(text("""
+            SELECT COUNT(*)
+            FROM user_subscription
+            WHERE status = 'trialing'
+              AND trial_end IS NOT NULL
+              AND trial_end <= NOW() + INTERVAL '7 days'
+              AND trial_end > NOW()
+        """)).scalar() or 0
+
+        return {
+            "by_status": by_status,
+            "by_plan": by_plan,
+            "trials_ending_soon": trials_ending
+        }
+
+    def get_churn_rate(self, days: int = 30) -> float:
+        """Calculate churn rate for the period"""
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        # Cancelled in period
+        cancelled = self.db.execute(text("""
+            SELECT COUNT(*)
+            FROM user_subscription
+            WHERE cancelled_at >= :cutoff
+        """), {"cutoff": cutoff}).scalar() or 0
+
+        # Total active at start of period (approximation)
+        total_active = self.db.execute(text("""
+            SELECT COUNT(*)
+            FROM user_subscription
+            WHERE status IN ('active', 'cancelled')
+        """)).scalar() or 0
+
+        if total_active == 0:
+            return 0.0
+
+        return round((cancelled / total_active) * 100, 2)
+
+    def get_trial_to_paid_conversion(self, days: int = 90) -> float:
+        """Calculate trial to paid conversion rate"""
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        # Count users who started trial in period
+        trials_started = self.db.execute(text("""
+            SELECT COUNT(*)
+            FROM subscription_history
+            WHERE event_type = 'trial_start'
+              AND created_at >= :cutoff
+        """), {"cutoff": cutoff}).scalar() or 0
+
+        if trials_started == 0:
+            return 0.0
+
+        # Count of those who then activated
+        activated = self.db.execute(text("""
+            SELECT COUNT(DISTINCT sh1.user_id)
+            FROM subscription_history sh1
+            WHERE sh1.event_type = 'trial_start'
+              AND sh1.created_at >= :cutoff
+              AND EXISTS (
+                  SELECT 1 FROM subscription_history sh2
+                  WHERE sh2.user_id = sh1.user_id
+                    AND sh2.event_type = 'activated'
+                    AND sh2.created_at > sh1.created_at
+              )
+        """), {"cutoff": cutoff}).scalar() or 0
+
+        return round((activated / trials_started) * 100, 2)
+
+    # ==================== Account Health Metrics ====================
+
+    def get_account_health_overview(self) -> Dict[str, Any]:
+        """Get overview of account health metrics"""
+        # Total linked accounts
+        total = self.db.execute(text("""
+            SELECT COUNT(DISTINCT account_id) FROM user_ad_account
+        """)).scalar() or 0
+
+        # Accounts with recent data (last 7 days)
+        active = self.db.execute(text("""
+            SELECT COUNT(DISTINCT f.account_id)
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            WHERE d.date >= CURRENT_DATE - INTERVAL '7 days'
+        """)).scalar() or 0
+
+        # Stale accounts (no data in 7+ days but have historical data)
+        stale = self.db.execute(text("""
+            SELECT COUNT(DISTINCT ua.account_id)
+            FROM user_ad_account ua
+            WHERE ua.account_id IN (
+                SELECT DISTINCT account_id FROM fact_core_metrics
+            )
+            AND ua.account_id NOT IN (
+                SELECT DISTINCT f.account_id
+                FROM fact_core_metrics f
+                JOIN dim_date d ON f.date_id = d.date_id
+                WHERE d.date >= CURRENT_DATE - INTERVAL '7 days'
+            )
+        """)).scalar() or 0
+
+        return {
+            "total_accounts": total,
+            "active_accounts": active,
+            "stale_accounts": stale,
+            "no_data_accounts": total - active - stale if total > active + stale else 0
+        }
+
+    def get_total_spend(self, days: int = 30) -> float:
+        """Get total spend across all accounts for period"""
+        result = self.db.execute(text("""
+            SELECT COALESCE(SUM(f.spend), 0)
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            WHERE d.date >= CURRENT_DATE - INTERVAL :days DAY
+        """), {"days": days})
+        return float(result.scalar() or 0)
+
+    def get_account_last_sync_dates(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Get last data date for each account"""
+        result = self.db.execute(text("""
+            SELECT
+                ua.account_id,
+                a.account_name,
+                MAX(d.date) as last_data_date
+            FROM user_ad_account ua
+            LEFT JOIN dim_account a ON ua.account_id = a.account_id
+            LEFT JOIN fact_core_metrics f ON ua.account_id = f.account_id
+            LEFT JOIN dim_date d ON f.date_id = d.date_id
+            GROUP BY ua.account_id, a.account_name
+            ORDER BY last_data_date DESC NULLS LAST
+            LIMIT :limit
+        """), {"limit": limit})
+
+        return [
+            {
+                "account_id": row[0],
+                "account_name": row[1] or "Unknown",
+                "last_data_date": str(row[2]) if row[2] else None
+            }
+            for row in result
+        ]
+
+    # ==================== Feature Adoption Metrics ====================
+
+    def get_feature_usage_stats(self, days: int = 30) -> List[Dict[str, Any]]:
+        """Get feature usage statistics from page views"""
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        # Map page paths to features
+        result = self.db.execute(text("""
+            SELECT
+                CASE
+                    WHEN page_path LIKE '%/campaigns%' THEN 'campaigns'
+                    WHEN page_path LIKE '%/creatives%' THEN 'creatives'
+                    WHEN page_path LIKE '%/targeting%' THEN 'targeting'
+                    WHEN page_path LIKE '%/insights%' THEN 'insights'
+                    WHEN page_path LIKE '%/reports%' THEN 'reports'
+                    WHEN page_path LIKE '%/uploader%' THEN 'uploader'
+                    WHEN page_path LIKE '%/ai-investigator%' THEN 'ai_investigator'
+                    WHEN page_path LIKE '%/account-dashboard%' THEN 'dashboard'
+                    ELSE 'other'
+                END as feature,
+                COUNT(DISTINCT user_id) as unique_users,
+                COUNT(*) as total_views
+            FROM page_view
+            WHERE created_at >= :cutoff
+            GROUP BY feature
+            ORDER BY unique_users DESC
+        """), {"cutoff": cutoff})
+
+        # Get total active users in period for adoption rate
+        total_active = self.db.execute(text("""
+            SELECT COUNT(DISTINCT user_id)
+            FROM page_view
+            WHERE created_at >= :cutoff
+        """), {"cutoff": cutoff}).scalar() or 1
+
+        return [
+            {
+                "feature": row[0],
+                "unique_users": row[1],
+                "total_views": row[2],
+                "adoption_rate": round((row[1] / total_active) * 100, 1)
+            }
+            for row in result
+            if row[0] != 'other'
+        ]
+
+    # ==================== Error Trends ====================
+
+    def get_error_trends(self, days: int = 30) -> List[Dict[str, Any]]:
+        """Get error counts by day and type"""
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        result = self.db.execute(text("""
+            SELECT
+                DATE(created_at) as date,
+                event_type,
+                COUNT(*) as count
+            FROM audit_log
+            WHERE created_at >= :cutoff
+              AND (event_type LIKE '%ERROR%' OR event_type LIKE '%FAIL%')
+            GROUP BY DATE(created_at), event_type
+            ORDER BY date DESC
+        """), {"cutoff": cutoff})
+
+        # Group by date
+        trends = {}
+        for row in result:
+            date_str = str(row[0])
+            if date_str not in trends:
+                trends[date_str] = {"date": date_str}
+            trends[date_str][row[1]] = row[2]
+
+        return list(trends.values())
+
+    def get_error_summary(self, days: int = 30) -> List[Dict[str, Any]]:
+        """Get error counts grouped by type"""
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        result = self.db.execute(text("""
+            SELECT
+                event_type,
+                COUNT(*) as count,
+                COUNT(DISTINCT user_id) as affected_users
+            FROM audit_log
+            WHERE created_at >= :cutoff
+              AND (event_type LIKE '%ERROR%' OR event_type LIKE '%FAIL%')
+            GROUP BY event_type
+            ORDER BY count DESC
+        """), {"cutoff": cutoff})
+
+        return [
+            {
+                "error_type": row[0],
+                "count": row[1],
+                "affected_users": row[2]
+            }
+            for row in result
+        ]

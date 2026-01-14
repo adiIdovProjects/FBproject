@@ -19,10 +19,41 @@ from backend.api.services.campaign_insights_service import CampaignInsightsServi
 from backend.api.services.proactive_analysis_service import ProactiveAnalysisService
 
 router = APIRouter(
-    prefix="/api/v1/insights", 
+    prefix="/api/v1/insights",
     tags=["insights"],
     dependencies=[Depends(get_current_user)]
 )
+
+
+@router.get("/overview-summary")
+def get_overview_summary(
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language (e.g., en, he, fr)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get overview summary with daily/weekly/monthly insights, improvement checks, and TL;DR.
+    No date filter needed - uses fixed comparison periods.
+
+    Returns:
+    - daily: Yesterday vs previous 7-day average
+    - weekly: This week vs previous 4 weeks average
+    - monthly: This month vs previous 3 months average
+    - improvement_checks: Learning phase, pixel status checks
+    - summary: TL;DR bullet points
+    """
+    try:
+        service = InsightsService(db, current_user.id)
+        return service.get_overview_summary(
+            user_id=current_user.id,
+            account_id=account_id,
+            locale=locale
+        )
+    except Exception as e:
+        import traceback
+        logger.error(f"Failed to generate overview summary: {str(e)}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate overview summary: {str(e)}")
 
 
 @router.get("/summary")
@@ -91,6 +122,8 @@ def get_deep_insights(
 async def get_historical_analysis(
     lookback_days: int = Query(90, description="Number of days to analyze (30/60/90)", ge=7, le=365),
     campaign_id: Optional[int] = Query(None, description="Optional campaign ID filter"),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -108,11 +141,16 @@ async def get_historical_analysis(
     """
     try:
         service = HistoricalInsightsService(db, current_user.id)
-        account_ids = service._get_user_account_ids()
+        # If specific account_id provided, use only that account
+        if account_id:
+            account_ids = [int(account_id)]
+        else:
+            account_ids = service._get_user_account_ids()
         result = await service.analyze_historical_trends(
             lookback_days=lookback_days,
             campaign_id=campaign_id,
-            account_ids=account_ids
+            account_ids=account_ids,
+            locale=locale
         )
         return result
     except Exception as e:
@@ -123,6 +161,7 @@ async def get_historical_analysis(
 async def get_campaign_deep_dive(
     campaign_id: int,
     lookback_days: int = Query(90, description="Number of days to analyze", ge=7, le=365),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -131,12 +170,19 @@ async def get_campaign_deep_dive(
     Tracks performance evolution, detects ad fatigue, and provides campaign-specific insights.
 
     Returns daily metrics with moving averages and AI analysis focused on this campaign.
+    User-specific: Only analyzes campaigns from accounts linked to the current user.
     """
     try:
         service = HistoricalInsightsService(db, current_user.id)
+        # If specific account_id provided, use only that account
+        if account_id:
+            account_ids = [int(account_id)]
+        else:
+            account_ids = service._get_user_account_ids()
         result = await service.get_campaign_deep_dive(
             campaign_id=campaign_id,
-            lookback_days=lookback_days
+            lookback_days=lookback_days,
+            account_ids=account_ids
         )
         return result
     except Exception as e:
@@ -147,6 +193,8 @@ async def get_campaign_deep_dive(
 async def get_campaign_analysis(
     start_date: date = Query(..., description="Start date for analysis"),
     end_date: date = Query(..., description="End date for analysis"),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -160,14 +208,23 @@ async def get_campaign_analysis(
     """
     try:
         service = CampaignInsightsService(db, current_user.id)
-        account_ids = [acc.account_id for acc in current_user.ad_accounts] if current_user.ad_accounts else []
+        # If specific account_id provided, use only that account
+        if account_id:
+            account_ids = [int(account_id)]
+        else:
+            account_ids = [acc.account_id for acc in current_user.ad_accounts] if current_user.ad_accounts else []
+
+        logger.info(f"[Campaign Analysis] account_id param: {account_id}, resolved account_ids: {account_ids}")
+
         result = await service.analyze_campaign_performance(
             start_date=start_date,
             end_date=end_date,
-            account_ids=account_ids
+            account_ids=account_ids,
+            locale=locale
         )
         return result
     except Exception as e:
+        logger.error(f"[Campaign Analysis] Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate campaign analysis: {str(e)}")
 
 
@@ -176,6 +233,8 @@ async def get_creative_analysis(
     start_date: date = Query(..., description="Start date for analysis"),
     end_date: date = Query(..., description="End date for analysis"),
     campaign_id: Optional[int] = Query(None, description="Optional campaign ID filter"),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -191,12 +250,17 @@ async def get_creative_analysis(
     """
     try:
         service = CreativeInsightsService(db, current_user.id)
-        account_ids = service._get_user_account_ids()
+        # If specific account_id provided, use only that account
+        if account_id:
+            account_ids = [int(account_id)]
+        else:
+            account_ids = service._get_user_account_ids()
         result = await service.analyze_creative_patterns(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
-            account_ids=account_ids
+            account_ids=account_ids,
+            locale=locale
         )
         return result
     except Exception as e:
@@ -206,6 +270,8 @@ async def get_creative_analysis(
 @router.get("/creative-fatigue")
 async def get_creative_fatigue_report(
     lookback_days: int = Query(30, description="Number of days to analyze", ge=7, le=90),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
+    locale: str = Query("en", description="Locale for insight language"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -218,10 +284,20 @@ async def get_creative_fatigue_report(
     - Monitor: CTR declined 15-20% (watch closely)
 
     Returns actionable refresh recommendations prioritized by business impact.
+    User-specific: Only analyzes creatives from accounts linked to the current user.
     """
     try:
         service = CreativeInsightsService(db, current_user.id)
-        result = await service.get_creative_fatigue_report(lookback_days=lookback_days)
+        # If specific account_id provided, use only that account
+        if account_id:
+            account_ids = [int(account_id)]
+        else:
+            account_ids = service._get_user_account_ids()
+        result = await service.get_creative_fatigue_report(
+            lookback_days=lookback_days,
+            locale=locale,
+            account_ids=account_ids
+        )
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate fatigue report: {str(e)}")
@@ -232,6 +308,7 @@ def get_latest_insights(
     priority: Optional[str] = Query(None, description="Filter by priority: critical, warning, opportunity, info"),
     limit: int = Query(10, description="Number of insights to return", ge=1, le=50),
     unread_only: bool = Query(False, description="Only return unread insights"),
+    account_id: Optional[str] = Query(None, description="Filter by specific ad account ID"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -248,14 +325,17 @@ def get_latest_insights(
     - info: General updates and trends
 
     Returns stored insights ordered by generation time (newest first).
+    User-specific: Only returns insights for accounts linked to the current user.
     """
     try:
         service = ProactiveAnalysisService(db, current_user.id)
+        # If specific account_id provided, use that; otherwise filter by user's accounts
+        filter_account_id = int(account_id) if account_id else None
         insights = service.get_latest_insights(
             priority=priority,
             limit=limit,
             unread_only=unread_only,
-            account_id=None
+            account_id=filter_account_id
         )
         return {
             'insights': insights,
@@ -293,6 +373,7 @@ def mark_insight_as_read(
 @router.post("/generate-now")
 def generate_insights_now(
     insight_type: str = Query(..., description="Type of insight to generate: daily or weekly"),
+    account_id: Optional[str] = Query(None, description="Specific ad account ID to generate insights for"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -302,14 +383,16 @@ def generate_insights_now(
     insight_type: 'daily' or 'weekly'
 
     Note: Normally insights are auto-generated by the scheduler.
+    User-specific: Generates insights only for accounts linked to the current user.
     """
     try:
         service = ProactiveAnalysisService(db, current_user.id)
+        filter_account_id = int(account_id) if account_id else None
 
         if insight_type == 'daily':
-            insights = service.generate_daily_insights(account_id=None)
+            insights = service.generate_daily_insights(account_id=filter_account_id)
         elif insight_type == 'weekly':
-            insights = service.generate_weekly_insights(account_id=None)
+            insights = service.generate_weekly_insights(account_id=filter_account_id)
         else:
             raise HTTPException(status_code=400, detail="insight_type must be 'daily' or 'weekly'")
 

@@ -263,6 +263,102 @@ export async function exportToExcel(dateRange: DateRange): Promise<Blob> {
 }
 
 /**
+ * Fetch breakdown data with period comparison (for targeting page)
+ */
+export async function fetchBreakdownWithComparison(
+  dateRange: DateRange,
+  breakdownType: BreakdownType,
+  groupBy: 'age' | 'gender' | 'both' = 'both',
+  status: string[] = [],
+  searchQuery: string = '',
+  accountId?: string | null,
+  creativeIds?: number[] | null,
+  campaignIds?: number[] | null
+): Promise<BreakdownRow[]> {
+  const { startDate, endDate } = dateRange;
+
+  // Only adset breakdown supports comparison for now
+  if (breakdownType !== 'adset') {
+    return fetchBreakdown(dateRange, breakdownType, groupBy, status, searchQuery, accountId, creativeIds, campaignIds);
+  }
+
+  const endpoint = '/api/v1/metrics/breakdowns/adset/comparison';
+
+  const params: any = {
+    start_date: startDate,
+    end_date: endDate
+  };
+
+  if (status.length > 0) {
+    params.status = status;
+  }
+
+  if (searchQuery) {
+    params.search = searchQuery;
+  }
+
+  if (accountId) {
+    params.account_id = accountId;
+  }
+
+  if (creativeIds && creativeIds.length > 0) {
+    params.creative_ids = creativeIds;
+  }
+
+  if (campaignIds && campaignIds.length > 0) {
+    params.campaign_ids = campaignIds;
+  }
+
+  try {
+    const response = await apiClient.get(endpoint, {
+      params,
+      paramsSerializer: {
+        indexes: null
+      }
+    });
+
+    const data = response.data;
+
+    // Map backend response to BreakdownRow format with comparison fields
+    return data.map((item: any) => ({
+      name: item.adset_name || 'Unknown Adset',
+      spend: item.spend || 0,
+      clicks: item.clicks || 0,
+      impressions: item.impressions || 0,
+      ctr: item.ctr || 0,
+      cpc: item.cpc || 0,
+      conversions: item.conversions || 0,
+      conversion_value: item.conversion_value || 0,
+      roas: item.roas || 0,
+      cpa: item.cpa || 0,
+      adset_id: item.adset_id,
+      adset_name: item.adset_name,
+      targeting_type: item.targeting_type,
+      targeting_summary: item.targeting_summary,
+      purchases: item.purchases || 0,
+      purchase_value: item.purchase_value || 0,
+      // Comparison fields
+      previous_spend: item.previous_spend,
+      previous_clicks: item.previous_clicks,
+      previous_impressions: item.previous_impressions,
+      previous_conversions: item.previous_conversions,
+      previous_ctr: item.previous_ctr,
+      previous_cpc: item.previous_cpc,
+      previous_cpa: item.previous_cpa,
+      spend_change_pct: item.spend_change_pct,
+      clicks_change_pct: item.clicks_change_pct,
+      conversions_change_pct: item.conversions_change_pct,
+      ctr_change_pct: item.ctr_change_pct,
+      cpc_change_pct: item.cpc_change_pct,
+      cpa_change_pct: item.cpa_change_pct,
+    }));
+  } catch (error) {
+    console.error('[Campaigns Service] Error fetching breakdown comparison data:', error);
+    throw error;
+  }
+}
+
+/**
  * Compare multiple campaigns side-by-side
  */
 export async function fetchCampaignComparison(

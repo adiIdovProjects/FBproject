@@ -56,8 +56,8 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         is_new_user = False
 
         if not user:
-            # Check if user exists by email
-            user = db.query(User).filter(User.email == g_user["email"]).first()
+            # Check if user exists by email (primary or secondary)
+            user = repo.get_user_by_any_email(g_user["email"])
             if user:
                 # Link Google ID to existing user
                 user.google_id = g_user["sub"]

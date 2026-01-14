@@ -9,6 +9,7 @@ import {
   DateRange,
   OverviewMetrics,
   MetricTrend,
+  DayOfWeekBreakdown,
 } from '../types/dashboard.types';
 
 /**
@@ -156,6 +157,33 @@ export async function fetchMetricsWithTrends(dateRange: DateRange, accountId?: s
     };
   } catch (error) {
     console.error('[Dashboard Service] Error fetching metrics with trends:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch day of week breakdown from the backend
+ */
+export async function fetchDayOfWeekBreakdown(
+  dateRange: DateRange,
+  accountId?: string | null
+): Promise<DayOfWeekBreakdown[]> {
+  try {
+    const params: any = {
+      start_date: dateRange.startDate,
+      end_date: dateRange.endDate,
+    };
+    if (accountId) {
+      params.account_id = accountId;
+    }
+
+    const response = await apiClient.get<DayOfWeekBreakdown[]>(
+      '/api/v1/metrics/breakdowns/day-of-week',
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching day of week breakdown:', error);
     throw error;
   }
 }

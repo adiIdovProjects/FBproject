@@ -7,11 +7,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { ChevronRight, ChevronDown, Pause, Play, Loader2, Pencil, X, Check } from 'lucide-react';
+import { ChevronRight, ChevronDown, Pause, Play, Loader2, Pencil, X, Check, Info } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
 import DateFilter from '../../../components/DateFilter';
+import { AIHelpPanel } from '../../../components/campaigns/AIHelpPanel';
 
 // Services & Types
 import { mutationsService, BudgetInfo } from '../../../services/mutations.service';
@@ -27,7 +28,9 @@ export default function ManagePage() {
   const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar' || locale === 'he';
-  const { selectedAccountId, currency } = useAccount();
+  const { selectedAccountId, linkedAccounts } = useAccount();
+  const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
+  const currency = selectedAccount?.currency || 'USD';
 
   // Initialize date range
   const initialDates = useMemo(() => calculateDateRange(DEFAULT_DATE_RANGE_KEY), []);
@@ -396,7 +399,7 @@ export default function ManagePage() {
       title={t('nav.campaign_control')}
       description={t('manage.subtitle')}
     >
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
         <DateFilter
           startDate={startDate}
           endDate={endDate}
@@ -407,6 +410,17 @@ export default function ManagePage() {
         />
       </div>
 
+      {/* Quick Guide */}
+      <div className="flex items-start gap-3 p-4 mb-6 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+        <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+        <div className="text-sm text-gray-300">
+          <span className="text-blue-300 font-medium">Campaign</span> → <span className="text-blue-300 font-medium">Ad Set</span> → <span className="text-blue-300 font-medium">Ad</span>. Click the arrow to expand. If a campaign or ad set is paused, all items inside it won't run even if they show as active.
+        </div>
+      </div>
+
+      {/* AI Help Panel */}
+      <AIHelpPanel accountId={selectedAccountId} />
+
       {/* Table */}
       <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
@@ -415,6 +429,7 @@ export default function ManagePage() {
                 <tr className="bg-black/20 border-b border-border-subtle">
                   <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase w-12"></th>
                   <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase min-w-[250px]">{t('common.name')}</th>
+                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase">{t('common.actions')}</th>
                   <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase">{t('common.status')}</th>
                   <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('manage.daily_budget')}</th>
                   <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.spend')}</th>
@@ -425,7 +440,6 @@ export default function ManagePage() {
                   <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.conversions')}</th>
                   <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpa')}</th>
                   <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.conversion_rate')}</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
@@ -467,6 +481,9 @@ export default function ManagePage() {
                           <div className="font-bold text-white">{campaign.campaign_name}</div>
                           <div className="text-[10px] text-gray-500 font-mono">{campaign.campaign_id}</div>
                         </td>
+                        <td className="px-4 py-4 text-center">
+                          {renderActionButton('campaign', campaign.campaign_id, campaign.campaign_status)}
+                        </td>
                         <td className="px-4 py-4">{renderStatusBadge(campaign.campaign_status)}</td>
                         <td className="px-4 py-4 text-right text-gray-300">
                           {renderBudgetCell('campaign', campaign.campaign_id, isCbo)}
@@ -479,9 +496,6 @@ export default function ManagePage() {
                         <td className="px-4 py-4 text-right text-gray-300">{formatNumber(campaign.conversions)}</td>
                         <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(campaign.cpa)}</td>
                         <td className="px-4 py-4 text-right text-gray-300">{formatPercent(campaign.conv_rate)}</td>
-                        <td className="px-4 py-4 text-center">
-                          {renderActionButton('campaign', campaign.campaign_id, campaign.campaign_status)}
-                        </td>
                       </tr>
 
                       {/* Ad Sets (when expanded) */}
@@ -514,6 +528,9 @@ export default function ManagePage() {
                                     <div className="text-gray-300 pl-4">{adset.adset_name}</div>
                                     <div className="text-[10px] text-gray-600 font-mono pl-4">{adset.adset_id}</div>
                                   </td>
+                                  <td className="px-4 py-3 text-center">
+                                    {renderActionButton('adset', adset.adset_id, adset.adset_status)}
+                                  </td>
                                   <td className="px-4 py-3">{renderStatusBadge(adset.adset_status)}</td>
                                   <td className="px-4 py-3 text-right text-gray-400">
                                     {renderBudgetCell('adset', adset.adset_id, isCbo)}
@@ -526,9 +543,6 @@ export default function ManagePage() {
                                   <td className="px-4 py-3 text-right text-gray-400">{formatNumber(adset.conversions)}</td>
                                   <td className="px-4 py-3 text-right text-gray-400">{formatCurrencyDecimal(adset.cpa)}</td>
                                   <td className="px-4 py-3 text-right text-gray-400">{formatPercent(adset.conv_rate)}</td>
-                                  <td className="px-4 py-3 text-center">
-                                    {renderActionButton('adset', adset.adset_id, adset.adset_status)}
-                                  </td>
                                 </tr>
 
                                 {/* Ads (when expanded) */}
@@ -548,6 +562,9 @@ export default function ManagePage() {
                                             <div className="text-gray-400 pl-8 text-sm">{ad.ad_name}</div>
                                             <div className="text-[10px] text-gray-600 font-mono pl-8">{ad.ad_id}</div>
                                           </td>
+                                          <td className="px-4 py-2 text-center">
+                                            {renderActionButton('ad', ad.ad_id, ad.ad_status)}
+                                          </td>
                                           <td className="px-4 py-2">{renderStatusBadge(ad.ad_status)}</td>
                                           <td className="px-4 py-2 text-right text-gray-500 text-sm">-</td>
                                           <td className="px-4 py-2 text-right text-gray-400 text-sm">{formatCurrency(ad.spend)}</td>
@@ -558,9 +575,6 @@ export default function ManagePage() {
                                           <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatNumber(ad.conversions)}</td>
                                           <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatCurrencyDecimal(ad.cpa)}</td>
                                           <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatPercent(ad.conv_rate)}</td>
-                                          <td className="px-4 py-2 text-center">
-                                            {renderActionButton('ad', ad.ad_id, ad.ad_status)}
-                                          </td>
                                         </tr>
                                       ))
                                     )}

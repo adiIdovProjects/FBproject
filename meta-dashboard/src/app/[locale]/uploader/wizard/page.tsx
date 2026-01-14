@@ -5,16 +5,52 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
     ArrowLeft, CheckCircle, Target, Users,
-    Upload, Loader2, DollarSign, MousePointer, X, Search, MapPin
+    Upload, Loader2, DollarSign, MousePointer, X, Search, MapPin, Lightbulb
 } from 'lucide-react';
-import { mutationsService, SmartCampaignRequest, GeoLocation } from '@/services/mutations.service';
+import { mutationsService, SmartCampaignRequest, GeoLocation, CustomAudience, Interest, InterestTarget } from '@/services/mutations.service';
 import { useAccount } from '@/context/AccountContext';
+import { useTranslations } from 'next-intl';
+
+// Inline Tip component
+const Tip = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-300 mt-3">
+        <Lightbulb className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
+        <span>{children}</span>
+    </div>
+);
+
+// Step indicator component
+const StepIndicator = ({ currentStep }: { currentStep: number }) => (
+    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
+        <div className="flex gap-1.5">
+            {[1, 2, 3].map(s => (
+                <div
+                    key={s}
+                    className={`w-10 h-1.5 rounded-full transition-colors ${currentStep >= s ? 'bg-accent' : 'bg-gray-700'}`}
+                />
+            ))}
+        </div>
+        <span className="text-sm text-gray-400">Step {currentStep} of 3</span>
+    </div>
+);
+
+// Quality check item component
+const QualityCheck = ({ passed, label, hint }: { passed: boolean; label: string; hint?: string }) => (
+    <div className="flex items-center gap-2 text-xs">
+        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${passed ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-500'}`}>
+            {passed ? <CheckCircle className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
+        </div>
+        <span className={passed ? 'text-green-400' : 'text-gray-500'}>{label}</span>
+        {hint && <span className="text-gray-600 ml-auto">{hint}</span>}
+    </div>
+);
 
 export default function NewCampaignWizard() {
     const router = useRouter();
     const params = useParams();
     const locale = params.locale as string;
-    const { selectedAccountId, linkedAccounts } = useAccount();
+    const t = useTranslations();
+    const { selectedAccountId, linkedAccounts, isLoading: isAccountLoading } = useAccount();
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,18 +84,45 @@ export default function NewCampaignWizard() {
         leadFormId: ''
     });
 
-    // Pixel state for SALES objective
+    // Pixel state for SALES and LEADS (website) objectives
     const [pixels, setPixels] = useState<Array<{ id: string; name: string; code?: string }>>([]);
     const [selectedPixel, setSelectedPixel] = useState<string>('');
+    const [selectedConversionEvent, setSelectedConversionEvent] = useState<string>('');
     const [isLoadingPixels, setIsLoadingPixels] = useState(false);
 
     // Lead forms state for LEADS objective
     const [leadForms, setLeadForms] = useState<Array<{ id: string; name: string }>>([]);
     const [isLoadingForms, setIsLoadingForms] = useState(false);
 
-    // Load pixels when SALES objective is selected
+    // Custom naming state
+    const [customNames, setCustomNames] = useState({
+        campaignName: '',
+        adsetName: '',
+        adName: ''
+    });
+
+    // Preview format state
+    const [previewFormat, setPreviewFormat] = useState<'feed' | 'story'>('feed');
+
+    // Audience targeting mode: advantage_plus (Facebook AI) or custom (user selected)
+    const [audienceMode, setAudienceMode] = useState<'advantage_plus' | 'custom'>('advantage_plus');
+    const [customAudiences, setCustomAudiences] = useState<CustomAudience[]>([]);
+    const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
+    const [excludedAudiences, setExcludedAudiences] = useState<string[]>([]);
+    const [isLoadingAudiences, setIsLoadingAudiences] = useState(false);
+
+    // Interest targeting
+    const [interestSearch, setInterestSearch] = useState('');
+    const [interestResults, setInterestResults] = useState<Interest[]>([]);
+    const [selectedInterests, setSelectedInterests] = useState<InterestTarget[]>([]);
+    const [showInterestDropdown, setShowInterestDropdown] = useState(false);
+    const [isSearchingInterests, setIsSearchingInterests] = useState(false);
+
+    // Load pixels when SALES or LEADS+WEBSITE objective is selected
+    const needsPixel = goal === 'SALES' || (goal === 'LEADS' && leadType === 'WEBSITE');
+
     useEffect(() => {
-        if (goal === 'SALES' && selectedAccount) {
+        if (needsPixel && selectedAccount) {
             setIsLoadingPixels(true);
             mutationsService.getPixels(selectedAccount.account_id)
                 .then((data) => {
@@ -67,6 +130,8 @@ export default function NewCampaignWizard() {
                     // Auto-select first pixel if available
                     if (data.length > 0) {
                         setSelectedPixel(data[0].id);
+                        // Set default conversion event based on objective
+                        setSelectedConversionEvent(goal === 'SALES' ? 'PURCHASE' : 'LEAD');
                     }
                 })
                 .catch((err) => {
@@ -74,12 +139,13 @@ export default function NewCampaignWizard() {
                     setPixels([]);
                 })
                 .finally(() => setIsLoadingPixels(false));
-        } else {
-            // Reset pixel selection when switching away from SALES
+        } else if (!needsPixel) {
+            // Reset pixel selection when not needed
             setPixels([]);
             setSelectedPixel('');
+            setSelectedConversionEvent('');
         }
-    }, [goal, selectedAccount]);
+    }, [needsPixel, selectedAccount, goal]);
 
     // Load lead forms when account has page_id
     useEffect(() => {
@@ -100,6 +166,51 @@ export default function NewCampaignWizard() {
                 .finally(() => setIsLoadingForms(false));
         }
     }, [selectedAccount?.page_id, selectedAccount?.account_id]);
+
+    // Load custom audiences when mode is "custom"
+    useEffect(() => {
+        if (audienceMode === 'custom' && selectedAccount?.account_id) {
+            setIsLoadingAudiences(true);
+            mutationsService.getCustomAudiences(selectedAccount.account_id)
+                .then((audiences) => {
+                    setCustomAudiences(audiences);
+                })
+                .catch((err) => {
+                    console.error('Failed to load custom audiences:', err);
+                    setCustomAudiences([]);
+                })
+                .finally(() => setIsLoadingAudiences(false));
+        }
+    }, [audienceMode, selectedAccount?.account_id]);
+
+    // Interest search with debounce
+    useEffect(() => {
+        if (interestSearch.length < 2) {
+            setInterestResults([]);
+            setShowInterestDropdown(false);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearchingInterests(true);
+            try {
+                const results = await mutationsService.searchInterests(interestSearch);
+                // Filter out already selected interests
+                const filtered = results.filter(
+                    r => !selectedInterests.some(s => s.id === r.id)
+                );
+                setInterestResults(filtered);
+                setShowInterestDropdown(true);
+            } catch (err) {
+                console.error('Interest search failed:', err);
+                setInterestResults([]);
+            } finally {
+                setIsSearchingInterests(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [interestSearch, selectedInterests]);
 
     // Location search with debounce
     useEffect(() => {
@@ -170,9 +281,15 @@ export default function NewCampaignWizard() {
             return;
         }
 
-        // Validate pixel for SALES objective
-        if (goal === 'SALES' && !selectedPixel) {
-            setError("Please select a Facebook Pixel for the SALES objective");
+        // Validate pixel for SALES or LEADS+WEBSITE objective
+        if ((goal === 'SALES' || (goal === 'LEADS' && leadType === 'WEBSITE')) && !selectedPixel) {
+            setError("Please select a Facebook Pixel to track conversions");
+            return;
+        }
+
+        // Validate conversion event when pixel is required
+        if ((goal === 'SALES' || (goal === 'LEADS' && leadType === 'WEBSITE')) && !selectedConversionEvent) {
+            setError("Please select a conversion event");
             return;
         }
 
@@ -266,10 +383,11 @@ export default function NewCampaignWizard() {
             }
 
             // 2. Create Campaign
+            const defaultCampaignName = `Smart Campaign - ${goal} - ${new Date().toISOString().split('T')[0]}`;
             const payload: SmartCampaignRequest = {
                 account_id: selectedAccount.account_id,
                 page_id: selectedAccount.page_id!,
-                campaign_name: `Smart Campaign - ${goal} - ${new Date().toLocaleDateString()}`,
+                campaign_name: customNames.campaignName || defaultCampaignName,
                 objective: goal!,
                 geo_locations: selectedLocations.map(loc => ({
                     key: loc.key,
@@ -280,7 +398,8 @@ export default function NewCampaignWizard() {
                 age_min: targeting.ageMin,
                 age_max: targeting.ageMax,
                 daily_budget_cents: targeting.budget * 100,
-                pixel_id: goal === 'SALES' ? selectedPixel : undefined,
+                pixel_id: needsPixel ? selectedPixel : undefined,
+                conversion_event: needsPixel ? selectedConversionEvent : undefined,
                 creative: {
                     title: creative.title,
                     body: creative.body,
@@ -289,7 +408,12 @@ export default function NewCampaignWizard() {
                     image_hash: imageHash,
                     video_id: videoId,
                     lead_form_id: (goal === 'LEADS' && leadType === 'FORM') ? creative.leadFormId : undefined
-                }
+                },
+                adset_name: customNames.adsetName || undefined,
+                ad_name: customNames.adName || undefined,
+                custom_audiences: selectedAudiences.length > 0 ? selectedAudiences : undefined,
+                excluded_audiences: excludedAudiences.length > 0 ? excludedAudiences : undefined,
+                interests: selectedInterests.length > 0 ? selectedInterests : undefined
             };
 
             const result = await mutationsService.createSmartCampaign(payload);
@@ -352,6 +476,7 @@ export default function NewCampaignWizard() {
     // Render Goal Selection Section
     const renderGoalSection = () => (
         <div className="space-y-4">
+            <StepIndicator currentStep={1} />
             <h2 className="text-xl font-bold text-gray-200">1. What is your goal?</h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -367,6 +492,7 @@ export default function NewCampaignWizard() {
                         <div>
                             <h3 className="font-bold">Sales</h3>
                             <p className="text-xs text-gray-400">Drive purchases</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_sales')}</p>
                         </div>
                     </div>
                 </div>
@@ -383,6 +509,7 @@ export default function NewCampaignWizard() {
                         <div>
                             <h3 className="font-bold">Leads</h3>
                             <p className="text-xs text-gray-400">Collect signups</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_leads')}</p>
                             {goal === 'LEADS' && leadType && (
                                 <p className="text-xs text-blue-400 mt-1">({leadType === 'FORM' ? 'Instant Form' : 'Website'})</p>
                             )}
@@ -402,6 +529,7 @@ export default function NewCampaignWizard() {
                         <div>
                             <h3 className="font-bold">Traffic</h3>
                             <p className="text-xs text-gray-400">Website visits</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_traffic')}</p>
                         </div>
                     </div>
                 </div>
@@ -418,9 +546,22 @@ export default function NewCampaignWizard() {
                         <div>
                             <h3 className="font-bold">Engagement</h3>
                             <p className="text-xs text-gray-400">Likes & comments</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_engagement')}</p>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Campaign Name */}
+            <div className="mt-4 space-y-2">
+                <label className="text-sm font-medium text-gray-400">Campaign Name <span className="text-gray-600">(Optional)</span></label>
+                <input
+                    type="text"
+                    value={customNames.campaignName}
+                    onChange={(e) => setCustomNames({ ...customNames, campaignName: e.target.value })}
+                    placeholder={`Smart Campaign - ${goal || 'GOAL'} - ${new Date().toISOString().split('T')[0]}`}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
             </div>
         </div>
     );
@@ -463,9 +604,22 @@ export default function NewCampaignWizard() {
     // Render Targeting Section
     const renderTargetingSection = () => (
         <div className="space-y-4">
+            <StepIndicator currentStep={2} />
             <h2 className="text-xl font-bold text-gray-200">2. Targeting & Budget</h2>
 
-            {/* Location Search - Full Width */}
+            {/* Ad Set Name - Above Location */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Ad Set Name <span className="text-gray-600">(Optional)</span></label>
+                <input
+                    type="text"
+                    value={customNames.adsetName}
+                    onChange={(e) => setCustomNames({ ...customNames, adsetName: e.target.value })}
+                    placeholder="Adset 12345"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+            </div>
+
+            {/* Location Search - Now above Audience Targeting */}
             <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-400">Location (Country, City, or Region)</label>
                 <div className="relative">
@@ -528,6 +682,203 @@ export default function NewCampaignWizard() {
                 )}
             </div>
 
+            {/* Audience Mode Toggle */}
+            <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-400">{t('wizard.audience_targeting')}</label>
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={() => { setAudienceMode('advantage_plus'); setSelectedAudiences([]); setExcludedAudiences([]); setSelectedInterests([]); }}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${audienceMode === 'advantage_plus'
+                            ? 'border-green-500 bg-green-500/10'
+                            : 'border-gray-700 bg-gray-800/50 hover:border-gray-500'}`}
+                    >
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">✨</span>
+                            <span className="font-bold text-white text-sm">{t('wizard.advantage_plus')}</span>
+                            <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">{t('wizard.recommended')}</span>
+                        </div>
+                        <p className="text-xs text-gray-400">{t('wizard.advantage_plus_desc')}</p>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setAudienceMode('custom')}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${audienceMode === 'custom'
+                            ? 'border-blue-500 bg-blue-500/10'
+                            : 'border-gray-700 bg-gray-800/50 hover:border-gray-500'}`}
+                    >
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">🎯</span>
+                            <span className="font-bold text-white text-sm">{t('wizard.custom_audience')}</span>
+                        </div>
+                        <p className="text-xs text-gray-400">{t('wizard.custom_audience_desc')}</p>
+                    </button>
+                </div>
+
+                {/* Custom Audiences Dropdown (only shown when mode is "custom") */}
+                {audienceMode === 'custom' && (
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                        <label className="text-sm font-medium text-gray-300 mb-2 block">
+                            {t('wizard.select_audiences')}
+                        </label>
+                        {isLoadingAudiences ? (
+                            <div className="flex items-center gap-2 text-sm text-blue-400">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {t('wizard.loading_audiences')}
+                            </div>
+                        ) : customAudiences.length > 0 ? (
+                            <>
+                                {/* Include Audiences */}
+                                <div className="space-y-2 max-h-36 overflow-y-auto">
+                                    {customAudiences.filter(a => !excludedAudiences.includes(a.id)).map((audience) => (
+                                        <label
+                                            key={audience.id}
+                                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedAudiences.includes(audience.id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedAudiences(prev => [...prev, audience.id]);
+                                                    } else {
+                                                        setSelectedAudiences(prev => prev.filter(id => id !== audience.id));
+                                                    }
+                                                }}
+                                                className="w-4 h-4 accent-blue-500"
+                                            />
+                                            <div className="flex-1">
+                                                <span className="text-sm text-white">{audience.name}</span>
+                                                <span className="text-xs text-gray-500 ml-2">({audience.type_label})</span>
+                                            </div>
+                                            {audience.approximate_count && (
+                                                <span className="text-xs text-gray-400">
+                                                    ~{(audience.approximate_count / 1000).toFixed(0)}K
+                                                </span>
+                                            )}
+                                        </label>
+                                    ))}
+                                </div>
+
+                                {/* Exclude Audiences */}
+                                <div className="mt-3 pt-3 border-t border-red-500/20">
+                                    <label className="text-sm font-medium text-red-400 mb-2 block">
+                                        {t('wizard.exclude_audiences')}
+                                    </label>
+                                    <div className="space-y-2 max-h-36 overflow-y-auto">
+                                        {customAudiences.filter(a => !selectedAudiences.includes(a.id)).map((audience) => (
+                                            <label
+                                                key={audience.id}
+                                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-500/5 cursor-pointer"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={excludedAudiences.includes(audience.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setExcludedAudiences(prev => [...prev, audience.id]);
+                                                        } else {
+                                                            setExcludedAudiences(prev => prev.filter(id => id !== audience.id));
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 accent-red-500"
+                                                />
+                                                <div className="flex-1">
+                                                    <span className="text-sm text-white">{audience.name}</span>
+                                                    <span className="text-xs text-gray-500 ml-2">({audience.type_label})</span>
+                                                </div>
+                                                {audience.approximate_count && (
+                                                    <span className="text-xs text-gray-400">
+                                                        ~{(audience.approximate_count / 1000).toFixed(0)}K
+                                                    </span>
+                                                )}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-sm text-yellow-400">{t('wizard.no_audiences')}</p>
+                        )}
+
+                        {/* Interest Targeting - Inside Custom Audience section */}
+                        <div className="mt-4 pt-4 border-t border-blue-500/20">
+                            <label className="text-sm font-medium text-gray-300 mb-1 block">{t('wizard.interest_targeting')}</label>
+                            <p className="text-xs text-gray-500 mb-2">{t('wizard.interest_hint')}</p>
+                            <div className="relative">
+                                <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-purple-500">
+                                    <Search className="w-4 h-4 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        value={interestSearch}
+                                        onChange={(e) => setInterestSearch(e.target.value)}
+                                        onFocus={() => interestResults.length > 0 && setShowInterestDropdown(true)}
+                                        placeholder={t('wizard.interest_placeholder')}
+                                        className="flex-1 bg-transparent outline-none text-sm"
+                                    />
+                                    {isSearchingInterests && <Loader2 className="w-4 h-4 animate-spin text-purple-400" />}
+                                </div>
+
+                                {/* Interest Dropdown Results */}
+                                {showInterestDropdown && interestResults.length > 0 && (
+                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                        {interestResults.map((interest) => (
+                                            <button
+                                                key={interest.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedInterests(prev => [...prev, { id: interest.id, name: interest.name }]);
+                                                    setInterestSearch('');
+                                                    setShowInterestDropdown(false);
+                                                }}
+                                                className="w-full px-3 py-2 text-left hover:bg-gray-700 flex items-center gap-2"
+                                            >
+                                                <span className="text-purple-400">🎯</span>
+                                                <div className="flex-1">
+                                                    <span className="text-sm text-white">{interest.name}</span>
+                                                    {interest.path && interest.path.length > 0 && (
+                                                        <span className="text-xs text-gray-500 ml-2">
+                                                            {interest.path.join(' > ')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {(interest.audience_size_lower_bound || interest.audience_size_upper_bound) && (
+                                                    <span className="text-xs text-gray-400">
+                                                        ~{((interest.audience_size_lower_bound + interest.audience_size_upper_bound) / 2000000).toFixed(1)}M
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Selected Interests */}
+                            {selectedInterests.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {selectedInterests.map((interest) => (
+                                        <span
+                                            key={interest.id}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/20 text-purple-300 rounded-full text-sm"
+                                        >
+                                            🎯 {interest.name}
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedInterests(prev => prev.filter(i => i.id !== interest.id))}
+                                                className="hover:text-purple-100"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Age */}
                 <div className="space-y-2">
@@ -563,9 +914,11 @@ export default function NewCampaignWizard() {
                 </div>
             </div>
 
-            {/* Pixel Selection (SALES only) */}
-            {goal === 'SALES' && (
-                <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+            <Tip>{t('tips.budget_testing')}</Tip>
+
+            {/* Pixel Selection (SALES or LEADS+WEBSITE) */}
+            {needsPixel && (
+                <div className={`p-4 rounded-xl ${goal === 'SALES' ? 'bg-green-500/10 border border-green-500/30' : 'bg-blue-500/10 border border-blue-500/30'}`}>
                     <label className="text-sm font-medium text-gray-300 mb-2 block">
                         Facebook Pixel <span className="text-red-400">*</span>
                     </label>
@@ -575,20 +928,56 @@ export default function NewCampaignWizard() {
                             Loading pixels...
                         </div>
                     ) : pixels.length > 0 ? (
-                        <select
-                            value={selectedPixel}
-                            onChange={(e) => setSelectedPixel(e.target.value)}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
-                            required
-                        >
-                            {pixels.map((pixel) => (
-                                <option key={pixel.id} value={pixel.id}>
-                                    {pixel.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="space-y-3">
+                            <select
+                                value={selectedPixel}
+                                onChange={(e) => setSelectedPixel(e.target.value)}
+                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                                required
+                            >
+                                {pixels.map((pixel) => (
+                                    <option key={pixel.id} value={pixel.id}>
+                                        {pixel.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            {/* Conversion Event Selection */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-400 mb-1 block">
+                                    Conversion Event <span className="text-red-400">*</span>
+                                </label>
+                                <select
+                                    value={selectedConversionEvent}
+                                    onChange={(e) => setSelectedConversionEvent(e.target.value)}
+                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                                    required
+                                >
+                                    {goal === 'SALES' ? (
+                                        <>
+                                            <option value="PURCHASE">Purchase</option>
+                                            <option value="ADD_TO_CART">Add to Cart</option>
+                                            <option value="INITIATE_CHECKOUT">Initiate Checkout</option>
+                                            <option value="ADD_PAYMENT_INFO">Add Payment Info</option>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <option value="LEAD">Lead</option>
+                                            <option value="COMPLETE_REGISTRATION">Complete Registration</option>
+                                            <option value="CONTACT">Contact</option>
+                                            <option value="SUBMIT_APPLICATION">Submit Application</option>
+                                        </>
+                                    )}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {goal === 'SALES'
+                                        ? 'Facebook will optimize for this conversion action'
+                                        : 'Track when visitors convert on your website'}
+                                </p>
+                            </div>
+                        </div>
                     ) : (
-                        <p className="text-sm text-red-400">⚠️ No pixels found. <a href="https://www.youtube.com/watch?v=pQU7jXHsbYo" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Watch tutorial</a></p>
+                        <p className="text-sm text-red-400">⚠️ No pixels found. <a href={`/${locale}/learning`} className="text-blue-400 underline">Learn how to set it up</a></p>
                     )}
                 </div>
             )}
@@ -598,7 +987,22 @@ export default function NewCampaignWizard() {
     // Render Creative Section
     const renderCreativeSection = () => (
         <div className="space-y-4">
+            <StepIndicator currentStep={3} />
             <h2 className="text-xl font-bold text-gray-200">3. Create Your Ad</h2>
+
+            {/* Ad Name */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Ad Name <span className="text-gray-600">(Optional)</span></label>
+                <input
+                    type="text"
+                    value={customNames.adName}
+                    onChange={(e) => setCustomNames({ ...customNames, adName: e.target.value })}
+                    placeholder="Ad 12345"
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+            </div>
+
+            <Tip>{t('tips.ad_variations')}</Tip>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Inputs */}
@@ -681,7 +1085,7 @@ export default function NewCampaignWizard() {
                                         ))}
                                     </select>
                                 ) : (
-                                    <p className="text-sm text-yellow-400 py-2">⚠️ No forms found. <a href="https://www.youtube.com/watch?v=iQ9rRnKtrxY" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Watch tutorial</a></p>
+                                    <p className="text-sm text-yellow-400 py-2">⚠️ No forms found. <a href={`/${locale}/learning`} className="text-blue-400 underline">Learn how to create one</a></p>
                                 )}
                             </div>
                         )}
@@ -704,41 +1108,114 @@ export default function NewCampaignWizard() {
                 </div>
 
                 {/* Preview */}
-                <div className="bg-white rounded-xl overflow-hidden shadow-xl h-fit border border-gray-800">
-                    <div className="bg-gray-100 p-2 border-b flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full" />
-                        <div className="h-2 w-20 bg-gray-300 rounded" />
-                    </div>
-                    <div className="p-3">
-                        <p className="text-xs text-gray-800 whitespace-pre-wrap">
-                            {creative.body || "Your ad text here..."}
-                        </p>
-                    </div>
-
-                    <div className="bg-gray-200 aspect-video w-full flex items-center justify-center overflow-hidden">
-                        {creative.previewUrl ? (
-                            creative.file?.type.startsWith('video') ? (
-                                <video src={creative.previewUrl} className="w-full h-full object-cover" />
-                            ) : (
-                                <img src={creative.previewUrl} className="w-full h-full object-cover" />
-                            )
-                        ) : (
-                            <p className="text-gray-400 text-sm">Preview</p>
-                        )}
-                    </div>
-
-                    <div className="bg-gray-100 p-2 flex justify-between items-center border-t border-gray-200">
-                        <div className="flex-1 min-w-0 pr-2">
-                            <p className="text-[10px] text-gray-500 uppercase truncate">
-                                {goal === 'LEADS' && leadType === 'FORM' ? 'FACEBOOK' : 'WEBSITE'}
-                            </p>
-                            <h4 className="font-bold text-gray-900 truncate text-sm">
-                                {creative.title || "Headline"}
-                            </h4>
-                        </div>
-                        <button className="bg-gray-300 px-3 py-1 rounded text-xs font-semibold text-gray-700">
-                            {creative.cta.replace('_', ' ')}
+                <div className="space-y-4">
+                    {/* Format Toggle */}
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setPreviewFormat('feed')}
+                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${previewFormat === 'feed' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                        >
+                            Feed
                         </button>
+                        <button
+                            type="button"
+                            onClick={() => setPreviewFormat('story')}
+                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${previewFormat === 'story' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                        >
+                            Story
+                        </button>
+                    </div>
+
+                    {/* Feed Preview */}
+                    {previewFormat === 'feed' && (
+                        <div className="bg-white rounded-xl overflow-hidden shadow-xl h-fit border border-gray-800">
+                            <div className="bg-gray-100 p-2 border-b flex items-center gap-2">
+                                <div className="w-6 h-6 bg-gray-300 rounded-full" />
+                                <div className="h-2 w-20 bg-gray-300 rounded" />
+                            </div>
+                            <div className="p-3">
+                                <p className="text-xs text-gray-800 whitespace-pre-wrap">
+                                    {creative.body || "Your ad text here..."}
+                                </p>
+                            </div>
+
+                            <div className="bg-gray-200 aspect-video w-full flex items-center justify-center overflow-hidden">
+                                {creative.previewUrl ? (
+                                    creative.file?.type.startsWith('video') ? (
+                                        <video
+                                            src={creative.previewUrl}
+                                            className="w-full h-full object-cover"
+                                            controls
+                                            muted
+                                            playsInline
+                                        />
+                                    ) : (
+                                        <img src={creative.previewUrl} className="w-full h-full object-cover" />
+                                    )
+                                ) : (
+                                    <p className="text-gray-400 text-sm">Preview</p>
+                                )}
+                            </div>
+
+                            <div className="bg-gray-100 p-2 flex justify-between items-center border-t border-gray-200">
+                                <div className="flex-1 min-w-0 pr-2">
+                                    <p className="text-[10px] text-gray-500 uppercase truncate">
+                                        {goal === 'LEADS' && leadType === 'FORM' ? 'FACEBOOK' : 'WEBSITE'}
+                                    </p>
+                                    <h4 className="font-bold text-gray-900 truncate text-sm">
+                                        {creative.title || "Headline"}
+                                    </h4>
+                                </div>
+                                <button className="bg-gray-300 px-3 py-1 rounded text-xs font-semibold text-gray-700">
+                                    {creative.cta.replace('_', ' ')}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Story Preview */}
+                    {previewFormat === 'story' && (
+                        <div className="bg-black rounded-xl overflow-hidden shadow-xl border border-gray-800 aspect-[9/16] max-h-[400px] relative">
+                            {creative.previewUrl ? (
+                                creative.file?.type.startsWith('video') ? (
+                                    <video
+                                        src={creative.previewUrl}
+                                        className="w-full h-full object-cover"
+                                        controls
+                                        muted
+                                        playsInline
+                                    />
+                                ) : (
+                                    <img src={creative.previewUrl} className="w-full h-full object-cover" />
+                                )
+                            ) : (
+                                <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+                                    <p className="text-gray-500 text-sm">Preview</p>
+                                </div>
+                            )}
+                            {/* Story overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                                <p className="text-white text-xs mb-2 line-clamp-2">{creative.body || "Your ad text..."}</p>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-white text-sm font-bold truncate flex-1">{creative.title || "Headline"}</span>
+                                    <span className="bg-white text-black px-3 py-1 rounded text-xs font-semibold ml-2">
+                                        {creative.cta.replace('_', ' ')}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Quality Checklist */}
+                    <div className="p-3 bg-gray-900/50 rounded-lg border border-gray-800">
+                        <p className="text-xs font-bold text-gray-400 mb-2 uppercase">Quality Check</p>
+                        <div className="space-y-1.5">
+                            <QualityCheck passed={!!creative.file} label="Image/video uploaded" />
+                            <QualityCheck passed={creative.title.length > 0 && creative.title.length <= 40} label="Headline length (under 40 chars)" hint={creative.title.length > 0 ? `${creative.title.length}/40` : undefined} />
+                            <QualityCheck passed={creative.body.length >= 20} label="Primary text (20+ chars)" hint={creative.body.length > 0 ? `${creative.body.length} chars` : undefined} />
+                            <QualityCheck passed={!!creative.cta} label="Call-to-action selected" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -751,7 +1228,7 @@ export default function NewCampaignWizard() {
         selectedLocations.length > 0 &&
         creative.file &&
         creative.title &&
-        (goal !== 'SALES' || selectedPixel) &&
+        (!needsPixel || (selectedPixel && selectedConversionEvent)) &&
         (goal !== 'LEADS' || leadType !== 'FORM' || creative.leadFormId);
 
     return (
@@ -776,8 +1253,8 @@ export default function NewCampaignWizard() {
                     </a>
                 </div>
 
-                {/* Page ID Warning */}
-                {!selectedAccount?.page_id && (
+                {/* Page ID Warning - only show after accounts have loaded */}
+                {!isAccountLoading && selectedAccount && !selectedAccount.page_id && (
                     <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                         <div className="flex items-center gap-3">
                             <span className="text-xl">⚠️</span>
@@ -807,7 +1284,6 @@ export default function NewCampaignWizard() {
                         <div className="text-sm text-gray-400">
                             {!goal && "Select a goal to continue"}
                             {goal === 'LEADS' && !leadType && "Select where to collect leads"}
-                            {goal && (goal !== 'LEADS' || leadType) && !creative.file && "Upload an image or video"}
                             {goal && (goal !== 'LEADS' || leadType) && creative.file && !creative.title && "Add a headline"}
                             {canSubmit && "Ready to launch!"}
                         </div>

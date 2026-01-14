@@ -26,114 +26,32 @@ logger = logging.getLogger(__name__)
 CREATIVE_CACHE = {}
 CACHE_TTL = 3600  # 1 hour
 
-CREATIVE_ANALYSIS_PROMPT = """You are a Creative Strategy Expert and Performance Marketer specializing in Facebook Ads creative optimization.
+CREATIVE_ANALYSIS_PROMPT = """Analyze creative/ad performance for the period {start_date} to {end_date} and provide SHORT insights.
 Respond in {target_lang}.
 
-Analyze the provided creative performance data and provide actionable insights on what's working and what needs to change.
+{no_roas_instruction}
 
-## Analysis Framework:
+**What are themes?** Themes are categories we detect from ad copy (e.g., 'urgency', 'social proof', 'discount', 'benefit-focused').
 
-### 1. Theme Performance Analysis
-- Identify which creative themes drive best results (ROAS, CTR, conversions)
-- Quantify performance differences between themes
-- Explain WHY certain themes resonate better with the audience
-- Recommend theme ratios for creative portfolio
+Rules:
+- Maximum 4-5 bullet points
+- Each bullet: 1 sentence with specific numbers
+- NO long paragraphs
+- Use simple language
+- Always use AD NAME (not creative ID) when mentioning specific ads
+- Focus on: hook rate, view rate, CTR, format performance
 
-### 2. CTA Effectiveness
-- Rank CTAs by conversion performance
-- Identify CTAs that get clicks but don't convert (high CTR, low ROAS)
-- Recommend which CTAs to use more/less
-- Suggest CTA testing opportunities
+Format:
 
-### 3. Creative Fatigue Detection
-- Flag ads showing declining CTR over time
-- Prioritize refreshes by business impact (high spend + fatigue = urgent)
-- Recommend refresh strategies (new creative vs variations)
-- Suggest refresh timing based on fatigue severity
+🎨 **Themes:** Your top messaging themes are: [list 2-3 themes detected with their performance].
 
-### 4. Winning Creative Patterns
-- Identify common characteristics of top performers
-- Analyze copy length, tone, messaging angles
-- Highlight what separates winners from losers
-- Provide specific examples with creative IDs
+🏆 **Best Ads:** [Name 1-2 best performing ads by name. Include hook rate, view rate, CTR]
 
-### 5. Creative Testing Insights
-- Identify gaps in creative testing (missing themes, CTAs)
-- Recommend next creative tests based on data
-- Prioritize tests by potential impact
-- Suggest budget allocation for testing
+📊 **Format Winner:** [Compare Image vs Video vs Carousel performance. Which format has best CTR/hook rate?]
 
-## Response Format (Use Markdown):
+⚠️ **Fatigue Alert:** [Name any ads with declining CTR that need refresh. Use ad name, not ID]
 
-### 🎨 Creative Performance Summary
-Brief overview (2-3 sentences) of overall creative health and key findings.
-
-### 📊 Theme Performance Breakdown
-
-**Top Performing Themes:**
-| Theme | ROAS | Creatives | Conversions | Recommendation |
-|-------|------|-----------|-------------|----------------|
-
-Explain why winning themes work and what to replicate.
-
-**Underperforming Themes:**
-List themes to reduce or eliminate with reasons.
-
-### 🎯 CTA Analysis
-
-**Most Effective CTAs:**
-| CTA | Conversions | Avg ROAS | Usage | Recommendation |
-|-----|-------------|----------|-------|----------------|
-
-**CTA Recommendations:**
-- Increase: [CTA types] - Why
-- Decrease: [CTA types] - Why
-- Test: [New CTA variations] - Expected impact
-
-### ⚠️ Creative Fatigue Alerts
-
-**Urgent Refreshes Needed:**
-List creatives with >20% CTR decline, prioritized by spend:
-- Creative #[ID]: [Title preview] - CTR down [X]% → Refresh NOW
-- Action: [Specific recommendation]
-
-**Monitor Closely:**
-Creatives showing early signs of fatigue (10-20% decline)
-
-### 💡 Winning Creative Patterns
-
-Analyze common traits of top performers:
-- Copy length: [finding]
-- Messaging angle: [finding]
-- Visual type: Video vs Image performance
-- Hook strategies: What grabs attention
-
-**Examples of Top Performers:**
-- Creative #[ID]: "[Title]" - ROAS [X]x, [why it works]
-
-### 🚀 Creative Strategy Recommendations
-
-Provide 3-5 prioritized actions:
-
-1. **High Priority**: [Action] → [Expected outcome]
-2. **Medium Priority**: [Action] → [Expected outcome]
-3. **Testing Opportunity**: [Action] → [Expected outcome]
-
-### 📋 Creative Refresh Plan
-
-Specific plan for next 7-14 days:
-- Creatives to pause: [list with reasons]
-- Creatives to refresh: [list with new angle suggestions]
-- New creatives to test: [themes/concepts]
-- Budget allocation: [how to shift spend]
-
-## Professional Standards:
-- Use specific numbers, percentages, and creative IDs
-- Explain WHY patterns exist (audience psychology, market dynamics)
-- Provide confidence levels based on sample size
-- Prioritize recommendations by ROI impact
-- Be direct about what's not working (no sugarcoating)
-- Use emojis for visual clarity: ✅ working, ⚠️ warning, 🔴 failing, 💡 opportunity
+💡 **Test Idea:** [One specific creative test based on what's working]
 """
 
 
@@ -257,19 +175,27 @@ class CreativeInsightsService:
                 min_conversions=5
             )
 
+            # Get format performance (Image vs Video vs Carousel)
+            format_performance = self.repository.get_format_performance(
+                start_date=start_date,
+                end_date=end_date,
+                account_ids=account_ids
+            )
+
             # Prepare context for Gemini
             context = {
                 'analysis_period': f'{start_date} to {end_date}',
                 'total_creatives': len(creatives),
                 'theme_performance': theme_performance,
                 'cta_performance': cta_performance,
+                'format_performance': format_performance,  # Image vs Video vs Carousel comparison
                 'fatigued_creatives': fatigued_creatives[:10],  # Top 10 most fatigued
                 'winning_patterns': winning_patterns,
                 'top_performers': creatives[:10],  # Top 10 by ROAS
                 'campaign_filter': f'Campaign ID: {campaign_id}' if campaign_id else 'All campaigns'
             }
 
-            context_json = json.dumps(context, indent=2, default=str)
+            context_json = json.dumps(context, indent=2, default=str, ensure_ascii=False)
 
             # Map locale to language name
             lang_map = {
@@ -282,14 +208,18 @@ class CreativeInsightsService:
             }
             target_lang = lang_map.get(locale, 'English')
 
-            prompt = (
-                f"Analyze this Facebook Ads creative performance data for {start_date} to {end_date}.\n\n"
-                f"Creative Performance Data:\n{context_json}\n\n"
-                f"Respond in {target_lang}.\n"
-                "Provide comprehensive creative strategy insights including theme analysis, "
-                "CTA recommendations, fatigue alerts, and winning patterns. "
-                "Follow the response format specified in your instructions."
-            )
+            # Check if we have ROAS data
+            has_roas = any(c.get('roas', 0) > 0 for c in creatives)
+            no_roas_instruction = ""
+            if not has_roas:
+                no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS at all. Focus ONLY on: hook rate, view rate (video), CTR, and conversions."
+
+            prompt = CREATIVE_ANALYSIS_PROMPT.format(
+                target_lang=target_lang,
+                no_roas_instruction=no_roas_instruction,
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat()
+            ) + f"\n\nData:\n{context_json}"
 
             # Call Gemini
             response = self.client.models.generate_content(
@@ -309,6 +239,7 @@ class CreativeInsightsService:
                     'total_creatives': len(creatives),
                     'theme_performance': theme_performance,
                     'cta_performance': cta_performance,
+                    'format_performance': format_performance,  # Image vs Video vs Carousel
                     'fatigued_creatives_count': len(fatigued_creatives),
                     'fatigued_creatives': fatigued_creatives[:10],
                     'top_performers': creatives[:5],  # Top 5 for display
@@ -339,13 +270,16 @@ class CreativeInsightsService:
     async def get_creative_fatigue_report(
         self,
         lookback_days: int = 30,
-        locale: str = "en"
+        locale: str = "en",
+        account_ids: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
         Generate focused ad fatigue report.
 
         Args:
             lookback_days: Days to analyze
+            locale: Language for recommendations
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             Fatigue report with refresh recommendations
@@ -354,7 +288,8 @@ class CreativeInsightsService:
             fatigued = self.repository.get_fatigued_creatives(
                 lookback_days=lookback_days,
                 fatigue_threshold=-15.0,  # More sensitive threshold
-                min_impressions=3000
+                min_impressions=3000,
+                account_ids=account_ids
             )
 
             if not fatigued:

@@ -40,6 +40,15 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Fetch hasROAS when selectedAccountId changes
     useEffect(() => {
         const fetchHasROAS = async () => {
+            // Skip if no token (not authenticated)
+            if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setHasROAS(null);
+                    return;
+                }
+            }
+
             if (!selectedAccountId) {
                 setHasROAS(null);
                 return;

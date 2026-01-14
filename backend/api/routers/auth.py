@@ -196,6 +196,22 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
                     db.commit()
                     is_new_user = True
             else:
+                # FB ID exists - returning user OR consolidation needed
+                fb_email = fb_user.get("email")
+
+                # Check if FB email is different and not already stored
+                if fb_email and fb_email != user.email and fb_email != user.secondary_email:
+                    if not user.secondary_email:
+                        # Slot available - add FB email as secondary (consolidation)
+                        user.secondary_email = fb_email
+                        db.commit()
+                    else:
+                        # Both slots full (2 emails max) - BLOCK 3rd email
+                        from backend.config.base_config import settings
+                        return RedirectResponse(
+                            f"{settings.FRONTEND_URL}/en/login?error=fb_already_linked"
+                        )
+
                 repo.update_fb_token(user.id, access_token, expires_at)
                 # Sync pages for existing user logging in
                 _sync_facebook_pages(db, user, access_token)
@@ -385,32 +401,37 @@ async def unified_login(request: UnifiedLoginRequest, db: Session = Depends(get_
         detail="Password authentication is no longer supported. Please use magic link or OAuth (Facebook/Google) to sign in."
     )
 
-@router.post("/dev-login")
-async def dev_login(db: Session = Depends(get_db)):
-    """TEMPORARY: Mock login for development without Facebook"""
-    from backend.models.user_schema import User
-    from datetime import datetime, timedelta
-    # Try to find a dev user or create one
-    user = db.query(User).filter(User.email == "dev@example.com").first()
-    if not user:
-        # Check if any user exists
-        user = db.query(User).first()
+# SECURITY: Dev login endpoint is only available in development environment
+# In production (ENVIRONMENT=production), this endpoint does not exist
+from backend.config.base_config import settings as auth_settings
 
-    if not user:
-        # Create a mock user if none exists
-        repo = UserRepository(db)
-        # Set expiration to 100 years in the future
-        far_future = datetime.now() + timedelta(days=36500)
-        user = repo.create_user(
-            email="dev@example.com",
-            fb_user_id="dev_id_" + str(uuid.uuid4())[:8],
-            full_name="Dev User",
-            access_token="mock_fb_token",
-            expires_at=far_future
-        )
+if auth_settings.ENVIRONMENT == "development":
+    @router.post("/dev-login")
+    async def dev_login(db: Session = Depends(get_db)):
+        """DEVELOPMENT ONLY: Mock login without Facebook. Disabled in production."""
+        from backend.models.user_schema import User
+        from datetime import datetime, timedelta
+        # Try to find a dev user or create one
+        user = db.query(User).filter(User.email == "dev@example.com").first()
+        if not user:
+            # Check if any user exists
+            user = db.query(User).first()
 
-    app_token = create_access_token(subject=user.id)
-    return {"access_token": app_token, "token_type": "bearer"}
+        if not user:
+            # Create a mock user if none exists
+            repo = UserRepository(db)
+            # Set expiration to 100 years in the future
+            far_future = datetime.now() + timedelta(days=36500)
+            user = repo.create_user(
+                email="dev@example.com",
+                fb_user_id="dev_id_" + str(uuid.uuid4())[:8],
+                full_name="Dev User",
+                access_token="mock_fb_token",
+                expires_at=far_future
+            )
+
+        app_token = create_access_token(subject=user.id)
+        return {"access_token": app_token, "token_type": "bearer"}
 
 # ========== Magic Link Endpoints (Passwordless Auth) ==========
 
@@ -487,8 +508,8 @@ async def verify_magic_link(token: str, db: Session = Depends(get_db)):
                 detail="Invalid or expired magic link. Please request a new one."
             )
 
-        # Get or create user
-        user = user_repo.get_user_by_email(email)
+        # Get or create user (check both primary and secondary email)
+        user = user_repo.get_user_by_any_email(email)
 
         if not user:
             # Create new user (passwordless)

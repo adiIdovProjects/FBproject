@@ -25,90 +25,32 @@ logger = logging.getLogger(__name__)
 HISTORICAL_CACHE = {}
 CACHE_TTL = 3600  # 1 hour
 
-HISTORICAL_ANALYSIS_PROMPT = """You are a Senior Performance Marketing Analyst with expertise in trend forecasting and seasonality analysis.
+HISTORICAL_ANALYSIS_PROMPT = """Analyze 90-day Facebook Ads performance and provide SHORT, actionable insights.
 Respond in {target_lang}.
 
-Analyze the provided historical Facebook Ads data and provide deep, strategic insights.
+{no_roas_instruction}
 
-## Analysis Framework:
+Rules:
+- Maximum 5-6 bullet points total
+- Each bullet: 1 sentence with specific numbers
+- NO tables, NO long paragraphs
+- Use simple language for non-marketing experts
+- Only mention significant changes (>10%)
 
-### 1. Trend Direction Assessment
-- Identify if performance is improving, declining, or stable
-- Quantify the trend strength (weak, moderate, strong)
-- Detect inflection points where trends changed direction
-- Calculate momentum (is the trend accelerating or decelerating?)
+Format your response as bullet points:
 
-### 2. Seasonality Patterns
-- Identify day-of-week performance patterns
-- Highlight best and worst performing days with specific percentages
-- Detect weekly cyclical patterns (e.g., "Conversions spike 35% every Friday")
-- Note confidence level based on sample size
+📊 **Overall Trend:** [Is performance improving/declining/stable over 90 days? By how much?]
 
-### 3. Performance Consistency
-- Measure volatility (high variance vs stable performance)
-- Identify periods of consistent growth or decline
-- Detect anomalies or one-off events
-- Assess predictability of future performance
+📈 **Key Metric Changes:**
+- Spend: [trend with %]
+- CTR: [trend with %]
+- CPC: [trend with %]
+- Conversions: [trend with %]
+- CPA: [trend with %]
 
-### 4. Early Warning Signals
-- Spot metrics starting to decline before they become critical
-- Identify leading indicators of performance issues
-- Flag unusual patterns that need investigation
-- Recommend preventive actions
+📅 **Best/Worst Days:** [Which days perform best? Which worst?]
 
-### 5. Forecast & Predictions
-- Based on historical trends, predict next week's expected performance
-- Provide confidence ranges (best case, likely case, worst case)
-- Identify key assumptions behind the forecast
-- Suggest what to monitor to validate predictions
-
-## Response Format (Use Markdown):
-
-### 📊 Trend Summary
-Brief overview (2-3 sentences) of overall performance trajectory and key findings.
-
-### 📈 Week-over-Week Analysis
-- Present weekly trend data in a clear table
-- Highlight sustained trends (3+ weeks in same direction)
-- Call out biggest changes and when they occurred
-
-**Table Format:**
-| Week | Conversions | WoW Change | ROAS | WoW Change | CTR | Status |
-|------|-------------|------------|------|------------|-----|--------|
-
-### 📅 Seasonality Findings
-- Best performing day(s) of week with specific lift percentages
-- Worst performing day(s) with specific drops
-- Patterns and confidence level (e.g., "Based on 12 Fridays, high confidence")
-- Actionable insight (e.g., "Increase budgets by 20% on Fridays")
-
-### ⚠️ Early Warning Signals
-List any concerning trends:
-- Metrics showing decline (even if small)
-- Volatility increases
-- Emerging patterns that could become problems
-- Recommended monitoring frequency
-
-### 🔮 Next Week Forecast
-Provide specific predictions:
-- **Expected Conversions:** [range] (based on [trend])
-- **Expected ROAS:** [range] (based on [trend])
-- **Expected CTR:** [range] (based on [trend])
-- **Confidence Level:** [High/Medium/Low] - explain why
-
-### 💡 Strategic Recommendations
-3-5 actionable recommendations based on historical patterns:
-1. **[Action Category]**: Specific action → Expected outcome
-2. **[Action Category]**: Specific action → Expected outcome
-etc.
-
-## Professional Standards:
-- Use specific numbers and percentages (not vague descriptions)
-- Explain WHY patterns exist when possible
-- Acknowledge data limitations or low confidence
-- Prioritize insights by business impact
-- Use emojis for visual clarity: ✅ positive, ⚠️ warning, 🔴 critical, 💡 opportunity
-- Show comparisons using arrows: ⬆️ improving, ⬇️ declining, ➡️ stable
+💡 **Action:** [One specific thing to do based on the data]
 """
 
 
@@ -286,7 +228,7 @@ class HistoricalInsightsService:
                 'campaign_filter': f'Campaign ID: {campaign_id}' if campaign_id else 'All campaigns'
             }
 
-            context_json = json.dumps(context, indent=2)
+            context_json = json.dumps(context, indent=2, ensure_ascii=False)
 
             # Map locale to language name
             lang_map = {
@@ -299,13 +241,16 @@ class HistoricalInsightsService:
             }
             target_lang = lang_map.get(locale, 'English')
 
-            prompt = (
-                f"Analyze this {lookback_days}-day historical Facebook Ads performance data.\n\n"
-                f"Historical Data:\n{context_json}\n\n"
-                f"Respond in {target_lang}.\n"
-                "Provide deep trend analysis, seasonality insights, early warning signals, "
-                "and forecast for next week. Follow the response format specified in your instructions."
-            )
+            # Check if we have ROAS data
+            has_roas = any(w.get('roas', 0) > 0 for w in weekly_trends) if weekly_trends else False
+            no_roas_instruction = ""
+            if not has_roas:
+                no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS. Focus on conversions, CPA, CTR instead."
+
+            prompt = HISTORICAL_ANALYSIS_PROMPT.format(
+                target_lang=target_lang,
+                no_roas_instruction=no_roas_instruction
+            ) + f"\n\nData:\n{context_json}"
 
             # Call Gemini
             response = self.client.models.generate_content(
@@ -351,7 +296,8 @@ class HistoricalInsightsService:
     async def get_campaign_deep_dive(
         self,
         campaign_id: int,
-        lookback_days: int = 90
+        lookback_days: int = 90,
+        account_ids: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
         Deep dive analysis for a specific campaign.
@@ -359,6 +305,7 @@ class HistoricalInsightsService:
         Args:
             campaign_id: Campaign to analyze
             lookback_days: Historical period
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             Campaign-specific trend analysis
@@ -370,10 +317,11 @@ class HistoricalInsightsService:
             }
 
         try:
-            # Fetch campaign-specific historical data
+            # Fetch campaign-specific historical data (filtered by account)
             campaign_history = self.repository.get_campaign_trend_history(
                 campaign_id=campaign_id,
-                lookback_days=lookback_days
+                lookback_days=lookback_days,
+                account_ids=account_ids
             )
 
             if not campaign_history:
@@ -399,7 +347,7 @@ class HistoricalInsightsService:
                 'current_avg_roas': avg_recent_roas
             }
 
-            context_json = json.dumps(context, indent=2)
+            context_json = json.dumps(context, indent=2, ensure_ascii=False)
 
             prompt = (
                 f"Analyze this campaign's {lookback_days}-day performance history in detail.\n\n"

@@ -53,7 +53,7 @@ export default function AccountQuizPage() {
     // Fetch conversion types on mount
     useEffect(() => {
         if (!accountId) {
-            router.push('/en/dashboard');
+            router.push('/en/account-dashboard');
             return;
         }
 
@@ -118,7 +118,7 @@ export default function AccountQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push('/en/dashboard');
+        router.push('/en/account-dashboard');
     };
 
     if (!accountId) {

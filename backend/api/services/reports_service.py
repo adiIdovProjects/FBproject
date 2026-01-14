@@ -689,6 +689,10 @@ class ReportsService:
             "d.date <= :end_date"
         ]
 
+        # Add account filter if specified
+        if account_ids:
+            where_clauses.append("f.account_id = ANY(:account_ids)")
+
         # Add filters
         if campaign_filter:
             where_clauses.append("c.campaign_name ILIKE :campaign_filter")
@@ -745,6 +749,8 @@ class ReportsService:
             'start_date': period1_start,
             'end_date': period1_end
         }
+        if account_ids:
+            params['account_ids'] = [int(aid) for aid in account_ids]
         if campaign_filter:
             params['campaign_filter'] = f"%{campaign_filter}%"
         if ad_set_filter:
@@ -762,6 +768,8 @@ class ReportsService:
                 'start_date': period2_start,
                 'end_date': period2_end
             }
+            if account_ids:
+                params2['account_ids'] = [int(aid) for aid in account_ids]
             if campaign_filter:
                 params2['campaign_filter'] = f"%{campaign_filter}%"
             if ad_set_filter:

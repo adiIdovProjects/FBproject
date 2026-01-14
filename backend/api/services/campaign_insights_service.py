@@ -25,63 +25,27 @@ logger = logging.getLogger(__name__)
 CAMPAIGN_CACHE = {}
 CACHE_TTL = 3600  # 1 hour
 
-CAMPAIGN_ANALYSIS_PROMPT = """You are a Senior Media Buyer and Performance Strategist.
+CAMPAIGN_ANALYSIS_PROMPT = """Analyze campaign performance for the period {start_date} to {end_date} and provide SHORT insights.
 Respond in {target_lang}.
 
-Analyze the provided campaign performance data and provide a strategic breakdown.
+{no_roas_instruction}
 
-## Analysis Framework:
+Rules:
+- Maximum 3-4 bullet points total
+- Each insight MUST be on its own line with a line break between them
+- Each bullet: 1 sentence with specific campaign names and numbers
+- NO tables, NO long paragraphs
+- Use simple language
+- If CTR is very low (under 0.5%), mention it needs creative/targeting review
+- If a campaign has spend but 0 conversions, flag it as needing review
 
-### 1. Campaign Categorization (The "Stop, Start, Continue" framework)
-- **Top Performers (SCALE)**: High ROAS/Low CPA campaigns that deserve more budget.
-- **Stable Performers (MAINTAIN)**: Campaigns hitting targets but not exceeding them.
-- **Underperformers (FIX/PAUSE)**: Campaigns burning budget with poor results.
+Format (each on separate line):
 
-### 2. Budget Allocation Strategy
-- Identify where budget is being wasted.
-- Recommend specific budget shifts (e.g., "Shift $50/day from Campaign A to Campaign B").
-- Analyze budget utilization efficiency.
+🚀 **Top Performers:** [1 sentence about best campaign]
 
-### 3. Structural Insights
-- Identify account-level issues (too many campaigns, audience overlap risks).
-- Recommend consolidation opportunities if seen.
-- Check for "Learning Limited" issues based on conversion volume.
+⚠️ **Needs Attention:** [1 sentence about struggling campaign - mention specific issue]
 
-## Response Format (Use Markdown):
-
-### 📊 Campaign Performance Matrix
-
-**🚀 SCALE Categories (Top Performers):**
-| Campaign | Spend | ROAS | CPA | Why Scale? |
-|----------|-------|------|-----|------------|
-(List 1-3 best campaigns)
-
-**🛡️ MAINTAIN Categories (Stable):**
-| Campaign | Spend | ROAS | Verdict |
-|----------|-------|------|---------|
-(List stable campaigns)
-
-**⚠️ FIX/PAUSE Categories (Underperformers):**
-| Campaign | Spend | CPA | Issue | Recommendation |
-|----------|-------|-----|-------|----------------|
-(List losing campaigns)
-
-### 💰 Budget Allocation Recommendations
-
-- **Move Budget:** [Specific Recommendation] -> [Expected Impact]
-- **Cut Budget:** [Specific Recommendation] -> [Savings]
-- **Efficiency Score:** [High/Medium/Low] - [Explanation]
-
-### 💡 Strategic Observations
-
-- **Account Structure:** [Comment on campaign count/granularity]
-- **Funnel Balance:** [Comment on Top vs Bottom funnel split if inferable]
-- **Key Action:** [One single most important action to take today]
-
-## Professional Standards:
-- Be ruthless with underperformers.
-- Be specific with dollar amounts.
-- Use emojis for visual clarity.
+💡 **Action:** [One specific action to take]
 """
 
 
@@ -153,7 +117,7 @@ class CampaignInsightsService:
                 page_context="campaigns",
                 account_ids=account_ids
             )
-            
+
             campaigns = insights_data.get('campaigns', [])
 
             if not campaigns:
@@ -188,7 +152,7 @@ class CampaignInsightsService:
                 'account_context': insights_data.get('account_context', {})
             }
 
-            context_json = json.dumps(context, indent=2, default=str)
+            context_json = json.dumps(context, indent=2, default=str, ensure_ascii=False)
 
             # Map locale
             lang_map = {
@@ -197,8 +161,17 @@ class CampaignInsightsService:
             }
             target_lang = lang_map.get(locale, 'English')
 
+            # Check if we have ROAS data
+            has_roas = any(c.get('roas', 0) > 0 for c in simplified_campaigns)
+            no_roas_instruction = ""
+            if not has_roas:
+                no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS. Focus on conversions, CPA, CTR instead."
+
             prompt = CAMPAIGN_ANALYSIS_PROMPT.format(
-                target_lang=target_lang
+                target_lang=target_lang,
+                no_roas_instruction=no_roas_instruction,
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat()
             ) + f"\n\nData Context:\n{context_json}"
 
             # Call Gemini

@@ -31,10 +31,68 @@ export interface DateRange {
   endDate: string;
 }
 
+// Overview Summary Types
+export interface PeriodInsight {
+  status: 'ok' | 'no_data';
+  insight: string;
+  color: 'green' | 'yellow' | 'red' | 'gray';
+  period_label: string;
+  metrics?: {
+    spend: number;
+    conversions: number;
+    cpa: number | null;
+    roas: number | null;
+  };
+}
+
+export interface ImprovementCheck {
+  type: 'learning_phase' | 'pixel' | 'ads_count';
+  status: 'warning' | 'good' | 'excellent' | 'critical';
+  icon: string;
+  message: string;
+  adset_id?: number;
+}
+
+export interface OverviewSummaryResponse {
+  daily: PeriodInsight;
+  weekly: PeriodInsight;
+  monthly: PeriodInsight;
+  improvement_checks: ImprovementCheck[];
+  summary: string[];
+  generated_at: string;
+}
+
 export interface InsightsFilters {
   campaignFilter?: string;
   breakdownType?: 'adset' | 'platform' | 'placement' | 'age-gender' | 'country';
   breakdownGroupBy?: 'age' | 'gender' | 'both';
+}
+
+/**
+ * Fetch overview summary with daily/weekly/monthly insights, improvement checks, and TL;DR.
+ * No date filter needed - uses fixed comparison periods.
+ */
+export async function fetchOverviewSummary(
+  accountId?: string | null,
+  locale?: string
+): Promise<OverviewSummaryResponse | null> {
+  try {
+    const params: any = {
+      locale: locale || 'en'
+    };
+    if (accountId) {
+      params.account_id = accountId;
+    }
+
+    const response = await apiClient.get<OverviewSummaryResponse>(
+      '/api/v1/insights/overview-summary',
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('[Insights Service] Error fetching overview summary:', error);
+    return null;
+  }
 }
 
 /**
@@ -158,9 +216,11 @@ export interface CreativeAnalysisResponse {
       avg_roas: number;
       total_conversions: number;
     }>;
+    format_performance: FormatPerformance[];
     fatigued_creatives_count: number;
     fatigued_creatives: Array<{
       creative_id: number;
+      ad_name: string;
       title: string;
       initial_ctr: number;
       recent_ctr: number;
@@ -168,10 +228,14 @@ export interface CreativeAnalysisResponse {
     }>;
     top_performers: Array<{
       creative_id: number;
+      ad_name: string;
       title: string;
       body: string;
+      format_type: 'Image' | 'Video' | 'Carousel';
       ctr: number;
       roas: number;
+      hook_rate: number;
+      completion_rate: number;
       conversions: number;
     }>;
   };
@@ -198,6 +262,18 @@ export interface CampaignAnalysisResponse {
   };
 }
 
+export interface FormatPerformance {
+  format_type: 'Image' | 'Video' | 'Carousel';
+  creative_count: number;
+  total_spend: number;
+  total_impressions: number;
+  total_clicks: number;
+  total_conversions: number;
+  avg_ctr: number;
+  avg_hook_rate: number;
+  avg_completion_rate: number;
+}
+
 export interface CreativeFatigueResponse {
   summary: {
     total_fatigued: number;
@@ -207,6 +283,7 @@ export interface CreativeFatigueResponse {
   };
   critical_refreshes: Array<{
     creative_id: number;
+    ad_name: string;
     title: string;
     initial_ctr: number;
     recent_ctr: number;
@@ -214,6 +291,7 @@ export interface CreativeFatigueResponse {
   }>;
   warning_refreshes: Array<{
     creative_id: number;
+    ad_name: string;
     title: string;
     initial_ctr: number;
     recent_ctr: number;
@@ -221,6 +299,7 @@ export interface CreativeFatigueResponse {
   }>;
   monitor_closely: Array<{
     creative_id: number;
+    ad_name: string;
     title: string;
     initial_ctr: number;
     recent_ctr: number;
@@ -235,7 +314,8 @@ export interface CreativeFatigueResponse {
 export async function fetchHistoricalAnalysis(
   lookbackDays: number = 90,
   campaignId?: number,
-  locale?: string
+  locale?: string,
+  accountId?: string | null
 ): Promise<HistoricalAnalysisResponse> {
   try {
     const params: any = {
@@ -244,6 +324,9 @@ export async function fetchHistoricalAnalysis(
     };
     if (campaignId) {
       params.campaign_id = campaignId;
+    }
+    if (accountId) {
+      params.account_id = accountId;
     }
 
     const response = await apiClient.get<HistoricalAnalysisResponse>(
@@ -263,7 +346,8 @@ export async function fetchHistoricalAnalysis(
 export async function fetchCreativeAnalysis(
   dateRange: DateRange,
   campaignId?: number,
-  locale?: string
+  locale?: string,
+  accountId?: string | null
 ): Promise<CreativeAnalysisResponse> {
   try {
     const params: any = {
@@ -273,6 +357,9 @@ export async function fetchCreativeAnalysis(
     };
     if (campaignId) {
       params.campaign_id = campaignId;
+    }
+    if (accountId) {
+      params.account_id = accountId;
     }
 
     const response = await apiClient.get<CreativeAnalysisResponse>(
@@ -320,12 +407,21 @@ export async function fetchCampaignAnalysis(
  */
 export async function fetchCreativeFatigue(
   lookbackDays: number = 30,
-  locale?: string
+  locale?: string,
+  accountId?: string | null
 ): Promise<CreativeFatigueResponse> {
   try {
+    const params: any = {
+      lookback_days: lookbackDays,
+      locale: locale || 'en'
+    };
+    if (accountId) {
+      params.account_id = accountId;
+    }
+
     const response = await apiClient.get<CreativeFatigueResponse>(
       '/api/v1/insights/creative-fatigue',
-      { params: { lookback_days: lookbackDays, locale: locale || 'en' } }
+      { params }
     );
     return response.data;
   } catch (error) {

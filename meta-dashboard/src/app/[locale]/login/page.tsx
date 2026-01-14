@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { generateState } from '@/utils/csrf';
 import { getGoogleLoginUrl, getFacebookLoginUrl, requestMagicLink } from '@/services/auth.service';
 import { BarChart3, Mail, Loader2, AlertCircle, Facebook, CheckCircle, Sparkles } from 'lucide-react';
@@ -10,10 +10,19 @@ import { BarChart3, Mail, Loader2, AlertCircle, Facebook, CheckCircle, Sparkles 
 export default function LoginPage() {
     const t = useTranslations();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [emailSent, setEmailSent] = useState(false);
+
+    // Check for error query param (e.g., fb_already_linked)
+    useEffect(() => {
+        const errorParam = searchParams.get('error');
+        if (errorParam === 'fb_already_linked') {
+            setError(t('auth.fbAlreadyLinked'));
+        }
+    }, [searchParams, t]);
 
     const handleGoogleLogin = () => {
         const state = generateState();

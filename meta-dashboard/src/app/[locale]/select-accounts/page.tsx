@@ -54,7 +54,7 @@ export default function SelectAccountsPage() {
             const onboardingStatus = await apiClient.get('/api/v1/auth/onboarding/status');
             if (onboardingStatus.data.onboarding_completed) {
                 // Already completed quiz - go to dashboard
-                router.push('/en/dashboard');
+                router.push('/en/account-dashboard');
             } else {
                 // First time - go to quiz
                 router.push('/en/quiz');

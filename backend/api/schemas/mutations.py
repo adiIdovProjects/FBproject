@@ -20,6 +20,7 @@ class AddCreativeRequest(BaseModel):
     campaign_id: str
     adset_id: str
     creative: SmartCreative
+    ad_name: Optional[str] = Field(None, description="Custom name for the ad")
 
 
 class GeoLocationTarget(BaseModel):
@@ -28,6 +29,12 @@ class GeoLocationTarget(BaseModel):
     type: Literal["country", "region", "city"] = Field(..., description="Type of location")
     name: str = Field(..., description="Display name of location")
     country_code: Optional[str] = Field(None, description="ISO country code")
+
+
+class InterestTarget(BaseModel):
+    """An interest for targeting"""
+    id: str = Field(..., description="Facebook interest ID")
+    name: str = Field(..., description="Interest name")
 
 
 class SmartCampaignRequest(BaseModel):
@@ -44,11 +51,24 @@ class SmartCampaignRequest(BaseModel):
     age_max: int = Field(65, ge=18, le=65)
     daily_budget_cents: int = Field(..., gt=100, description="Daily budget in cents (e.g., 2000 = $20)")
 
+    # Custom audiences (lookalikes, saved audiences) - optional
+    custom_audiences: Optional[List[str]] = Field(None, description="List of custom audience IDs to target")
+
+    # Excluded audiences - optional
+    excluded_audiences: Optional[List[str]] = Field(None, description="List of custom audience IDs to exclude")
+
+    # Interest targeting - optional
+    interests: Optional[List[InterestTarget]] = Field(None, description="List of interests to target")
+
     # Pixel for SALES objective
     pixel_id: Optional[str] = Field(None, description="Facebook Pixel ID (required for SALES objective)")
 
     # Step 3: Creative
     creative: SmartCreative
+
+    # Optional custom names (defaults generated if not provided)
+    adset_name: Optional[str] = Field(None, description="Custom name for the ad set")
+    ad_name: Optional[str] = Field(None, description="Custom name for the ad")
 
 
 # --- Status & Budget Update Schemas ---
@@ -61,3 +81,26 @@ class StatusUpdateRequest(BaseModel):
 class BudgetUpdateRequest(BaseModel):
     """Request body for updating ad set budget"""
     daily_budget_cents: int = Field(..., gt=100, description="Daily budget in cents (minimum 100 = $1)")
+
+
+# --- Edit Schemas ---
+
+class UpdateAdSetTargetingRequest(BaseModel):
+    """Request body for updating ad set targeting"""
+    geo_locations: Optional[List[GeoLocationTarget]] = Field(None, description="New target locations")
+    age_min: Optional[int] = Field(None, ge=18, le=65)
+    age_max: Optional[int] = Field(None, ge=18, le=65)
+    daily_budget_cents: Optional[int] = Field(None, gt=100, description="Daily budget in cents")
+
+
+class UpdateAdCreativeRequest(BaseModel):
+    """Request body for updating ad creative"""
+    account_id: str = Field(..., description="Ad Account ID for uploading new media")
+    page_id: str = Field(..., description="Facebook Page ID")
+    title: Optional[str] = Field(None, max_length=255, description="New headline")
+    body: Optional[str] = Field(None, description="New primary text")
+    call_to_action: Optional[str] = Field(None, description="New CTA button text")
+    image_hash: Optional[str] = Field(None, description="Hash of new uploaded image")
+    video_id: Optional[str] = Field(None, description="ID of new uploaded video")
+    link_url: Optional[HttpUrl] = Field(None, description="New website URL")
+    lead_form_id: Optional[str] = Field(None, description="New Instant Form ID")

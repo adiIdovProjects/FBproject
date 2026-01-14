@@ -18,6 +18,7 @@ from backend.api.repositories.creative_repository import CreativeRepository
 from backend.api.repositories.creative_analysis_repository import CreativeAnalysisRepository
 from backend.api.repositories.breakdown_repository import BreakdownRepository
 from backend.api.repositories.timeseries_repository import TimeSeriesRepository
+from backend.api.repositories.historical_repository import HistoricalRepository
 from backend.api.utils.calculations import MetricCalculator
 from backend.api.schemas.responses import (
     MetricsOverviewResponse,
@@ -30,7 +31,10 @@ from backend.api.schemas.responses import (
     PlacementBreakdown,
     CountryBreakdown,
     CreativeMetrics,
-    AdsetBreakdown
+    CreativeComparisonMetrics,
+    AdsetBreakdown,
+    AdsetComparisonMetrics,
+    DayOfWeekBreakdown
 )
 import logging
 
@@ -51,6 +55,7 @@ class MetricsService:
         self.creative_analysis_repo = CreativeAnalysisRepository(db)
         self.breakdown_repo = BreakdownRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
+        self.historical_repo = HistoricalRepository(db)
         self.calculator = MetricCalculator()
 
     def _get_user_account_ids(self) -> Optional[List[int]]:
@@ -723,6 +728,95 @@ class MetricsService:
 
         return creative_metrics
 
+    def get_creative_metrics_comparison(
+        self,
+        start_date: date,
+        end_date: date,
+        is_video: Optional[bool] = None,
+        min_spend: float = 0,
+        sort_by: str = "spend",
+        account_ids: Optional[List[int]] = None
+    ) -> List[CreativeComparisonMetrics]:
+        """
+        Get creative-level metrics with period comparison.
+
+        Returns creative metrics with comparison to the previous period.
+        """
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        # Get current period creatives
+        current_creatives = self.get_creative_metrics(
+            start_date, end_date, is_video, min_spend, sort_by, None, None, filtered_account_ids
+        )
+
+        # Calculate previous period
+        try:
+            days_diff = (end_date - start_date).days + 1
+            previous_end = start_date - timedelta(days=1)
+            previous_start = previous_end - timedelta(days=days_diff - 1)
+
+            if previous_start.year < 1 or previous_end.year < 1:
+                raise OverflowError("Date underflow")
+
+            # Get previous period creatives (raw dict for lookup)
+            previous_creatives_raw = self.creative_repo.get_creative_metrics(
+                start_date=previous_start,
+                end_date=previous_end,
+                is_video=is_video,
+                min_spend=0,
+                search_query=None,
+                ad_status=None,
+                account_ids=filtered_account_ids
+            )
+        except (OverflowError, ValueError):
+            logger.warning(f"Could not calculate previous period for {start_date} to {end_date}")
+            previous_creatives_raw = []
+
+        # Map previous creatives for lookup
+        previous_map = {c['creative_id']: c for c in previous_creatives_raw}
+
+        comparison_results = []
+        for current in current_creatives:
+            prev = previous_map.get(current.creative_id)
+
+            # Calculate current CPC (not stored in CreativeMetrics)
+            current_cpc = self.calculator.cpc(current.spend, current.clicks)
+
+            # Calculate previous derived metrics if exists
+            prev_metrics = None
+            if prev:
+                prev_metrics = {
+                    'spend': prev['spend'],
+                    'clicks': prev['clicks'],
+                    'impressions': prev['impressions'],
+                    'conversions': prev['conversions'],
+                    'ctr': self.calculator.ctr(prev['clicks'], prev['impressions']),
+                    'cpc': self.calculator.cpc(prev['spend'], prev['clicks']),
+                    'cpa': self.calculator.cpa(prev['spend'], prev['conversions'])
+                }
+
+            # Build comparison object
+            comparison = CreativeComparisonMetrics(
+                **current.model_dump(),
+                previous_spend=prev_metrics['spend'] if prev_metrics else None,
+                previous_clicks=prev_metrics['clicks'] if prev_metrics else None,
+                previous_impressions=prev_metrics['impressions'] if prev_metrics else None,
+                previous_conversions=prev_metrics['conversions'] if prev_metrics else None,
+                previous_ctr=prev_metrics['ctr'] if prev_metrics else None,
+                previous_cpc=prev_metrics['cpc'] if prev_metrics else None,
+                previous_cpa=prev_metrics['cpa'] if prev_metrics else None,
+                spend_change_pct=self.calculator.change_percentage(current.spend, prev_metrics['spend']) if prev_metrics else None,
+                clicks_change_pct=self.calculator.change_percentage(current.clicks, prev_metrics['clicks']) if prev_metrics else None,
+                conversions_change_pct=self.calculator.change_percentage(current.conversions, prev_metrics['conversions']) if prev_metrics else None,
+                ctr_change_pct=self.calculator.change_percentage(current.ctr, prev_metrics['ctr']) if prev_metrics else None,
+                cpc_change_pct=self.calculator.change_percentage(current_cpc, prev_metrics['cpc']) if prev_metrics else None,
+                cpa_change_pct=self.calculator.change_percentage(current.cpa, prev_metrics['cpa']) if prev_metrics else None
+            )
+            comparison_results.append(comparison)
+
+        return comparison_results
+
     def _calculate_derived_metrics(self, raw_metrics: Dict[str, Any]) -> MetricsPeriod:
         """
         Calculate derived metrics from raw metrics.
@@ -796,6 +890,93 @@ class MetricsService:
             adset_metrics.append(metrics)
 
         return adset_metrics
+
+    def get_adset_breakdown_comparison(
+        self,
+        start_date: date,
+        end_date: date,
+        campaign_id: Optional[int] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
+    ) -> List[AdsetComparisonMetrics]:
+        """
+        Get adset-level breakdown with period comparison.
+
+        Returns adset metrics with comparison to the previous period.
+        """
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        # Get current period adsets
+        current_adsets = self.get_adset_breakdown(
+            start_date, end_date, campaign_id, campaign_status, search_query, filtered_account_ids, campaign_ids
+        )
+
+        # Calculate previous period
+        try:
+            days_diff = (end_date - start_date).days + 1
+            previous_end = start_date - timedelta(days=1)
+            previous_start = previous_end - timedelta(days=days_diff - 1)
+
+            if previous_start.year < 1 or previous_end.year < 1:
+                raise OverflowError("Date underflow")
+
+            # Get previous period adsets (raw dict for lookup)
+            previous_adsets_raw = self.adset_repo.get_adset_breakdown(
+                start_date=previous_start,
+                end_date=previous_end,
+                campaign_id=campaign_id,
+                campaign_status=campaign_status,
+                search_query=None,
+                account_ids=filtered_account_ids,
+                campaign_ids=campaign_ids
+            )
+        except (OverflowError, ValueError):
+            logger.warning(f"Could not calculate previous period for {start_date} to {end_date}")
+            previous_adsets_raw = []
+
+        # Map previous adsets for lookup
+        previous_map = {a['adset_id']: a for a in previous_adsets_raw}
+
+        comparison_results = []
+        for current in current_adsets:
+            prev = previous_map.get(current.adset_id)
+
+            # Calculate previous derived metrics if exists
+            prev_metrics = None
+            if prev:
+                prev_metrics = {
+                    'spend': prev['spend'],
+                    'clicks': prev['clicks'],
+                    'impressions': prev['impressions'],
+                    'conversions': prev['conversions'],
+                    'ctr': self.calculator.ctr(prev['clicks'], prev['impressions']),
+                    'cpc': self.calculator.cpc(prev['spend'], prev['clicks']),
+                    'cpa': self.calculator.cpa(prev['spend'], prev['conversions'])
+                }
+
+            # Build comparison object
+            comparison = AdsetComparisonMetrics(
+                **current.model_dump(),
+                previous_spend=prev_metrics['spend'] if prev_metrics else None,
+                previous_clicks=prev_metrics['clicks'] if prev_metrics else None,
+                previous_impressions=prev_metrics['impressions'] if prev_metrics else None,
+                previous_conversions=prev_metrics['conversions'] if prev_metrics else None,
+                previous_ctr=prev_metrics['ctr'] if prev_metrics else None,
+                previous_cpc=prev_metrics['cpc'] if prev_metrics else None,
+                previous_cpa=prev_metrics['cpa'] if prev_metrics else None,
+                spend_change_pct=self.calculator.change_percentage(current.spend, prev_metrics['spend']) if prev_metrics else None,
+                clicks_change_pct=self.calculator.change_percentage(current.clicks, prev_metrics['clicks']) if prev_metrics else None,
+                conversions_change_pct=self.calculator.change_percentage(current.conversions, prev_metrics['conversions']) if prev_metrics else None,
+                ctr_change_pct=self.calculator.change_percentage(current.ctr, prev_metrics['ctr']) if prev_metrics else None,
+                cpc_change_pct=self.calculator.change_percentage(current.cpc, prev_metrics['cpc']) if prev_metrics else None,
+                cpa_change_pct=self.calculator.change_percentage(current.cpa, prev_metrics['cpa']) if prev_metrics else None
+            )
+            comparison_results.append(comparison)
+
+        return comparison_results
 
     def get_country_breakdown(
         self,
@@ -1171,3 +1352,43 @@ class MetricsService:
             roas=self.calculator.change_percentage(current.roas, previous.roas),
             cpa=self.calculator.change_percentage(current.cpa, previous.cpa)
         )
+
+    def get_day_of_week_breakdown(
+        self,
+        start_date: date,
+        end_date: date,
+        account_ids: Optional[List[int]] = None
+    ) -> List[DayOfWeekBreakdown]:
+        """
+        Get performance breakdown by day of week.
+
+        Args:
+            start_date: Start date
+            end_date: End date
+            account_ids: Optional list of account IDs to filter by
+
+        Returns:
+            List of DayOfWeekBreakdown with metrics for each day
+        """
+        resolved_accounts = self._resolve_account_ids(account_ids)
+
+        raw_data = self.historical_repo.get_day_of_week_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=resolved_accounts if resolved_accounts else None
+        )
+
+        return [
+            DayOfWeekBreakdown(
+                day_of_week=row['day_of_week'],
+                spend=row['spend'],
+                impressions=row['impressions'],
+                clicks=row['clicks'],
+                conversions=row['conversions'],
+                ctr=row['ctr'],
+                cpc=row['cpc'],
+                cpa=row['cpa'],
+                roas=row['roas']
+            )
+            for row in raw_data
+        ]

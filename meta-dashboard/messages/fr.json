@@ -3,12 +3,12 @@
     "error_loading": "Erreur lors du chargement des données",
     "no_data_available": "Aucune donnée disponible",
     "try_again": "Essayer à nouveau",
-    "clear": "Clair",
+    "clear": "Effacer",
     "none": "Aucun",
     "loading_data_for": "Chargement des données pour",
     "switch_language": "Changer de langue",
     "save_changes": "Enregistrer les modifications",
-    "back": "Dos",
+    "back": "Retour",
     "cancel": "Annuler",
     "search": "Recherche...",
     "all_statuses": "Tous les statuts",
@@ -25,7 +25,7 @@
     "compare_periods": "Comparer les périodes",
     "saving": "Économie...",
     "saved_successfully": "Sauvegarde réussie",
-    "actions": "Actions",
+    "actions": "Actes",
     "loading": "Chargement..."
   },
   "status": {
@@ -54,7 +54,8 @@
     "creative_performance": "Performance créative",
     "campaign_control": "Contrôle des campagnes",
     "intelligence": "Intelligence",
-    "custom_reports": "Rapports personnalisés"
+    "custom_reports": "Rapports personnalisés",
+    "learning_center": "Centre d'apprentissage"
   },
   "manage": {
     "title": "Gérer les campagnes",
@@ -65,8 +66,8 @@
     "invalid_budget": "Veuillez entrer un montant de budget valide"
   },
   "metrics": {
-    "spend": "Dépenser",
-    "total_spend": "Dépenser",
+    "spend": "Dépenses",
+    "total_spend": "Total Dépenses",
     "impressions": "Impressions",
     "total_impressions": "Impressions",
     "clicks": "Clics",
@@ -96,7 +97,18 @@
     "subtitle": "Affichage des tendances temporelles d'une métrique sélectionnée par niveau de détail.",
     "chart_title": "Graphique de tendance dynamique",
     "quick_insights": "Aperçu rapide",
-    "view_full_analysis": "Voir l'analyse complète"
+    "view_full_analysis": "Voir l'analyse complète",
+    "day_of_week_performance": "Performance par jour de la semaine",
+    "day": "Jour"
+  },
+  "days": {
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche"
   },
   "campaigns": {
     "title": "Performance de la campagne",
@@ -128,7 +140,7 @@
     "filters_panel": "Filtres",
     "metric_select": "Sélectionner les indicateurs",
     "dimension": "Dimension",
-    "breakdown": "Panne",
+    "breakdown": "Ventilation",
     "primary_breakdown": "Ventilation primaire",
     "secondary_breakdown": "Ventilation secondaire (facultative)",
     "none_optional": "Aucun",
@@ -236,14 +248,14 @@
     "gemini_analysis": "Analyse des Gémeaux",
     "questions": {
       "compare_weeks": "Comment cette semaine se compare-t-elle à la semaine dernière ?",
-      "best_ad": "Quelle est la meilleure publicité ?",
-      "ad_performance": "Comment cette publicité fonctionne-t-elle cette semaine ?",
-      "best_country_cpc": "Quel pays possède le meilleur CPC ?",
-      "spend_by_age": "Quelle est la répartition des dépenses par âge ?",
-      "ig_vs_feed": "Comment les Stories Instagram se comportent-elles par rapport au fil d'actualité ?",
-      "avg_roas": "Quel est notre ROAS moyen ce mois-ci ?",
-      "creative_effectiveness": "Quel titre créatif est le plus efficace ?",
-      "leads_overview": "Présentez-moi un aperçu des prospects de cette semaine."
+      "best_ad": "Quelles campagnes devrais-je développer ?",
+      "ad_performance": "Quelles campagnes sous-performent ?",
+      "best_country_cpc": "Quel pays a le meilleur CPC ?",
+      "spend_by_age": "Quel groupe d'âge convertit le mieux ?",
+      "ig_vs_feed": "Comment les Stories performent-elles par rapport au fil ?",
+      "avg_roas": "Comment évolue mon ROAS ?",
+      "creative_effectiveness": "Qu'est-ce qui fait augmenter mon CPA ?",
+      "leads_overview": "Comment devrais-je réallouer mon budget ?"
     }
   },
   "insights": {
@@ -269,7 +281,9 @@
     "opportunities": "Opportunités",
     "no_insights": "Aucune donnée disponible pour cette période",
     "error_loading": "Erreur lors du chargement des informations",
-    "generated_at": "Généré à"
+    "generated_at": "Généré à",
+    "what_can_improve": "Que peut-on améliorer ?",
+    "summary": "Résumé"
   },
   "auth": {
     "login_title": "Connectez-vous à votre compte",
@@ -291,7 +305,8 @@
     "redirecting": "Redirection vers le tableau de bord...",
     "connection_failed": "Échec de la connexion",
     "return_to_login": "Retour à la page de connexion",
-    "continue": "Continuer"
+    "continue": "Continuer",
+    "fbAlreadyLinked": "Ce compte Facebook est déjà lié à un autre compte. Veuillez vous connecter avec l'adresse e-mail que vous avez utilisée à l'origine."
   },
   "settings": {
     "profile": "Profil",
@@ -408,33 +423,82 @@
       "label": "Filtre publicitaire"
     }
   },
-  "token": "(MANQUANT : jeton)",
-  "state": "(MANQUANT : état)",
   "step": "(Étape manquante)",
-  "T": "(MANQUANT : T)",
-  "tab": "(MANQUE : tabulation)",
-  "connect_success": "(MANQUANT : connect_success)",
-  "error": "(MANQUANT : erreur)",
-  "both": "(MANQUANTS : les deux)",
-  "age": "(MANQUE : âge)",
-  "gender": "(MANQUE : genre)",
-  "no_data_available": "(MANQUANT : aucune donnée disponible)",
-  "ad_set_name": "(MANQUANT : nom_ensemble_de_publicités)",
-  "targeting_type": "(MANQUANT : type_ciblage)",
-  "targeting_summary": "(MANQUANT : targeting_summary)",
-  "spend": "(MANQUANT : dépenser)",
-  "impressions": "(MANQUANT : impressions)",
   "clicks": "(Clics manquants)",
-  "ctr": "(MANQUANT : ctr)",
-  "cpc": "(MANQUANT : cpc)",
-  "conversions": "(MANQUANT : conversions)",
-  "roas": "(MANQUANT : roas)",
-  "cpa": "(MANQUANT : cpa)",
-  "broad": "(MANQUANT : large)",
-  "campaign_name": "(MANQUANT : nom_de_la_campagne)",
-  "campaign_status": "(MANQUANT : statut_campagne)",
-  "a": "(MANQUANT : a)",
-  "-": "(MANQUANT: -)",
-  "language-switcher": "(MANQUANT : .language-switcher)",
-  "name": "(NOM MANQUANT)"
+  "name": "(NOM MANQUANT)",
+  "learning": {
+    "title": "Centre d'apprentissage",
+    "subtitle": "Tout ce dont vous avez besoin pour réussir avec les publicités Facebook",
+    "ads_structure": "Structure des publicités Facebook",
+    "ads_structure_desc": "Comprendre les campagnes, les ensembles de publicités et les publicités",
+    "best_practices": "Meilleures pratiques",
+    "best_practices_desc": "Conseils pour de meilleures performances publicitaires",
+    "pixel_setup": "Guide d'installation des pixels",
+    "pixel_setup_desc": "Suivez les conversions sur votre site web",
+    "lead_forms": "Configuration du formulaire de génération de prospects",
+    "lead_forms_desc": "Collectez des prospects directement sur Facebook",
+    "common_mistakes": "Erreurs courantes",
+    "common_mistakes_desc": "Évitez ces erreurs de débutant",
+    "campaign_definition": "Le conteneur qui renferme votre stratégie d'objectifs (Ventes, Prospects, Trafic) et de budget",
+    "adset_definition": "Les paramètres de ciblage : qui voit vos annonces, quand et où.",
+    "ad_definition": "La création - ce que les gens voient réellement (image/vidéo + texte)",
+    "ads_per_adset": "Il est recommandé de diffuser 3 à 5 publicités par ensemble de publicités. Cela permet à Facebook d'optimiser la diffusion sans diluer votre budget.",
+    "new_campaign_vs_adset": "Créez une nouvelle campagne pour des objectifs différents (Ventes vs Prospects). Créez un nouvel ensemble de publicités pour des audiences différentes (États-Unis vs Royaume-Uni, ou différentes tranches d'âge).",
+    "budget_testing": "Commencez par un budget de 5 à 20 $ par jour et par ensemble de publicités pour les tests.",
+    "budget_scaling": "Lors de la montée en puissance, augmentez le budget de 20 % tous les 2 à 3 jours si les performances sont bonnes.",
+    "when_to_pause": "Envisagez de suspendre les annonces dont le taux de clics est inférieur à 1 %, le coût par acquisition est deux fois supérieur à votre objectif ou qui n'ont généré aucune conversion pendant plus de 3 jours.",
+    "pixel_step_1": "Accédez au Gestionnaire d'événements Facebook",
+    "pixel_step_2": "Cliquez sur « Connecter les sources de données », puis sélectionnez « Web ».",
+    "pixel_step_3": "Nommez votre pixel et saisissez l'URL de votre site web.",
+    "pixel_step_4": "Choisissez la méthode d'installation (intégration partenaire ou code manuel)",
+    "pixel_step_5": "Vérifiez que votre pixel fonctionne correctement à l'aide de l'extension de navigateur Pixel Helper.",
+    "pixel_link": "Gestionnaire d'événements ouverts",
+    "lead_step_1": "Accédez à votre page Facebook, puis aux outils de publication.",
+    "lead_step_2": "Cliquez sur « Bibliothèque de formulaires » dans le menu de gauche",
+    "lead_step_3": "Cliquez sur « Créer un formulaire » et choisissez le type de formulaire.",
+    "lead_step_4": "Ajoutez vos questions (nom, courriel, téléphone, questions personnalisées)",
+    "lead_step_5": "Configurez votre écran de remerciement avec les prochaines étapes.",
+    "lead_step_6": "Publiez votre formulaire ; il apparaîtra dans votre liste de formulaires.",
+    "lead_link": "Bibliothèque de formulaires ouverts",
+    "mistake_too_many_ads": "Un trop grand nombre de publicités dans un même ensemble dilue votre budget sur un trop grand nombre de variantes.",
+    "mistake_narrow_targeting": "Un ciblage trop restreint (audience inférieure à 100 000) limite l’optimisation sur Facebook.",
+    "mistake_learning_phase": "Modifier les annonces pendant la phase d'apprentissage réinitialise le processus d'optimisation",
+    "mistake_no_testing": "Ne pas tester les variantes créatives signifie que vous risquez de passer à côté d'options plus performantes.",
+    "objective_title": "Choisissez le bon objectif de campagne",
+    "objective_tip": "L'objectif de votre campagne indique à Facebook l'action que vous souhaitez que les utilisateurs entreprennent. Choisissez toujours l'objectif qui correspond à votre objectif commercial : si vous souhaitez générer des ventes, sélectionnez « Ventes » ; si vous souhaitez générer des prospects, sélectionnez « Prospects ».",
+    "objective_tip_box": "Ciblez précisément ce que vous souhaitez que l'utilisateur fasse : Facebook optimise pour répondre exactement à vos demandes.",
+    "ads_per_adset_title": "Combien de publicités par ensemble de publicités ?",
+    "campaign_vs_adset_title": "Nouvelle campagne ou nouvel ensemble de publicités ?",
+    "budget_title": "Recommandations budgétaires",
+    "when_to_pause_title": "Quand mettre les publicités en pause",
+    "pixel_youtube": "Tutoriel vidéo",
+    "lead_youtube": "Tutoriel vidéo",
+    "pixel_youtube_query": "Tutoriel de configuration de Facebook Pixel",
+    "lead_youtube_query": "Comment créer des formulaires instantanés Facebook"
+  },
+  "tips": {
+    "budget_testing": "Commencez par un budget de 10 à 20 $ par jour pour tester de nouveaux publics.",
+    "audience_size": "Pour de meilleurs résultats, limitez la taille de votre audience à 500 000 à 2 millions d'abonnés.",
+    "ad_variations": "Utilisez 3 à 5 variantes d'annonces pour permettre à Facebook de trouver les annonces gagnantes.",
+    "budget_increase": "Augmenter le budget de 20 % maximum à la fois pour éviter de réinitialiser la phase d'apprentissage",
+    "pause_criteria": "Envisagez de suspendre les annonces dont le taux de clics est inférieur à 1 % ou qui n'ont généré aucune conversion en 3 jours."
+  },
+  "wizard": {
+    "step_of": "Étape {actuelle} de {totale}",
+    "objective_sales": "Idéal pour le e-commerce. Suit les achats via votre pixel.",
+    "objective_leads": "Collectez les coordonnées via des formulaires. Idéal pour les services.",
+    "objective_traffic": "Attirez des visiteurs sur votre site web. Idéal pour accroître votre notoriété.",
+    "objective_engagement": "Obtenez des « j’aime », des commentaires, des partages. Développez votre crédibilité sociale."
+  },
+  "ai_panel": {
+    "title": "Demandez à l'assistant IA",
+    "subtitle": "Obtenez des informations sur vos campagnes",
+    "placeholder": "Posez une question sur vos campagnes...",
+    "thinking": "Analyse de vos données...",
+    "error": "Une erreur s'est produite. Veuillez réessayer.",
+    "q_high_cpa": "Pourquoi mon CPA est-il élevé ?",
+    "q_what_pause": "À quoi dois-je faire une pause ?",
+    "q_improve_ctr": "Comment puis-je améliorer le CTR ?",
+    "q_best_performing": "Qu'est-ce qui fonctionne le mieux ?"
+  }
 }

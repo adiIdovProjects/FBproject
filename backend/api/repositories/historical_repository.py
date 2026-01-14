@@ -243,10 +243,103 @@ class HistoricalRepository(BaseRepository):
             for row in result
         ]
 
+    def get_day_of_week_breakdown(
+        self,
+        start_date: date,
+        end_date: date,
+        account_ids: Optional[List[int]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get performance breakdown by day of week for a date range.
+
+        Args:
+            start_date: Start date
+            end_date: End date
+            account_ids: Optional list of account IDs to filter by
+
+        Returns:
+            List of dicts with metrics aggregated by day of week
+        """
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
+        query = text(f"""
+            SELECT
+                d.day_of_week,
+                SUM(f.spend) as total_spend,
+                SUM(f.impressions) as total_impressions,
+                SUM(f.clicks) as total_clicks,
+                COALESCE(SUM(conv.action_count), 0) as total_conversions,
+                CASE WHEN SUM(f.impressions) > 0
+                     THEN (SUM(f.clicks)::float / SUM(f.impressions)) * 100
+                     ELSE 0 END as ctr,
+                CASE WHEN SUM(f.clicks) > 0
+                     THEN SUM(f.spend) / SUM(f.clicks)
+                     ELSE 0 END as cpc,
+                CASE WHEN COALESCE(SUM(conv.action_count), 0) > 0
+                     THEN SUM(f.spend) / COALESCE(SUM(conv.action_count), 0)
+                     ELSE 0 END as cpa,
+                CASE WHEN SUM(f.spend) > 0 AND SUM(f.purchases) > 0
+                     THEN SUM(f.purchase_value) / SUM(f.spend)
+                     ELSE NULL END as roas
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            LEFT JOIN (
+                SELECT date_id, account_id, campaign_id, adset_id, ad_id, creative_id,
+                       SUM(action_count) as action_count
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                WHERE dat.is_conversion = TRUE
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id
+                  AND f.account_id = conv.account_id
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
+            WHERE d.date BETWEEN :start_date AND :end_date
+                {account_filter}
+            GROUP BY d.day_of_week
+            ORDER BY
+                CASE d.day_of_week
+                    WHEN 'Monday' THEN 1
+                    WHEN 'Tuesday' THEN 2
+                    WHEN 'Wednesday' THEN 3
+                    WHEN 'Thursday' THEN 4
+                    WHEN 'Friday' THEN 5
+                    WHEN 'Saturday' THEN 6
+                    WHEN 'Sunday' THEN 7
+                END
+        """)
+
+        params = {'start_date': start_date, 'end_date': end_date, **param_account_ids}
+        result = self.db.execute(query, params).fetchall()
+
+        return [
+            {
+                'day_of_week': row.day_of_week,
+                'spend': float(row.total_spend or 0),
+                'impressions': int(row.total_impressions or 0),
+                'clicks': int(row.total_clicks or 0),
+                'conversions': int(row.total_conversions or 0),
+                'ctr': float(row.ctr or 0),
+                'cpc': float(row.cpc or 0),
+                'cpa': float(row.cpa or 0),
+                'roas': float(row.roas) if row.roas is not None else None
+            }
+            for row in result
+        ]
+
     def get_campaign_trend_history(
         self,
         campaign_id: int,
-        lookback_days: int = 90
+        lookback_days: int = 90,
+        account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get daily trend history for a specific campaign.
@@ -254,10 +347,20 @@ class HistoricalRepository(BaseRepository):
         Args:
             campaign_id: Campaign ID to analyze
             lookback_days: Number of days to look back (default 90)
+            account_ids: Optional list of account IDs to filter by
 
         Returns:
             List of dicts with daily performance and moving averages
         """
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
         query = text(f"""
             WITH daily_metrics AS (
                 SELECT
@@ -291,6 +394,7 @@ class HistoricalRepository(BaseRepository):
                       AND f.creative_id = conv.creative_id
                 WHERE f.campaign_id = :campaign_id
                     AND d.date >= CURRENT_DATE - INTERVAL '{lookback_days} days'
+                    {account_filter}
                 GROUP BY d.date
             )
             SELECT
@@ -312,7 +416,8 @@ class HistoricalRepository(BaseRepository):
             ORDER BY date
         """)
 
-        result = self.db.execute(query, {'campaign_id': campaign_id}).fetchall()
+        params = {'campaign_id': campaign_id, **param_account_ids}
+        result = self.db.execute(query, params).fetchall()
 
         return [
             {

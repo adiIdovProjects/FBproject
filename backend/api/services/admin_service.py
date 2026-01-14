@@ -75,3 +75,50 @@ class AdminService:
     def get_recent_activity(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get recent audit log activity"""
         return self.repository.get_recent_activity(limit)
+
+    def get_revenue_metrics(self, days: int = 30) -> Dict[str, Any]:
+        """Get revenue and subscription metrics"""
+        subscription_stats = self.repository.get_subscription_stats()
+
+        return {
+            "mrr": 0,  # Will be calculated from Stripe when integrated
+            "arr": 0,
+            "churn_rate": self.repository.get_churn_rate(days),
+            "trial_to_paid_rate": self.repository.get_trial_to_paid_conversion(days),
+            "paying_customers": self.repository.get_paying_customers_count(),
+            "subscription_stats": subscription_stats,
+            "status": "basic"  # "basic" = db only, "full" = with Stripe
+        }
+
+    def get_account_health(self) -> Dict[str, Any]:
+        """Get account health overview"""
+        health = self.repository.get_account_health_overview()
+        last_syncs = self.repository.get_account_last_sync_dates(20)
+        total_spend = self.repository.get_total_spend(30)
+
+        return {
+            **health,
+            "total_spend_30d": total_spend,
+            "last_syncs": last_syncs
+        }
+
+    def get_feature_adoption(self, days: int = 30) -> Dict[str, Any]:
+        """Get feature adoption metrics"""
+        features = self.repository.get_feature_usage_stats(days)
+
+        # Calculate total active users
+        total_active = 0
+        if features:
+            total_active = max(f["unique_users"] for f in features)
+
+        return {
+            "features": features,
+            "total_active_users": total_active
+        }
+
+    def get_error_trends(self, days: int = 30) -> Dict[str, Any]:
+        """Get error trends and summary"""
+        return {
+            "trends": self.repository.get_error_trends(days),
+            "summary": self.repository.get_error_summary(days)
+        }

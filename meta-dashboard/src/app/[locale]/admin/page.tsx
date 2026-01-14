@@ -1,13 +1,14 @@
 "use client";
 
 /**
- * Admin Analytics Dashboard
- * Internal dashboard for tracking platform usage metrics
+ * Admin Analytics Dashboard - Overview
+ * Quick KPIs and platform health at a glance
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import {
   Users,
   Building2,
@@ -16,22 +17,19 @@ import {
   TrendingUp,
   UserCheck,
   ArrowRight,
-  Shield,
+  DollarSign,
+  ChevronRight,
 } from 'lucide-react';
 
 // Components
-import { MainLayout } from '../../../components/MainLayout';
+import { AdminLayout } from '../../../components/admin/AdminLayout';
 
 // Services
 import {
   fetchAdminDashboard,
   fetchErrorLogs,
   fetchActivityLogs,
-  AdminDashboardResponse,
-  ErrorLogEntry,
-  ActivityLogEntry,
 } from '../../../services/admin.service';
-import { apiClient } from '../../../services/apiClient';
 
 // Chart components
 import {
@@ -52,32 +50,13 @@ import {
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b'];
 
 export default function AdminDashboard() {
-  const router = useRouter();
+  const locale = useLocale();
   const [days, setDays] = useState(30);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-
-  // Check admin access
-  useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const response = await apiClient.get('/api/v1/users/me');
-        if (!response.data.is_admin) {
-          router.push('/en/dashboard');
-          return;
-        }
-        setIsAdmin(true);
-      } catch {
-        router.push('/en/login');
-      }
-    };
-    checkAdmin();
-  }, [router]);
 
   // Fetch dashboard data
   const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
     queryKey: ['admin-dashboard', days],
     queryFn: () => fetchAdminDashboard(days),
-    enabled: isAdmin === true,
     staleTime: 60 * 1000, // 1 minute
   });
 
@@ -85,26 +64,13 @@ export default function AdminDashboard() {
   const { data: errorLogs } = useQuery({
     queryKey: ['admin-errors'],
     queryFn: () => fetchErrorLogs(50),
-    enabled: isAdmin === true,
   });
 
   // Fetch activity logs
   const { data: activityLogs } = useQuery({
     queryKey: ['admin-activity'],
     queryFn: () => fetchActivityLogs(20),
-    enabled: isAdmin === true,
   });
-
-  // Show loading while checking admin
-  if (isAdmin === null) {
-    return (
-      <MainLayout title="Admin Dashboard" description="Checking access...">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
-        </div>
-      </MainLayout>
-    );
-  }
 
   const userMetrics = dashboardData?.user_metrics;
   const accountMetrics = dashboardData?.account_metrics;
@@ -130,13 +96,36 @@ export default function AdminDashboard() {
     : [];
 
   return (
-    <MainLayout
-      title="Admin Dashboard"
-      description="Platform analytics and user metrics"
+    <AdminLayout
+      title="Overview"
+      description="Platform analytics and user metrics at a glance"
     >
+      {/* Quick Navigation Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Link href={`/${locale}/admin/users`} className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-indigo-500/50 transition-all group">
+          <Users className="w-6 h-6 text-indigo-400 mb-2" />
+          <p className="font-semibold text-white">Users</p>
+          <p className="text-xs text-gray-500">Manage users</p>
+        </Link>
+        <Link href={`/${locale}/admin/revenue`} className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-green-500/50 transition-all group">
+          <DollarSign className="w-6 h-6 text-green-400 mb-2" />
+          <p className="font-semibold text-white">Revenue</p>
+          <p className="text-xs text-gray-500">MRR & subscriptions</p>
+        </Link>
+        <Link href={`/${locale}/admin/accounts`} className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-purple-500/50 transition-all group">
+          <Building2 className="w-6 h-6 text-purple-400 mb-2" />
+          <p className="font-semibold text-white">Accounts</p>
+          <p className="text-xs text-gray-500">Account health</p>
+        </Link>
+        <Link href={`/${locale}/admin/activity`} className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-orange-500/50 transition-all group">
+          <Activity className="w-6 h-6 text-orange-400 mb-2" />
+          <p className="font-semibold text-white">Activity</p>
+          <p className="text-xs text-gray-500">Logs & errors</p>
+        </Link>
+      </div>
+
       {/* Period Selector */}
-      <div className="flex items-center gap-4 mb-8">
-        <Shield className="w-6 h-6 text-indigo-400" />
+      <div className="flex items-center gap-4 mb-6">
         <span className="text-gray-400">Period:</span>
         <select
           value={days}
@@ -308,7 +297,7 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={authBreakdown}
+                    data={authBreakdown as any}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -316,7 +305,7 @@ export default function AdminDashboard() {
                     paddingAngle={5}
                     dataKey="count"
                     nameKey="method"
-                    label={({ method, count }) => `${method}: ${count}`}
+                    label={({ name, value }) => `${name}: ${value}`}
                   >
                     {authBreakdown.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -450,7 +439,7 @@ export default function AdminDashboard() {
           Stripe integration coming soon
         </p>
       </div>
-    </MainLayout>
+    </AdminLayout>
   );
 }
 

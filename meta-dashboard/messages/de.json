@@ -48,7 +48,8 @@
     "creative_performance": "Kreativleistung",
     "campaign_control": "Kampagnensteuerung",
     "intelligence": "Intelligenz",
-    "custom_reports": "Benutzerdefinierte Berichte"
+    "custom_reports": "Benutzerdefinierte Berichte",
+    "learning_center": "Lernzentrum"
   },
   "manage": {
     "title": "Kampagnen verwalten",
@@ -90,7 +91,18 @@
     "subtitle": "Zeittrends für eine ausgewählte Metrik nach Granularität anzeigen.",
     "chart_title": "Dynamisches Trenddiagramm",
     "quick_insights": "Schnelle Einblicke",
-    "view_full_analysis": "Vollständige Analyse anzeigen"
+    "view_full_analysis": "Vollständige Analyse anzeigen",
+    "day_of_week_performance": "Leistung nach Wochentag",
+    "day": "Tag"
+  },
+  "days": {
+    "monday": "Montag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch",
+    "thursday": "Donnerstag",
+    "friday": "Freitag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag"
   },
   "campaigns": {
     "title": "Kampagnen-Performance",
@@ -229,15 +241,15 @@
     "suggested_questions": "Vorgeschlagene Fragen",
     "gemini_analysis": "Gemini-Analyse",
     "questions": {
-      "compare_weeks": "Wie schneidet diese Woche im Vergleich zu letzter Woche ab?",
-      "best_ad": "Was ist die beste Anzeige?",
-      "ad_performance": "Wie funktioniert diese Anzeige diese Woche?",
+      "compare_weeks": "Wie schneidet diese Woche im Vergleich zur letzten ab?",
+      "best_ad": "Welche Kampagnen sollte ich skalieren?",
+      "ad_performance": "Welche Kampagnen performen schlecht?",
       "best_country_cpc": "Welches Land hat den besten CPC?",
-      "spend_by_age": "Wie ist die Ausgabenverteilung nach Alter?",
-      "ig_vs_feed": "Wie performen Instagram Stories im Vergleich zum Feed?",
-      "avg_roas": "Was ist unser durchschnittlicher ROAS in diesem Monat?",
-      "creative_effectiveness": "Welcher Creative-Titel ist am effektivsten?",
-      "leads_overview": "Zeigen Sie mir eine Übersicht der Leads in dieser Woche."
+      "spend_by_age": "Welche Altersgruppe konvertiert am besten?",
+      "ig_vs_feed": "Wie performen Stories im Vergleich zum Feed?",
+      "avg_roas": "Wie entwickelt sich mein ROAS?",
+      "creative_effectiveness": "Was verursacht den Anstieg meines CPA?",
+      "leads_overview": "Wie sollte ich mein Budget umverteilen?"
     }
   },
   "insights": {
@@ -263,7 +275,9 @@
     "medium_priority": "Mittlere Priorität",
     "test_and_learn": "Testen und Lernen",
     "campaign_analysis": "Kampagnenanalyse",
-    "campaign_analysis_desc": "Portfoliooptimierung & Budget"
+    "campaign_analysis_desc": "Portfoliooptimierung & Budget",
+    "what_can_improve": "Was kann verbessert werden?",
+    "summary": "Zusammenfassung"
   },
   "auth": {
     "login_title": "Melden Sie sich bei Ihrem Konto an",
@@ -285,7 +299,8 @@
     "connection_failed": "Verbindung fehlgeschlagen",
     "return_to_login": "Zurück zum Login",
     "continue_with_facebook": "Weiter mit Facebook",
-    "continue": "Weitermachen"
+    "continue": "Weitermachen",
+    "fbAlreadyLinked": "Dieses Facebook-Konto ist bereits mit einem anderen Konto verknüpft. Bitte melden Sie sich mit der ursprünglich verwendeten E-Mail-Adresse an."
   },
   "settings": {
     "profile": "Profil",
@@ -436,5 +451,80 @@
     "PAUSED": "Angehalten",
     "ARCHIVED": "Archiviert",
     "UNKNOWN": "Unbekannt"
+  },
+  "learning": {
+    "title": "Lernzentrum",
+    "subtitle": "Alles, was Sie für erfolgreiche Facebook-Anzeigen benötigen",
+    "ads_structure": "Facebook-Anzeigenstruktur",
+    "ads_structure_desc": "Kampagne, Anzeigengruppe und Anzeige verstehen",
+    "best_practices": "Bewährte Verfahren",
+    "best_practices_desc": "Tipps für eine bessere Anzeigenleistung",
+    "pixel_setup": "Pixel-Einrichtungsanleitung",
+    "pixel_setup_desc": "Verfolgen Sie die Konversionen auf Ihrer Website",
+    "lead_forms": "Einrichtung des Lead-Formulars",
+    "lead_forms_desc": "Sammeln Sie Leads direkt auf Facebook",
+    "common_mistakes": "Häufige Fehler",
+    "common_mistakes_desc": "Vermeiden Sie diese Anfängerfehler",
+    "campaign_definition": "Der Container, der Ihre Zielsetzung (Umsatz, Leads, Traffic) und Budgetstrategie enthält",
+    "adset_definition": "Die Targeting-Einstellungen – wer Ihre Anzeigen wann und wo sieht",
+    "ad_definition": "Das Kreative – das, was die Leute tatsächlich sehen (Bild/Video + Text)",
+    "ads_per_adset": "Es werden 3–5 Anzeigen pro Anzeigengruppe empfohlen. Dadurch kann Facebook die Auslieferung optimieren, ohne Ihr Budget zu belasten.",
+    "new_campaign_vs_adset": "Erstellen Sie eine neue Kampagne für unterschiedliche Ziele (Umsatz vs. Leads). Erstellen Sie eine neue Anzeigengruppe für unterschiedliche Zielgruppen (USA vs. Großbritannien oder unterschiedliche Altersgruppen).",
+    "budget_testing": "Beginnen Sie mit 5-20 $/Tag pro Anzeigengruppe für die Testphase.",
+    "budget_scaling": "Bei einer Skalierung sollte das Budget alle 2-3 Tage um 20 % erhöht werden, sofern die Performance gut ist.",
+    "when_to_pause": "Erwägen Sie, Anzeigen mit einer Klickrate unter 1 %, einem Kosten-pro-Buchung-Preis (CPA) vom Doppelten Ihres Zielwerts oder ohne Conversions innerhalb von 3 oder mehr Tagen zu pausieren.",
+    "pixel_step_1": "Gehe zum Facebook-Veranstaltungsmanager",
+    "pixel_step_2": "Klicken Sie auf „Datenquellen verbinden“ und wählen Sie dann „Web“ aus.",
+    "pixel_step_3": "Benennen Sie Ihr Pixel und geben Sie Ihre Website-URL ein.",
+    "pixel_step_4": "Wählen Sie die Installationsmethode (Partnerintegration oder manuelle Codierung).",
+    "pixel_step_5": "Testen Sie mithilfe der Browsererweiterung Pixel Helper, ob Ihr Pixel korrekt funktioniert.",
+    "pixel_link": "Veranstaltungsmanager",
+    "lead_step_1": "Gehe zu deiner Facebook-Seite und dann zu den Veröffentlichungstools.",
+    "lead_step_2": "Klicken Sie im linken Menü auf „Formularbibliothek“.",
+    "lead_step_3": "Klicken Sie auf „Formular erstellen“ und wählen Sie den Formulartyp aus.",
+    "lead_step_4": "Fügen Sie Ihre Fragen hinzu (Name, E-Mail-Adresse, Telefonnummer, individuelle Fragen)",
+    "lead_step_5": "Richten Sie Ihren Dankesbildschirm mit den nächsten Schritten ein.",
+    "lead_step_6": "Veröffentlichen Sie Ihr Formular – es wird dann in Ihrer Formularliste angezeigt.",
+    "lead_link": "Open Forms Bibliothek",
+    "mistake_too_many_ads": "Zu viele Anzeigen in einer Anzeigengruppe verteilen Ihr Budget auf zu viele Varianten.",
+    "mistake_narrow_targeting": "Eine zu enge Zielgruppenansprache (unter 100.000 Nutzern) schränkt die Optimierungsmöglichkeiten von Facebook ein.",
+    "mistake_learning_phase": "Eine Änderung der Anzeigen während der Lernphase setzt den Optimierungsprozess zurück.",
+    "mistake_no_testing": "Wenn kreative Varianten nicht getestet werden, könnten Ihnen leistungsfähigere Optionen entgehen.",
+    "objective_title": "Wählen Sie das richtige Kampagnenziel",
+    "objective_tip": "Mit Ihrem Kampagnenziel teilen Sie Facebook mit, welche Aktion Sie von den Nutzern erwarten. Wählen Sie immer das Ziel, das Ihrem tatsächlichen Geschäftsziel entspricht: Wenn Sie Käufe generieren möchten, wählen Sie „Verkäufe“; wenn Sie Leads generieren möchten, wählen Sie „Leads“.",
+    "objective_tip_box": "Richten Sie die Aufmerksamkeit auf das, was der Nutzer wirklich tun soll – Facebook optimiert genau für das, was Sie verlangen.",
+    "ads_per_adset_title": "Wie viele Anzeigen pro Anzeigengruppe?",
+    "campaign_vs_adset_title": "Neue Kampagne vs. neue Anzeigengruppe?",
+    "budget_title": "Budgetempfehlungen",
+    "when_to_pause_title": "Wann man Werbung pausieren sollte",
+    "pixel_youtube": "Tutorial ansehen",
+    "lead_youtube": "Tutorial ansehen",
+    "pixel_youtube_query": "Facebook-Pixel-Einrichtungsanleitung",
+    "lead_youtube_query": "So erstellen Sie Facebook-Sofortformulare"
+  },
+  "tips": {
+    "budget_testing": "Beginnen Sie mit 10-20 Dollar pro Tag für das Testen neuer Zielgruppen.",
+    "audience_size": "Für optimale Ergebnisse sollte die Zielgruppe zwischen 500.000 und 2 Millionen Personen liegen.",
+    "ad_variations": "Nutzen Sie 3-5 Anzeigenvarianten, damit Facebook die Gewinner ermittelt.",
+    "budget_increase": "Erhöhen Sie das Budget jeweils um maximal 20 %, um eine Zurücksetzung der Lernphase zu vermeiden.",
+    "pause_criteria": "Erwägen Sie, Anzeigen mit einer Klickrate unter 1 % oder ohne Conversions innerhalb von 3 Tagen zu pausieren."
+  },
+  "wizard": {
+    "step_of": "Schritt {aktuell} von {gesamt}",
+    "objective_sales": "Ideal für den E-Commerce. Erfasst Käufe über Ihr Pixel.",
+    "objective_leads": "Sammeln Sie Kontaktinformationen über Formulare. Ideal für Dienstleistungsunternehmen.",
+    "objective_traffic": "Generieren Sie Besucher für Ihre Website. Gut für die Bekanntheitssteigerung.",
+    "objective_engagement": "Erhalte Likes, Kommentare und Shares. Schaffe Social Proof."
+  },
+  "ai_panel": {
+    "title": "Frag den KI-Assistenten",
+    "subtitle": "Erhalten Sie Einblicke in Ihre Kampagnen",
+    "placeholder": "Stellen Sie eine Frage zu Ihren Kampagnen...",
+    "thinking": "Ihre Daten werden analysiert...",
+    "error": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "q_high_cpa": "Warum ist mein CPA so hoch?",
+    "q_what_pause": "Was soll ich pausieren?",
+    "q_improve_ctr": "Wie kann ich die Klickrate verbessern?",
+    "q_best_performing": "Was schneidet am besten ab?"
   }
 }

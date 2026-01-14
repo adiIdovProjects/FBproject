@@ -120,7 +120,7 @@ export default function UserProfileQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push('/en/dashboard');
+        router.push('/en/account-dashboard');
     };
 
     const progressPercent = ((currentQuestion + 1) / 4) * 100;

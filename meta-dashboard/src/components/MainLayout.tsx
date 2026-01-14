@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Sidebar } from './Sidebar';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -14,6 +15,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
     const t = useTranslations();
     const locale = useLocale();
     const isRTL = locale === 'ar' || locale === 'he';
+
+    // Track page views automatically
+    usePageTracking();
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans flex overflow-hidden selection:bg-accent/30 selection:text-white">

@@ -10,8 +10,6 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { BreakdownRow, BreakdownType, DateRange } from '../../types/campaigns.types';
 import { fetchBreakdown } from '../../services/campaigns.service';
-import { fetchInsightsSummary, InsightItem } from '../../services/insights.service';
-import InsightCard from '../insights/InsightCard';
 
 interface BreakdownTabsProps {
   dateRange: DateRange;
@@ -20,6 +18,8 @@ interface BreakdownTabsProps {
   statusFilter?: string[];
   searchQuery?: string;
   accountId?: string | null;
+  campaignIds?: number[] | null; // Optional: filter by specific campaigns
+  isVisible?: boolean; // Triggers initial load when section enters viewport
 }
 
 type Tab = {
@@ -42,6 +42,8 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   statusFilter = [],
   searchQuery = '',
   accountId = null,
+  campaignIds = null,
+  isVisible = false,
 }) => {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState<BreakdownType>('adset');
@@ -53,14 +55,17 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   // Track if component has been interacted with (lazy loading)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  // Insights state
-  const [breakdownInsights, setBreakdownInsights] = useState<InsightItem[]>([]);
-  const [isInsightsLoading, setIsInsightsLoading] = useState(false);
-
   // Check if any row has conversion value
   const hasConversionValue = breakdownData.some(row => (row.conversion_value || 0) > 0);
 
-  // Fetch breakdown data when tab changes or date range changes (only after first interaction)
+  // Auto-load when section becomes visible in viewport
+  useEffect(() => {
+    if (isVisible && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [isVisible, hasLoadedOnce]);
+
+  // Fetch breakdown data when tab changes or date range changes (only after first interaction or visibility)
   useEffect(() => {
     const loadBreakdownData = async () => {
       if (!dateRange.startDate || !dateRange.endDate || !hasLoadedOnce) return;
@@ -81,35 +86,6 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
 
     loadBreakdownData();
   }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, statusFilter, searchQuery, accountId]);
-
-  // Fetch insights when breakdown tab changes
-  useEffect(() => {
-    const loadBreakdownInsights = async () => {
-      if (!hasLoadedOnce || !dateRange.startDate || !dateRange.endDate) return;
-
-      setIsInsightsLoading(true);
-      try {
-        const insights = await fetchInsightsSummary(
-          dateRange,
-          'campaigns',
-          {
-            breakdownType: activeTab,
-            breakdownGroupBy: activeTab === 'age-gender' ? demographicSubTab : undefined
-          },
-          accountId
-        );
-        setBreakdownInsights(insights);
-      } catch (err: any) {
-        console.error('[BreakdownTabs] Error fetching insights:', err);
-        setBreakdownInsights([]);
-      } finally {
-        setIsInsightsLoading(false);
-      }
-    };
-
-    loadBreakdownInsights();
-    loadBreakdownInsights();
-  }, [activeTab, demographicSubTab, dateRange.startDate, dateRange.endDate, hasLoadedOnce, accountId]);
 
   // Load data on first tab click
   const handleTabClick = (tabId: BreakdownType) => {
@@ -191,15 +167,6 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
 
       {/* Tab Content */}
       <div className="p-6">
-        {/* Breakdown Insights */}
-        {hasLoadedOnce && breakdownInsights.length > 0 && (
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {breakdownInsights.map((insight, idx) => (
-              <InsightCard key={idx} insights={[insight]} isLoading={isInsightsLoading} />
-            ))}
-          </div>
-        )}
-
         {!hasLoadedOnce && !isLoading && (
           <div className="flex items-center justify-center h-64 text-gray-400">
             <div className="text-center">
@@ -264,20 +231,11 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
                     {t('metrics.cpc')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.conversions')}
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.leads') || 'Leads'}
-                  </th>
                   {hasConversionValue && (
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
                       {t('metrics.roas')}
                     </th>
                   )}
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.cpa')}
-                  </th>
                 </tr>
               </thead>
 
@@ -296,15 +254,19 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     {activeTab === 'adset' && (
                       <>
                         <td className="px-4 py-4 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.targeting_type === 'Lookalike' ? 'bg-purple-900/40 text-purple-300' :
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            row.targeting_type === 'Broad' ? 'bg-blue-900/40 text-blue-300' :
+                            row.targeting_type === 'Lookalike' ? 'bg-purple-900/40 text-purple-300' :
+                            row.targeting_type === 'Interest' ? 'bg-green-900/40 text-green-300' :
+                            row.targeting_type === 'Custom Audience' ? 'bg-orange-900/40 text-orange-300' :
                             row.targeting_type === 'List Audience' ? 'bg-amber-900/40 text-amber-300' :
-                              row.targeting_type === 'Remarketing' ? 'bg-blue-900/40 text-blue-300' :
-                                row.targeting_type === 'Interest Audience' ? 'bg-green-900/40 text-green-300' :
-                                  row.targeting_type === 'Mix Audience' ? 'bg-indigo-900/40 text-indigo-300' :
-                                    row.targeting_type === 'Advantage+' ? 'bg-teal-900/40 text-teal-300' :
-                                      'bg-gray-700 text-gray-300'
-                            }`}>
-                            {row.targeting_type ? t(row.targeting_type.toLowerCase()) : t('breakdown.broad')}
+                            row.targeting_type === 'Remarketing' ? 'bg-cyan-900/40 text-cyan-300' :
+                            row.targeting_type === 'Interest Audience' ? 'bg-green-900/40 text-green-300' :
+                            row.targeting_type === 'Mix Audience' ? 'bg-indigo-900/40 text-indigo-300' :
+                            row.targeting_type === 'Advantage+' ? 'bg-teal-900/40 text-teal-300' :
+                            'bg-gray-700 text-gray-300'
+                          }`}>
+                            {row.targeting_type || 'Broad'}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-400 max-w-[300px] truncate">
@@ -338,27 +300,12 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                       {formatCurrency(row.cpc)}
                     </td>
 
-                    {/* Conversions */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatNumber(row.conversions)}
-                    </td>
-
-                    {/* Leads (Consolidated) */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatNumber((row.lead_website || 0) + (row.lead_form || 0))}
-                    </td>
-
                     {/* ROAS */}
                     {hasConversionValue && (
                       <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
                         {row.conversions > 0 ? row.roas.toFixed(2) : 'N/A'}
                       </td>
                     )}
-
-                    {/* CPA */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
-                      {formatCurrency(row.cpa)}
-                    </td>
                   </tr>
                 ))}
               </tbody>

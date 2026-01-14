@@ -7,8 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { TrendingUp, TrendingDown, Calendar, AlertCircle } from 'lucide-react';
+import { TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   fetchHistoricalAnalysis,
   HistoricalAnalysisResponse
@@ -18,12 +19,14 @@ interface HistoricalTrendsViewProps {
   startDate: string;
   endDate: string;
   isRTL: boolean;
+  accountId?: string;
 }
 
 export default function HistoricalTrendsView({
   startDate,
   endDate,
-  isRTL
+  isRTL,
+  accountId
 }: HistoricalTrendsViewProps) {
   const [data, setData] = useState<HistoricalAnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +47,7 @@ export default function HistoricalTrendsView({
       setError(null);
 
       try {
-        const result = await fetchHistoricalAnalysis(lookbackDays, undefined, locale);
+        const result = await fetchHistoricalAnalysis(lookbackDays, undefined, locale, accountId);
         setData(result);
       } catch (err: any) {
         console.error('[Historical Trends] Error:', err);
@@ -55,7 +58,7 @@ export default function HistoricalTrendsView({
     };
 
     fetchData();
-  }, [lookbackDays]);
+  }, [lookbackDays, accountId, locale]);
 
   // Loading state
   if (isLoading) {
@@ -111,80 +114,56 @@ export default function HistoricalTrendsView({
         </div>
       </div>
 
-      {/* Trend Metrics Summary */}
-      {data.data && data.data.trend_metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Trend Direction */}
-          <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-1">Trend Direction</div>
-            <div className="flex items-center gap-2">
-              {data.data.trend_metrics.trend_direction.toLowerCase().includes('up') ? (
-                <TrendingUp className="w-5 h-5 text-green-400" />
-              ) : (
-                <TrendingDown className="w-5 h-5 text-red-400" />
-              )}
-              <div className="text-xl font-bold">
-                {data.data.trend_metrics.trend_direction}
-              </div>
-            </div>
-          </div>
-
-          {/* Best Day */}
-          <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-1">Best Day</div>
-            <div className="text-xl font-bold text-green-400">
-              {data.data.trend_metrics.best_day}
-            </div>
-          </div>
-
-          {/* Worst Day */}
-          <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-1">Worst Day</div>
-            <div className="text-xl font-bold text-red-400">
-              {data.data.trend_metrics.worst_day}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Weekly Trends Table */}
+      {/* Weekly Trend Chart */}
       {data.data && data.data.weekly_trends && data.data.weekly_trends.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Weekly Performance Trends</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border-subtle">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">Week Start</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Spend</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conversions</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">ROAS</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">WoW Change</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.data.weekly_trends.slice(-8).reverse().map((week, idx) => (
-                  <tr key={idx} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
-                    <td className="py-3 px-4 text-sm">
-                      {new Date(week.week_start).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      ${(week.spend ?? 0).toFixed(2)}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      {week.conversions ?? 0}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      {(week.roas ?? 0).toFixed(2)}x
-                    </td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${(week.wow_change_pct ?? 0) > 0 ? 'text-green-400' : (week.wow_change_pct ?? 0) < 0 ? 'text-red-400' : 'text-gray-400'
-                      }`}>
-                      {(week.wow_change_pct ?? 0) > 0 ? '+' : ''}{(week.wow_change_pct ?? 0).toFixed(1)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h3 className="text-lg font-bold mb-4">Weekly Conversions Trend</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={data.data.weekly_trends.map(week => ({
+                  week: new Date(week.week_start).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+                  conversions: week.conversions || 0,
+                  spend: week.spend || 0
+                }))}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis
+                  dataKey="week"
+                  stroke="#475569"
+                  tick={{ fill: '#9ca3af', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="#475569"
+                  tick={{ fill: '#9ca3af', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#9ca3af' }}
+                  formatter={(value: number, name: string) => [
+                    name === 'conversions' ? value : `$${value.toFixed(2)}`,
+                    name === 'conversions' ? 'Conversions' : 'Spend'
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="conversions"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={{ fill: '#10b981', strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: '#10b981' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}

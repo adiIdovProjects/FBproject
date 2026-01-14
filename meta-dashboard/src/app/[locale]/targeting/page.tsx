@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Filter, Target, Search, X, Layers } from 'lucide-react';
+import { Filter, Target, Search, X, Layers, TrendingUp, TrendingDown } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -16,9 +16,10 @@ import TargetingTable from '../../../components/targeting/TargetingTable';
 import TimeGranularityToggle from '../../../components/campaigns/TimeGranularityToggle';
 import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsChart';
 import CreativeBreakdownTabs from '../../../components/creatives/CreativeBreakdownTabs';
+import { useInView } from '../../../hooks/useInView';
 
 // Services & Types
-import { fetchBreakdown, fetchTrendData } from '../../../services/campaigns.service';
+import { fetchBreakdown, fetchBreakdownWithComparison, fetchTrendData } from '../../../services/campaigns.service';
 import { TargetingRow, TargetingTypeMetrics } from '../../../types/targeting.types';
 import { DateRange, MetricType } from '../../../types/dashboard.types';
 import { TimeGranularity } from '../../../types/campaigns.types';
@@ -48,12 +49,18 @@ export default function TargetingPage() {
     const [isFilterActive, setIsFilterActive] = useState(false);
     const [filteredAdsetIds, setFilteredAdsetIds] = useState<number[]>([]);
 
+    // Comparison toggle
+    const [showComparison, setShowComparison] = useState(false);
+
     // Chart state
     const [selectedMetric, setSelectedMetric] = useState<MetricType>('spend');
     const [granularity, setGranularity] = useState<TimeGranularity>('day');
     const [trendData, setTrendData] = useState<any[]>([]);
     const [isTrendLoading, setIsTrendLoading] = useState(false);
     const [currency, setCurrency] = useState<string>('USD');
+
+    // Viewport-based lazy loading for breakdown section
+    const [breakdownRef, isBreakdownVisible] = useInView();
 
     // Use account-level hasROAS from context (with fallback to local check)
     const hasConversionValue = hasROAS ?? targetingData.some(adset => (adset.conversion_value || 0) > 0);
@@ -70,23 +77,62 @@ export default function TargetingPage() {
         const interestAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Interest');
         const customAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Custom Audience');
 
-        const calculateMetrics = (adsetsArray: TargetingRow[]): TargetingTypeMetrics => {
+        const calculateMetrics = (adsetsArray: TargetingRow[]) => {
             if (adsetsArray.length === 0) {
-                return { avgROAS: 0, avgCTR: 0, totalSpend: 0, count: 0 };
+                return {
+                    avgROAS: 0, avgCTR: 0, totalSpend: 0, count: 0,
+                    totalClicks: 0, totalConversions: 0, avgCPC: 0, avgCPA: 0,
+                    prevSpend: null, prevCTR: null, prevCPC: null, prevConversions: null, prevCPA: null,
+                    spendChangePct: null, ctrChangePct: null, cpcChangePct: null, conversionsChangePct: null, cpaChangePct: null
+                };
             }
 
             const totalSpend = adsetsArray.reduce((sum, a) => sum + a.spend, 0);
             const totalConversionValue = adsetsArray.reduce((sum, a) => sum + (a.conversion_value || 0), 0);
             const totalClicks = adsetsArray.reduce((sum, a) => sum + a.clicks, 0);
             const totalImpressions = adsetsArray.reduce((sum, a) => sum + a.impressions, 0);
+            const totalConversions = adsetsArray.reduce((sum, a) => sum + (a.conversions || 0), 0);
             const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
             const avgROAS = totalSpend > 0 ? totalConversionValue / totalSpend : 0;
+            const avgCPC = totalClicks > 0 ? totalSpend / totalClicks : 0;
+            const avgCPA = totalConversions > 0 ? totalSpend / totalConversions : 0;
+
+            // Calculate previous period metrics if comparison data exists
+            const prevSpend = adsetsArray.reduce((sum, a) => sum + (a.previous_spend || 0), 0);
+            const prevClicks = adsetsArray.reduce((sum, a) => sum + (a.previous_clicks || 0), 0);
+            const prevImpressions = adsetsArray.reduce((sum, a) => sum + (a.previous_impressions || 0), 0);
+            const prevConversions = adsetsArray.reduce((sum, a) => sum + (a.previous_conversions || 0), 0);
+            const prevCTR = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
+            const prevCPC = prevClicks > 0 ? prevSpend / prevClicks : 0;
+            const prevCPA = prevConversions > 0 ? prevSpend / prevConversions : 0;
+
+            // Calculate change percentages
+            const calcChange = (current: number, previous: number) => {
+                if (previous === 0) return current > 0 ? 100 : null;
+                return ((current - previous) / previous) * 100;
+            };
+
+            const hasPrevData = prevSpend > 0 || prevClicks > 0;
 
             return {
                 avgROAS,
                 avgCTR,
                 totalSpend,
-                count: adsetsArray.length
+                count: adsetsArray.length,
+                totalClicks,
+                totalConversions,
+                avgCPC,
+                avgCPA,
+                prevSpend: hasPrevData ? prevSpend : null,
+                prevCTR: hasPrevData ? prevCTR : null,
+                prevCPC: hasPrevData ? prevCPC : null,
+                prevConversions: hasPrevData ? prevConversions : null,
+                prevCPA: hasPrevData ? prevCPA : null,
+                spendChangePct: hasPrevData ? calcChange(totalSpend, prevSpend) : null,
+                ctrChangePct: hasPrevData ? calcChange(avgCTR, prevCTR) : null,
+                cpcChangePct: hasPrevData ? calcChange(avgCPC, prevCPC) : null,
+                conversionsChangePct: hasPrevData ? calcChange(totalConversions, prevConversions) : null,
+                cpaChangePct: hasPrevData ? calcChange(avgCPA, prevCPA) : null
             };
         };
 
@@ -111,15 +157,26 @@ export default function TargetingPage() {
         async function loadData() {
             setIsLoading(true);
             try {
-                const adsetsData = await fetchBreakdown(
-                    dateRange,
-                    'adset',
-                    'both',
-                    statusFilter ? [statusFilter] : [],
-                    searchQuery,
-                    selectedAccountId || undefined,
-                    undefined
-                );
+                // Use comparison endpoint when showComparison is enabled
+                const adsetsData = showComparison
+                    ? await fetchBreakdownWithComparison(
+                        dateRange,
+                        'adset',
+                        'both',
+                        statusFilter ? [statusFilter] : [],
+                        searchQuery,
+                        selectedAccountId || undefined,
+                        undefined
+                    )
+                    : await fetchBreakdown(
+                        dateRange,
+                        'adset',
+                        'both',
+                        statusFilter ? [statusFilter] : [],
+                        searchQuery,
+                        selectedAccountId || undefined,
+                        undefined
+                    );
 
                 // Apply type filter client-side
                 let filteredData = adsetsData;
@@ -136,7 +193,7 @@ export default function TargetingPage() {
         }
 
         loadData();
-    }, [dateRange, searchQuery, typeFilter, statusFilter, selectedAccountId]);
+    }, [dateRange, searchQuery, typeFilter, statusFilter, selectedAccountId, showComparison]);
 
     // Fetch trend data when granularity changes
     useEffect(() => {
@@ -285,6 +342,19 @@ export default function TargetingPage() {
                         </button>
                     )}
 
+                    {/* Comparison Toggle */}
+                    <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5">
+                        <span className="text-sm text-gray-400">Compare Periods</span>
+                        <button
+                            onClick={() => setShowComparison(!showComparison)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showComparison ? 'bg-accent' : 'bg-gray-700'}`}
+                        >
+                            <span className="sr-only">Enable comparison</span>
+                            <span
+                                className={`${showComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                            />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -296,10 +366,15 @@ export default function TargetingPage() {
                             <tr className="border-b border-border-subtle bg-black/20">
                                 <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
                                 <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Spend</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
                                 <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CTR</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
                                 <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPC</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
                                 <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Conversions</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
                                 <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPA</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-subtle">
@@ -311,33 +386,178 @@ export default function TargetingPage() {
                             ]
                                 .map((type) => {
                                     const data = formatMetrics[type.key as keyof typeof formatMetrics];
-                                    const adsetsOfType = targetingData.filter(a => a.targeting_type === type.targetingType);
-                                    const totalClicks = adsetsOfType.reduce((sum, a) => sum + a.clicks, 0);
-                                    const totalConversions = adsetsOfType.reduce((sum, a) => sum + (a.conversions || 0), 0);
-                                    const avgCPC = totalClicks > 0 ? data.totalSpend / totalClicks : 0;
-                                    const avgCPA = totalConversions > 0 ? data.totalSpend / totalConversions : 0;
-                                    return { ...type, data, totalConversions, avgCPC, avgCPA };
+                                    return { ...type, data };
                                 })
                                 .sort((a, b) => b.data.totalSpend - a.data.totalSpend)
-                                .map((type) => (
-                                    <tr key={type.key} className="hover:bg-white/[0.02]">
+                                .map((type) => {
+                                    const renderChangeBadge = (changePct: number | null | undefined, metricType: 'cost' | 'performance' | 'neutral', prevValue?: number | null, formatter?: (v: number) => string) => {
+                                        if (changePct === null || changePct === undefined) return <span className="text-gray-500 text-sm">-</span>;
+                                        const isPositive = changePct > 0;
+                                        const isNegative = changePct < 0;
+                                        let colorClass = 'text-gray-400'; // neutral
+                                        if (metricType === 'cost') {
+                                            colorClass = isNegative ? 'text-green-400' : 'text-red-400';
+                                        } else if (metricType === 'performance') {
+                                            colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+                                        }
+                                        const Icon = isPositive ? TrendingUp : TrendingDown;
+                                        const tooltip = prevValue !== null && prevValue !== undefined && formatter
+                                            ? `Previous: ${formatter(prevValue)}` : undefined;
+                                        return (
+                                            <div className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass} cursor-help`} title={tooltip}>
+                                                <Icon className="w-3 h-3" />
+                                                <span>{Math.abs(changePct).toFixed(1)}%</span>
+                                            </div>
+                                        );
+                                    };
+
+                                    return (
+                                        <tr key={type.key} className="hover:bg-white/[0.02]">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-7 h-7 rounded-lg ${type.bgClass} border ${type.borderClass} flex items-center justify-center`}>
+                                                        <type.icon className={`w-3.5 h-3.5 ${type.textClass}`} />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-white">{type.name}</span>
+                                                    <span className="text-xs text-gray-500">({type.data.count})</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">${Math.round(type.data.totalSpend).toLocaleString()}</td>
+                                            {showComparison && (
+                                                <td className="px-4 py-3 text-right">
+                                                    {renderChangeBadge(type.data.spendChangePct, 'neutral', type.data.prevSpend, (v) => `$${Math.round(v).toLocaleString()}`)}
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">{type.data.avgCTR.toFixed(2)}%</td>
+                                            {showComparison && (
+                                                <td className="px-4 py-3 text-right">
+                                                    {renderChangeBadge(type.data.ctrChangePct, 'performance', type.data.prevCTR, (v) => `${v.toFixed(2)}%`)}
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">${type.data.avgCPC.toFixed(1)}</td>
+                                            {showComparison && (
+                                                <td className="px-4 py-3 text-right">
+                                                    {renderChangeBadge(type.data.cpcChangePct, 'cost', type.data.prevCPC, (v) => `$${v.toFixed(1)}`)}
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">{type.data.totalConversions.toLocaleString()}</td>
+                                            {showComparison && (
+                                                <td className="px-4 py-3 text-right">
+                                                    {renderChangeBadge(type.data.conversionsChangePct, 'performance', type.data.prevConversions, (v) => v.toLocaleString())}
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-3 text-right text-sm font-bold text-white">${type.data.avgCPA.toFixed(1)}</td>
+                                            {showComparison && (
+                                                <td className="px-4 py-3 text-right">
+                                                    {renderChangeBadge(type.data.cpaChangePct, 'cost', type.data.prevCPA, (v) => `$${v.toFixed(1)}`)}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                })}
+                        </tbody>
+                        {/* Total Row */}
+                        <tfoot>
+                            {(() => {
+                                const total = {
+                                    spend: formatMetrics.broad.totalSpend + formatMetrics.lookalike.totalSpend + formatMetrics.interest.totalSpend + formatMetrics.custom.totalSpend,
+                                    conversions: formatMetrics.broad.totalConversions + formatMetrics.lookalike.totalConversions + formatMetrics.interest.totalConversions + formatMetrics.custom.totalConversions,
+                                    clicks: formatMetrics.broad.totalClicks + formatMetrics.lookalike.totalClicks + formatMetrics.interest.totalClicks + formatMetrics.custom.totalClicks,
+                                    count: formatMetrics.broad.count + formatMetrics.lookalike.count + formatMetrics.interest.count + formatMetrics.custom.count,
+                                    prevSpend: (formatMetrics.broad.prevSpend || 0) + (formatMetrics.lookalike.prevSpend || 0) + (formatMetrics.interest.prevSpend || 0) + (formatMetrics.custom.prevSpend || 0),
+                                    prevConversions: (formatMetrics.broad.prevConversions || 0) + (formatMetrics.lookalike.prevConversions || 0) + (formatMetrics.interest.prevConversions || 0) + (formatMetrics.custom.prevConversions || 0),
+                                };
+                                // Calculate weighted CTR and CPC from all adsets
+                                const adsetsToAnalyze = isFilterActive && filteredAdsetIds.length > 0
+                                    ? targetingData.filter(a => filteredAdsetIds.includes(a.adset_id))
+                                    : targetingData;
+                                const totalImpressions = adsetsToAnalyze.reduce((sum, a) => sum + a.impressions, 0);
+                                const totalCTR = totalImpressions > 0 ? (total.clicks / totalImpressions) * 100 : 0;
+                                const totalCPC = total.clicks > 0 ? total.spend / total.clicks : 0;
+                                const totalCPA = total.conversions > 0 ? total.spend / total.conversions : 0;
+
+                                // Previous period totals
+                                const prevClicks = adsetsToAnalyze.reduce((sum, a) => sum + (a.previous_clicks || 0), 0);
+                                const prevImpressions = adsetsToAnalyze.reduce((sum, a) => sum + (a.previous_impressions || 0), 0);
+                                const prevCTR = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
+                                const prevCPC = prevClicks > 0 ? total.prevSpend / prevClicks : 0;
+                                const prevCPA = total.prevConversions > 0 ? total.prevSpend / total.prevConversions : 0;
+
+                                const hasPrevData = total.prevSpend > 0 || prevClicks > 0;
+                                const calcChange = (current: number, previous: number) => {
+                                    if (previous === 0) return current > 0 ? 100 : null;
+                                    return ((current - previous) / previous) * 100;
+                                };
+
+                                const spendChangePct = hasPrevData ? calcChange(total.spend, total.prevSpend) : null;
+                                const ctrChangePct = hasPrevData ? calcChange(totalCTR, prevCTR) : null;
+                                const cpcChangePct = hasPrevData ? calcChange(totalCPC, prevCPC) : null;
+                                const conversionsChangePct = hasPrevData ? calcChange(total.conversions, total.prevConversions) : null;
+                                const cpaChangePct = hasPrevData ? calcChange(totalCPA, prevCPA) : null;
+
+                                const renderChangeBadge = (changePct: number | null, metricType: 'cost' | 'performance' | 'neutral', prevValue?: number | null, formatter?: (v: number) => string) => {
+                                    if (changePct === null || changePct === undefined) return <span className="text-gray-500 text-sm">-</span>;
+                                    const isPositive = changePct > 0;
+                                    const isNegative = changePct < 0;
+                                    let colorClass = 'text-gray-400'; // neutral
+                                    if (metricType === 'cost') {
+                                        colorClass = isNegative ? 'text-green-400' : 'text-red-400';
+                                    } else if (metricType === 'performance') {
+                                        colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+                                    }
+                                    const Icon = isPositive ? TrendingUp : TrendingDown;
+                                    const tooltip = prevValue !== null && prevValue !== undefined && formatter
+                                        ? `Previous: ${formatter(prevValue)}` : undefined;
+                                    return (
+                                        <div className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass} cursor-help`} title={tooltip}>
+                                            <Icon className="w-3 h-3" />
+                                            <span>{Math.abs(changePct).toFixed(1)}%</span>
+                                        </div>
+                                    );
+                                };
+
+                                return (
+                                    <tr className="border-t-2 border-border-subtle bg-white/[0.03]">
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-7 h-7 rounded-lg ${type.bgClass} border ${type.borderClass} flex items-center justify-center`}>
-                                                    <type.icon className={`w-3.5 h-3.5 ${type.textClass}`} />
-                                                </div>
-                                                <span className="text-sm font-medium text-white">{type.name}</span>
-                                                <span className="text-xs text-gray-500">({type.data.count})</span>
+                                                <span className="text-sm font-bold text-white">Total</span>
+                                                <span className="text-xs text-gray-500">({total.count})</span>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">${Math.round(type.data.totalSpend).toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">{type.data.avgCTR.toFixed(2)}%</td>
-                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">${type.avgCPC.toFixed(1)}</td>
-                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">{type.totalConversions.toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">${type.avgCPA.toFixed(1)}</td>
+                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">${Math.round(total.spend).toLocaleString()}</td>
+                                        {showComparison && (
+                                            <td className="px-4 py-3 text-right">
+                                                {renderChangeBadge(spendChangePct, 'neutral', total.prevSpend, (v) => `$${Math.round(v).toLocaleString()}`)}
+                                            </td>
+                                        )}
+                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">{totalCTR.toFixed(2)}%</td>
+                                        {showComparison && (
+                                            <td className="px-4 py-3 text-right">
+                                                {renderChangeBadge(ctrChangePct, 'performance', prevCTR, (v) => `${v.toFixed(2)}%`)}
+                                            </td>
+                                        )}
+                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">${totalCPC.toFixed(1)}</td>
+                                        {showComparison && (
+                                            <td className="px-4 py-3 text-right">
+                                                {renderChangeBadge(cpcChangePct, 'cost', prevCPC, (v) => `$${v.toFixed(1)}`)}
+                                            </td>
+                                        )}
+                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">{total.conversions.toLocaleString()}</td>
+                                        {showComparison && (
+                                            <td className="px-4 py-3 text-right">
+                                                {renderChangeBadge(conversionsChangePct, 'performance', total.prevConversions, (v) => v.toLocaleString())}
+                                            </td>
+                                        )}
+                                        <td className="px-4 py-3 text-right text-sm font-bold text-white">${totalCPA.toFixed(1)}</td>
+                                        {showComparison && (
+                                            <td className="px-4 py-3 text-right">
+                                                {renderChangeBadge(cpaChangePct, 'cost', prevCPA, (v) => `$${v.toFixed(1)}`)}
+                                            </td>
+                                        )}
                                     </tr>
-                                ))}
-                        </tbody>
+                                );
+                            })()}
+                        </tfoot>
                     </table>
                 </div>
             )}
@@ -357,6 +577,7 @@ export default function TargetingPage() {
                     isRTL={isRTL}
                     selectedAdsetIds={selectedAdsetIds}
                     onSelectionChange={setSelectedAdsetIds}
+                    showComparison={showComparison}
                 />
             </div>
 
@@ -389,7 +610,7 @@ export default function TargetingPage() {
             </div>
 
             {/* Breakdown Tabs */}
-            <div className="mb-8">
+            <div className="mb-8" ref={breakdownRef}>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold text-gray-100">Breakdown Analysis</h2>
                     {isFilterActive && (
@@ -404,6 +625,7 @@ export default function TargetingPage() {
                     isRTL={isRTL}
                     accountId={selectedAccountId || undefined}
                     creativeIds={isFilterActive ? filteredAdsetIds : null}
+                    isVisible={isBreakdownVisible}
                 />
             </div>
         </MainLayout>

@@ -1,17 +1,36 @@
 /**
  * FilterPanel Component
  * Left sidebar with all filters for Reports page (Tableau-inspired)
+ * Includes pre-built report templates for quick access
  */
 
 'use client';
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, Calendar, CalendarRange, Target, Layers, Layout, Users, Globe } from 'lucide-react';
 import MetricPills, { MetricKey } from './MetricPills';
 
 export type DimensionType = 'overview' | 'campaign' | 'ad';
 export type BreakdownType = 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month';
+
+// Pre-built report template definitions
+export type ReportTemplateId = 'daily' | 'weekly' | 'campaign' | 'adset' | 'placement' | 'demographics' | 'geographic';
+
+interface ReportTemplate {
+  id: ReportTemplateId;
+  labelKey: string;
+  icon: React.ReactNode;
+  primaryBreakdown: BreakdownType;
+  secondaryBreakdown: BreakdownType;
+}
+
+const REPORT_TEMPLATES: ReportTemplate[] = [
+  { id: 'daily', labelKey: 'reports.templates.daily', icon: <Calendar className="w-4 h-4" />, primaryBreakdown: 'date', secondaryBreakdown: 'none' },
+  { id: 'weekly', labelKey: 'reports.templates.weekly', icon: <CalendarRange className="w-4 h-4" />, primaryBreakdown: 'week', secondaryBreakdown: 'none' },
+  { id: 'campaign', labelKey: 'reports.templates.campaign', icon: <Target className="w-4 h-4" />, primaryBreakdown: 'campaign_name', secondaryBreakdown: 'week' },
+  { id: 'adset', labelKey: 'reports.templates.adset', icon: <Layers className="w-4 h-4" />, primaryBreakdown: 'ad_set_name', secondaryBreakdown: 'none' },
+];
 
 interface FilterPanelProps {
   // Date range
@@ -131,6 +150,38 @@ export default function FilterPanel({
             <X className="w-5 h-5" />
           </button>
         )}
+      </div>
+
+      {/* Quick Templates */}
+      <div className="space-y-2">
+        <label className={`block text-xs font-semibold text-gray-400 uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t('reports.quick_templates')}
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {REPORT_TEMPLATES.map((template) => {
+            const isSelected = breakdown === template.primaryBreakdown && secondaryBreakdown === template.secondaryBreakdown;
+            return (
+              <button
+                key={template.id}
+                onClick={() => {
+                  onBreakdownChange(template.primaryBreakdown);
+                  onSecondaryBreakdownChange(template.secondaryBreakdown);
+                }}
+                className={`
+                  flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium
+                  transition-all duration-200 border
+                  ${isSelected
+                    ? 'bg-blue-600 text-white border-blue-500'
+                    : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700 hover:border-gray-600'
+                  }
+                `}
+              >
+                {template.icon}
+                <span>{t(template.labelKey)}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Breakdown Selector */}

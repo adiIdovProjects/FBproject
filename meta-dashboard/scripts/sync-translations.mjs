@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
-import { TranslationService } from './services/translation-service.mjs';
+import { LLMTranslationService } from './services/llm-translation-service.mjs';
 import { config } from './config/i18n-config.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -67,20 +67,18 @@ async function syncTranslations() {
   console.log(chalk.blue.bold('\n🌍 Translation Sync Started\n'));
 
   // Check for API key
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    console.error(chalk.red('❌ Error: GOOGLE_TRANSLATE_API_KEY not found in .env.local'));
+    console.error(chalk.red('❌ Error: GEMINI_API_KEY not found in .env.local'));
     console.log(chalk.yellow('\nSetup instructions:'));
-    console.log('1. Go to https://console.cloud.google.com');
-    console.log('2. Enable Cloud Translation API');
-    console.log('3. Create an API key');
-    console.log('4. Create meta-dashboard/.env.local with:');
-    console.log('   GOOGLE_TRANSLATE_API_KEY=your_key_here\n');
+    console.log('1. Get an API key from https://aistudio.google.com/');
+    console.log('2. Add it to meta-dashboard/.env.local:');
+    console.log('   GEMINI_API_KEY=AIzaSy...\n');
     process.exit(1);
   }
 
   // Initialize translation service
-  const translationService = new TranslationService(apiKey);
+  const translationService = new LLMTranslationService(apiKey);
 
   // Load source (English) translations
   const sourcePath = path.join(config.paths.messages, `${config.sourceLocale}.json`);
