@@ -18,6 +18,7 @@ from backend.api.schemas.responses import (
     CountryBreakdown,
     AdsetBreakdown,
     EntityPlacementBreakdown,
+    EntityPlatformBreakdown,
     EntityDemographicsBreakdown,
     EntityCountryBreakdown
 )
@@ -41,7 +42,9 @@ def get_age_gender_breakdown(
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     group_by: str = Query('both', regex="^(age|gender|both)$", description="Group by age, gender, or both"),
     creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
-    db: Session = Depends(get_db)
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get demographic performance breakdown.
@@ -49,13 +52,15 @@ def get_age_gender_breakdown(
     Returns metrics aggregated by age group and gender combinations.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_age_gender_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             group_by=group_by,
-            creative_ids=creative_ids
+            creative_ids=creative_ids,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get age/gender breakdown: {str(e)}")
@@ -72,7 +77,9 @@ def get_placement_breakdown(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
-    db: Session = Depends(get_db)
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get placement performance breakdown.
@@ -80,12 +87,14 @@ def get_placement_breakdown(
     Returns metrics aggregated by placement (Facebook Feed, Instagram Stories, etc.).
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_placement_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
-            creative_ids=creative_ids
+            creative_ids=creative_ids,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get placement breakdown: {str(e)}")
@@ -103,7 +112,9 @@ def get_country_breakdown(
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
     top_n: int = Query(10, ge=1, le=50, description="Number of top countries to return"),
     creative_ids: Optional[List[int]] = Query(None, description="Filter by creative IDs"),
-    db: Session = Depends(get_db)
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get geographic performance breakdown.
@@ -111,13 +122,15 @@ def get_country_breakdown(
     Returns top N countries by spend with their performance metrics.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_country_breakdown(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
             top_n=top_n,
-            creative_ids=creative_ids
+            creative_ids=creative_ids,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get country breakdown: {str(e)}")
@@ -131,17 +144,21 @@ def get_adset_breakdown(
     start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     campaign_id: Optional[int] = Query(None, description="Filter by specific campaign"),
-    db: Session = Depends(get_db)
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get adset performance breakdown.
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_adset_breakdown(
             start_date=start_date,
             end_date=end_date,
-            campaign_id=campaign_id
+            campaign_id=campaign_id,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get adset breakdown: {str(e)}")
@@ -158,22 +175,59 @@ def get_placement_by_entity(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
     search_query: Optional[str] = Query(None, description="Filter by entity name"),
-    db: Session = Depends(get_db)
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get placement breakdown grouped by entity.
     Returns rows like: "Campaign A - Instagram Feed", "Campaign A - Stories"
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_placement_by_entity(
             start_date=start_date,
             end_date=end_date,
             entity_type=entity_type,
-            search_query=search_query
+            search_query=search_query,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get placement by entity: {str(e)}")
+
+
+@router.get(
+    "/platform/by-entity",
+    response_model=List[EntityPlatformBreakdown],
+    summary="Get platform breakdown by entity",
+    description="Returns platform metrics (Facebook, Instagram, etc.) grouped by campaign, adset, or ad"
+)
+def get_platform_by_entity(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
+    search_query: Optional[str] = Query(None, description="Filter by entity name"),
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get platform breakdown grouped by entity.
+    Returns rows like: "Campaign A - Facebook", "Campaign A - Instagram"
+    """
+    try:
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+        return service.get_platform_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            search_query=search_query,
+            account_ids=account_ids
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get platform by entity: {str(e)}")
 
 
 @router.get(
@@ -187,19 +241,25 @@ def get_demographics_by_entity(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
     search_query: Optional[str] = Query(None, description="Filter by entity name"),
-    db: Session = Depends(get_db)
+    group_by: str = Query('both', regex="^(age|gender|both)$", description="Group by age, gender, or both"),
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get demographics breakdown grouped by entity.
     Returns rows like: "Campaign A - Male 25-34"
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_demographics_by_entity(
             start_date=start_date,
             end_date=end_date,
             entity_type=entity_type,
-            search_query=search_query
+            search_query=search_query,
+            group_by=group_by,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get demographics by entity: {str(e)}")
@@ -216,19 +276,23 @@ def get_country_by_entity(
     end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     entity_type: str = Query(..., regex="^(campaign|adset|ad)$", description="Entity type to group by"),
     search_query: Optional[str] = Query(None, description="Filter by entity name"),
-    db: Session = Depends(get_db)
+    account_id: Optional[str] = Query(None, description="Filter by specific account ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get country breakdown grouped by entity.
     Returns rows like: "Campaign A - United States"
     """
     try:
-        service = MetricsService(db)
+        service = MetricsService(db, user_id=current_user.id)
+        account_ids = [int(account_id)] if account_id else None
         return service.get_country_by_entity(
             start_date=start_date,
             end_date=end_date,
             entity_type=entity_type,
-            search_query=search_query
+            search_query=search_query,
+            account_ids=account_ids
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get country by entity: {str(e)}")

@@ -7,8 +7,8 @@ import Providers from '../../components/Providers';
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "FBWatson: Facebook Ads Insights",
-  description: "FBWatson - The AI Detective for your Facebook Ads performance",
+  title: "AdSolus: Total Control. Zero Middlemen.",
+  description: "AdSolus - Be your own best agency. Total Control. Zero Middlemen.",
 };
 
 const geistSans = Geist({

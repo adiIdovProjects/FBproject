@@ -1327,13 +1327,41 @@ class InsightsService:
         # Determine status color based on performance
         status_color = self._determine_status_color(curr_metrics, prev_metrics, has_roas)
 
-        # Build period labels
-        period_labels = {
-            'daily': ('Yesterday', 'previous 7-day average'),
-            'weekly': ('This week', 'previous 4 weeks average'),
-            'monthly': ('This month', 'previous 3 months average')
+        # Build period labels with translations
+        period_label_translations = {
+            'en': {
+                'daily': ('Yesterday', 'previous 7-day average'),
+                'weekly': ('This Week', 'previous 4 weeks average'),
+                'monthly': ('This Month', 'previous 3 months average'),
+                'default': ('Period', 'Previous period')
+            },
+            'he': {
+                'daily': ('אתמול', 'ממוצע 7 ימים קודמים'),
+                'weekly': ('השבוע', 'ממוצע 4 שבועות קודמים'),
+                'monthly': ('החודש', 'ממוצע 3 חודשים קודמים'),
+                'default': ('תקופה', 'תקופה קודמת')
+            },
+            'ar': {
+                'daily': ('أمس', 'متوسط 7 أيام السابقة'),
+                'weekly': ('هذا الأسبوع', 'متوسط 4 أسابيع السابقة'),
+                'monthly': ('هذا الشهر', 'متوسط 3 أشهر السابقة'),
+                'default': ('الفترة', 'الفترة السابقة')
+            },
+            'de': {
+                'daily': ('Gestern', 'Durchschnitt der letzten 7 Tage'),
+                'weekly': ('Diese Woche', 'Durchschnitt der letzten 4 Wochen'),
+                'monthly': ('Dieser Monat', 'Durchschnitt der letzten 3 Monate'),
+                'default': ('Zeitraum', 'Vorheriger Zeitraum')
+            },
+            'fr': {
+                'daily': ('Hier', 'moyenne des 7 derniers jours'),
+                'weekly': ('Cette semaine', 'moyenne des 4 dernières semaines'),
+                'monthly': ('Ce mois', 'moyenne des 3 derniers mois'),
+                'default': ('Période', 'Période précédente')
+            }
         }
-        period_label, comparison_label = period_labels.get(period_type, ('Period', 'Previous period'))
+        labels = period_label_translations.get(locale, period_label_translations['en'])
+        period_label, comparison_label = labels.get(period_type, labels['default'])
 
         # Generate insight with AI or fallback
         if self.client:
@@ -1343,7 +1371,7 @@ class InsightsService:
             )
         else:
             insight_text = self._generate_fallback_period_insight(
-                curr_metrics, prev_metrics, period_type, has_roas
+                curr_metrics, prev_metrics, period_type, has_roas, locale
             )
 
         return {
@@ -1447,31 +1475,77 @@ class InsightsService:
             return response.text.strip()
         except Exception as e:
             logger.error(f"AI period insight generation failed: {e}")
-            return self._generate_fallback_period_insight(curr, prev, period_type, has_roas)
+            return self._generate_fallback_period_insight(curr, prev, period_type, has_roas, locale)
 
     def _generate_fallback_period_insight(
         self,
         curr: Dict,
         prev: Optional[Dict],
         period_type: str,
-        has_roas: bool
+        has_roas: bool,
+        locale: str = "en"
     ) -> str:
         """Generate fallback insight without AI."""
+        # Translations for fallback insights
+        translations = {
+            'en': {
+                'spent_with_conversions_roas': "${spend:.0f} spent with {conversions} conversions at {roas:.1f}x ROAS.",
+                'spent_with_conversions': "${spend:.0f} spent with {conversions} conversions.",
+                'conversions_up': "Conversions up {change:.0f}% - performance is improving.",
+                'conversions_down': "Conversions down {change:.0f}% - check what changed.",
+                'stable': "Performance is stable compared to previous period."
+            },
+            'he': {
+                'spent_with_conversions_roas': "הוצאה של ${spend:.0f} עם {conversions} המרות ב-ROAS של {roas:.1f}x.",
+                'spent_with_conversions': "הוצאה של ${spend:.0f} עם {conversions} המרות.",
+                'conversions_up': "המרות עלו ב-{change:.0f}% - הביצועים משתפרים.",
+                'conversions_down': "המרות ירדו ב-{change:.0f}% - בדוק מה השתנה.",
+                'stable': "הביצועים יציבים בהשוואה לתקופה הקודמת."
+            },
+            'ar': {
+                'spent_with_conversions_roas': "تم إنفاق ${spend:.0f} مع {conversions} تحويلات بمعدل ROAS {roas:.1f}x.",
+                'spent_with_conversions': "تم إنفاق ${spend:.0f} مع {conversions} تحويلات.",
+                'conversions_up': "ارتفعت التحويلات بنسبة {change:.0f}% - الأداء يتحسن.",
+                'conversions_down': "انخفضت التحويلات بنسبة {change:.0f}% - تحقق مما تغير.",
+                'stable': "الأداء مستقر مقارنة بالفترة السابقة."
+            },
+            'de': {
+                'spent_with_conversions_roas': "${spend:.0f} ausgegeben mit {conversions} Conversions bei {roas:.1f}x ROAS.",
+                'spent_with_conversions': "${spend:.0f} ausgegeben mit {conversions} Conversions.",
+                'conversions_up': "Conversions um {change:.0f}% gestiegen - Leistung verbessert sich.",
+                'conversions_down': "Conversions um {change:.0f}% gesunken - prüfen was sich geändert hat.",
+                'stable': "Leistung ist stabil im Vergleich zum vorherigen Zeitraum."
+            },
+            'fr': {
+                'spent_with_conversions_roas': "${spend:.0f} dépensés avec {conversions} conversions à {roas:.1f}x ROAS.",
+                'spent_with_conversions': "${spend:.0f} dépensés avec {conversions} conversions.",
+                'conversions_up': "Conversions en hausse de {change:.0f}% - les performances s'améliorent.",
+                'conversions_down': "Conversions en baisse de {change:.0f}% - vérifiez ce qui a changé.",
+                'stable': "Performance stable par rapport à la période précédente."
+            }
+        }
+
+        t = translations.get(locale, translations['en'])
+
         if not prev:
             if has_roas:
-                return f"${curr['spend']:.0f} spent with {curr['conversions']} conversions at {curr['roas']:.1f}x ROAS."
-            return f"${curr['spend']:.0f} spent with {curr['conversions']} conversions."
+                return t['spent_with_conversions_roas'].format(
+                    spend=curr['spend'], conversions=curr['conversions'], roas=curr['roas']
+                )
+            return t['spent_with_conversions'].format(
+                spend=curr['spend'], conversions=curr['conversions']
+            )
 
         conv_change = ComparisonService.calculate_change_percentage(
             curr['conversions'], prev['conversions']
         ) or 0
 
         if conv_change > 10:
-            return f"Conversions up {conv_change:.0f}% - performance is improving."
+            return t['conversions_up'].format(change=conv_change)
         elif conv_change < -10:
-            return f"Conversions down {abs(conv_change):.0f}% - check what changed."
+            return t['conversions_down'].format(change=abs(conv_change))
         else:
-            return "Performance is stable compared to previous period."
+            return t['stable']
 
     def _get_improvement_checks(
         self,
@@ -1479,6 +1553,41 @@ class InsightsService:
         locale: str
     ) -> List[Dict[str, Any]]:
         """Get improvement checks (learning phase, ads per adset, pixel)."""
+        # Translations for improvement checks
+        translations = {
+            'en': {
+                'needs_conversions': "Ad set '{name}' needs more conversions to exit learning ({count}/week, aim for 25-50)",
+                'doing_well': "Ad set '{name}' is doing well! Facebook can optimize at {count}/week",
+                'excellent': "Great job! '{name}' has {count} conversions/week - excellent data for Facebook to optimize",
+                'no_conversions': "No conversions detected in the past week (${spend:.0f} spent) - check your pixel setup"
+            },
+            'he': {
+                'needs_conversions': "קבוצת המודעות '{name}' צריכה עוד המרות כדי לצאת מלמידה ({count}/שבוע, כדאי לשאוף ל-25-50)",
+                'doing_well': "קבוצת המודעות '{name}' מצליחה! פייסבוק יכול לבצע אופטימיזציה עם {count}/שבוע",
+                'excellent': "עבודה מצוינת! '{name}' עם {count} המרות/שבוע - נתונים מעולים לאופטימיזציה של פייסבוק",
+                'no_conversions': "לא זוהו המרות בשבוע האחרון (${spend:.0f} הוצאה) - בדוק את הגדרות הפיקסל"
+            },
+            'ar': {
+                'needs_conversions': "مجموعة الإعلانات '{name}' تحتاج المزيد من التحويلات للخروج من التعلم ({count}/أسبوع، استهدف 25-50)",
+                'doing_well': "مجموعة الإعلانات '{name}' تعمل بشكل جيد! فيسبوك يمكنه التحسين عند {count}/أسبوع",
+                'excellent': "عمل رائع! '{name}' لديها {count} تحويل/أسبوع - بيانات ممتازة لتحسين فيسبوك",
+                'no_conversions': "لم يتم اكتشاف تحويلات في الأسبوع الماضي (${spend:.0f} إنفاق) - تحقق من إعداد البكسل"
+            },
+            'de': {
+                'needs_conversions': "Anzeigengruppe '{name}' benötigt mehr Conversions zum Verlassen der Lernphase ({count}/Woche, Ziel: 25-50)",
+                'doing_well': "Anzeigengruppe '{name}' läuft gut! Facebook kann bei {count}/Woche optimieren",
+                'excellent': "Großartig! '{name}' hat {count} Conversions/Woche - ausgezeichnete Daten für Facebook-Optimierung",
+                'no_conversions': "Keine Conversions in der letzten Woche erkannt (${spend:.0f} ausgegeben) - überprüfen Sie Ihre Pixel-Einrichtung"
+            },
+            'fr': {
+                'needs_conversions': "L'ensemble de publicités '{name}' a besoin de plus de conversions pour sortir de l'apprentissage ({count}/semaine, visez 25-50)",
+                'doing_well': "L'ensemble de publicités '{name}' fonctionne bien ! Facebook peut optimiser à {count}/semaine",
+                'excellent': "Excellent ! '{name}' a {count} conversions/semaine - excellentes données pour l'optimisation Facebook",
+                'no_conversions': "Aucune conversion détectée la semaine dernière (${spend:.0f} dépensés) - vérifiez votre configuration de pixel"
+            }
+        }
+        t = translations.get(locale, translations['en'])
+
         checks = []
         today = date.today()
         week_ago = today - timedelta(days=7)
@@ -1501,13 +1610,14 @@ class InsightsService:
 
             conversions = adset.get('conversions', 0)
             adset_name = adset.get('adset_name', 'Unknown')
+            short_name = adset_name[:30] + '...' if len(adset_name) > 30 else adset_name
 
             if conversions < 25:
                 checks.append({
                     'type': 'learning_phase',
                     'status': 'warning',
                     'icon': '⚠️',
-                    'message': f"Ad set '{adset_name[:30]}...' needs more conversions to exit learning ({conversions}/week, aim for 25-50)",
+                    'message': t['needs_conversions'].format(name=short_name, count=conversions),
                     'adset_id': adset.get('adset_id')
                 })
             elif 25 <= conversions < 50:
@@ -1515,7 +1625,7 @@ class InsightsService:
                     'type': 'learning_phase',
                     'status': 'good',
                     'icon': '✅',
-                    'message': f"Ad set '{adset_name[:30]}...' is doing well! Facebook can optimize at {conversions}/week",
+                    'message': t['doing_well'].format(name=short_name, count=conversions),
                     'adset_id': adset.get('adset_id')
                 })
             elif conversions >= 50:
@@ -1523,7 +1633,7 @@ class InsightsService:
                     'type': 'learning_phase',
                     'status': 'excellent',
                     'icon': '🎉',
-                    'message': f"Great job! '{adset_name[:30]}...' has {conversions} conversions/week - excellent data for Facebook to optimize",
+                    'message': t['excellent'].format(name=short_name, count=conversions),
                     'adset_id': adset.get('adset_id')
                 })
 
@@ -1536,7 +1646,7 @@ class InsightsService:
                 'type': 'pixel',
                 'status': 'critical',
                 'icon': '🔴',
-                'message': f"No conversions detected in the past week (${total_spend:.0f} spent) - check your pixel setup"
+                'message': t['no_conversions'].format(spend=total_spend)
             })
 
         return checks
@@ -1553,34 +1663,95 @@ class InsightsService:
         """Generate TL;DR summary bullets."""
         bullets = []
 
+        # Translations for summary bullets
+        translations = {
+            'en': {
+                'yesterday_dropped': "⚠️ Yesterday's performance dropped - investigate soon",
+                'yesterday_good': "✅ Yesterday was a good day!",
+                'week_underperform': "⚠️ This week is underperforming - review campaigns",
+                'week_strong': "✅ Strong week so far",
+                'month_declining': "⚠️ Monthly trend is declining - needs attention",
+                'month_great': "✅ Great month overall",
+                'adsets_need_conversions': "⚠️ {count} ad set(s) need more conversions for optimal learning",
+                'adsets_excellent': "🎉 {count} ad set(s) have excellent conversion data",
+                'account_healthy': "✅ Account looks healthy - keep monitoring"
+            },
+            'he': {
+                'yesterday_dropped': "⚠️ הביצועים של אתמול ירדו - כדאי לבדוק בהקדם",
+                'yesterday_good': "✅ אתמול היה יום טוב!",
+                'week_underperform': "⚠️ השבוע הביצועים נמוכים - בדוק את הקמפיינים",
+                'week_strong': "✅ שבוע חזק עד כה",
+                'month_declining': "⚠️ המגמה החודשית בירידה - דורש תשומת לב",
+                'month_great': "✅ חודש מצוין בסך הכל",
+                'adsets_need_conversions': "⚠️ {count} קבוצות מודעות צריכות יותר המרות ללמידה מיטבית",
+                'adsets_excellent': "🎉 ל-{count} קבוצות מודעות יש נתוני המרה מצוינים",
+                'account_healthy': "✅ החשבון נראה בריא - המשך לעקוב"
+            },
+            'ar': {
+                'yesterday_dropped': "⚠️ انخفض أداء أمس - تحقق قريبًا",
+                'yesterday_good': "✅ كان أمس يومًا جيدًا!",
+                'week_underperform': "⚠️ هذا الأسبوع أداؤه ضعيف - راجع الحملات",
+                'week_strong': "✅ أسبوع قوي حتى الآن",
+                'month_declining': "⚠️ الاتجاه الشهري في انخفاض - يحتاج إلى اهتمام",
+                'month_great': "✅ شهر رائع بشكل عام",
+                'adsets_need_conversions': "⚠️ {count} مجموعة(ات) إعلانية تحتاج إلى المزيد من التحويلات للتعلم الأمثل",
+                'adsets_excellent': "🎉 {count} مجموعة(ات) إعلانية لديها بيانات تحويل ممتازة",
+                'account_healthy': "✅ الحساب يبدو صحيًا - استمر في المراقبة"
+            },
+            'de': {
+                'yesterday_dropped': "⚠️ Die Leistung von gestern ist gesunken - bald prüfen",
+                'yesterday_good': "✅ Gestern war ein guter Tag!",
+                'week_underperform': "⚠️ Diese Woche unterperformt - Kampagnen prüfen",
+                'week_strong': "✅ Bisher eine starke Woche",
+                'month_declining': "⚠️ Monatlicher Trend ist rückläufig - erfordert Aufmerksamkeit",
+                'month_great': "✅ Insgesamt ein großartiger Monat",
+                'adsets_need_conversions': "⚠️ {count} Anzeigengruppe(n) benötigen mehr Conversions für optimales Lernen",
+                'adsets_excellent': "🎉 {count} Anzeigengruppe(n) haben ausgezeichnete Conversion-Daten",
+                'account_healthy': "✅ Konto sieht gesund aus - weiter beobachten"
+            },
+            'fr': {
+                'yesterday_dropped': "⚠️ Les performances d'hier ont chuté - à vérifier rapidement",
+                'yesterday_good': "✅ Hier était une bonne journée !",
+                'week_underperform': "⚠️ Cette semaine sous-performe - vérifiez les campagnes",
+                'week_strong': "✅ Semaine solide jusqu'à présent",
+                'month_declining': "⚠️ La tendance mensuelle est en déclin - nécessite une attention",
+                'month_great': "✅ Excellent mois dans l'ensemble",
+                'adsets_need_conversions': "⚠️ {count} ensemble(s) de publicités ont besoin de plus de conversions pour un apprentissage optimal",
+                'adsets_excellent': "🎉 {count} ensemble(s) de publicités ont d'excellentes données de conversion",
+                'account_healthy': "✅ Le compte semble sain - continuez à surveiller"
+            }
+        }
+
+        t = translations.get(locale, translations['en'])
+
         # Add insights based on period performance
         if daily.get('color') == 'red':
-            bullets.append("⚠️ Yesterday's performance dropped - investigate soon")
+            bullets.append(t['yesterday_dropped'])
         elif daily.get('color') == 'green':
-            bullets.append("✅ Yesterday was a good day!")
+            bullets.append(t['yesterday_good'])
 
         if weekly.get('color') == 'red':
-            bullets.append("⚠️ This week is underperforming - review campaigns")
+            bullets.append(t['week_underperform'])
         elif weekly.get('color') == 'green':
-            bullets.append("✅ Strong week so far")
+            bullets.append(t['week_strong'])
 
         if monthly.get('color') == 'red':
-            bullets.append("⚠️ Monthly trend is declining - needs attention")
+            bullets.append(t['month_declining'])
         elif monthly.get('color') == 'green':
-            bullets.append("✅ Great month overall")
+            bullets.append(t['month_great'])
 
         # Add critical checks
         critical_checks = [c for c in checks if c.get('status') in ['warning', 'critical']]
         excellent_checks = [c for c in checks if c.get('status') == 'excellent']
 
         if critical_checks:
-            bullets.append(f"⚠️ {len(critical_checks)} ad set(s) need more conversions for optimal learning")
+            bullets.append(t['adsets_need_conversions'].format(count=len(critical_checks)))
 
         if excellent_checks:
-            bullets.append(f"🎉 {len(excellent_checks)} ad set(s) have excellent conversion data")
+            bullets.append(t['adsets_excellent'].format(count=len(excellent_checks)))
 
         # If everything is good
         if not bullets:
-            bullets.append("✅ Account looks healthy - keep monitoring")
+            bullets.append(t['account_healthy'])
 
         return bullets[:5]  # Max 5 bullets

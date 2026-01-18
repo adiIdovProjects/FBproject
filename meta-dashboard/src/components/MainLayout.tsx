@@ -28,9 +28,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
             <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-y-auto ${isRTL ? 'mr-64 border-r border-white/5' : 'ml-64 border-l border-white/5'} transition-all duration-300 relative`}>
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent z-10"></div>
 
-                <div className="p-8 sm:p-12 max-w-7xl mx-auto w-full relative z-0">
+                <div className={`p-8 sm:p-12 max-w-7xl w-full relative z-0 ${isRTL ? 'ml-auto' : 'mx-auto'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     {/* Page Header */}
-                    <header className={`mb-12 flex flex-col gap-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <header className="mb-12 flex flex-col gap-3">
                         <div className="flex items-center gap-2 mb-1">
                             <div className="w-8 h-1 bg-accent rounded-full"></div>
                             <div className="w-2 h-1 bg-accent/40 rounded-full"></div>

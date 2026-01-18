@@ -1,103 +1,137 @@
 # Project Tasks & Progress
 
-## ✅ COMPLETED TASK: Reports Page - Entity + Special Breakdown Combinations
+## Current Task: Change Report Builder Toggle from X to +/- Icons
 
-### Overview
-Enabled 2-dimensional reports combining entity breakdowns (Campaign, Ad Set, Ad) with special breakdowns (Placement, Demographics, Country). Previously these were treated as mutually exclusive.
+### Todo
+- [x] Change X icon to Minus (-) icon when panel is open
+- [x] Change collapsed button from Filter icon to Plus (+) icon when panel is closed
 
-### Changes Made
-
-#### 1. Frontend (FilterPanel.tsx)
-- Modified `getSecondaryOptions()` to show special breakdowns as secondary options for entity breakdowns
-- Added Placement, Demographics, Country as secondary options when Campaign/Ad Set/Ad is selected
-- Simplified secondary prompt label to generic "Add grouping"
-- Updated conversion metric hiding to work with entity + special combinations
-
-#### 2. Backend Repository (breakdown_repository.py)
-- Added `get_placement_by_entity()` - GROUP BY entity + placement
-- Added `get_demographics_by_entity()` - GROUP BY entity + age/gender
-- Added `get_country_by_entity()` - GROUP BY entity + country
-
-#### 3. Backend Router (breakdowns.py)
-- Added `GET /breakdowns/placement/by-entity` endpoint
-- Added `GET /breakdowns/demographics/by-entity` endpoint
-- Added `GET /breakdowns/country/by-entity` endpoint
-
-#### 4. Backend Service (metrics_service.py)
-- Added service methods to call the new repository methods
-- Added response schema imports
-
-#### 5. Backend Schemas (responses.py)
-- Added `EntityPlacementBreakdown` schema
-- Added `EntityDemographicsBreakdown` schema
-- Added `EntityCountryBreakdown` schema
-
-#### 6. Frontend Service (reports.service.ts)
-- Added `fetchEntityBreakdownReport()` function
-- Added helper functions: `isEntityBreakdown()`, `getEntityType()`, `getSpecialBreakdownType()`
-
-#### 7. Frontend Page (reports/page.tsx)
-- Updated `fetchData()` to detect entity + special combinations
-- Routes to new API endpoints when combination is detected
-- Updated conversion metric hiding logic for combinations
-
-#### 8. Translations (en.json)
-- Added `reports.builder.add_grouping` key
-
-### Example Usage
-- Select "Campaign" → click "Placement" in secondary → Shows "Campaign × Placement"
-- Data displays as: "Campaign A - Instagram Feed", "Campaign A - Stories", etc.
+### Plan
+Simple icon swap in FilterPanel.tsx:
+1. Import `Minus` and `Plus` icons from lucide-react
+2. Replace `X` with `Minus` in header (line 280)
+3. Replace `Filter` with `Plus` in collapsed state button (line 258)
 
 ---
 
-## ✅ COMPLETED TASK: Internationalize Hardcoded English Text
-
-### Overview
-Converted all hardcoded English text in pages and components to use the i18n translation system.
-
-### Changes Made
-
-#### 1. Translation File (en.json)
-- Added `auth.*` keys for login/magic link flow
-- Added `onboarding.*` keys for Facebook connect flow
-- Added `accounts.*` keys for account selection
-- Added `quiz.*` keys for profile quiz (including nested job_titles, experience, referral)
-- Added `settings.*` keys for account settings page
-
-#### 2. Files Updated
-
-| File | Changes |
-|------|---------|
-| [login/page.tsx](meta-dashboard/src/app/[locale]/login/page.tsx) | Passwordless login, magic link UI, social buttons, notes |
-| [auth/verify/page.tsx](meta-dashboard/src/app/[locale]/auth/verify/page.tsx) | Verification states, error messages |
-| [callback/page.tsx](meta-dashboard/src/app/[locale]/callback/page.tsx) | Login status messages |
-| [select-accounts/page.tsx](meta-dashboard/src/app/[locale]/select-accounts/page.tsx) | Page title, error states, help text |
-| [onboard/connect-facebook/page.tsx](meta-dashboard/src/app/[locale]/onboard/connect-facebook/page.tsx) | Step indicator, access info, button text |
-| [quiz/page.tsx](meta-dashboard/src/app/[locale]/quiz/page.tsx) | All questions, options, sync status, completion |
-| [AccountSelector.tsx](meta-dashboard/src/components/connect/AccountSelector.tsx) | Loading, empty state, selection UI |
-| [AccountSettings.tsx](meta-dashboard/src/components/AccountSettings.tsx) | Profile form, billing, reconnect |
-
-#### 3. Translation Sync
-Ran `node scripts/sync-translations.mjs` to propagate all new keys to:
-- Arabic (ar): 101 new translations
-- German (de): 115 new translations
-- French (fr): 127 new translations
-- Hebrew (he): 112 new translations
+## Previous Task: Insights Page Full Localization (Completed)
 
 ### Summary
-- **~70+ hardcoded strings** converted to dynamic translations
-- All 5 languages now fully supported for auth, onboarding, and settings flows
-- Uses `useTranslations()` hook consistently across all updated components
+Added complete translation support for all hardcoded English text on the Insights page, including RTL layout fixes for Hebrew/Arabic.
+
+### Changes Made
+
+#### Frontend Components
+1. **OverviewInsights.tsx** - Fixed RTL card ordering (monthly->weekly->daily for RTL), added translations for period labels and metrics
+2. **HistoricalTrendsView.tsx** - Translated all section titles, error messages, and chart labels
+3. **CreativeAnalysisView.tsx** - Translated all table headers, status labels, and analysis text
+4. **CampaignAnalysisView.tsx** - Translated all campaign table headers and section titles
+5. **AIChat.tsx** - Translated welcome message, error messages, and UI labels
+6. **insights/page.tsx** - Fixed RTL tab ordering with `flex-row-reverse`
+
+#### Translation Files
+- Added 55+ new translation keys to all 5 language files (en, he, ar, de, fr)
+
+#### Backend (insights_service.py)
+1. **_generate_tldr_summary()** - Added translations for summary bullet points (month declining, week improvement, daily good/bad)
+2. **_generate_fallback_period_insight()** - Added translations for fallback insight messages, updated callers to pass locale
+3. **_get_improvement_checks()** - Added translations for learning phase and pixel check messages
+
+### RTL Fixes
+- Cards now display in correct order: Monthly (right) -> Weekly -> Daily (left) for RTL
+- Tabs display right-to-left for Hebrew/Arabic
+- Floating AI button positioned on left side for RTL
 
 ---
 
-## Previous Tasks
+## Previous Task: Age-Gender Translation Support
 
-### ✅ Add Compare Periods to Targeting Page (COMPLETED)
-- Added period comparison functionality to the targeting page
+### Issue
+When displaying demographics data with combined age-gender format (e.g., "65+ | female"), the gender part needs translation while keeping the age part intact.
 
-### ✅ Make Optimization Preferences Editable (COMPLETED)
-- Added edit functionality to the Optimization tab in AdAccountSettings.tsx
+### Solution
+Added translation logic to detect the `" | "` separator and translate only the gender portion using existing `breakdown.values.male`, `breakdown.values.female`, `breakdown.values.unknown` translations.
 
-### ✅ Fix Creatives Page 500 Error (COMPLETED)
-- Fixed type mismatch in creative_repository.py
+### Files Changed
+
+1. **CreativeBreakdownTabs.tsx** - Updated `translateValue()` function to handle combined age-gender values
+2. **BreakdownTabs.tsx** (campaigns) - Added `translateValue()` function with same logic + country translation via `Intl.DisplayNames`
+3. **ComparisonTable.tsx** (reports) - Added `translateBreakdownValue()` function to translate both primary and secondary breakdown values
+
+### How it works
+- When `activeTab === 'age-gender'` and value contains `" | "` (e.g., "65+ | female")
+- Split on `" | "` to get `[age, gender]`
+- Translate only the gender part using `t('breakdown.values.female')` -> "female" in Hebrew
+- Return combined: `"65+ | female"`
+
+---
+
+## Previous Task: Reports Account Filtering Bug Fix + Platform Breakdown
+
+### Issue 1: Account Filtering Bug (Fixed)
+When filtering reports with Campaign + Placement (or other entity + special breakdown combinations), the results showed campaigns from OTHER accounts instead of only the selected account.
+
+**Root Cause**: In `reports_service.py`, the main method `get_comparison_data()` correctly converted `account_id` (string) to `account_ids` (list of ints), but then passed the ORIGINAL string `account_id` to all private helper methods instead of the converted int list.
+
+**Fix**: Updated all method calls and signatures to use `account_ids: Optional[List[int]]` consistently.
+
+### Issue 2: Platform Breakdown Separate from Placement (Added)
+User requested Platform as a separate breakdown option (Facebook, Instagram, Messenger, Audience Network) distinct from Placement (which shows detailed positions like "Instagram Stories", "Facebook Feed").
+
+### Changes Made
+
+#### 1. Backend Repository (breakdown_repository.py)
+- Added `get_platform_by_entity()` method that:
+  - Queries placement data grouped by entity (campaign/adset/ad)
+  - Aggregates placements into platform categories (e.g., "Instagram Stories" -> "Instagram")
+  - Returns entity + platform combinations
+
+#### 2. Backend Schemas (responses.py)
+- Added `EntityPlatformBreakdown` response model with fields:
+  - `entity_name`, `platform`, `spend`, `impressions`, `clicks`, `ctr`, `cpc`
+
+#### 3. Backend Router (breakdowns.py)
+- Added `GET /api/v1/breakdowns/platform/by-entity` endpoint
+- Also fixed legacy endpoints to include `account_id` and `current_user`:
+  - `/age-gender`
+  - `/placement`
+  - `/country`
+  - `/adset`
+
+#### 4. Backend Service (metrics_service.py)
+- Added `get_platform_by_entity()` service method
+- Imported `EntityPlatformBreakdown` schema
+
+#### 5. Frontend Service (reports.service.ts)
+- Added `platform` to `fetchEntityBreakdownReport()` endpoint map
+- Updated response parsing to handle `platform` field
+- Updated `getSpecialBreakdownType()` to return `'platform'` separately
+
+#### 6. Frontend UI (FilterPanel.tsx)
+- Platform was already in the UI as a chip option
+- Translation key `reports.builder.platform` already exists
+
+### Summary
+- **Account filtering**: Now correctly filters by selected account across all breakdown types
+- **Platform breakdown**: Now available as Entity + Platform combination (e.g., "Campaign x Platform")
+  - Shows high-level platforms: Facebook, Instagram, Messenger, Audience Network
+  - Placement continues to show detailed positions like Stories, Feed, Reels
+
+---
+
+## Previous Completed Tasks
+
+### Reports Page - Entity + Special Breakdown Combinations
+Enabled 2-dimensional reports combining entity breakdowns with special breakdowns.
+
+### Internationalize Hardcoded English Text
+Converted all hardcoded English text to use i18n translation system.
+
+### Add Compare Periods to Targeting Page
+Added period comparison functionality to the targeting page.
+
+### Make Optimization Preferences Editable
+Added edit functionality to the Optimization tab.
+
+### Fix Creatives Page 500 Error
+Fixed type mismatch in creative_repository.py.

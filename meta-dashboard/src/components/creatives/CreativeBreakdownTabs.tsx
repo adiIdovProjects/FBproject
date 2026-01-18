@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { BreakdownRow, BreakdownType, DateRange } from '../../types/campaigns.types';
 import { fetchBreakdown } from '../../services/campaigns.service';
 import { useAccount } from '../../context/AccountContext';
@@ -44,6 +44,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
   isVisible = false,
 }) => {
   const t = useTranslations();
+  const locale = useLocale();
   const { hasROAS } = useAccount();
   const [activeTab, setActiveTab] = useState<CreativeBreakdownType>('platform');
   const [demographicSubTab, setDemographicSubTab] = useState<'age' | 'gender' | 'both'>('both');
@@ -122,6 +123,60 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
     return `${value.toFixed(2)}%`;
   };
 
+  // Map of English country names to ISO 3166-1 alpha-2 codes
+  const countryToCode: Record<string, string> = {
+    'United States': 'US', 'Israel': 'IL', 'Germany': 'DE', 'France': 'FR',
+    'United Kingdom': 'GB', 'Canada': 'CA', 'Australia': 'AU', 'Spain': 'ES',
+    'Italy': 'IT', 'Netherlands': 'NL', 'Brazil': 'BR', 'Mexico': 'MX',
+    'Japan': 'JP', 'India': 'IN', 'South Korea': 'KR', 'China': 'CN',
+    'Russia': 'RU', 'Turkey': 'TR', 'Saudi Arabia': 'SA', 'United Arab Emirates': 'AE',
+    'Poland': 'PL', 'Sweden': 'SE', 'Belgium': 'BE', 'Switzerland': 'CH',
+    'Austria': 'AT', 'Norway': 'NO', 'Denmark': 'DK', 'Finland': 'FI',
+    'Portugal': 'PT', 'Greece': 'GR', 'Ireland': 'IE', 'New Zealand': 'NZ',
+    'Singapore': 'SG', 'Hong Kong': 'HK', 'Taiwan': 'TW', 'Thailand': 'TH',
+    'Malaysia': 'MY', 'Indonesia': 'ID', 'Philippines': 'PH', 'Vietnam': 'VN',
+    'Argentina': 'AR', 'Chile': 'CL', 'Colombia': 'CO', 'Peru': 'PE',
+    'Egypt': 'EG', 'South Africa': 'ZA', 'Nigeria': 'NG', 'Kenya': 'KE',
+    'Morocco': 'MA', 'Pakistan': 'PK', 'Bangladesh': 'BD', 'Ukraine': 'UA',
+    'Czech Republic': 'CZ', 'Romania': 'RO', 'Hungary': 'HU', 'Slovakia': 'SK',
+  };
+
+  // Translate country name using Intl.DisplayNames
+  const translateCountry = (countryName: string): string => {
+    const code = countryToCode[countryName];
+    if (!code) return countryName; // Fallback to original if no mapping
+    try {
+      const displayNames = new Intl.DisplayNames([locale], { type: 'region' });
+      return displayNames.of(code) || countryName;
+    } catch {
+      return countryName;
+    }
+  };
+
+  // Translate breakdown value (gender, platform, placement, country)
+  const translateValue = (value: string): string => {
+    if (!value) return t('breakdown.values.unknown');
+
+    // For country tab, use Intl.DisplayNames
+    if (activeTab === 'country') {
+      return translateCountry(value);
+    }
+
+    // For age-gender combined values like "65+ | female", translate only the gender part
+    if (activeTab === 'age-gender' && demographicSubTab === 'both' && value.includes(' | ')) {
+      const [age, gender] = value.split(' | ');
+      const genderKey = gender.toLowerCase();
+      const genderTranslationKey = `breakdown.values.${genderKey}`;
+      const translatedGender = t.has(genderTranslationKey) ? t(genderTranslationKey) : gender;
+      return `${age} | ${translatedGender}`;
+    }
+
+    // For other tabs, use translation lookup
+    const key = value.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+    const translationKey = `breakdown.values.${key}`;
+    return t.has(translationKey) ? t(translationKey) : value;
+  };
+
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Tab Navigation */}
@@ -154,7 +209,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
                   : 'bg-card-bg/40 text-gray-400 hover:text-gray-300'
               }`}
             >
-              {subTab === 'both' ? 'Age & Gender' : subTab === 'age' ? 'Age Only' : 'Gender Only'}
+              {subTab === 'both' ? t('breakdown.age_and_gender') : subTab === 'age' ? t('breakdown.age_only') : t('breakdown.gender_only')}
             </button>
           ))}
         </div>
@@ -225,7 +280,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
                     className="group hover:bg-white/[0.02] transition-colors duration-150"
                   >
                     <td className={`px-6 py-5 text-sm text-white font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {row.name || 'Unknown'}
+                      {translateValue(row.name)}
                     </td>
                     <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                       {formatCurrency(row.spend)}

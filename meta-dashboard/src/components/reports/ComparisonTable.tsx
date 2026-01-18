@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { ComparisonItem, MetricsPeriod } from '../../services/reports.service';
 import { MetricKey } from './MetricPills';
@@ -16,11 +16,12 @@ interface ComparisonTableProps {
   selectedMetrics: MetricKey[];
   breakdown?: string;
   secondaryBreakdown?: string;
+  tertiaryBreakdown?: string;
   currency?: string;
   isRTL?: boolean;
 }
 
-type SortKey = MetricKey | 'name' | 'primary' | 'secondary';
+type SortKey = MetricKey | 'name' | 'primary' | 'secondary' | 'tertiary';
 type SortDirection = 'asc' | 'desc';
 
 export default function ComparisonTable({
@@ -28,13 +29,16 @@ export default function ComparisonTable({
   selectedMetrics,
   breakdown = 'none',
   secondaryBreakdown = 'none',
+  tertiaryBreakdown = 'none',
   currency = 'USD',
   isRTL = false,
 }: ComparisonTableProps) {
   const t = useTranslations();
+  const locale = useLocale();
 
   // Check if we have multi-dimensional breakdown
   const hasSecondaryBreakdown = secondaryBreakdown !== 'none';
+  const hasTertiaryBreakdown = tertiaryBreakdown !== 'none';
 
   const getBreakdownLabel = (type: string): string => {
     switch (type) {
@@ -54,8 +58,10 @@ export default function ComparisonTable({
         return t('breakdown.placement');
       case 'platform':
         return t('breakdown.platform');
-      case 'age-gender':
-        return t('breakdown.demographics');
+      case 'age':
+        return t('breakdown.age');
+      case 'gender':
+        return t('breakdown.gender');
       case 'country':
         return t('breakdown.country');
       default:
@@ -67,16 +73,19 @@ export default function ComparisonTable({
     return getBreakdownLabel(breakdown);
   };
 
-  // Parse name into primary and secondary parts
-  const parseItemName = (name: string): { primary: string; secondary: string } => {
-    if (hasSecondaryBreakdown && name.includes(' - ')) {
-      const parts = name.split(' - ');
+  // Get breakdown values from item - use new fields if available, fallback to name
+  const getItemValues = (item: ComparisonItem): { primary: string; secondary: string; tertiary: string } => {
+    // Use the new separate fields if available (from multi-dimensional breakdown)
+    // Check if primary_value exists and is not empty
+    if ('primary_value' in item && item.primary_value) {
       return {
-        primary: parts[0] || name,
-        secondary: parts.slice(1).join(' - ') || ''
+        primary: item.primary_value,
+        secondary: item.secondary_value || '',
+        tertiary: item.tertiary_value || ''
       };
     }
-    return { primary: name, secondary: '' };
+    // Fallback to name for single-dimension breakdowns
+    return { primary: item.name, secondary: '', tertiary: '' };
   };
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -96,15 +105,20 @@ export default function ComparisonTable({
       let bValue: any;
 
       if (sortKey === 'name' || sortKey === 'primary') {
-        const aParsed = parseItemName(a.name);
-        const bParsed = parseItemName(b.name);
-        aValue = aParsed.primary;
-        bValue = bParsed.primary;
+        const aValues = getItemValues(a);
+        const bValues = getItemValues(b);
+        aValue = aValues.primary;
+        bValue = bValues.primary;
       } else if (sortKey === 'secondary') {
-        const aParsed = parseItemName(a.name);
-        const bParsed = parseItemName(b.name);
-        aValue = aParsed.secondary;
-        bValue = bParsed.secondary;
+        const aValues = getItemValues(a);
+        const bValues = getItemValues(b);
+        aValue = aValues.secondary;
+        bValue = bValues.secondary;
+      } else if (sortKey === 'tertiary') {
+        const aValues = getItemValues(a);
+        const bValues = getItemValues(b);
+        aValue = aValues.tertiary;
+        bValue = bValues.tertiary;
       } else {
         aValue = a.period1[sortKey as MetricKey];
         bValue = b.period1[sortKey as MetricKey];
@@ -118,7 +132,7 @@ export default function ComparisonTable({
 
       return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
     });
-  }, [data, sortKey, sortDirection, hasSecondaryBreakdown]);
+  }, [data, sortKey, sortDirection, hasSecondaryBreakdown, hasTertiaryBreakdown]);
 
   const formatValue = (metric: MetricKey, value: number | null): string => {
     if (value === null || value === undefined) return '-';
@@ -166,6 +180,58 @@ export default function ComparisonTable({
     } else {
       return changePct < 0 ? 'text-green-400' : 'text-red-400';
     }
+  };
+
+  // Map of English country names to ISO 3166-1 alpha-2 codes
+  const countryToCode: Record<string, string> = {
+    'United States': 'US', 'Israel': 'IL', 'Germany': 'DE', 'France': 'FR',
+    'United Kingdom': 'GB', 'Canada': 'CA', 'Australia': 'AU', 'Spain': 'ES',
+    'Italy': 'IT', 'Netherlands': 'NL', 'Brazil': 'BR', 'Mexico': 'MX',
+    'Japan': 'JP', 'India': 'IN', 'South Korea': 'KR', 'China': 'CN',
+  };
+
+  // Translate a breakdown value based on its type
+  const translateBreakdownValue = (value: string, breakdownType: string): string => {
+    if (!value) return t('breakdown.values.unknown');
+
+    // For country breakdown, use Intl.DisplayNames
+    if (breakdownType === 'country') {
+      const code = countryToCode[value];
+      if (code) {
+        try {
+          const displayNames = new Intl.DisplayNames([locale], { type: 'region' });
+          return displayNames.of(code) || value;
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    }
+
+    // For gender breakdown (or age_gender with combined values like "65+ | female")
+    if (breakdownType === 'gender' || breakdownType === 'age_gender' || breakdownType === 'age-gender') {
+      // Handle combined age-gender format "65+ | female"
+      if (value.includes(' | ')) {
+        const [age, gender] = value.split(' | ');
+        const genderKey = gender.toLowerCase();
+        const genderTranslationKey = `breakdown.values.${genderKey}`;
+        const translatedGender = t.has(genderTranslationKey) ? t(genderTranslationKey) : gender;
+        return `${age} | ${translatedGender}`;
+      }
+      // Handle standalone gender value
+      const key = value.toLowerCase();
+      const translationKey = `breakdown.values.${key}`;
+      return t.has(translationKey) ? t(translationKey) : value;
+    }
+
+    // For platform/placement breakdown
+    if (breakdownType === 'platform' || breakdownType === 'placement') {
+      const key = value.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+      const translationKey = `breakdown.values.${key}`;
+      return t.has(translationKey) ? t(translationKey) : value;
+    }
+
+    return value;
   };
 
   const getMetricLabel = (metric: MetricKey): string => {
@@ -232,6 +298,24 @@ export default function ComparisonTable({
               </th>
             )}
 
+            {/* Tertiary breakdown column (if applicable) */}
+            {hasTertiaryBreakdown && (
+              <th
+                onClick={() => handleSort('tertiary')}
+                className={`
+                  px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors
+                  ${isRTL ? 'text-right' : 'text-left'}
+                `}
+              >
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <span>{getBreakdownLabel(tertiaryBreakdown)}</span>
+                  {sortKey === 'tertiary' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  )}
+                </div>
+              </th>
+            )}
+
             {/* Metric columns */}
             {selectedMetrics.map((metric) => (
               <React.Fragment key={metric}>
@@ -254,7 +338,7 @@ export default function ComparisonTable({
 
         <tbody>
           {sortedData.map((item, idx) => {
-            const parsedName = parseItemName(item.name);
+            const itemValues = getItemValues(item);
             return (
               <tr
                 key={item.id}
@@ -271,7 +355,7 @@ export default function ComparisonTable({
                     ${isRTL ? 'text-right' : 'text-left'}
                   `}
                 >
-                  {parsedName.primary}
+                  {translateBreakdownValue(itemValues.primary, breakdown)}
                 </td>
 
                 {/* Secondary breakdown value (if applicable) */}
@@ -282,7 +366,19 @@ export default function ComparisonTable({
                       ${isRTL ? 'text-right' : 'text-left'}
                     `}
                   >
-                    {parsedName.secondary}
+                    {translateBreakdownValue(itemValues.secondary, secondaryBreakdown)}
+                  </td>
+                )}
+
+                {/* Tertiary breakdown value (if applicable) */}
+                {hasTertiaryBreakdown && (
+                  <td
+                    className={`
+                      px-4 py-3 text-sm text-gray-300
+                      ${isRTL ? 'text-right' : 'text-left'}
+                    `}
+                  >
+                    {translateBreakdownValue(itemValues.tertiary, tertiaryBreakdown)}
                   </td>
                 )}
 
@@ -305,7 +401,7 @@ export default function ComparisonTable({
       {/* Empty state */}
       {sortedData.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          <p>No data available for the selected filters</p>
+          <p>{t('reports.no_data')}</p>
         </div>
       )}
     </div>

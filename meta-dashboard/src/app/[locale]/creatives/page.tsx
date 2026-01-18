@@ -276,7 +276,7 @@ export default function CreativesPage() {
                             <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
                             <input
                                 type="text"
-                                placeholder="Search creatives..."
+                                placeholder={t('creatives.search_placeholder')}
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
                                 className={`w-full bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all placeholder:text-gray-600`}
@@ -291,10 +291,10 @@ export default function CreativesPage() {
                                 onChange={(e) => setTypeFilter(e.target.value)}
                                 className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
                             >
-                                <option value="" className="bg-gray-900 text-white">All Types</option>
-                                <option value="video" className="bg-gray-900 text-white">Video</option>
-                                <option value="image" className="bg-gray-900 text-white">Image</option>
-                                <option value="carousel" className="bg-gray-900 text-white">Carousel</option>
+                                <option value="" className="bg-gray-900 text-white">{t('common.all_types')}</option>
+                                <option value="video" className="bg-gray-900 text-white">{t('creatives.types.video')}</option>
+                                <option value="image" className="bg-gray-900 text-white">{t('creatives.types.image')}</option>
+                                <option value="carousel" className="bg-gray-900 text-white">{t('creatives.types.carousel')}</option>
                             </select>
                             <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,23 +386,23 @@ export default function CreativesPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border-subtle bg-black/20">
-                                <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Spend</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CTR</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPC</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Conversions</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPA</th>
+                                <th className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('creatives.type')}</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.spend')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.ctr')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.cpc')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.conversions')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.cpa')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-subtle">
                             {[
-                                { key: 'image', name: 'Image', data: formatMetrics.image, icon: ImageIcon, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' },
-                                { key: 'carousel', name: 'Carousel', data: formatMetrics.carousel, icon: LayoutGrid, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400' },
-                                { key: 'video', name: 'Video', data: formatMetrics.video, icon: Play, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400' },
+                                { key: 'image', name: t('creatives.types.image'), data: formatMetrics.image, icon: ImageIcon, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' },
+                                { key: 'carousel', name: t('creatives.types.carousel'), data: formatMetrics.carousel, icon: LayoutGrid, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400' },
+                                { key: 'video', name: t('creatives.types.video'), data: formatMetrics.video, icon: Play, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400' },
                             ]
                                 .sort((a, b) => b.data.totalSpend - a.data.totalSpend)
                                 .map((type) => {
@@ -435,7 +435,7 @@ export default function CreativesPage() {
 
                                     return (
                                         <tr key={type.key} className="hover:bg-white/[0.02]">
-                                            <td className="px-4 py-3">
+                                            <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-7 h-7 rounded-lg ${type.bgClass} border ${type.borderClass} flex items-center justify-center`}>
                                                         <type.icon className={`w-3.5 h-3.5 ${type.textClass}`} />
@@ -533,9 +533,9 @@ export default function CreativesPage() {
 
                                 return (
                                     <tr className="border-t-2 border-border-subtle bg-white/[0.03]">
-                                        <td className="px-4 py-3">
+                                        <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-white">Total</span>
+                                                <span className="text-sm font-bold text-white">{t('common.total')}</span>
                                                 <span className="text-xs text-gray-500">({total.count})</span>
                                             </div>
                                         </td>
@@ -575,7 +575,7 @@ export default function CreativesPage() {
             {/* Creatives Table */}
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-100 mb-4">
-                    {isFilterActive ? `Filtered Creatives (${filteredCreativeIds.length})` : 'All Creatives'}
+                    {isFilterActive ? `${t('creatives.all_creatives')} (${filteredCreativeIds.length})` : t('creatives.all_creatives')}
                 </h2>
                 <CreativesTable
                     creatives={isFilterActive && filteredCreativeIds.length > 0
@@ -597,7 +597,7 @@ export default function CreativesPage() {
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-gray-100">Performance Over Time</h2>
+                        <h2 className="text-2xl font-bold text-gray-100">{t('common.performance_over_time')}</h2>
                         {isFilterActive && (
                             <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                 Filtered ({filteredCreativeIds.length} creatives)
@@ -623,8 +623,8 @@ export default function CreativesPage() {
 
             {/* Creative Breakdown Tabs */}
             <div className="mb-8" ref={breakdownRef}>
-                <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.breakdown_title')}</h2>
+                <div className={`flex items-center justify-between mb-4`}>
+                    <h2 className={`text-2xl font-bold text-gray-100 ${isRTL ? 'text-right w-full' : ''}`}>{t('campaigns.breakdown_title')}</h2>
                     {isFilterActive && (
                         <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             Filtered ({filteredCreativeIds.length} creatives)

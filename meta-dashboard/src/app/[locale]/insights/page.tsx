@@ -123,7 +123,7 @@ export default function InsightsPage() {
       description={t('insights.subtitle')}
     >
       {/* Tabs */}
-      <div className="mb-8 border-b border-border-subtle">
+      <div className={`mb-8 border-b border-border-subtle ${isRTL ? 'direction-rtl' : ''}`}>
         <div className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -135,6 +135,7 @@ export default function InsightsPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`
                   flex items-center gap-2 px-4 py-3 border-b-2 transition-colors
+                  ${isRTL ? 'flex-row-reverse' : ''}
                   ${isActive
                     ? 'border-primary-light text-primary-light bg-primary-dark/10'
                     : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-card-bg/50'
@@ -142,7 +143,7 @@ export default function InsightsPage() {
                 `}
               >
                 <Icon className="w-4 h-4" />
-                <div className="text-left">
+                <div className={isRTL ? 'text-right' : 'text-left'}>
                   <div className="font-medium">{tab.label}</div>
                   <div className="text-xs opacity-75">{tab.description}</div>
                 </div>
@@ -257,11 +258,11 @@ export default function InsightsPage() {
       {/* Floating Action Button for AI Chat */}
       <button
         onClick={() => openChat()}
-        className="fixed bottom-8 right-8 bg-accent hover:bg-accent/90 text-white p-4 rounded-full shadow-2xl z-30 transition-all hover:scale-105 group"
+        className={`fixed bottom-8 ${isRTL ? 'left-8' : 'right-8'} bg-accent hover:bg-accent/90 text-white p-4 rounded-full shadow-2xl z-30 transition-all hover:scale-105 group`}
       >
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-[#131620]"></div>
+        <div className={`absolute -top-2 ${isRTL ? '-left-2' : '-right-2'} w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-[#131620]`}></div>
         <Lightbulb className="w-8 h-8 group-hover:rotate-12 transition-transform" />
-        <span className="sr-only">Ask AI Investigator</span>
+        <span className="sr-only">{t('insights.ai_investigator')}</span>
       </button>
 
       {/* AI Chat Drawer */}

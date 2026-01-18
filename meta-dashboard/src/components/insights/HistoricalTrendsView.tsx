@@ -28,6 +28,9 @@ export default function HistoricalTrendsView({
   isRTL,
   accountId
 }: HistoricalTrendsViewProps) {
+  const t = useTranslations();
+  const locale = useLocale();
+
   const [data, setData] = useState<HistoricalAnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +40,6 @@ export default function HistoricalTrendsView({
     Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)),
     90
   );
-
-  // Get locale
-  const locale = useLocale();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,7 +84,7 @@ export default function HistoricalTrendsView({
       <div className="bg-red-900/50 border border-red-400 text-red-300 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <AlertCircle className="w-5 h-5" />
-          <p className="font-bold">Error Loading Historical Trends</p>
+          <p className="font-bold">{t('insights.error_loading_historical')}</p>
         </div>
         <p className="text-sm">{error}</p>
       </div>
@@ -96,7 +96,7 @@ export default function HistoricalTrendsView({
     return (
       <div className="text-center py-12">
         <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-        <p className="text-gray-400">No historical data available</p>
+        <p className="text-gray-400">{t('insights.no_historical_data')}</p>
       </div>
     );
   }
@@ -105,9 +105,9 @@ export default function HistoricalTrendsView({
     <div className="space-y-6">
       {/* AI Analysis Card */}
       <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-xl p-6 shadow-lg">
-        <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
           <TrendingUp className="w-6 h-6 text-blue-400" />
-          <h2 className="text-2xl font-bold text-blue-200">Historical Trend Analysis</h2>
+          <h2 className="text-2xl font-bold text-blue-200">{t('insights.historical_trend_analysis')}</h2>
         </div>
         <div className={`prose prose-invert max-w-none ${isRTL ? 'text-right' : 'text-left'}`}>
           <ReactMarkdown>{data.analysis}</ReactMarkdown>
@@ -117,7 +117,7 @@ export default function HistoricalTrendsView({
       {/* Weekly Trend Chart */}
       {data.data && data.data.weekly_trends && data.data.weekly_trends.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Weekly Conversions Trend</h3>
+          <h3 className="text-lg font-bold mb-4">{t('insights.weekly_conversions_trend')}</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
@@ -151,7 +151,7 @@ export default function HistoricalTrendsView({
                   labelStyle={{ color: '#9ca3af' }}
                   formatter={(value: number, name: string) => [
                     name === 'conversions' ? value : `$${value.toFixed(2)}`,
-                    name === 'conversions' ? 'Conversions' : 'Spend'
+                    name === 'conversions' ? t('metrics.conversions') : t('metrics.spend')
                   ]}
                 />
                 <Line
@@ -171,7 +171,7 @@ export default function HistoricalTrendsView({
       {/* Day of Week Seasonality */}
       {data.data && data.data.daily_seasonality && data.data.daily_seasonality.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Day-of-Week Performance</h3>
+          <h3 className="text-lg font-bold mb-4">{t('insights.day_of_week_performance')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {data.data.daily_seasonality.map((day) => (
               <div
@@ -179,11 +179,11 @@ export default function HistoricalTrendsView({
                 className="bg-card-bg/60 border border-border-subtle rounded-lg p-3"
               >
                 <div className="text-sm font-semibold mb-2">{day.day_name}</div>
-                <div className="text-xs text-gray-400 mb-1">CTR</div>
+                <div className="text-xs text-gray-400 mb-1">{t('metrics.ctr')}</div>
                 <div className="text-sm font-bold text-blue-400 mb-2">
                   {(day.avg_ctr ?? 0).toFixed(2)}%
                 </div>
-                <div className="text-xs text-gray-400 mb-1">ROAS</div>
+                <div className="text-xs text-gray-400 mb-1">{t('metrics.roas')}</div>
                 <div className="text-sm font-bold text-green-400">
                   {(day.avg_roas ?? 0).toFixed(2)}x
                 </div>
@@ -196,7 +196,7 @@ export default function HistoricalTrendsView({
       {/* Metadata */}
       {data.metadata && (
         <div className="text-center text-xs text-gray-500">
-          ✨ Analyzed {data.metadata.lookback_days} days of historical data • Generated at{' '}
+          ✨ {t('insights.analyzed_days', { days: data.metadata.lookback_days })} • {t('insights.generated_at')}{' '}
           {new Date(data.metadata.generated_at).toLocaleString()}
         </div>
       )}

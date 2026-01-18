@@ -986,7 +986,12 @@ class AdMutationService:
             logger.info(f"Fetching targeting for adset {adset_id}")
             adset = AdSet(adset_id)
             data = adset.api_get(fields=[AdSet.Field.targeting])
-            targeting = data.get(AdSet.Field.targeting, {})
+
+            # Export data to dict for proper access
+            raw_data = data.export_all_data() if hasattr(data, 'export_all_data') else dict(data)
+            logger.info(f"Raw targeting data for adset {adset_id}: {raw_data}")
+
+            targeting = raw_data.get("targeting", {})
 
             # Parse geo_locations into a simpler format
             geo_locations = targeting.get("geo_locations", {})
@@ -1022,11 +1027,28 @@ class AdMutationService:
                     "display_name": f"{city.get('name', '')}, {city.get('region', '')} ({city.get('country', '')})"
                 })
 
-            return {
+            # Custom locations (radius-based targeting)
+            for idx, custom_loc in enumerate(geo_locations.get("custom_locations", [])):
+                lat = custom_loc.get("latitude")
+                lng = custom_loc.get("longitude")
+                radius = custom_loc.get("radius", 0)
+                unit = custom_loc.get("distance_unit", "mile")
+                country = custom_loc.get("country", "")
+                locations.append({
+                    "key": f"custom_{idx}_{lat}_{lng}",
+                    "type": "custom_location",
+                    "name": f"{radius} {unit} radius",
+                    "country_code": country,
+                    "display_name": f"{radius} {unit} radius ({country})"
+                })
+
+            result = {
                 "locations": locations,
                 "age_min": targeting.get("age_min", 18),
                 "age_max": targeting.get("age_max", 65)
             }
+            logger.info(f"Parsed targeting result for adset {adset_id}: locations={len(locations)}, age_min={result['age_min']}, age_max={result['age_max']}")
+            return result
         except Exception as e:
             logger.error(f"Failed to fetch adset {adset_id} targeting: {str(e)}")
             raise

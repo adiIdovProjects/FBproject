@@ -29,6 +29,7 @@ export default function CreativeAnalysisView({
   isRTL,
   accountId
 }: CreativeAnalysisViewProps) {
+  const t = useTranslations();
   const locale = useLocale();
   const [analysisData, setAnalysisData] = useState<CreativeAnalysisResponse | null>(null);
   const [fatigueData, setFatigueData] = useState<CreativeFatigueResponse | null>(null);
@@ -88,7 +89,7 @@ export default function CreativeAnalysisView({
       <div className="bg-red-900/50 border border-red-400 text-red-300 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <AlertCircle className="w-5 h-5" />
-          <p className="font-bold">Error Loading Creative Analysis</p>
+          <p className="font-bold">{t('insights.error_loading_creative')}</p>
         </div>
         <p className="text-sm">{error}</p>
       </div>
@@ -100,7 +101,7 @@ export default function CreativeAnalysisView({
     return (
       <div className="text-center py-12">
         <Palette className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-        <p className="text-gray-400">No creative data available</p>
+        <p className="text-gray-400">{t('insights.no_creative_data')}</p>
       </div>
     );
   }
@@ -113,9 +114,9 @@ export default function CreativeAnalysisView({
     <div className="space-y-6">
       {/* AI Analysis Card */}
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border border-purple-500/30 rounded-xl p-6 shadow-lg">
-        <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
           <Palette className="w-6 h-6 text-purple-400" />
-          <h2 className="text-2xl font-bold text-purple-200">Creative Insights</h2>
+          <h2 className="text-2xl font-bold text-purple-200">{t('insights.creative_insights')}</h2>
         </div>
         <div className={`prose prose-invert max-w-none ${isRTL ? 'text-right' : 'text-left'}`}>
           <ReactMarkdown>{analysisData.analysis}</ReactMarkdown>
@@ -126,19 +127,19 @@ export default function CreativeAnalysisView({
       {analysisData.data && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-1">Total Creatives Analyzed</div>
+            <div className="text-sm text-gray-400 mb-1">{t('insights.total_creatives_analyzed')}</div>
             <div className="text-2xl font-bold">{analysisData.data.total_creatives || 0}</div>
           </div>
 
           <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-1">Themes Detected</div>
+            <div className="text-sm text-gray-400 mb-1">{t('insights.themes_detected')}</div>
             <div className="text-2xl font-bold">
               {Object.keys(analysisData.data.theme_performance || {}).length}
             </div>
           </div>
 
           <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-1">Fatigued Creatives</div>
+            <div className="text-sm text-gray-400 mb-1">{t('insights.fatigued_creatives')}</div>
             <div className="text-2xl font-bold text-red-400">
               {analysisData.data.fatigued_creatives_count || 0}
             </div>
@@ -151,22 +152,22 @@ export default function CreativeAnalysisView({
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-bold">Theme Performance</h3>
+            <h3 className="text-lg font-bold">{t('insights.theme_performance')}</h3>
           </div>
           <p className="text-sm text-gray-400 mb-4">
-            Themes are categories detected from your ad copy (e.g., "urgency", "social proof", "discount", "benefit-focused").
+            {t('insights.theme_description')}
           </p>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border-subtle">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">Theme</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Ads</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Spend</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CTR</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conv</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">{t('insights.theme')}</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('insights.ads')}</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('metrics.spend')}</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('metrics.ctr')}</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('insights.conv')}</th>
                   {hasRoas && (
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">ROAS</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('metrics.roas')}</th>
                   )}
                 </tr>
               </thead>
@@ -208,7 +209,7 @@ export default function CreativeAnalysisView({
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <LayoutGrid className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-bold">Format Performance</h3>
+            <h3 className="text-lg font-bold">{t('insights.format_performance')}</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {analysisData.data.format_performance.map((format: any) => {
@@ -221,33 +222,33 @@ export default function CreativeAnalysisView({
                   <div className="flex items-center gap-2 mb-3">
                     <FormatIcon className="w-5 h-5 text-cyan-400" />
                     <span className="font-semibold">{format.format_type}</span>
-                    <span className="ml-auto text-xs text-gray-400">{format.creative_count} ads</span>
+                    <span className="ml-auto text-xs text-gray-400">{format.creative_count} {t('insights.ads')}</span>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">CTR</span>
+                      <span className="text-gray-400">{t('metrics.ctr')}</span>
                       <span className={`font-semibold ${format.avg_ctr >= 2 ? 'text-green-400' : format.avg_ctr >= 1 ? 'text-yellow-400' : 'text-gray-200'}`}>
                         {format.avg_ctr.toFixed(2)}%
                       </span>
                     </div>
                     {format.format_type === 'Video' && format.avg_hook_rate > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Hook Rate</span>
+                        <span className="text-gray-400">{t('insights.hook_rate')}</span>
                         <span className="font-semibold">{format.avg_hook_rate.toFixed(1)}%</span>
                       </div>
                     )}
                     {format.format_type === 'Video' && format.avg_completion_rate > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">View Rate</span>
+                        <span className="text-gray-400">{t('insights.view_rate')}</span>
                         <span className="font-semibold">{format.avg_completion_rate.toFixed(1)}%</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Conversions</span>
+                      <span className="text-gray-400">{t('metrics.conversions')}</span>
                       <span className="font-semibold">{format.total_conversions}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Spend</span>
+                      <span className="text-gray-400">{t('metrics.spend')}</span>
                       <span className="font-semibold">${format.total_spend.toFixed(0)}</span>
                     </div>
                   </div>
@@ -261,7 +262,7 @@ export default function CreativeAnalysisView({
       {/* Top Performers */}
       {analysisData.data && analysisData.data.top_performers && analysisData.data.top_performers.length > 0 && (
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Top Performing Ads</h3>
+          <h3 className="text-lg font-bold mb-4">{t('insights.top_performing_ads')}</h3>
           <div className="space-y-3">
             {analysisData.data.top_performers.map((creative: any) => {
               const FormatIcon = creative.format_type === 'Video' ? Video : creative.format_type === 'Carousel' ? LayoutGrid : Image;
@@ -285,14 +286,14 @@ export default function CreativeAnalysisView({
                     </div>
                     <div className="flex gap-4 text-right flex-shrink-0">
                       <div>
-                        <div className="text-xs text-gray-400">CTR</div>
+                        <div className="text-xs text-gray-400">{t('metrics.ctr')}</div>
                         <div className={`text-sm font-bold ${creative.ctr >= 2 ? 'text-green-400' : creative.ctr >= 1 ? 'text-yellow-400' : 'text-gray-200'}`}>
                           {creative.ctr.toFixed(2)}%
                         </div>
                       </div>
                       {creative.format_type === 'Video' && creative.hook_rate > 0 && (
                         <div>
-                          <div className="text-xs text-gray-400">Hook</div>
+                          <div className="text-xs text-gray-400">{t('insights.hook')}</div>
                           <div className="text-sm font-bold">
                             {creative.hook_rate.toFixed(1)}%
                           </div>
@@ -300,21 +301,21 @@ export default function CreativeAnalysisView({
                       )}
                       {creative.format_type === 'Video' && creative.completion_rate > 0 && (
                         <div>
-                          <div className="text-xs text-gray-400">View</div>
+                          <div className="text-xs text-gray-400">{t('insights.view')}</div>
                           <div className="text-sm font-bold">
                             {creative.completion_rate.toFixed(1)}%
                           </div>
                         </div>
                       )}
                       <div>
-                        <div className="text-xs text-gray-400">Conv</div>
+                        <div className="text-xs text-gray-400">{t('insights.conv')}</div>
                         <div className="text-sm font-bold">
                           {creative.conversions}
                         </div>
                       </div>
                       {hasRoas && creative.roas > 0 && (
                         <div>
-                          <div className="text-xs text-gray-400">ROAS</div>
+                          <div className="text-xs text-gray-400">{t('metrics.roas')}</div>
                           <div className="text-sm font-bold text-green-400">
                             {creative.roas.toFixed(2)}x
                           </div>
@@ -336,34 +337,34 @@ export default function CreativeAnalysisView({
         <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 border border-orange-500/30 rounded-xl p-6 shadow-lg">
           <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
             <AlertTriangle className="w-6 h-6 text-orange-400" />
-            <h2 className="text-2xl font-bold text-orange-200">Ad Fatigue Alert Summary</h2>
+            <h2 className="text-2xl font-bold text-orange-200">{t('insights.ad_fatigue_alert')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-card-bg/40 rounded-lg p-4">
-              <div className="text-sm text-gray-400 mb-1">Total Fatigued</div>
+              <div className="text-sm text-gray-400 mb-1">{t('insights.total_fatigued')}</div>
               <div className="text-3xl font-bold">{fatigueData.summary.total_fatigued}</div>
             </div>
             <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4">
-              <div className="text-sm text-gray-400 mb-1">Critical</div>
+              <div className="text-sm text-gray-400 mb-1">{t('insights.critical')}</div>
               <div className="text-3xl font-bold text-red-400">{fatigueData.summary.critical_count}</div>
-              <div className="text-xs text-gray-400 mt-1">&gt;30% decline</div>
+              <div className="text-xs text-gray-400 mt-1">{t('insights.critical_decline')}</div>
             </div>
             <div className="bg-orange-900/30 border border-orange-500/30 rounded-lg p-4">
-              <div className="text-sm text-gray-400 mb-1">Warning</div>
+              <div className="text-sm text-gray-400 mb-1">{t('insights.warning')}</div>
               <div className="text-3xl font-bold text-orange-400">{fatigueData.summary.warning_count}</div>
-              <div className="text-xs text-gray-400 mt-1">20-30% decline</div>
+              <div className="text-xs text-gray-400 mt-1">{t('insights.warning_decline')}</div>
             </div>
             <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-4">
-              <div className="text-sm text-gray-400 mb-1">Monitor</div>
+              <div className="text-sm text-gray-400 mb-1">{t('insights.monitor')}</div>
               <div className="text-3xl font-bold text-yellow-400">{fatigueData.summary.monitor_count}</div>
-              <div className="text-xs text-gray-400 mt-1">15-20% decline</div>
+              <div className="text-xs text-gray-400 mt-1">{t('insights.monitor_decline')}</div>
             </div>
           </div>
 
           {/* Recommendations */}
           {fatigueData.recommendations && fatigueData.recommendations.length > 0 && (
             <div className="mt-6 bg-card-bg/40 border border-border-subtle rounded-lg p-4">
-              <h3 className="text-lg font-bold mb-3 text-orange-100">Recommended Actions</h3>
+              <h3 className="text-lg font-bold mb-3 text-orange-100">{t('insights.recommended_actions')}</h3>
               <div className="space-y-2">
                 {fatigueData.recommendations.map((rec, idx) => (
                   <div key={idx} className="flex items-start gap-2">
@@ -382,9 +383,9 @@ export default function CreativeAnalysisView({
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-5 h-5 text-red-400" />
-            <h3 className="text-lg font-bold text-white">Critical: Urgent Refresh Needed</h3>
+            <h3 className="text-lg font-bold text-white">{t('insights.critical_refresh')}</h3>
             <span className="ml-auto text-sm text-gray-400">
-              {fatigueData.critical_refreshes.length} ads
+              {fatigueData.critical_refreshes.length} {t('insights.ads')}
             </span>
           </div>
           <div className="space-y-3">
@@ -393,15 +394,15 @@ export default function CreativeAnalysisView({
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-red-400">CRITICAL</span>
+                      <span className="text-xs font-bold text-red-400">{t('insights.critical').toUpperCase()}</span>
                     </div>
                     <div className="text-sm font-semibold mb-2 truncate text-gray-200">
                       {creative.ad_name || creative.title || 'Untitled Ad'}
                     </div>
                     <div className="flex gap-6 text-xs text-gray-400">
-                      <div>Initial CTR: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
-                      <div>Recent CTR: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
-                      <div>Decline: <span className="text-red-400 font-bold">{creative.fatigue_pct.toFixed(1)}%</span></div>
+                      <div>{t('insights.initial_ctr')}: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
+                      <div>{t('insights.recent_ctr')}: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
+                      <div>{t('insights.decline')}: <span className="text-red-400 font-bold">{creative.fatigue_pct.toFixed(1)}%</span></div>
                     </div>
                   </div>
                 </div>
@@ -416,9 +417,9 @@ export default function CreativeAnalysisView({
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingDown className="w-5 h-5 text-orange-400" />
-            <h3 className="text-lg font-bold text-white">Warning: Plan Refresh Soon</h3>
+            <h3 className="text-lg font-bold text-white">{t('insights.warning_refresh')}</h3>
             <span className="ml-auto text-sm text-gray-400">
-              {fatigueData.warning_refreshes.length} ads
+              {fatigueData.warning_refreshes.length} {t('insights.ads')}
             </span>
           </div>
           <div className="space-y-3">
@@ -427,15 +428,15 @@ export default function CreativeAnalysisView({
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-orange-400">WARNING</span>
+                      <span className="text-xs font-bold text-orange-400">{t('insights.warning').toUpperCase()}</span>
                     </div>
                     <div className="text-sm font-semibold mb-2 truncate text-gray-200">
                       {creative.ad_name || creative.title || 'Untitled Ad'}
                     </div>
                     <div className="flex gap-6 text-xs text-gray-400">
-                      <div>Initial CTR: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
-                      <div>Recent CTR: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
-                      <div>Decline: <span className="text-orange-400 font-bold">{creative.fatigue_pct.toFixed(1)}%</span></div>
+                      <div>{t('insights.initial_ctr')}: <span className="text-gray-200 font-semibold">{creative.initial_ctr.toFixed(2)}%</span></div>
+                      <div>{t('insights.recent_ctr')}: <span className="text-gray-200 font-semibold">{creative.recent_ctr.toFixed(2)}%</span></div>
+                      <div>{t('insights.decline')}: <span className="text-orange-400 font-bold">{creative.fatigue_pct.toFixed(1)}%</span></div>
                     </div>
                   </div>
                 </div>
@@ -448,7 +449,7 @@ export default function CreativeAnalysisView({
       {/* Metadata */}
       {analysisData.metadata && (
         <div className="text-center text-xs text-gray-500">
-          ✨ Analyzed {startDate} to {endDate} • Generated at{' '}
+          ✨ {t('insights.analyzed_period', { start: startDate, end: endDate })} • {t('insights.generated_at')}{' '}
           {new Date(analysisData.metadata.generated_at).toLocaleString()}
         </div>
       )}

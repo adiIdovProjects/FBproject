@@ -20,7 +20,8 @@ export type ReportBreakdown =
   | 'ad_name'
   | 'placement'
   | 'platform'
-  | 'age-gender'
+  | 'age'
+  | 'gender'
   | 'country';
 
 export type ReportTemplateId =
@@ -100,6 +101,10 @@ export interface ComparisonItem {
   period2: MetricsPeriod;
   change_pct: ChangePercentage;
   change_abs: Record<string, number>;
+  // Multi-dimensional breakdown values (for 2D/3D reports)
+  primary_value?: string;
+  secondary_value?: string;
+  tertiary_value?: string;
 }
 
 export interface ReportsComparisonResponse {
@@ -120,7 +125,8 @@ export interface ComparisonParams {
   period2End?: string;
   dimension?: 'overview' | 'campaign' | 'ad';
   breakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month';
-  secondaryBreakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month';
+  secondaryBreakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age' | 'gender' | 'country';
+  tertiaryBreakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age' | 'gender' | 'country';
   campaignFilter?: string;
   adSetFilter?: string;
   adFilter?: string;
@@ -139,6 +145,7 @@ export async function fetchComparisonData(
     dimension: params.dimension || 'overview',
     breakdown: params.breakdown || 'none',
     secondary_breakdown: params.secondaryBreakdown || 'none',
+    tertiary_breakdown: params.tertiaryBreakdown || 'none',
   };
 
   if (params.period2Start) {
@@ -363,14 +370,15 @@ export async function exportToGoogleSheets(
 export async function fetchBreakdownReport(
   startDate: string,
   endDate: string,
-  breakdownType: 'placement' | 'platform' | 'age-gender' | 'country',
-  accountId?: string,
-  groupBy: 'age' | 'gender' | 'both' = 'both'
+  breakdownType: 'placement' | 'platform' | 'age' | 'gender' | 'country',
+  accountId?: string
 ): Promise<BreakdownRow[]> {
+  // Map age/gender to the same endpoint with different group_by
   const endpointMap: Record<string, string> = {
     'placement': '/api/v1/metrics/breakdowns/placement',
     'platform': '/api/v1/metrics/breakdowns/platform',
-    'age-gender': '/api/v1/metrics/breakdowns/age-gender',
+    'age': '/api/v1/metrics/breakdowns/age-gender',
+    'gender': '/api/v1/metrics/breakdowns/age-gender',
     'country': '/api/v1/metrics/breakdowns/country',
   };
 
@@ -384,8 +392,11 @@ export async function fetchBreakdownReport(
     params.account_id = accountId;
   }
 
-  if (breakdownType === 'age-gender') {
-    params.group_by = groupBy;
+  // For age/gender, use the group_by parameter
+  if (breakdownType === 'age') {
+    params.group_by = 'age';
+  } else if (breakdownType === 'gender') {
+    params.group_by = 'gender';
   }
 
   try {
@@ -398,12 +409,10 @@ export async function fetchBreakdownReport(
         name = item.platform || item.placement_name || 'Unknown';
       } else if (breakdownType === 'placement') {
         name = item.placement_name || 'Unknown';
-      } else if (breakdownType === 'age-gender') {
-        const age = item.age_group || item.age;
-        const gender = item.gender;
-        name = (age && gender && gender !== 'All' && age !== 'All')
-          ? `${age} | ${gender}`
-          : (age !== 'All' ? age : (gender !== 'All' ? gender : 'Unknown'));
+      } else if (breakdownType === 'age') {
+        name = item.age_group || item.age || 'Unknown';
+      } else if (breakdownType === 'gender') {
+        name = item.gender || 'Unknown';
       } else if (breakdownType === 'country') {
         name = item.country || 'Unknown';
       }
@@ -431,7 +440,7 @@ export async function fetchBreakdownReport(
  * Check if breakdown type uses special breakdown endpoints
  */
 export function isSpecialBreakdown(breakdown: ReportBreakdown): boolean {
-  return ['placement', 'platform', 'age-gender', 'country'].includes(breakdown);
+  return ['placement', 'platform', 'age', 'gender', 'country'].includes(breakdown);
 }
 
 /**
@@ -442,12 +451,16 @@ export async function fetchEntityBreakdownReport(
   startDate: string,
   endDate: string,
   entityType: 'campaign' | 'adset' | 'ad',
-  breakdownType: 'placement' | 'age-gender' | 'country',
-  searchQuery?: string
+  breakdownType: 'placement' | 'platform' | 'age' | 'gender' | 'country',
+  searchQuery?: string,
+  accountId?: string
 ): Promise<BreakdownRow[]> {
+  // Map age/gender to demographics endpoint
   const endpointMap: Record<string, string> = {
     'placement': '/api/v1/breakdowns/placement/by-entity',
-    'age-gender': '/api/v1/breakdowns/demographics/by-entity',
+    'platform': '/api/v1/breakdowns/platform/by-entity',
+    'age': '/api/v1/breakdowns/demographics/by-entity',
+    'gender': '/api/v1/breakdowns/demographics/by-entity',
     'country': '/api/v1/breakdowns/country/by-entity',
   };
 
@@ -462,6 +475,17 @@ export async function fetchEntityBreakdownReport(
     params.search_query = searchQuery;
   }
 
+  if (accountId) {
+    params.account_id = accountId;
+  }
+
+  // Add group_by for age/gender filtering
+  if (breakdownType === 'age') {
+    params.group_by = 'age';
+  } else if (breakdownType === 'gender') {
+    params.group_by = 'gender';
+  }
+
   try {
     const response = await apiClient.get(endpoint, { params });
     const data = response.data;
@@ -471,10 +495,12 @@ export async function fetchEntityBreakdownReport(
       let breakdownValue = 'Unknown';
       if (breakdownType === 'placement') {
         breakdownValue = item.placement_name || 'Unknown';
-      } else if (breakdownType === 'age-gender') {
-        const age = item.age_group || 'Unknown';
-        const gender = item.gender || 'Unknown';
-        breakdownValue = `${age} | ${gender}`;
+      } else if (breakdownType === 'platform') {
+        breakdownValue = item.platform || 'Unknown';
+      } else if (breakdownType === 'age') {
+        breakdownValue = item.age_group || 'Unknown';
+      } else if (breakdownType === 'gender') {
+        breakdownValue = item.gender || 'Unknown';
       } else if (breakdownType === 'country') {
         breakdownValue = item.country || 'Unknown';
       }
@@ -522,9 +548,11 @@ export function getEntityType(breakdown: ReportBreakdown): 'campaign' | 'adset' 
 /**
  * Get special breakdown type
  */
-export function getSpecialBreakdownType(breakdown: ReportBreakdown): 'placement' | 'age-gender' | 'country' | null {
-  if (breakdown === 'placement' || breakdown === 'platform') return 'placement';
-  if (breakdown === 'age-gender') return 'age-gender';
+export function getSpecialBreakdownType(breakdown: ReportBreakdown): 'placement' | 'platform' | 'age' | 'gender' | 'country' | null {
+  if (breakdown === 'placement') return 'placement';
+  if (breakdown === 'platform') return 'platform';
+  if (breakdown === 'age') return 'age';
+  if (breakdown === 'gender') return 'gender';
   if (breakdown === 'country') return 'country';
   return null;
 }
@@ -538,7 +566,7 @@ export const REPORT_TEMPLATES: ReportTemplate[] = [
   { id: 'campaign', labelKey: 'reports.templates.campaign', icon: 'target', primaryBreakdown: 'campaign_name', secondaryBreakdown: 'week' },
   { id: 'adset', labelKey: 'reports.templates.adset', icon: 'layers', primaryBreakdown: 'ad_set_name', secondaryBreakdown: 'none' },
   { id: 'placement', labelKey: 'reports.templates.placement', icon: 'layout', primaryBreakdown: 'placement', secondaryBreakdown: 'none' },
-  { id: 'demographics', labelKey: 'reports.templates.demographics', icon: 'users', primaryBreakdown: 'age-gender', secondaryBreakdown: 'none' },
+  { id: 'demographics', labelKey: 'reports.templates.demographics', icon: 'users', primaryBreakdown: 'age', secondaryBreakdown: 'gender' },
   { id: 'geographic', labelKey: 'reports.templates.geographic', icon: 'globe', primaryBreakdown: 'country', secondaryBreakdown: 'none' },
 ];
 

@@ -41,12 +41,21 @@ Rules:
 
 Format (each on separate line):
 
-🚀 **Top Performers:** [1 sentence about best campaign]
+🚀 **{top_performers_label}:** [1 sentence about best campaign]
 
-⚠️ **Needs Attention:** [1 sentence about struggling campaign - mention specific issue]
+⚠️ **{needs_attention_label}:** [1 sentence about struggling campaign - mention specific issue]
 
-💡 **Action:** [One specific action to take]
+💡 **{action_label}:** [One specific action to take]
 """
+
+# Translated labels for campaign analysis
+CAMPAIGN_LABELS = {
+    'en': {'top_performers': 'Top Performers', 'needs_attention': 'Needs Attention', 'action': 'Action'},
+    'he': {'top_performers': 'ביצועים מובילים', 'needs_attention': 'דורש טיפול', 'action': 'פעולה'},
+    'ar': {'top_performers': 'الأفضل أداءً', 'needs_attention': 'يحتاج اهتمام', 'action': 'إجراء'},
+    'de': {'top_performers': 'Top-Performer', 'needs_attention': 'Braucht Aufmerksamkeit', 'action': 'Aktion'},
+    'fr': {'top_performers': 'Meilleurs Performeurs', 'needs_attention': 'Nécessite Attention', 'action': 'Action'},
+}
 
 
 class CampaignInsightsService:
@@ -167,11 +176,17 @@ class CampaignInsightsService:
             if not has_roas:
                 no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS. Focus on conversions, CPA, CTR instead."
 
+            # Get translated labels
+            labels = CAMPAIGN_LABELS.get(locale, CAMPAIGN_LABELS['en'])
+
             prompt = CAMPAIGN_ANALYSIS_PROMPT.format(
                 target_lang=target_lang,
                 no_roas_instruction=no_roas_instruction,
                 start_date=start_date.isoformat(),
-                end_date=end_date.isoformat()
+                end_date=end_date.isoformat(),
+                top_performers_label=labels['top_performers'],
+                needs_attention_label=labels['needs_attention'],
+                action_label=labels['action']
             ) + f"\n\nData Context:\n{context_json}"
 
             # Call Gemini

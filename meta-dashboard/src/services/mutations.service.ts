@@ -102,7 +102,7 @@ export interface BudgetInfo {
 export interface GeoLocation {
     key: string;
     name: string;
-    type: 'country' | 'region' | 'city';
+    type: 'country' | 'region' | 'city' | 'custom_location';
     country_code?: string;
     country_name?: string;
     region?: string;

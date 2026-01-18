@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import {
     ArrowLeft, CheckCircle, Upload, Loader2, Search, MapPin, X
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { mutationsService, GeoLocation, UpdateAdSetTargetingRequest, UpdateAdCreativeRequest, AdSetTargeting, AdCreativeData } from '../../../../services/mutations.service';
 import { useAccount } from '../../../../context/AccountContext';
 
@@ -14,6 +15,9 @@ export default function EditPage() {
     const router = useRouter();
     const params = useParams();
     const locale = params.locale as string;
+    const isRTL = locale === 'he' || locale === 'ar';
+    const t = useTranslations('edit');
+    const tCommon = useTranslations('common');
     const { selectedAccountId, linkedAccounts } = useAccount();
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
@@ -55,6 +59,7 @@ export default function EditPage() {
     });
     const [leadForms, setLeadForms] = useState<any[]>([]);
     const [isLoadingForms, setIsLoadingForms] = useState(false);
+    const [adHasLeadForm, setAdHasLeadForm] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -198,6 +203,9 @@ export default function EditPage() {
         setIsLoadingCurrentData(true);
         try {
             const data = await mutationsService.getAdCreative(adId);
+            // Check if ad has a lead form
+            const hasForm = !!data.lead_form_id;
+            setAdHasLeadForm(hasForm);
             // Pre-fill form with current values
             setAdCreative(prev => ({
                 ...prev,
@@ -214,12 +222,12 @@ export default function EditPage() {
         }
     };
 
-    // Load lead forms when in ad edit mode
+    // Load lead forms when in ad edit mode and ad has a lead form
     useEffect(() => {
-        if (editMode === 'ad' && selectedAccount?.page_id && leadForms.length === 0 && !isLoadingForms) {
+        if (editMode === 'ad' && adHasLeadForm && selectedAccount?.page_id && leadForms.length === 0 && !isLoadingForms) {
             loadLeadForms();
         }
-    }, [editMode, selectedAccount?.page_id]);
+    }, [editMode, selectedAccount?.page_id, adHasLeadForm]);
 
     const addLocation = (location: GeoLocation) => {
         setSelectedLocations(prev => [...prev, location]);
@@ -245,7 +253,7 @@ export default function EditPage() {
 
     const handleSubmitAdSet = async () => {
         if (!selectedAdSetId) {
-            setError("Please select an ad set to edit");
+            setError(t('please_select_adset'));
             return;
         }
 
@@ -269,11 +277,11 @@ export default function EditPage() {
             payload.age_max = ageMax;
 
             await mutationsService.updateAdSetTargeting(selectedAdSetId, payload);
-            setSuccess("Ad Set updated successfully!");
+            setSuccess(t('adset_updated'));
 
         } catch (err: any) {
             console.error(err);
-            setError(err.response?.data?.detail || "Failed to update ad set. Please try again.");
+            setError(err.response?.data?.detail || t('update_failed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -281,18 +289,18 @@ export default function EditPage() {
 
     const handleSubmitAd = async () => {
         if (!selectedAdId) {
-            setError("Please select an ad to edit");
+            setError(t('please_select_ad'));
             return;
         }
 
         if (!selectedAccount?.page_id) {
-            setError("No Facebook Page connected. Please reconnect in Settings.");
+            setError(t('no_page_connected'));
             return;
         }
 
         // At least one field should be changed
         if (!adCreative.title && !adCreative.body && !adCreative.file && !adCreative.link && !adCreative.leadFormId) {
-            setError("Please make at least one change");
+            setError(t('please_make_change'));
             return;
         }
 
@@ -329,7 +337,7 @@ export default function EditPage() {
             };
 
             await mutationsService.updateAdCreative(selectedAdId, payload);
-            setSuccess("Ad updated successfully!");
+            setSuccess(t('ad_updated'));
 
             // Reset form
             setAdCreative({
@@ -344,7 +352,7 @@ export default function EditPage() {
 
         } catch (err: any) {
             console.error(err);
-            setError(err.response?.data?.detail || "Failed to update ad. Please try again.");
+            setError(err.response?.data?.detail || t('update_failed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -354,20 +362,20 @@ export default function EditPage() {
         <div className="min-h-screen bg-black text-white p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Breadcrumb */}
-                <div className="mb-6">
+                <div className="mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
                     <button
                         onClick={() => router.push(`/${locale}/uploader`)}
                         className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                     >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Uploader
+                        <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+                        {t('back_to_uploader')}
                     </button>
                 </div>
 
                 {/* Header */}
                 <div>
-                    <h1 className="text-2xl font-bold">Edit Ad Set or Ad</h1>
-                    <p className="text-gray-400 mt-1">Modify targeting, copy, or media on existing items</p>
+                    <h1 className="text-2xl font-bold">{t('title')}</h1>
+                    <p className="text-gray-400 mt-1">{t('subtitle')}</p>
                 </div>
 
                 {/* Mode Toggle */}
@@ -380,7 +388,7 @@ export default function EditPage() {
                                 : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                     >
-                        Edit Ad Set
+                        {t('edit_adset')}
                     </button>
                     <button
                         onClick={() => setEditMode('ad')}
@@ -390,59 +398,59 @@ export default function EditPage() {
                                 : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                     >
-                        Edit Ad
+                        {t('edit_ad')}
                     </button>
                 </div>
 
                 {/* Selection Area */}
                 <div className={`grid grid-cols-1 ${editMode === 'ad' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-400">Select Campaign</label>
+                        <label className="text-sm font-medium text-gray-400">{t('select_campaign')}</label>
                         <select
                             value={selectedCampaignId}
                             onChange={(e) => setSelectedCampaignId(e.target.value)}
                             className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 outline-none focus:border-orange-500"
                             disabled={isLoadingCampaigns}
                         >
-                            <option value="">-- Select Campaign --</option>
+                            <option value="">{t('select_campaign_placeholder')}</option>
                             {campaigns.map(c => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
-                        {isLoadingCampaigns && <p className="text-xs text-orange-400 animate-pulse">Loading...</p>}
+                        {isLoadingCampaigns && <p className="text-xs text-orange-400 animate-pulse">{tCommon('loading')}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-400">Select Ad Set</label>
+                        <label className="text-sm font-medium text-gray-400">{t('select_adset')}</label>
                         <select
                             value={selectedAdSetId}
                             onChange={(e) => setSelectedAdSetId(e.target.value)}
                             className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 outline-none focus:border-orange-500"
                             disabled={!selectedCampaignId || isLoadingAdSets}
                         >
-                            <option value="">-- Select Ad Set --</option>
+                            <option value="">{t('select_adset_placeholder')}</option>
                             {adSets.map(a => (
                                 <option key={a.id} value={a.id}>{a.name}</option>
                             ))}
                         </select>
-                        {isLoadingAdSets && <p className="text-xs text-orange-400 animate-pulse">Loading...</p>}
+                        {isLoadingAdSets && <p className="text-xs text-orange-400 animate-pulse">{tCommon('loading')}</p>}
                     </div>
 
                     {editMode === 'ad' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-400">Select Ad</label>
+                            <label className="text-sm font-medium text-gray-400">{t('select_ad')}</label>
                             <select
                                 value={selectedAdId}
                                 onChange={(e) => setSelectedAdId(e.target.value)}
                                 className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 outline-none focus:border-orange-500"
                                 disabled={!selectedAdSetId || isLoadingAds}
                             >
-                                <option value="">-- Select Ad --</option>
+                                <option value="">{t('select_ad_placeholder')}</option>
                                 {ads.map(a => (
                                     <option key={a.id} value={a.id}>{a.name}</option>
                                 ))}
                             </select>
-                            {isLoadingAds && <p className="text-xs text-orange-400 animate-pulse">Loading...</p>}
+                            {isLoadingAds && <p className="text-xs text-orange-400 animate-pulse">{tCommon('loading')}</p>}
                         </div>
                     )}
                 </div>
@@ -452,20 +460,20 @@ export default function EditPage() {
                     <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800 space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl font-bold">Edit Ad Set Targeting</h2>
-                                <p className="text-sm text-gray-400">Current values are pre-filled below</p>
+                                <h2 className="text-xl font-bold">{t('edit_adset_targeting')}</h2>
+                                <p className="text-sm text-gray-400">{t('current_values_prefilled')}</p>
                             </div>
                             {isLoadingCurrentData && (
                                 <div className="flex items-center gap-2 text-orange-400">
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span className="text-sm">Loading current settings...</span>
+                                    <span className="text-sm">{t('loading_current_settings')}</span>
                                 </div>
                             )}
                         </div>
 
                         {/* Location Search */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-400">Add/Replace Locations</label>
+                            <label className="text-sm font-medium text-gray-400">{t('add_replace_locations')}</label>
                             <div className="relative">
                                 <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
                                     <Search className="w-4 h-4 text-gray-500" />
@@ -474,7 +482,7 @@ export default function EditPage() {
                                         value={locationSearch}
                                         onChange={(e) => setLocationSearch(e.target.value)}
                                         onFocus={() => locationResults.length > 0 && setShowLocationDropdown(true)}
-                                        placeholder="Search for a location..."
+                                        placeholder={t('search_location')}
                                         className="flex-1 bg-transparent outline-none text-sm"
                                     />
                                     {isSearchingLocations && <Loader2 className="w-4 h-4 animate-spin text-orange-400" />}
@@ -513,12 +521,12 @@ export default function EditPage() {
                                     ))}
                                 </div>
                             )}
-                            <p className="text-xs text-gray-500">Adding locations will replace existing targeting</p>
+                            <p className="text-xs text-gray-500">{t('locations_replace_note')}</p>
                         </div>
 
                         {/* Age Range */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-400">Age Range: {ageMin} - {ageMax}+</label>
+                            <label className="text-sm font-medium text-gray-400">{t('age_range')}: {ageMin} - {ageMax}+</label>
                             <div className="flex gap-4 items-center">
                                 <input
                                     type="range" min="18" max="65"
@@ -542,7 +550,7 @@ export default function EditPage() {
                                 className="bg-orange-600 hover:bg-orange-500 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 disabled:opacity-50"
                             >
                                 {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
-                                Save Changes
+                                {tCommon('save_changes')}
                             </button>
                         </div>
                     </div>
@@ -553,13 +561,13 @@ export default function EditPage() {
                     <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800 space-y-6 animate-in fade-in slide-in-from-bottom-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl font-bold">Edit Ad Creative</h2>
-                                <p className="text-sm text-gray-400">Current values are pre-filled below</p>
+                                <h2 className="text-xl font-bold">{t('edit_ad_creative')}</h2>
+                                <p className="text-sm text-gray-400">{t('current_values_prefilled')}</p>
                             </div>
                             {isLoadingCurrentData && (
                                 <div className="flex items-center gap-2 text-orange-400">
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span className="text-sm">Loading current creative...</span>
+                                    <span className="text-sm">{t('loading_current_creative')}</span>
                                 </div>
                             )}
                         </div>
@@ -572,64 +580,66 @@ export default function EditPage() {
                                     {adCreative.file ? (
                                         <p className="text-orange-400 font-medium">{adCreative.file.name}</p>
                                     ) : (
-                                        <p className="text-gray-400 text-sm">Upload New Image/Video (Optional)</p>
+                                        <p className="text-gray-400 text-sm">{t('upload_new_media')}</p>
                                     )}
                                 </div>
 
                                 <input
-                                    placeholder="Headline"
+                                    placeholder={t('headline')}
                                     value={adCreative.title}
                                     onChange={(e) => setAdCreative({ ...adCreative, title: e.target.value })}
                                     className="w-full bg-black border border-gray-700 rounded-lg p-3"
                                 />
 
                                 <textarea
-                                    placeholder="Primary Text"
+                                    placeholder={t('primary_text')}
                                     value={adCreative.body}
                                     onChange={(e) => setAdCreative({ ...adCreative, body: e.target.value })}
                                     className="w-full bg-black border border-gray-700 rounded-lg p-3 h-24 resize-none"
                                 />
 
                                 <input
-                                    placeholder="Website URL"
+                                    placeholder={t('website_url')}
                                     value={adCreative.link}
                                     onChange={(e) => setAdCreative({ ...adCreative, link: e.target.value })}
                                     className="w-full bg-black border border-gray-700 rounded-lg p-3"
                                 />
 
-                                <div className="space-y-1">
-                                    <label className="text-xs text-gray-500">Change Lead Form (Optional)</label>
-                                    <select
-                                        value={adCreative.leadFormId}
-                                        onChange={(e) => setAdCreative({ ...adCreative, leadFormId: e.target.value })}
-                                        className="w-full bg-black border border-gray-700 rounded-lg p-3"
-                                        disabled={isLoadingForms}
-                                    >
-                                        <option value="">-- Keep Current / No Form --</option>
-                                        {leadForms.map(f => (
-                                            <option key={f.id} value={f.id}>{f.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                {adHasLeadForm && (
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-500">{t('change_lead_form')}</label>
+                                        <select
+                                            value={adCreative.leadFormId}
+                                            onChange={(e) => setAdCreative({ ...adCreative, leadFormId: e.target.value })}
+                                            className="w-full bg-black border border-gray-700 rounded-lg p-3"
+                                            disabled={isLoadingForms}
+                                        >
+                                            <option value="">{t('keep_current_no_form')}</option>
+                                            {leadForms.map(f => (
+                                                <option key={f.id} value={f.id}>{f.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
 
                                 <select
                                     value={adCreative.cta}
                                     onChange={(e) => setAdCreative({ ...adCreative, cta: e.target.value })}
                                     className="w-full bg-black border border-gray-700 rounded-lg p-3"
                                 >
-                                    <option value="LEARN_MORE">Learn More (Default)</option>
-                                    <option value="SHOP_NOW">Shop Now</option>
-                                    <option value="SIGN_UP">Sign Up</option>
-                                    <option value="GET_OFFER">Get Offer</option>
-                                    <option value="APPLY_NOW">Apply Now</option>
+                                    <option value="LEARN_MORE">{t('learn_more_default')}</option>
+                                    <option value="SHOP_NOW">{t('shop_now')}</option>
+                                    <option value="SIGN_UP">{t('sign_up')}</option>
+                                    <option value="GET_OFFER">{t('get_offer')}</option>
+                                    <option value="APPLY_NOW">{t('apply_now')}</option>
                                 </select>
                             </div>
 
                             {/* Preview */}
                             <div className="bg-white rounded-lg overflow-hidden h-fit text-black shadow-lg">
-                                <div className="bg-gray-100 p-2 text-xs font-bold text-gray-500 border-b">Preview</div>
+                                <div className="bg-gray-100 p-2 text-xs font-bold text-gray-500 border-b">{t('preview')}</div>
                                 <div className="p-3">
-                                    <p className="text-sm mb-2">{adCreative.body || "(Current text)"}</p>
+                                    <p className="text-sm mb-2">{adCreative.body || t('current_text')}</p>
                                     <div className="bg-gray-200 aspect-video w-full flex items-center justify-center mb-2">
                                         {adCreative.previewUrl ? (
                                             adCreative.file?.type.startsWith('video') ? (
@@ -637,10 +647,10 @@ export default function EditPage() {
                                             ) : (
                                                 <img src={adCreative.previewUrl} alt="preview" className="w-full h-full object-cover" />
                                             )
-                                        ) : "(Current media)"}
+                                        ) : t('current_media')}
                                     </div>
                                     <div className="flex justify-between items-center bg-gray-50 p-2 rounded border">
-                                        <p className="font-bold truncate">{adCreative.title || "(Current headline)"}</p>
+                                        <p className="font-bold truncate">{adCreative.title || t('current_headline')}</p>
                                         <button className="bg-gray-300 px-3 py-1 rounded text-xs font-bold">
                                             {adCreative.cta.replace('_', ' ')}
                                         </button>
@@ -656,7 +666,7 @@ export default function EditPage() {
                                 className="bg-orange-600 hover:bg-orange-500 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 disabled:opacity-50"
                             >
                                 {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
-                                Save Changes
+                                {tCommon('save_changes')}
                             </button>
                         </div>
                     </div>

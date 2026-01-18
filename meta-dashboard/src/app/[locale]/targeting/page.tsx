@@ -74,7 +74,7 @@ export default function TargetingPage() {
 
         const broadAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Broad');
         const lookalikeAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Lookalike');
-        const interestAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Interest');
+        const interestAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Interest Audience');
         const customAdsets = adsetsToAnalyze.filter(a => a.targeting_type === 'Custom Audience');
 
         const calculateMetrics = (adsetsArray: TargetingRow[]) => {
@@ -278,11 +278,11 @@ export default function TargetingPage() {
                                 onChange={(e) => setTypeFilter(e.target.value)}
                                 className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
                             >
-                                <option value="" className="bg-gray-900 text-white">All Types</option>
-                                <option value="Broad" className="bg-gray-900 text-white">Broad</option>
-                                <option value="Lookalike" className="bg-gray-900 text-white">Lookalike</option>
-                                <option value="Interest" className="bg-gray-900 text-white">Interest</option>
-                                <option value="Custom Audience" className="bg-gray-900 text-white">Custom Audience</option>
+                                <option value="" className="bg-gray-900 text-white">{t('common.all_types')}</option>
+                                <option value="Broad" className="bg-gray-900 text-white">{t('targeting.types.Broad')}</option>
+                                <option value="Lookalike" className="bg-gray-900 text-white">{t('targeting.types.Lookalike')}</option>
+                                <option value="Interest Audience" className="bg-gray-900 text-white">{t('targeting.types.Interest Audience')}</option>
+                                <option value="Custom Audience" className="bg-gray-900 text-white">{t('targeting.types.Custom Audience')}</option>
                             </select>
                             <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,25 +364,25 @@ export default function TargetingPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border-subtle bg-black/20">
-                                <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Spend</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CTR</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPC</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Conversions</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">CPA</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">VS PREV</th>}
+                                <th className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('targeting.type')}</th>
+                                <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('metrics.spend')}</th>
+                                {showComparison && <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('common.vs_previous')}</th>}
+                                <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('metrics.ctr')}</th>
+                                {showComparison && <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('common.vs_previous')}</th>}
+                                <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('metrics.cpc')}</th>
+                                {showComparison && <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('common.vs_previous')}</th>}
+                                <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('metrics.conversions')}</th>
+                                {showComparison && <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('common.vs_previous')}</th>}
+                                <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('metrics.cpa')}</th>
+                                {showComparison && <th className={`px-4 py-3 ${isRTL ? 'text-left' : 'text-right'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('common.vs_previous')}</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-subtle">
                             {[
-                                { key: 'broad', name: 'Broad', targetingType: 'Broad', icon: Layers, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' },
-                                { key: 'lookalike', name: 'Lookalike', targetingType: 'Lookalike', icon: Target, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400' },
-                                { key: 'interest', name: 'Interest', targetingType: 'Interest', icon: Target, bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400' },
-                                { key: 'custom', name: 'Custom Audience', targetingType: 'Custom Audience', icon: Target, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400' },
+                                { key: 'broad', nameKey: 'Broad', targetingType: 'Broad', icon: Layers, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' },
+                                { key: 'lookalike', nameKey: 'Lookalike', targetingType: 'Lookalike', icon: Target, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400' },
+                                { key: 'interest', nameKey: 'Interest Audience', targetingType: 'Interest Audience', icon: Target, bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400' },
+                                { key: 'custom', nameKey: 'Custom Audience', targetingType: 'Custom Audience', icon: Target, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400' },
                             ]
                                 .map((type) => {
                                     const data = formatMetrics[type.key as keyof typeof formatMetrics];
@@ -418,7 +418,7 @@ export default function TargetingPage() {
                                                     <div className={`w-7 h-7 rounded-lg ${type.bgClass} border ${type.borderClass} flex items-center justify-center`}>
                                                         <type.icon className={`w-3.5 h-3.5 ${type.textClass}`} />
                                                     </div>
-                                                    <span className="text-sm font-medium text-white">{type.name}</span>
+                                                    <span className="text-sm font-medium text-white">{t(`targeting.types.${type.nameKey}`)}</span>
                                                     <span className="text-xs text-gray-500">({type.data.count})</span>
                                                 </div>
                                             </td>
@@ -520,7 +520,7 @@ export default function TargetingPage() {
                                     <tr className="border-t-2 border-border-subtle bg-white/[0.03]">
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-white">Total</span>
+                                                <span className="text-sm font-bold text-white">{t('common.total')}</span>
                                                 <span className="text-xs text-gray-500">({total.count})</span>
                                             </div>
                                         </td>
@@ -585,7 +585,7 @@ export default function TargetingPage() {
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-gray-100">Performance Over Time</h2>
+                        <h2 className="text-2xl font-bold text-gray-100">{t('common.performance_over_time')}</h2>
                         {isFilterActive && (
                             <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                 Filtered ({filteredAdsetIds.length} ad sets)
@@ -611,8 +611,8 @@ export default function TargetingPage() {
 
             {/* Breakdown Tabs */}
             <div className="mb-8" ref={breakdownRef}>
-                <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <h2 className="text-2xl font-bold text-gray-100">{t('campaigns.breakdown_title')}</h2>
+                <div className={`flex items-center justify-between mb-4`}>
+                    <h2 className={`text-2xl font-bold text-gray-100 ${isRTL ? 'text-right w-full' : ''}`}>{t('campaigns.breakdown_title')}</h2>
                     {isFilterActive && (
                         <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             Filtered ({filteredAdsetIds.length} ad sets)

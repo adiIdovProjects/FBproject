@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { ChevronRight, ChevronDown, Pause, Play, Loader2, Pencil, X, Check, Info } from 'lucide-react';
+import { ChevronRight, ChevronDown, ChevronLeft, Pause, Play, Loader2, Pencil, X, Check, Info } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -411,10 +411,13 @@ export default function ManagePage() {
       </div>
 
       {/* Quick Guide */}
-      <div className="flex items-start gap-3 p-4 mb-6 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+      <div
+        className="flex items-start gap-3 p-4 mb-6 bg-blue-500/5 border border-blue-500/20 rounded-xl"
+        dir={isRTL ? 'rtl' : 'ltr'}
+      >
         <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
         <div className="text-sm text-gray-300">
-          <span className="text-blue-300 font-medium">Campaign</span> → <span className="text-blue-300 font-medium">Ad Set</span> → <span className="text-blue-300 font-medium">Ad</span>. Click the arrow to expand. If a campaign or ad set is paused, all items inside it won't run even if they show as active.
+          {t('manage.hierarchy_guide')}
         </div>
       </div>
 
@@ -424,35 +427,34 @@ export default function ManagePage() {
       {/* Table */}
       <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse" dir={isRTL ? 'rtl' : 'ltr'}>
               <thead>
                 <tr className="bg-black/20 border-b border-border-subtle">
-                  <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase w-12"></th>
-                  <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase min-w-[250px]">{t('common.name')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase min-w-[280px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.name')}</th>
                   <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase">{t('common.actions')}</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase">{t('common.status')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('manage.daily_budget')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.spend')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.impressions')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.clicks')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.ctr')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpc')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.conversions')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpa')}</th>
-                  <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.conversion_rate')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.status')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('manage.daily_budget')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.spend')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.impressions')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.clicks')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.ctr')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.cpc')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.conversions')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.cpa')}</th>
+                  <th className={`px-4 py-4 text-[10px] font-black text-gray-500 uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('metrics.conversion_rate')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={13} className="px-6 py-12 text-center">
+                    <td colSpan={12} className="px-6 py-12 text-center">
                       <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-2" />
                       <span className="text-gray-500">{t('common.loading')}</span>
                     </td>
                   </tr>
                 ) : campaigns.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={12} className="px-6 py-12 text-center text-gray-500">
                       {t('campaigns.no_data')}
                     </td>
                   </tr>
@@ -465,37 +467,39 @@ export default function ManagePage() {
                     <React.Fragment key={`campaign-${campaign.campaign_id}`}>
                       {/* Campaign Row */}
                       <tr className="hover:bg-white/[0.02]">
-                        <td className="px-4 py-4">
-                          <button
-                            onClick={() => handleCampaignExpand(campaign.campaign_id)}
-                            className="p-1 hover:bg-white/10 rounded"
-                          >
-                            {expandedCampaigns.has(campaign.campaign_id) ? (
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4 text-gray-400" />
-                            )}
-                          </button>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="font-bold text-white">{campaign.campaign_name}</div>
-                          <div className="text-[10px] text-gray-500 font-mono">{campaign.campaign_id}</div>
+                        <td className={`px-4 py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                            <button
+                              onClick={() => handleCampaignExpand(campaign.campaign_id)}
+                              className="p-1 hover:bg-white/10 rounded shrink-0"
+                            >
+                              {expandedCampaigns.has(campaign.campaign_id) ? (
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                              ) : (
+                                isRTL ? <ChevronLeft className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />
+                              )}
+                            </button>
+                            <div className={isRTL ? 'text-right' : 'text-left'}>
+                              <div className="font-bold text-white">{campaign.campaign_name}</div>
+                              <div className="text-[10px] text-gray-500 font-mono">{campaign.campaign_id}</div>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-4 text-center">
                           {renderActionButton('campaign', campaign.campaign_id, campaign.campaign_status)}
                         </td>
                         <td className="px-4 py-4">{renderStatusBadge(campaign.campaign_status)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>
                           {renderBudgetCell('campaign', campaign.campaign_id, isCbo)}
                         </td>
-                        <td className="px-4 py-4 text-right text-white font-bold">{formatCurrency(campaign.spend)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatNumber(campaign.impressions)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatNumber(campaign.clicks)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatPercent(campaign.ctr)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(campaign.cpc)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatNumber(campaign.conversions)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(campaign.cpa)}</td>
-                        <td className="px-4 py-4 text-right text-gray-300">{formatPercent(campaign.conv_rate)}</td>
+                        <td className={`px-4 py-4 text-white font-bold ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrency(campaign.spend)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(campaign.impressions)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(campaign.clicks)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatPercent(campaign.ctr)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrencyDecimal(campaign.cpc)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(campaign.conversions)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrencyDecimal(campaign.cpa)}</td>
+                        <td className={`px-4 py-4 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatPercent(campaign.conv_rate)}</td>
                       </tr>
 
                       {/* Ad Sets (when expanded) */}
@@ -503,7 +507,7 @@ export default function ManagePage() {
                         <>
                           {loadingAdsets.has(campaign.campaign_id) ? (
                             <tr key={`loading-adsets-${campaign.campaign_id}`}>
-                              <td colSpan={13} className="px-6 py-4 text-center bg-black/10">
+                              <td colSpan={12} className="px-6 py-4 text-center bg-black/10">
                                 <Loader2 className="w-5 h-5 text-gray-400 animate-spin mx-auto" />
                               </td>
                             </tr>
@@ -512,37 +516,39 @@ export default function ManagePage() {
                               <React.Fragment key={`adset-${adset.adset_id}`}>
                                 {/* Ad Set Row */}
                                 <tr className="bg-black/10 hover:bg-black/20">
-                                  <td className="px-4 py-3 pl-8">
-                                    <button
-                                      onClick={() => handleAdsetExpand(adset.adset_id)}
-                                      className="p-1 hover:bg-white/10 rounded"
-                                    >
-                                      {expandedAdsets.has(adset.adset_id) ? (
-                                        <ChevronDown className="w-4 h-4 text-gray-500" />
-                                      ) : (
-                                        <ChevronRight className="w-4 h-4 text-gray-500" />
-                                      )}
-                                    </button>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="text-gray-300 pl-4">{adset.adset_name}</div>
-                                    <div className="text-[10px] text-gray-600 font-mono pl-4">{adset.adset_id}</div>
+                                  <td className={`px-4 py-3 ${isRTL ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
+                                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                                      <button
+                                        onClick={() => handleAdsetExpand(adset.adset_id)}
+                                        className="p-1 hover:bg-white/10 rounded shrink-0"
+                                      >
+                                        {expandedAdsets.has(adset.adset_id) ? (
+                                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                                        ) : (
+                                          isRTL ? <ChevronLeft className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />
+                                        )}
+                                      </button>
+                                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                                        <div className="text-gray-300">{adset.adset_name}</div>
+                                        <div className="text-[10px] text-gray-600 font-mono">{adset.adset_id}</div>
+                                      </div>
+                                    </div>
                                   </td>
                                   <td className="px-4 py-3 text-center">
                                     {renderActionButton('adset', adset.adset_id, adset.adset_status)}
                                   </td>
                                   <td className="px-4 py-3">{renderStatusBadge(adset.adset_status)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>
                                     {renderBudgetCell('adset', adset.adset_id, isCbo)}
                                   </td>
-                                  <td className="px-4 py-3 text-right text-gray-300">{formatCurrency(adset.spend)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatNumber(adset.impressions)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatNumber(adset.clicks)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatPercent(adset.ctr)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatCurrencyDecimal(adset.cpc)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatNumber(adset.conversions)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatCurrencyDecimal(adset.cpa)}</td>
-                                  <td className="px-4 py-3 text-right text-gray-400">{formatPercent(adset.conv_rate)}</td>
+                                  <td className={`px-4 py-3 text-gray-300 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrency(adset.spend)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(adset.impressions)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(adset.clicks)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatPercent(adset.ctr)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrencyDecimal(adset.cpc)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(adset.conversions)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrencyDecimal(adset.cpa)}</td>
+                                  <td className={`px-4 py-3 text-gray-400 ${isRTL ? 'text-left' : 'text-right'}`}>{formatPercent(adset.conv_rate)}</td>
                                 </tr>
 
                                 {/* Ads (when expanded) */}
@@ -550,31 +556,32 @@ export default function ManagePage() {
                                   <>
                                     {loadingAds.has(adset.adset_id) ? (
                                       <tr key={`loading-ads-${adset.adset_id}`}>
-                                        <td colSpan={13} className="px-6 py-3 text-center bg-black/20">
+                                        <td colSpan={12} className="px-6 py-3 text-center bg-black/20">
                                           <Loader2 className="w-4 h-4 text-gray-500 animate-spin mx-auto" />
                                         </td>
                                       </tr>
                                     ) : (
                                       (ads[adset.adset_id] || []).map(ad => (
                                         <tr key={`ad-${ad.ad_id}`} className="bg-black/20 hover:bg-black/30">
-                                          <td className="px-4 py-2 pl-12"></td>
-                                          <td className="px-4 py-2">
-                                            <div className="text-gray-400 pl-8 text-sm">{ad.ad_name}</div>
-                                            <div className="text-[10px] text-gray-600 font-mono pl-8">{ad.ad_id}</div>
+                                          <td className={`px-4 py-2 ${isRTL ? 'pr-16' : 'pl-16'}`}>
+                                            <div className={isRTL ? 'text-right' : 'text-left'}>
+                                              <div className="text-gray-400 text-sm">{ad.ad_name}</div>
+                                              <div className="text-[10px] text-gray-600 font-mono">{ad.ad_id}</div>
+                                            </div>
                                           </td>
                                           <td className="px-4 py-2 text-center">
                                             {renderActionButton('ad', ad.ad_id, ad.ad_status)}
                                           </td>
                                           <td className="px-4 py-2">{renderStatusBadge(ad.ad_status)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">-</td>
-                                          <td className="px-4 py-2 text-right text-gray-400 text-sm">{formatCurrency(ad.spend)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatNumber(ad.impressions)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatNumber(ad.clicks)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatPercent(ad.ctr)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatCurrencyDecimal(ad.cpc)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatNumber(ad.conversions)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatCurrencyDecimal(ad.cpa)}</td>
-                                          <td className="px-4 py-2 text-right text-gray-500 text-sm">{formatPercent(ad.conv_rate)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>-</td>
+                                          <td className={`px-4 py-2 text-gray-400 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrency(ad.spend)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(ad.impressions)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(ad.clicks)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatPercent(ad.ctr)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrencyDecimal(ad.cpc)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatNumber(ad.conversions)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrencyDecimal(ad.cpa)}</td>
+                                          <td className={`px-4 py-2 text-gray-500 text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatPercent(ad.conv_rate)}</td>
                                         </tr>
                                       ))
                                     )}

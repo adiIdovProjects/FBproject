@@ -21,33 +21,36 @@ interface SectionProps {
     icon: React.ReactNode;
     children: React.ReactNode;
     defaultOpen?: boolean;
+    isRTL?: boolean;
 }
 
-const Section: React.FC<SectionProps> = ({ title, description, icon, children, defaultOpen = false }) => {
+const Section: React.FC<SectionProps> = ({ title, description, icon, children, defaultOpen = false, isRTL = false }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    const closedChevronClass = isRTL ? 'rotate-180' : '';
 
     return (
         <div className="bg-gray-900/50 border border-white/5 rounded-xl overflow-hidden">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center gap-4 p-5 hover:bg-white/5 transition-colors"
+                className={`w-full flex items-center gap-4 p-5 hover:bg-white/5 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
             >
                 <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
                     {icon}
                 </div>
-                <div className="flex-1 text-left">
+                <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <h3 className="text-lg font-bold text-white">{title}</h3>
                     <p className="text-sm text-gray-400">{description}</p>
                 </div>
                 {isOpen ? (
                     <ChevronDown className="w-5 h-5 text-gray-400" />
                 ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                    <ChevronRight className={`w-5 h-5 text-gray-400 ${closedChevronClass}`} />
                 )}
             </button>
             {isOpen && (
                 <div className="px-5 pb-5 border-t border-white/5">
-                    <div className="pt-5">
+                    <div className={`pt-5 ${isRTL ? 'text-right' : ''}`}>
                         {children}
                     </div>
                 </div>
@@ -57,7 +60,7 @@ const Section: React.FC<SectionProps> = ({ title, description, icon, children, d
 };
 
 const StepItem: React.FC<{ number: number; children: React.ReactNode }> = ({ number, children }) => (
-    <div className="flex gap-3">
+    <div className="flex gap-3 rtl-reverse">
         <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center shrink-0 text-xs font-bold text-accent">
             {number}
         </div>
@@ -66,31 +69,42 @@ const StepItem: React.FC<{ number: number; children: React.ReactNode }> = ({ num
 );
 
 const TipBox: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-300">
+    <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-300 rtl-reverse">
         <Lightbulb className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
         <span>{children}</span>
     </div>
 );
 
-const QuestionItem: React.FC<{ question: string; children: React.ReactNode }> = ({ question, children }) => {
+const QuestionItem: React.FC<{ question: string; children: React.ReactNode; isRTL?: boolean }> = ({ question, children, isRTL = false }) => {
     const [isOpen, setIsOpen] = useState(false);
+
+    const closedChevronClass = isRTL ? 'rotate-180' : '';
 
     return (
         <div className="border border-white/10 rounded-lg overflow-hidden">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors"
             >
-                <h4 className="font-semibold text-white text-left">{question}</h4>
-                {isOpen ? (
-                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
-                ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+                {isRTL && (
+                    isOpen ? (
+                        <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
+                    ) : (
+                        <ChevronRight className={`w-4 h-4 text-gray-400 shrink-0 ${closedChevronClass}`} />
+                    )
+                )}
+                <h4 className={`flex-1 font-semibold text-white ${isRTL ? 'text-right' : 'text-left'}`}>{question}</h4>
+                {!isRTL && (
+                    isOpen ? (
+                        <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
+                    ) : (
+                        <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+                    )
                 )}
             </button>
             {isOpen && (
                 <div className="px-4 pb-4 border-t border-white/10">
-                    <div className="pt-4 space-y-3">
+                    <div className={`pt-4 space-y-3 ${isRTL ? 'text-right' : ''}`}>
                         {children}
                     </div>
                 </div>
@@ -102,6 +116,7 @@ const QuestionItem: React.FC<{ question: string; children: React.ReactNode }> = 
 export default function LearningCenterPage() {
     const t = useTranslations();
     const locale = useLocale();
+    const isRTL = locale === 'ar' || locale === 'he';
 
     // YouTube search queries based on language
     const getYoutubeSearchUrl = (query: string) => {
@@ -122,6 +137,7 @@ export default function LearningCenterPage() {
                     title={t('learning.ads_structure')}
                     description={t('learning.ads_structure_desc')}
                     icon={<Layers className="w-5 h-5 text-accent" />}
+                    isRTL={isRTL}
                 >
                     <div className="flex flex-col items-center gap-3 py-2">
                         <div className="w-full max-w-md p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
@@ -146,30 +162,31 @@ export default function LearningCenterPage() {
                     title={t('learning.best_practices')}
                     description={t('learning.best_practices_desc')}
                     icon={<Sparkles className="w-5 h-5 text-accent" />}
+                    isRTL={isRTL}
                 >
                     <div className="space-y-3">
-                        <QuestionItem question={t('learning.objective_title')}>
+                        <QuestionItem question={t('learning.objective_title')} isRTL={isRTL}>
                             <p className="text-gray-300 text-sm">{t('learning.objective_tip')}</p>
                             <TipBox>{t('learning.objective_tip_box')}</TipBox>
                         </QuestionItem>
 
-                        <QuestionItem question={t('learning.ads_per_adset_title')}>
+                        <QuestionItem question={t('learning.ads_per_adset_title')} isRTL={isRTL}>
                             <p className="text-gray-300 text-sm">{t('learning.ads_per_adset')}</p>
-                            <TipBox>3-5 ads per ad set is the sweet spot</TipBox>
+                            <TipBox>{t('learning.ads_per_adset_tip')}</TipBox>
                         </QuestionItem>
 
-                        <QuestionItem question={t('learning.campaign_vs_adset_title')}>
+                        <QuestionItem question={t('learning.campaign_vs_adset_title')} isRTL={isRTL}>
                             <p className="text-gray-300 text-sm">{t('learning.new_campaign_vs_adset')}</p>
                         </QuestionItem>
 
-                        <QuestionItem question={t('learning.budget_title')}>
+                        <QuestionItem question={t('learning.budget_title')} isRTL={isRTL}>
                             <div className="space-y-2 text-sm">
                                 <p className="text-gray-300"><span className="text-green-400 font-medium">Testing:</span> {t('learning.budget_testing')}</p>
                                 <p className="text-gray-300"><span className="text-blue-400 font-medium">Scaling:</span> {t('learning.budget_scaling')}</p>
                             </div>
                         </QuestionItem>
 
-                        <QuestionItem question={t('learning.when_to_pause_title')}>
+                        <QuestionItem question={t('learning.when_to_pause_title')} isRTL={isRTL}>
                             <p className="text-gray-300 text-sm">{t('learning.when_to_pause')}</p>
                         </QuestionItem>
                     </div>
@@ -180,10 +197,11 @@ export default function LearningCenterPage() {
                     title={t('learning.pixel_setup')}
                     description={t('learning.pixel_setup_desc')}
                     icon={<Activity className="w-5 h-5 text-accent" />}
+                    isRTL={isRTL}
                 >
                     <div className="space-y-4">
                         <p className="text-gray-400 text-sm mb-4">
-                            A Facebook Pixel tracks actions on your website (purchases, sign-ups, etc.) so Facebook can optimize your ads for conversions.
+                            {t('learning.pixel_intro')}
                         </p>
 
                         <div className="space-y-3">
@@ -222,10 +240,11 @@ export default function LearningCenterPage() {
                     title={t('learning.lead_forms')}
                     description={t('learning.lead_forms_desc')}
                     icon={<Target className="w-5 h-5 text-accent" />}
+                    isRTL={isRTL}
                 >
                     <div className="space-y-4">
                         <p className="text-gray-400 text-sm mb-4">
-                            Lead forms let people submit their contact info directly on Facebook without leaving the app. Great for collecting leads quickly.
+                            {t('learning.lead_intro')}
                         </p>
 
                         <div className="space-y-3">
@@ -237,7 +256,7 @@ export default function LearningCenterPage() {
                             <StepItem number={6}>{t('learning.lead_step_6')}</StepItem>
                         </div>
 
-                        <TipBox>Choose "Higher Intent" form type if you want more qualified leads (they have to confirm their info)</TipBox>
+                        <TipBox>{t('learning.higher_intent_tip')}</TipBox>
 
                         <div className="flex flex-wrap gap-3 mt-4">
                             <a

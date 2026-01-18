@@ -271,10 +271,10 @@ export const Sidebar: React.FC = () => {
                                 <div key={item.id}>
                                     <button
                                         onClick={() => toggleSection(item.id)}
-                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 group"
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 group ${isRTL ? 'flex-row-reverse' : ''}`}
                                     >
                                         <Icon className="w-5 h-5 group-hover:text-white" />
-                                        <span className="text-sm flex-1 text-left">{item.name}</span>
+                                        <span className={`text-sm flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{item.name}</span>
                                         <ChevronIcon className={`w-4 h-4 transition-transform duration-200 ${isRTL ? 'rotate-0' : ''}`} />
                                     </button>
 
@@ -297,10 +297,22 @@ export const Sidebar: React.FC = () => {
                                                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                                                         }`}
                                                     >
-                                                        <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
-                                                        <span className="text-sm">{subItem.name}</span>
-                                                        {isActive && !isHighlight && (
-                                                            <div className={`w-1.5 h-1.5 rounded-full bg-accent ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
+                                                        {isRTL ? (
+                                                            <>
+                                                                {isActive && !isHighlight && (
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                                                )}
+                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
+                                                                <span className="text-sm">{subItem.name}</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                {isActive && !isHighlight && (
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                                                )}
+                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
+                                                                <span className="text-sm">{subItem.name}</span>
+                                                            </>
                                                         )}
                                                     </Link>
                                                 );
@@ -322,7 +334,7 @@ export const Sidebar: React.FC = () => {
                 {quizCompleted === false && selectedAccountId && (
                     <Link
                         href={`/${locale}/account-quiz?account_id=${selectedAccountId}`}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group"
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
                         <Sparkles className="w-5 h-5 text-purple-400" />
                         <span className="flex-1 text-white font-semibold">Complete Setup</span>
@@ -334,7 +346,7 @@ export const Sidebar: React.FC = () => {
                 {selectedAccountId && (
                     <Link
                         href={`/${locale}/accounts/${selectedAccountId}/settings`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-white/5 text-white' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-white/5 text-white' : ''} ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
                         <Settings className="w-5 h-5" />
                         <span>{t('settings.account_settings')}</span>
@@ -344,7 +356,7 @@ export const Sidebar: React.FC = () => {
                 {/* User Settings */}
                 <Link
                     href={`/${locale}/settings`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-white/5 text-white' : ''}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-white/5 text-white' : ''} ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                     <User className="w-5 h-5" />
                     <span>{t('settings.user_settings')}</span>
@@ -354,7 +366,7 @@ export const Sidebar: React.FC = () => {
                 {isAdmin && (
                     <Link
                         href={`/${locale}/admin`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-900/30 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-indigo-900/30 text-white' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-900/30 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-indigo-900/30 text-white' : ''} ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
                         <Shield className="w-5 h-5" />
                         <span>Admin Dashboard</span>

@@ -185,6 +185,17 @@ class EntityPlacementBreakdown(BaseModel):
     cpc: float = 0.0
 
 
+class EntityPlatformBreakdown(BaseModel):
+    """Platform breakdown grouped by entity (campaign/adset/ad)"""
+    entity_name: str
+    platform: str
+    spend: float
+    impressions: int
+    clicks: int
+    ctr: float
+    cpc: float = 0.0
+
+
 class EntityDemographicsBreakdown(BaseModel):
     """Demographics breakdown grouped by entity (campaign/adset/ad)"""
     entity_name: str
@@ -401,6 +412,11 @@ class ComparisonItem(BaseModel):
     period2: MetricsPeriod = Field(..., description="Period 2 metrics")
     change_pct: ChangePercentage = Field(..., description="Percentage changes")
     change_abs: Dict[str, float] = Field(..., description="Absolute changes")
+    # Multi-dimensional breakdown values (optional, for 2D/3D reports)
+    primary_value: Optional[str] = Field(default=None, description="Primary breakdown value")
+    secondary_value: Optional[str] = Field(default=None, description="Secondary breakdown value")
+    tertiary_value: Optional[str] = Field(default=None, description="Tertiary breakdown value")
+
 
 
 class ReportsComparisonResponse(BaseModel):

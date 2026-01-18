@@ -27,6 +27,7 @@ export default function CampaignAnalysisView({
     isRTL,
     accountId
 }: CampaignAnalysisViewProps) {
+    const t = useTranslations();
     const locale = useLocale();
     const [data, setData] = useState<CampaignAnalysisResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +76,7 @@ export default function CampaignAnalysisView({
             <div className="bg-red-900/50 border border-red-400 text-red-300 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-2">
                     <AlertCircle className="w-5 h-5" />
-                    <p className="font-bold">Error Loading Campaign Analysis</p>
+                    <p className="font-bold">{t('insights.error_loading_campaign')}</p>
                 </div>
                 <p className="text-sm">{error}</p>
             </div>
@@ -87,7 +88,7 @@ export default function CampaignAnalysisView({
         return (
             <div className="text-center py-12">
                 <Activity className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No campaign data available</p>
+                <p className="text-gray-400">{t('insights.no_campaign_data')}</p>
             </div>
         );
     }
@@ -115,11 +116,11 @@ export default function CampaignAnalysisView({
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border-subtle">
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">Campaign</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Spend</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CTR</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">CPA</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">Conv</th>
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">{t('insights.campaign')}</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('metrics.spend')}</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('metrics.ctr')}</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('metrics.cpa')}</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">{t('insights.conv')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -143,9 +144,9 @@ export default function CampaignAnalysisView({
         <div className="space-y-6">
             {/* AI Analysis Card */}
             <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border border-blue-500/30 rounded-xl p-6 shadow-lg">
-                <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
                     <Activity className="w-6 h-6 text-blue-400" />
-                    <h2 className="text-2xl font-bold text-blue-200">Campaign Insights</h2>
+                    <h2 className="text-2xl font-bold text-blue-200">{t('insights.campaign_insights')}</h2>
                 </div>
                 <div className={`prose prose-invert max-w-none ${isRTL ? 'text-right' : 'text-left'}`}>
                     <ReactMarkdown>{data.analysis}</ReactMarkdown>
@@ -157,14 +158,14 @@ export default function CampaignAnalysisView({
                 <>
                     {renderCampaignTable(
                         data.data.scale_candidates,
-                        "🚀 Top Performing Campaigns",
+                        `🚀 ${t('insights.top_performing_campaigns')}`,
                         <TrendingUp className="w-5 h-5 text-green-400" />,
                         'scale'
                     )}
 
                     {renderCampaignTable(
                         data.data.fix_candidates,
-                        "⚠️ Campaigns Needing Attention",
+                        `⚠️ ${t('insights.campaigns_needing_attention')}`,
                         <AlertCircle className="w-5 h-5 text-red-400" />,
                         'fix'
                     )}
@@ -172,15 +173,15 @@ export default function CampaignAnalysisView({
                     {/* Total Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-                            <div className="text-sm text-gray-400 mb-1">Total Campaigns</div>
+                            <div className="text-sm text-gray-400 mb-1">{t('insights.total_campaigns')}</div>
                             <div className="text-2xl font-bold">{data.data.total_analyzed}</div>
                         </div>
                         <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-                            <div className="text-sm text-gray-400 mb-1">Scale Candidates</div>
+                            <div className="text-sm text-gray-400 mb-1">{t('insights.scale_candidates')}</div>
                             <div className="text-2xl font-bold text-green-400">{data.data.scale_candidates?.length || 0}</div>
                         </div>
                         <div className="bg-card-bg/60 border border-border-subtle rounded-xl p-4">
-                            <div className="text-sm text-gray-400 mb-1">Fix Candidates</div>
+                            <div className="text-sm text-gray-400 mb-1">{t('insights.fix_candidates')}</div>
                             <div className="text-2xl font-bold text-red-400">{data.data.fix_candidates?.length || 0}</div>
                         </div>
                     </div>
@@ -190,7 +191,7 @@ export default function CampaignAnalysisView({
             {/* Metadata */}
             {data.metadata && (
                 <div className="text-center text-xs text-gray-500 mt-8">
-                    ✨ Analyzed {startDate} to {endDate} • Generated at{' '}
+                    ✨ {t('insights.analyzed_period', { start: startDate, end: endDate })} • {t('insights.generated_at')}{' '}
                     {new Date(data.metadata.generated_at).toLocaleString()}
                 </div>
             )}

@@ -679,7 +679,7 @@ class BreakdownRepository(BaseRepository):
 
         return breakdowns
 
-    def get_demographics_by_entity(
+    def get_platform_by_entity(
         self,
         start_date: date,
         end_date: date,
@@ -689,8 +689,150 @@ class BreakdownRepository(BaseRepository):
         search_query: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
+        Get platform breakdown grouped by entity (campaign/adset/ad).
+        Returns rows like: "Campaign A - Facebook", "Campaign A - Instagram"
+        Platform is derived from placement_name (e.g., "Instagram Stories" -> "Instagram")
+        """
+        # Determine entity join and select
+        entity_join = ""
+        entity_select = ""
+        entity_group = ""
+
+        if entity_type == 'campaign':
+            entity_join = "JOIN dim_campaign c ON f.campaign_id = c.campaign_id"
+            entity_select = "c.campaign_name as entity_name"
+            entity_group = "c.campaign_name"
+        elif entity_type == 'adset':
+            entity_join = """
+                JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+                JOIN dim_adset ads ON f.adset_id = ads.adset_id
+            """
+            entity_select = "ads.adset_name as entity_name"
+            entity_group = "ads.adset_name"
+        elif entity_type == 'ad':
+            entity_join = """
+                JOIN dim_campaign c ON f.campaign_id = c.campaign_id
+                JOIN dim_ad ad ON f.ad_id = ad.ad_id
+            """
+            entity_select = "ad.ad_name as entity_name"
+            entity_group = "ad.ad_name"
+        else:
+            return []
+
+        # Build filters
+        account_filter = ""
+        if account_ids is not None:
+            if len(account_ids) == 0:
+                return []
+            placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+
+        status_filter = ""
+        if campaign_status and campaign_status != ['ALL']:
+            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            status_filter = f"AND c.campaign_status IN ({placeholders})"
+
+        search_filter = ""
+        if search_query:
+            search_filter = f"AND LOWER({entity_group}) LIKE :search_query"
+
+        # Get placement data first, then aggregate by platform in Python
+        query = text(f"""
+            SELECT
+                {entity_select},
+                p.placement_name,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks
+            FROM fact_placement_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            JOIN dim_placement p ON f.placement_id = p.placement_id
+            {entity_join}
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                {account_filter}
+                {status_filter}
+                {search_filter}
+            GROUP BY {entity_group}, p.placement_name
+            ORDER BY {entity_group}, spend DESC
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date
+        }
+
+        if account_ids:
+            for i, aid in enumerate(account_ids):
+                params[f'account_id_{i}'] = aid
+
+        if campaign_status and campaign_status != ['ALL']:
+            for i, status in enumerate(campaign_status):
+                params[f'status_{i}'] = status
+
+        if search_query:
+            params['search_query'] = f"%{search_query.lower()}%"
+
+        results = self.db.execute(query, params).fetchall()
+
+        # Aggregate by entity + platform
+        entity_platform_metrics = {}
+        for row in results:
+            entity_name = str(row.entity_name)
+            placement_name = str(row.placement_name)
+            # Extract platform: "Instagram Stories" -> "Instagram"
+            platform = placement_name.split(' ')[0] if ' ' in placement_name else placement_name
+            platform = platform.capitalize()
+
+            key = (entity_name, platform)
+            if key not in entity_platform_metrics:
+                entity_platform_metrics[key] = {
+                    'spend': 0.0,
+                    'clicks': 0,
+                    'impressions': 0
+                }
+
+            entity_platform_metrics[key]['spend'] += float(row.spend or 0)
+            entity_platform_metrics[key]['clicks'] += int(row.clicks or 0)
+            entity_platform_metrics[key]['impressions'] += int(row.impressions or 0)
+
+        breakdowns = []
+        for (entity_name, platform), metrics in entity_platform_metrics.items():
+            spend = metrics['spend']
+            clicks = metrics['clicks']
+            impressions = metrics['impressions']
+            ctr = (clicks / impressions * 100) if impressions > 0 else 0.0
+            cpc = (spend / clicks) if clicks > 0 else 0.0
+
+            breakdowns.append({
+                'entity_name': entity_name,
+                'platform': platform,
+                'spend': spend,
+                'impressions': impressions,
+                'clicks': clicks,
+                'ctr': ctr,
+                'cpc': cpc
+            })
+
+        # Sort by entity_name, then by spend desc
+        breakdowns.sort(key=lambda x: (x['entity_name'], -x['spend']))
+
+        return breakdowns
+
+    def get_demographics_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,  # 'campaign', 'adset', or 'ad'
+        account_ids: Optional[List[int]] = None,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None,
+        group_by: str = 'both'  # 'age', 'gender', or 'both'
+    ) -> List[Dict[str, Any]]:
+        """
         Get age-gender breakdown grouped by entity (campaign/adset/ad).
         Returns rows like: "Campaign A - Male 25-34"
+        group_by: 'age' for age only, 'gender' for gender only, 'both' for combined
         """
         entity_join = ""
         entity_select = ""
@@ -733,25 +875,38 @@ class BreakdownRepository(BaseRepository):
         if search_query:
             search_filter = f"AND LOWER({entity_group}) LIKE :search_query"
 
+        # Build demographic select, group, and joins based on group_by parameter
+        if group_by == 'age':
+            demo_select = "a.age_group, 'All' as gender"
+            demo_group = "a.age_group"
+            demo_joins = "JOIN dim_age a ON f.age_id = a.age_id"
+        elif group_by == 'gender':
+            demo_select = "'All' as age_group, g.gender"
+            demo_group = "g.gender"
+            demo_joins = "JOIN dim_gender g ON f.gender_id = g.gender_id"
+        else:  # 'both'
+            demo_select = "a.age_group, g.gender"
+            demo_group = "a.age_group, g.gender"
+            demo_joins = """JOIN dim_age a ON f.age_id = a.age_id
+            JOIN dim_gender g ON f.gender_id = g.gender_id"""
+
         query = text(f"""
             SELECT
                 {entity_select},
-                a.age_group,
-                g.gender,
+                {demo_select},
                 SUM(f.spend) as spend,
                 SUM(f.impressions) as impressions,
                 SUM(f.clicks) as clicks
             FROM fact_age_gender_metrics f
             JOIN dim_date d ON f.date_id = d.date_id
-            JOIN dim_age a ON f.age_id = a.age_id
-            JOIN dim_gender g ON f.gender_id = g.gender_id
+            {demo_joins}
             {entity_join}
             WHERE d.date >= :start_date
                 AND d.date <= :end_date
                 {account_filter}
                 {status_filter}
                 {search_filter}
-            GROUP BY {entity_group}, a.age_group, g.gender
+            GROUP BY {entity_group}, {demo_group}
             ORDER BY {entity_group}, spend DESC
         """)
 

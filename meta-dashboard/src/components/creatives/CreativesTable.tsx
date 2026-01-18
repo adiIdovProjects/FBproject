@@ -213,20 +213,20 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
     if (creative.is_video) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-md border bg-purple-900/30 text-purple-400 border-purple-600">
-          Video
+          {t('creatives.types.video')}
         </span>
       );
     }
     if (creative.is_carousel) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-md border bg-orange-900/30 text-orange-400 border-orange-600">
-          Carousel
+          {t('creatives.types.carousel')}
         </span>
       );
     }
     return (
       <span className="px-2 py-1 text-xs font-medium rounded-md border bg-blue-900/30 text-blue-400 border-blue-600">
-        Image
+        {t('creatives.types.image')}
       </span>
     );
   };
@@ -271,29 +271,29 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
 
               {/* Thumbnail */}
-              <th className="px-4 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                <span>Preview</span>
+              <th className={`px-4 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
+                <span>{t('creatives.preview')}</span>
               </th>
 
               {/* Creative Name */}
               <th
-                className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors`}
                 onClick={() => handleSort('title')}
               >
-                <div className="flex items-center gap-2">
-                  <span>Creative</span>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <span>{t('creatives.creative')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
 
               {/* Type */}
-              <th className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                <span>Type</span>
+              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
+                <span>{t('creatives.type')}</span>
               </th>
 
               {/* Fatigue */}
-              <th className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                <span>Fatigue</span>
+              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
+                <span>{t('creatives.fatigue')}</span>
               </th>
 
               {/* Spend */}

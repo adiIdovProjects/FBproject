@@ -36,6 +36,7 @@ from backend.api.schemas.responses import (
     AdsetComparisonMetrics,
     DayOfWeekBreakdown,
     EntityPlacementBreakdown,
+    EntityPlatformBreakdown,
     EntityDemographicsBreakdown,
     EntityCountryBreakdown
 )
@@ -1430,16 +1431,52 @@ class MetricsService:
             for b in breakdowns
         ]
 
-    def get_demographics_by_entity(
+    def get_platform_by_entity(
         self,
         start_date: date,
         end_date: date,
         entity_type: str,
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None
+    ) -> List[EntityPlatformBreakdown]:
+        """
+        Get platform breakdown grouped by entity (campaign/adset/ad).
+        """
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        breakdowns = self.breakdown_repo.get_platform_by_entity(
+            start_date=start_date,
+            end_date=end_date,
+            entity_type=entity_type,
+            account_ids=filtered_account_ids,
+            search_query=search_query
+        )
+
+        return [
+            EntityPlatformBreakdown(
+                entity_name=b['entity_name'],
+                platform=b['platform'],
+                spend=b['spend'],
+                impressions=b['impressions'],
+                clicks=b['clicks'],
+                ctr=b['ctr'],
+                cpc=b['cpc']
+            )
+            for b in breakdowns
+        ]
+
+    def get_demographics_by_entity(
+        self,
+        start_date: date,
+        end_date: date,
+        entity_type: str,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None,
+        group_by: str = 'both'
     ) -> List[EntityDemographicsBreakdown]:
         """
         Get demographics breakdown grouped by entity (campaign/adset/ad).
+        group_by: 'age', 'gender', or 'both'
         """
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
@@ -1448,7 +1485,8 @@ class MetricsService:
             end_date=end_date,
             entity_type=entity_type,
             account_ids=filtered_account_ids,
-            search_query=search_query
+            search_query=search_query,
+            group_by=group_by
         )
 
         return [

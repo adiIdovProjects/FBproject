@@ -7,16 +7,16 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Filter, X, RotateCcw, Target, Layers, FileText, Calendar, CalendarDays, CalendarRange, Layout, Users, Globe } from 'lucide-react';
+import { Filter, Minus, Plus, RotateCcw, Target, Layers, FileText, Calendar, CalendarDays, CalendarRange, Layout, Users, Globe } from 'lucide-react';
 import MetricPills, { MetricKey } from './MetricPills';
 
 export type DimensionType = 'overview' | 'campaign' | 'ad';
-export type BreakdownType = 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age-gender' | 'country';
+export type BreakdownType = 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age' | 'gender' | 'country';
 
 // Breakdown categories
 const ENTITY_BREAKDOWNS: BreakdownType[] = ['campaign_name', 'ad_set_name', 'ad_name'];
 const TIME_BREAKDOWNS: BreakdownType[] = ['date', 'week', 'month'];
-const SPECIAL_BREAKDOWNS: BreakdownType[] = ['placement', 'platform', 'age-gender', 'country'];
+const SPECIAL_BREAKDOWNS: BreakdownType[] = ['placement', 'platform', 'age', 'gender', 'country'];
 
 // Labels for breakdowns
 const BREAKDOWN_CONFIG: Record<BreakdownType, { labelKey: string; icon: React.ReactNode }> = {
@@ -29,7 +29,8 @@ const BREAKDOWN_CONFIG: Record<BreakdownType, { labelKey: string; icon: React.Re
   'month': { labelKey: 'reports.builder.month', icon: <CalendarRange className="w-4 h-4" /> },
   'placement': { labelKey: 'reports.builder.placement', icon: <Layout className="w-4 h-4" /> },
   'platform': { labelKey: 'reports.builder.platform', icon: <Layout className="w-4 h-4" /> },
-  'age-gender': { labelKey: 'reports.builder.demographics', icon: <Users className="w-4 h-4" /> },
+  'age': { labelKey: 'reports.builder.age', icon: <Users className="w-4 h-4" /> },
+  'gender': { labelKey: 'reports.builder.gender', icon: <Users className="w-4 h-4" /> },
   'country': { labelKey: 'reports.builder.country', icon: <Globe className="w-4 h-4" /> },
 };
 
@@ -50,6 +51,10 @@ interface FilterPanelProps {
   // Secondary Breakdown
   secondaryBreakdown: BreakdownType;
   onSecondaryBreakdownChange: (breakdown: BreakdownType) => void;
+
+  // Tertiary Breakdown (for 3-dimensional reports)
+  tertiaryBreakdown?: BreakdownType;
+  onTertiaryBreakdownChange?: (breakdown: BreakdownType) => void;
 
   // Filters
   campaignFilter: string;
@@ -75,6 +80,8 @@ export default function FilterPanel({
   onBreakdownChange,
   secondaryBreakdown,
   onSecondaryBreakdownChange,
+  tertiaryBreakdown = 'none',
+  onTertiaryBreakdownChange,
   campaignFilter,
   adSetFilter,
   adFilter,
@@ -90,87 +97,117 @@ export default function FilterPanel({
 }: FilterPanelProps) {
   const t = useTranslations();
 
-  // Check if primary breakdown is a special type (used for UI logic)
-  const isPrimarySpecial = SPECIAL_BREAKDOWNS.includes(breakdown);
-  // Check if either breakdown is special (used for hiding conversion metrics)
-  const hasSpecialBreakdown = isPrimarySpecial || SPECIAL_BREAKDOWNS.includes(secondaryBreakdown);
+  // Check if any breakdown is a special type (used for hiding conversion metrics)
+  const hasSpecialBreakdown = SPECIAL_BREAKDOWNS.includes(breakdown) ||
+    SPECIAL_BREAKDOWNS.includes(secondaryBreakdown) ||
+    SPECIAL_BREAKDOWNS.includes(tertiaryBreakdown);
 
-  // Check if two breakdowns are compatible for combination
-  const areCompatible = (primary: BreakdownType, secondary: BreakdownType): boolean => {
-    if (primary === 'none' || secondary === 'none') return false;
-    if (primary === secondary) return false;
-    // Entity + Time is always valid
-    if (ENTITY_BREAKDOWNS.includes(primary) && TIME_BREAKDOWNS.includes(secondary)) return true;
-    if (TIME_BREAKDOWNS.includes(primary) && ENTITY_BREAKDOWNS.includes(secondary)) return true;
-    // Entity + Special is valid
-    if (ENTITY_BREAKDOWNS.includes(primary) && SPECIAL_BREAKDOWNS.includes(secondary)) return true;
-    // Special as primary cannot have secondary
-    return false;
+  // Get category of a breakdown
+  const getCategory = (b: BreakdownType): 'entity' | 'time' | 'special' | 'none' => {
+    if (b === 'none') return 'none';
+    if (ENTITY_BREAKDOWNS.includes(b)) return 'entity';
+    if (TIME_BREAKDOWNS.includes(b)) return 'time';
+    if (SPECIAL_BREAKDOWNS.includes(b)) return 'special';
+    return 'none';
+  };
+
+  // Get currently selected categories
+  const getSelectedCategories = (): Set<string> => {
+    const cats = new Set<string>();
+    if (breakdown !== 'none') cats.add(getCategory(breakdown));
+    if (secondaryBreakdown !== 'none') cats.add(getCategory(secondaryBreakdown));
+    if (tertiaryBreakdown !== 'none') cats.add(getCategory(tertiaryBreakdown));
+    return cats;
+  };
+
+  // Check if a value can be added as next selection
+  const canAddAsNext = (value: BreakdownType): boolean => {
+    const valueCategory = getCategory(value);
+    const selectedCats = getSelectedCategories();
+
+    // Can't select same item twice
+    if (value === breakdown || value === secondaryBreakdown || value === tertiaryBreakdown) return false;
+
+    // Can't select from same category twice
+    if (selectedCats.has(valueCategory)) return false;
+
+    // Max 3 selections
+    if (selectedCats.size >= 3) return false;
+
+    // Valid combination: Entity + Time + Special (any order)
+    return true;
   };
 
   // Build summary text
   const getSummary = (): string => {
-    if (breakdown === 'none') return t('reports.builder.select_above');
+    if (breakdown === 'none') return '';
 
     const primaryLabel = t(BREAKDOWN_CONFIG[breakdown].labelKey);
     if (secondaryBreakdown === 'none') return primaryLabel;
 
     const secondaryLabel = t(BREAKDOWN_CONFIG[secondaryBreakdown].labelKey);
-    return `${primaryLabel} × ${secondaryLabel}`;
+    if (tertiaryBreakdown === 'none') return `${primaryLabel} × ${secondaryLabel}`;
+
+    const tertiaryLabel = t(BREAKDOWN_CONFIG[tertiaryBreakdown].labelKey);
+    return `${primaryLabel} × ${secondaryLabel} × ${tertiaryLabel}`;
   };
 
-  // Handle chip click - first click = primary, second click = secondary (if compatible)
+  // Handle chip click - supports up to 3 selections
   const handleChipClick = (value: BreakdownType) => {
-    console.log('[FilterPanel] handleChipClick:', value, 'current primary:', breakdown, 'current secondary:', secondaryBreakdown);
-
-    // If clicking on the current primary, deselect it
+    // If clicking on the current primary, deselect all
     if (breakdown === value) {
-      console.log('[FilterPanel] Deselecting primary');
       onBreakdownChange('none');
       onSecondaryBreakdownChange('none');
+      onTertiaryBreakdownChange?.('none');
       return;
     }
 
-    // If clicking on the current secondary, deselect it
+    // If clicking on the current secondary, deselect secondary and tertiary
     if (secondaryBreakdown === value) {
-      console.log('[FilterPanel] Deselecting secondary');
       onSecondaryBreakdownChange('none');
+      onTertiaryBreakdownChange?.('none');
+      return;
+    }
+
+    // If clicking on the current tertiary, deselect only tertiary
+    if (tertiaryBreakdown === value) {
+      onTertiaryBreakdownChange?.('none');
       return;
     }
 
     // If no primary selected, set as primary
     if (breakdown === 'none') {
-      console.log('[FilterPanel] Setting as primary:', value);
       onBreakdownChange(value);
       return;
     }
 
-    // Primary is selected - check if this can be secondary
-    const compatible = areCompatible(breakdown, value);
-    console.log('[FilterPanel] areCompatible(' + breakdown + ', ' + value + ') =', compatible);
-
-    if (compatible) {
-      console.log('[FilterPanel] Setting as secondary:', value);
-      onSecondaryBreakdownChange(value);
+    // Check if can add as next selection
+    if (canAddAsNext(value)) {
+      if (secondaryBreakdown === 'none') {
+        onSecondaryBreakdownChange(value);
+      } else if (tertiaryBreakdown === 'none' && onTertiaryBreakdownChange) {
+        onTertiaryBreakdownChange(value);
+      }
       return;
     }
 
-    // Not compatible as secondary - replace primary and clear secondary
-    console.log('[FilterPanel] Replacing primary with:', value);
+    // Not compatible - replace primary and clear others
     onBreakdownChange(value);
     onSecondaryBreakdownChange('none');
+    onTertiaryBreakdownChange?.('none');
   };
 
   // Handle clear
   const handleClear = () => {
     onBreakdownChange('none');
     onSecondaryBreakdownChange('none');
+    onTertiaryBreakdownChange?.('none');
     onCampaignFilterChange('');
     onAdSetFilterChange('');
     onAdFilterChange('');
   };
 
-  // Chip component with primary/secondary styling
+  // Chip component with primary/secondary/tertiary styling
   const Chip = ({
     value,
     children,
@@ -181,6 +218,7 @@ export default function FilterPanel({
     const config = BREAKDOWN_CONFIG[value];
     const isPrimary = breakdown === value;
     const isSecondary = secondaryBreakdown === value;
+    const isTertiary = tertiaryBreakdown === value;
 
     return (
       <button
@@ -192,7 +230,9 @@ export default function FilterPanel({
             ? 'bg-blue-600 text-white border-blue-500 shadow-md'
             : isSecondary
               ? 'bg-blue-500/30 text-blue-300 border-blue-500/50 shadow-sm'
-              : 'bg-gray-800/60 text-gray-300 border-gray-700 hover:bg-gray-700 hover:border-gray-600'
+              : isTertiary
+                ? 'bg-purple-500/30 text-purple-300 border-purple-500/50 shadow-sm'
+                : 'bg-gray-800/60 text-gray-300 border-gray-700 hover:bg-gray-700 hover:border-gray-600'
           }
         `}
       >
@@ -211,12 +251,26 @@ export default function FilterPanel({
 
   if (!isOpen) {
     return (
-      <button
-        onClick={onToggle}
-        className="fixed left-0 top-1/2 -translate-y-1/2 bg-card-bg border border-border-subtle rounded-r-lg p-2 hover:bg-gray-800 transition-colors z-10"
+      <div
+        className={`
+          bg-card-bg/40 border-r border-border-subtle
+          h-full
+          p-5
+          ${isRTL ? 'border-r-0 border-l' : ''}
+        `}
       >
-        <Filter className="w-5 h-5 text-gray-400" />
-      </button>
+        {/* Collapsed Header - just Plus button */}
+        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+            <Filter className="w-5 h-5 text-blue-400" />
+          </div>
+          {onToggle && (
+            <button onClick={onToggle} className="text-gray-400 hover:text-gray-300 transition-colors">
+              <Plus className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -237,7 +291,7 @@ export default function FilterPanel({
         </div>
         {onToggle && (
           <button onClick={onToggle} className="text-gray-400 hover:text-gray-300 transition-colors">
-            <X className="w-5 h-5" />
+            <Minus className="w-5 h-5" />
           </button>
         )}
       </div>
@@ -273,7 +327,9 @@ export default function FilterPanel({
         </label>
         <div className="flex flex-wrap gap-2">
           <Chip value="placement">{t('reports.builder.placement')}</Chip>
-          <Chip value="age-gender">{t('reports.builder.demographics')}</Chip>
+          <Chip value="platform">{t('reports.builder.platform')}</Chip>
+          <Chip value="age">{t('reports.builder.age')}</Chip>
+          <Chip value="gender">{t('reports.builder.gender')}</Chip>
           <Chip value="country">{t('reports.builder.country')}</Chip>
         </div>
       </div>
@@ -323,16 +379,6 @@ export default function FilterPanel({
           />
         )}
       </div>
-
-      {/* Section 6: Metrics */}
-      <div className="border-t border-gray-700/50"></div>
-      <MetricPills
-        selectedMetrics={selectedMetrics}
-        onMetricsChange={onMetricsChange}
-        isRTL={isRTL}
-        hasConversionValue={hasConversionValue}
-        isSpecialBreakdown={hasSpecialBreakdown}
-      />
     </div>
   );
 }

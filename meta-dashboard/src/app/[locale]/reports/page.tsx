@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { BarChart3, Table as TableIcon, Download, FileText } from 'lucide-react';
+import { BarChart3, Table as TableIcon, Download, FileText, ChevronDown } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -15,7 +15,7 @@ import FilterPanel, { DimensionType, BreakdownType } from '../../../components/r
 import DateFilter from '../../../components/DateFilter';
 import ComparisonTable from '../../../components/reports/ComparisonTable';
 import ComparisonChart from '../../../components/reports/ComparisonChart';
-import { MetricKey } from '../../../components/reports/MetricPills';
+import MetricPills, { MetricKey } from '../../../components/reports/MetricPills';
 import GoogleConnectModal from '../../../components/reports/GoogleConnectModal';
 
 // Services & Types
@@ -53,6 +53,7 @@ export default function ReportsPage() {
   const [dimension, setDimension] = useState<DimensionType>('overview');
   const [breakdown, setBreakdown] = useState<BreakdownType>('none');
   const [secondaryBreakdown, setSecondaryBreakdown] = useState<BreakdownType>('none');
+  const [tertiaryBreakdown, setTertiaryBreakdown] = useState<BreakdownType>('none');
   const [campaignFilter, setCampaignFilter] = useState<string>('');
   const [adSetFilter, setAdSetFilter] = useState<string>('');
 
@@ -75,6 +76,9 @@ export default function ReportsPage() {
   // Google connection modal state
   const [showGoogleConnectModal, setShowGoogleConnectModal] = useState(false);
 
+  // Export dropdown state
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
   // Check if any item has conversion value
   const hasConversionValue = useMemo(() => {
     return displayData.some(item => (item.period1.conversion_value || 0) > 0);
@@ -82,11 +86,13 @@ export default function ReportsPage() {
 
   // Metrics that require conversion data (not available for special breakdowns)
   const CONVERSION_METRICS: MetricKey[] = ['conversions', 'conversion_value', 'roas', 'cpa', 'conversion_rate'];
-  const SPECIAL_BREAKDOWNS = ['placement', 'platform', 'age-gender', 'country'];
+  const SPECIAL_BREAKDOWNS = ['placement', 'platform', 'age', 'gender', 'country'];
   const isCurrentBreakdownSpecial = SPECIAL_BREAKDOWNS.includes(breakdown);
-  // Also check if secondary breakdown is special (entity + special combination)
+  // Also check if secondary or tertiary breakdown is special
   const hasSpecialSecondary = SPECIAL_BREAKDOWNS.includes(secondaryBreakdown);
-  const shouldHideConversionMetrics = isCurrentBreakdownSpecial || hasSpecialSecondary;
+  const hasSpecialTertiary = SPECIAL_BREAKDOWNS.includes(tertiaryBreakdown);
+  const hasSpecialBreakdown = isCurrentBreakdownSpecial || hasSpecialSecondary || hasSpecialTertiary;
+  const shouldHideConversionMetrics = hasSpecialBreakdown;
 
   // Remove conversion metrics when switching to special breakdown
   useEffect(() => {
@@ -96,7 +102,7 @@ export default function ReportsPage() {
         setSelectedMetrics(filteredMetrics);
       }
     }
-  }, [breakdown, secondaryBreakdown]);
+  }, [breakdown, secondaryBreakdown, tertiaryBreakdown]);
 
   // Remove ROAS from selectedMetrics if there's no conversion value
   useEffect(() => {
@@ -185,35 +191,47 @@ export default function ReportsPage() {
             period1End,
             entityType,
             specialType,
-            campaignFilter || undefined
+            campaignFilter || undefined,
+            selectedAccountId || undefined
           );
 
           // Convert to ComparisonItem format for display
-          const items: ComparisonItem[] = breakdownData.map((row, idx) => ({
-            id: `${breakdown}-${secondaryBreakdown}-${idx}`,
-            name: row.name,
-            period1: {
-              spend: row.spend,
-              impressions: row.impressions,
-              clicks: row.clicks,
-              ctr: row.ctr,
-              cpc: row.cpc,
-              conversions: row.conversions,
-              conversion_value: row.conversion_value,
-              roas: row.roas,
-              cpa: row.cpa,
-              conversion_rate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
-            },
-            period2: {
-              spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0,
-              conversions: 0, conversion_value: 0, roas: 0, cpa: 0, conversion_rate: 0,
-            },
-            change_pct: {
-              spend: null, impressions: null, clicks: null, ctr: null, cpc: null,
-              conversions: null, conversion_value: null, roas: null, cpa: null, conversion_rate: null,
-            },
-            change_abs: {},
-          }));
+          // Parse name "Entity - Breakdown" into separate values
+          const items: ComparisonItem[] = breakdownData.map((row, idx) => {
+            // Parse combined name into separate values
+            const nameParts = row.name.split(' - ');
+            const primaryVal = nameParts[0] || row.name;
+            const secondaryVal = nameParts.slice(1).join(' - ') || '';
+
+            return {
+              id: `${breakdown}-${secondaryBreakdown}-${idx}`,
+              name: row.name,
+              primary_value: primaryVal,
+              secondary_value: secondaryVal,
+              tertiary_value: undefined,
+              period1: {
+                spend: row.spend,
+                impressions: row.impressions,
+                clicks: row.clicks,
+                ctr: row.ctr,
+                cpc: row.cpc,
+                conversions: row.conversions,
+                conversion_value: row.conversion_value,
+                roas: row.roas,
+                cpa: row.cpa,
+                conversion_rate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
+              },
+              period2: {
+                spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0,
+                conversions: 0, conversion_value: 0, roas: 0, cpa: 0, conversion_rate: 0,
+              },
+              change_pct: {
+                spend: null, impressions: null, clicks: null, ctr: null, cpc: null,
+                conversions: null, conversion_value: null, roas: null, cpa: null, conversion_rate: null,
+              },
+              change_abs: {},
+            };
+          });
 
           setComparisonData({
             dimension: `${breakdown}_${secondaryBreakdown}`,
@@ -230,11 +248,12 @@ export default function ReportsPage() {
         }
       }
       // Check if this is a special breakdown (placement, demographics, country) as primary
-      else if (isSpecialBreakdown(breakdown as any)) {
+      // BUT only use the simple endpoint if there's NO secondary breakdown
+      else if (isSpecialBreakdown(breakdown as any) && secondaryBreakdown === 'none') {
         const breakdownData = await fetchBreakdownReport(
           period1Start,
           period1End,
-          breakdown as 'placement' | 'platform' | 'age-gender' | 'country',
+          breakdown as 'placement' | 'platform' | 'age' | 'gender' | 'country',
           selectedAccountId || undefined
         );
 
@@ -286,6 +305,7 @@ export default function ReportsPage() {
           dimension,
           breakdown,
           secondaryBreakdown,
+          tertiaryBreakdown,
           campaignFilter: campaignFilter || undefined,
           adSetFilter: adSetFilter || undefined,
           adFilter: adFilter || undefined,
@@ -322,7 +342,7 @@ export default function ReportsPage() {
     }, 500); // 500ms debounce for text filters
 
     return () => clearTimeout(timer);
-  }, [breakdown, secondaryBreakdown, campaignFilter, adSetFilter, adFilter]);
+  }, [breakdown, secondaryBreakdown, tertiaryBreakdown, campaignFilter, adSetFilter, adFilter]);
 
   // Handle apply filters
   const handleApplyFilters = () => {
@@ -338,6 +358,7 @@ export default function ReportsPage() {
     setDimension('overview');
     setBreakdown('none');
     setSecondaryBreakdown('none');
+    setTertiaryBreakdown('none');
     setCampaignFilter('');
     setAdSetFilter('');
     setAdFilter('');
@@ -454,6 +475,8 @@ export default function ReportsPage() {
           onBreakdownChange={setBreakdown}
           secondaryBreakdown={secondaryBreakdown}
           onSecondaryBreakdownChange={setSecondaryBreakdown}
+          tertiaryBreakdown={tertiaryBreakdown}
+          onTertiaryBreakdownChange={setTertiaryBreakdown}
           campaignFilter={campaignFilter}
           adSetFilter={adSetFilter}
           adFilter={adFilter}
@@ -480,53 +503,80 @@ export default function ReportsPage() {
               t={t}
               isRTL={isRTL}
             />
+
+            {/* Export Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                disabled={!comparisonData || isLoading}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+                  ${!comparisonData || isLoading
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  }
+                `}
+              >
+                <Download className="w-4 h-4" />
+                <span>{t('actions.export')}</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {exportMenuOpen && (
+                <>
+                  {/* Click-outside overlay */}
+                  <div className="fixed inset-0 z-10" onClick={() => setExportMenuOpen(false)} />
+
+                  {/* Dropdown menu */}
+                  <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden`}>
+                    <button
+                      onClick={() => {
+                        setExportMenuOpen(false);
+                        handleExportExcel();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4 text-green-400" />
+                      <span>Excel (.xlsx)</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setExportMenuOpen(false);
+                        handleExportGoogleSheets();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4 text-blue-400" />
+                      <span>Google Sheets</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Toolbar */}
-          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-            {/* View mode toggle */}
-            <div className="flex gap-2 bg-gray-800 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded transition-colors
-                  ${viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}
-                `}
-              >
-                <TableIcon className="w-4 h-4" />
-                <span>{t('reports.view_as_table')}</span>
-              </button>
-              <button
-                onClick={() => setViewMode('chart')}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded transition-colors
-                  ${viewMode === 'chart' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}
-                `}
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>{t('reports.view_as_bar_chart')}</span>
-              </button>
-            </div>
-
-            {/* Export buttons */}
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-              <button
-                onClick={handleExportExcel}
-                disabled={!comparisonData || isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span>{t('actions.export_to_excel')}</span>
-              </button>
-              <button
-                onClick={handleExportGoogleSheets}
-                disabled={!comparisonData || isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span>{t('actions.export_to_google_sheets')}</span>
-              </button>
-            </div>
+          {/* View Mode Toggle */}
+          <div className="flex gap-2 bg-gray-800 rounded-lg p-1 w-fit">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded transition-colors
+                ${viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}
+              `}
+            >
+              <TableIcon className="w-4 h-4" />
+              <span>{t('reports.view_as_table')}</span>
+            </button>
+            <button
+              onClick={() => setViewMode('chart')}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded transition-colors
+                ${viewMode === 'chart' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}
+              `}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>{t('reports.view_as_bar_chart')}</span>
+            </button>
           </div>
 
           {/* Error Message */}
@@ -560,6 +610,17 @@ export default function ReportsPage() {
 
               </div>
 
+              {/* Metrics Selection - above table */}
+              <div className="px-6 pt-4">
+                <MetricPills
+                  selectedMetrics={selectedMetrics}
+                  onMetricsChange={setSelectedMetrics}
+                  isRTL={isRTL}
+                  hasConversionValue={hasConversionValue}
+                  isSpecialBreakdown={hasSpecialBreakdown}
+                />
+              </div>
+
               <div className="p-6">
                 {viewMode === 'table' ? (
                   <ComparisonTable
@@ -567,6 +628,7 @@ export default function ReportsPage() {
                     selectedMetrics={selectedMetrics}
                     breakdown={breakdown}
                     secondaryBreakdown={secondaryBreakdown}
+                    tertiaryBreakdown={tertiaryBreakdown}
                     currency={comparisonData?.currency}
                     isRTL={isRTL}
                   />
@@ -585,7 +647,7 @@ export default function ReportsPage() {
           {/* Empty State */}
           {!isLoading && !error && displayData.length === 0 && (
             <div className="flex items-center justify-center h-64 text-gray-500">
-              <p>No data available. Try adjusting your filters.</p>
+              <p>{t('reports.no_data')}</p>
             </div>
           )}
         </div>

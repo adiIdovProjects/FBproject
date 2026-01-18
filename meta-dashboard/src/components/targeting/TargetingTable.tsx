@@ -166,14 +166,20 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
       'Broad': 'bg-blue-900/30 text-blue-400 border-blue-600',
       'Lookalike': 'bg-purple-900/30 text-purple-400 border-purple-600',
       'Interest': 'bg-green-900/30 text-green-400 border-green-600',
+      'Interest Audience': 'bg-green-900/30 text-green-400 border-green-600',
       'Custom Audience': 'bg-orange-900/30 text-orange-400 border-orange-600',
     };
 
     const colorClass = colors[type] || 'bg-gray-900/30 text-gray-400 border-gray-600';
 
+    // Get translated label, fallback to raw type if not found
+    const translatedLabel = t.has(`targeting.types.${type}`)
+      ? t(`targeting.types.${type}`)
+      : type;
+
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-md border ${colorClass}`}>
-        {type}
+        {translatedLabel}
       </span>
     );
   };
@@ -237,11 +243,6 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <span>{t('targeting.targeting_type')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
-              </th>
-
-              {/* Targeting Summary */}
-              <th className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                <span>{t('targeting.targeting_summary')}</span>
               </th>
 
               {/* Spend */}
@@ -351,18 +352,6 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   {/* Targeting Type */}
                   <td className="px-6 py-5">
                     {renderTargetingBadge(adset.targeting_type)}
-                  </td>
-
-                  {/* Targeting Summary */}
-                  <td className="px-6 py-5">
-                    <div className="max-w-xs">
-                      <span
-                        className="text-xs text-gray-400 truncate block"
-                        title={adset.targeting_summary}
-                      >
-                        {adset.targeting_summary || 'No targeting info'}
-                      </span>
-                    </div>
                   </td>
 
                   {/* Spend */}

@@ -43,16 +43,25 @@ Rules:
 
 Format:
 
-🎨 **Themes:** Your top messaging themes are: [list 2-3 themes detected with their performance].
+🎨 **{themes_label}:** Your top messaging themes are: [list 2-3 themes detected with their performance].
 
-🏆 **Best Ads:** [Name 1-2 best performing ads by name. Include hook rate, view rate, CTR]
+🏆 **{best_ads_label}:** [Name 1-2 best performing ads by name. Include hook rate, view rate, CTR]
 
-📊 **Format Winner:** [Compare Image vs Video vs Carousel performance. Which format has best CTR/hook rate?]
+📊 **{format_winner_label}:** [Compare Image vs Video vs Carousel performance. Which format has best CTR/hook rate?]
 
-⚠️ **Fatigue Alert:** [Name any ads with declining CTR that need refresh. Use ad name, not ID]
+⚠️ **{fatigue_alert_label}:** [Name any ads with declining CTR that need refresh. Use ad name, not ID]
 
-💡 **Test Idea:** [One specific creative test based on what's working]
+💡 **{test_idea_label}:** [One specific creative test based on what's working]
 """
+
+# Translated labels for creative analysis
+CREATIVE_LABELS = {
+    'en': {'themes': 'Themes', 'best_ads': 'Best Ads', 'format_winner': 'Format Winner', 'fatigue_alert': 'Fatigue Alert', 'test_idea': 'Test Idea'},
+    'he': {'themes': 'נושאים', 'best_ads': 'מודעות מובילות', 'format_winner': 'פורמט מנצח', 'fatigue_alert': 'התראת עייפות', 'test_idea': 'רעיון לבדיקה'},
+    'ar': {'themes': 'المواضيع', 'best_ads': 'أفضل الإعلانات', 'format_winner': 'الصيغة الفائزة', 'fatigue_alert': 'تنبيه الإرهاق', 'test_idea': 'فكرة اختبار'},
+    'de': {'themes': 'Themen', 'best_ads': 'Beste Anzeigen', 'format_winner': 'Format-Gewinner', 'fatigue_alert': 'Ermüdungswarnung', 'test_idea': 'Testidee'},
+    'fr': {'themes': 'Thèmes', 'best_ads': 'Meilleures Pubs', 'format_winner': 'Format Gagnant', 'fatigue_alert': 'Alerte Fatigue', 'test_idea': 'Idée de Test'},
+}
 
 
 class CreativeInsightsService:
@@ -214,11 +223,19 @@ class CreativeInsightsService:
             if not has_roas:
                 no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS at all. Focus ONLY on: hook rate, view rate (video), CTR, and conversions."
 
+            # Get translated labels
+            labels = CREATIVE_LABELS.get(locale, CREATIVE_LABELS['en'])
+
             prompt = CREATIVE_ANALYSIS_PROMPT.format(
                 target_lang=target_lang,
                 no_roas_instruction=no_roas_instruction,
                 start_date=start_date.isoformat(),
-                end_date=end_date.isoformat()
+                end_date=end_date.isoformat(),
+                themes_label=labels['themes'],
+                best_ads_label=labels['best_ads'],
+                format_winner_label=labels['format_winner'],
+                fatigue_alert_label=labels['fatigue_alert'],
+                test_idea_label=labels['test_idea']
             ) + f"\n\nData:\n{context_json}"
 
             # Call Gemini

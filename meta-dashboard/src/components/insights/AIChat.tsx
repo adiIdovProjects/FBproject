@@ -41,7 +41,7 @@ export const AIChat: React.FC<AIChatProps> = ({
                 {
                     id: 'welcome',
                     role: 'assistant',
-                    content: "Hello! I'm your AI Investigator. I can analyze your ad performance, detect trends, and help you optimize your budget. How can I help you today?",
+                    content: t('insights.ai_welcome'),
                     timestamp: new Date()
                 }
             ]);
@@ -108,7 +108,7 @@ export const AIChat: React.FC<AIChatProps> = ({
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: "I'm sorry, I encountered an error while analyzing your data. Please try again later.",
+                content: t('insights.ai_error'),
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, errorMsg]);
@@ -136,10 +136,10 @@ export const AIChat: React.FC<AIChatProps> = ({
                             <Bot className="w-6 h-6 text-accent" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-white text-lg">AI Investigator</h3>
+                            <h3 className="font-bold text-white text-lg">{t('insights.ai_investigator')}</h3>
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                <span className="text-xs text-gray-400">Online & Ready to Analyze</span>
+                                <span className="text-xs text-gray-400">{t('insights.online_ready')}</span>
                             </div>
                         </div>
                     </div>
@@ -201,7 +201,7 @@ export const AIChat: React.FC<AIChatProps> = ({
                 {/* Suggestions Area */}
                 {messages.length === 1 && suggestions.length > 0 && (
                     <div className="px-4 pb-2">
-                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest font-bold">Suggested Actions</p>
+                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest font-bold">{t('insights.suggested_actions')}</p>
                         <div className="flex flex-wrap gap-2">
                             {suggestions.map((suggestion, idx) => (
                                 <button
@@ -224,7 +224,7 @@ export const AIChat: React.FC<AIChatProps> = ({
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend(inputValue)}
-                            placeholder="Ask me anything about your ads..."
+                            placeholder={t('insights.ask_placeholder')}
                             className="w-full bg-[#1a1d2d] border border-white/10 rounded-xl pl-4 pr-12 py-4 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent placeholder-gray-500"
                             disabled={isLoading}
                         />

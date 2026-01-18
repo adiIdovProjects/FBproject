@@ -20,7 +20,7 @@ const Tip = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Step indicator component
-const StepIndicator = ({ currentStep }: { currentStep: number }) => (
+const StepIndicator = ({ currentStep, stepText }: { currentStep: number; stepText: string }) => (
     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
         <div className="flex gap-1.5">
             {[1, 2, 3].map(s => (
@@ -30,7 +30,7 @@ const StepIndicator = ({ currentStep }: { currentStep: number }) => (
                 />
             ))}
         </div>
-        <span className="text-sm text-gray-400">Step {currentStep} of 3</span>
+        <span className="text-sm text-gray-400">{stepText}</span>
     </div>
 );
 
@@ -50,6 +50,7 @@ export default function NewCampaignWizard() {
     const params = useParams();
     const locale = params.locale as string;
     const t = useTranslations();
+    const isRTL = locale === 'he' || locale === 'ar';
     const { selectedAccountId, linkedAccounts, isLoading: isAccountLoading } = useAccount();
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
@@ -476,8 +477,8 @@ export default function NewCampaignWizard() {
     // Render Goal Selection Section
     const renderGoalSection = () => (
         <div className="space-y-4">
-            <StepIndicator currentStep={1} />
-            <h2 className="text-xl font-bold text-gray-200">1. What is your goal?</h2>
+            <StepIndicator currentStep={1} stepText={t('wizard.step_of', { current: 1, total: 3 })} />
+            <h2 className="text-xl font-bold text-gray-200">{t('wizard.step_1_title')}</h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* SALES */}
@@ -490,8 +491,8 @@ export default function NewCampaignWizard() {
                             <DollarSign className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold">Sales</h3>
-                            <p className="text-xs text-gray-400">Drive purchases</p>
+                            <h3 className="font-bold">{t('wizard.sales')}</h3>
+                            <p className="text-xs text-gray-400">{t('wizard.sales_desc')}</p>
                             <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_sales')}</p>
                         </div>
                     </div>
@@ -507,11 +508,11 @@ export default function NewCampaignWizard() {
                             <Target className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold">Leads</h3>
-                            <p className="text-xs text-gray-400">Collect signups</p>
+                            <h3 className="font-bold">{t('wizard.leads')}</h3>
+                            <p className="text-xs text-gray-400">{t('wizard.leads_desc')}</p>
                             <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_leads')}</p>
                             {goal === 'LEADS' && leadType && (
-                                <p className="text-xs text-blue-400 mt-1">({leadType === 'FORM' ? 'Instant Form' : 'Website'})</p>
+                                <p className="text-xs text-blue-400 mt-1">({leadType === 'FORM' ? t('wizard.instant_form') : t('wizard.website')})</p>
                             )}
                         </div>
                     </div>
@@ -527,8 +528,8 @@ export default function NewCampaignWizard() {
                             <Users className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold">Traffic</h3>
-                            <p className="text-xs text-gray-400">Website visits</p>
+                            <h3 className="font-bold">{t('wizard.traffic')}</h3>
+                            <p className="text-xs text-gray-400">{t('wizard.traffic_desc')}</p>
                             <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_traffic')}</p>
                         </div>
                     </div>
@@ -544,8 +545,8 @@ export default function NewCampaignWizard() {
                             <MousePointer className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold">Engagement</h3>
-                            <p className="text-xs text-gray-400">Likes & comments</p>
+                            <h3 className="font-bold">{t('wizard.engagement')}</h3>
+                            <p className="text-xs text-gray-400">{t('wizard.engagement_desc')}</p>
                             <p className="text-[10px] text-gray-500 mt-1">{t('wizard.objective_engagement')}</p>
                         </div>
                     </div>
@@ -554,12 +555,12 @@ export default function NewCampaignWizard() {
 
             {/* Campaign Name */}
             <div className="mt-4 space-y-2">
-                <label className="text-sm font-medium text-gray-400">Campaign Name <span className="text-gray-600">(Optional)</span></label>
+                <label className="text-sm font-medium text-gray-400">{t('wizard.campaign_name_optional')}</label>
                 <input
                     type="text"
                     value={customNames.campaignName}
                     onChange={(e) => setCustomNames({ ...customNames, campaignName: e.target.value })}
-                    placeholder={`Smart Campaign - ${goal || 'GOAL'} - ${new Date().toISOString().split('T')[0]}`}
+                    placeholder={`${t('wizard.campaign_placeholder')} - ${goal || 'GOAL'} - ${new Date().toISOString().split('T')[0]}`}
                     className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 />
             </div>
@@ -571,7 +572,7 @@ export default function NewCampaignWizard() {
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/70 backdrop-blur-sm">
             <div className="bg-gray-900 rounded-2xl border border-gray-700 p-8 max-w-md w-full mx-4 animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold">Where do you want to collect leads?</h3>
+                    <h3 className="text-xl font-bold">{t('wizard.lead_type_title')}</h3>
                     <button
                         onClick={() => { setShowLeadTypeModal(false); setGoal(null); }}
                         className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
@@ -585,16 +586,16 @@ export default function NewCampaignWizard() {
                         onClick={() => handleLeadTypeSelect('FORM')}
                         className="w-full p-4 rounded-xl border-2 border-gray-700 hover:border-blue-500 hover:bg-blue-500/10 transition-all text-left"
                     >
-                        <div className="font-bold mb-1">On Facebook (Instant Form)</div>
-                        <p className="text-sm text-gray-400">Collect leads directly on Facebook without leaving the app</p>
+                        <div className="font-bold mb-1">{t('wizard.lead_type_form')}</div>
+                        <p className="text-sm text-gray-400">{t('wizard.lead_type_form_desc')}</p>
                     </button>
 
                     <button
                         onClick={() => handleLeadTypeSelect('WEBSITE')}
                         className="w-full p-4 rounded-xl border-2 border-gray-700 hover:border-blue-500 hover:bg-blue-500/10 transition-all text-left"
                     >
-                        <div className="font-bold mb-1">On My Website</div>
-                        <p className="text-sm text-gray-400">Send people to your website landing page</p>
+                        <div className="font-bold mb-1">{t('wizard.lead_type_website')}</div>
+                        <p className="text-sm text-gray-400">{t('wizard.lead_type_website_desc')}</p>
                     </button>
                 </div>
             </div>
@@ -604,24 +605,24 @@ export default function NewCampaignWizard() {
     // Render Targeting Section
     const renderTargetingSection = () => (
         <div className="space-y-4">
-            <StepIndicator currentStep={2} />
-            <h2 className="text-xl font-bold text-gray-200">2. Targeting & Budget</h2>
+            <StepIndicator currentStep={2} stepText={t('wizard.step_of', { current: 2, total: 3 })} />
+            <h2 className="text-xl font-bold text-gray-200">{t('wizard.step_2_title')}</h2>
 
             {/* Ad Set Name - Above Location */}
             <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Ad Set Name <span className="text-gray-600">(Optional)</span></label>
+                <label className="text-sm font-medium text-gray-400">{t('wizard.adset_name_optional')}</label>
                 <input
                     type="text"
                     value={customNames.adsetName}
                     onChange={(e) => setCustomNames({ ...customNames, adsetName: e.target.value })}
-                    placeholder="Adset 12345"
+                    placeholder={`${t('wizard.adset_placeholder')} 12345`}
                     className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 />
             </div>
 
             {/* Location Search - Now above Audience Targeting */}
             <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Location (Country, City, or Region)</label>
+                <label className="text-sm font-medium text-gray-400">{t('wizard.location')}</label>
                 <div className="relative">
                     <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
                         <Search className="w-4 h-4 text-gray-500" />
@@ -630,7 +631,7 @@ export default function NewCampaignWizard() {
                             value={locationSearch}
                             onChange={(e) => setLocationSearch(e.target.value)}
                             onFocus={() => locationResults.length > 0 && setShowLocationDropdown(true)}
-                            placeholder="Search for a location..."
+                            placeholder={t('wizard.search_location')}
                             className="flex-1 bg-transparent outline-none text-sm"
                         />
                         {isSearchingLocations && <Loader2 className="w-4 h-4 animate-spin text-blue-400" />}
@@ -678,7 +679,7 @@ export default function NewCampaignWizard() {
                 )}
 
                 {selectedLocations.length === 0 && (
-                    <p className="text-xs text-gray-500">Add at least one location to target</p>
+                    <p className="text-xs text-gray-500">{t('wizard.add_location_hint')}</p>
                 )}
             </div>
 
@@ -882,7 +883,7 @@ export default function NewCampaignWizard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Age */}
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400">Age: {targeting.ageMin} - {targeting.ageMax}+</label>
+                    <label className="text-sm font-medium text-gray-400">{t('wizard.age')}: {targeting.ageMin} - {targeting.ageMax}+</label>
                     <div className="flex gap-2 items-center">
                         <input
                             type="range" min="18" max="65"
@@ -901,7 +902,7 @@ export default function NewCampaignWizard() {
 
                 {/* Budget */}
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400">Daily Budget</label>
+                    <label className="text-sm font-medium text-gray-400">{t('wizard.daily_budget')}</label>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                         <input
@@ -920,12 +921,12 @@ export default function NewCampaignWizard() {
             {needsPixel && (
                 <div className={`p-4 rounded-xl ${goal === 'SALES' ? 'bg-green-500/10 border border-green-500/30' : 'bg-blue-500/10 border border-blue-500/30'}`}>
                     <label className="text-sm font-medium text-gray-300 mb-2 block">
-                        Facebook Pixel <span className="text-red-400">*</span>
+                        {t('wizard.facebook_pixel')} <span className="text-red-400">*</span>
                     </label>
                     {isLoadingPixels ? (
                         <div className="flex items-center gap-2 text-sm text-blue-400">
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Loading pixels...
+                            {t('wizard.loading_pixels')}
                         </div>
                     ) : pixels.length > 0 ? (
                         <div className="space-y-3">
@@ -945,7 +946,7 @@ export default function NewCampaignWizard() {
                             {/* Conversion Event Selection */}
                             <div>
                                 <label className="text-sm font-medium text-gray-400 mb-1 block">
-                                    Conversion Event <span className="text-red-400">*</span>
+                                    {t('wizard.conversion_event')} <span className="text-red-400">*</span>
                                 </label>
                                 <select
                                     value={selectedConversionEvent}
@@ -955,29 +956,29 @@ export default function NewCampaignWizard() {
                                 >
                                     {goal === 'SALES' ? (
                                         <>
-                                            <option value="PURCHASE">Purchase</option>
-                                            <option value="ADD_TO_CART">Add to Cart</option>
-                                            <option value="INITIATE_CHECKOUT">Initiate Checkout</option>
-                                            <option value="ADD_PAYMENT_INFO">Add Payment Info</option>
+                                            <option value="PURCHASE">{t('wizard.purchase')}</option>
+                                            <option value="ADD_TO_CART">{t('wizard.add_to_cart')}</option>
+                                            <option value="INITIATE_CHECKOUT">{t('wizard.initiate_checkout')}</option>
+                                            <option value="ADD_PAYMENT_INFO">{t('wizard.add_payment_info')}</option>
                                         </>
                                     ) : (
                                         <>
-                                            <option value="LEAD">Lead</option>
-                                            <option value="COMPLETE_REGISTRATION">Complete Registration</option>
-                                            <option value="CONTACT">Contact</option>
-                                            <option value="SUBMIT_APPLICATION">Submit Application</option>
+                                            <option value="LEAD">{t('wizard.lead')}</option>
+                                            <option value="COMPLETE_REGISTRATION">{t('wizard.complete_registration')}</option>
+                                            <option value="CONTACT">{t('wizard.contact')}</option>
+                                            <option value="SUBMIT_APPLICATION">{t('wizard.submit_application')}</option>
                                         </>
                                     )}
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">
                                     {goal === 'SALES'
-                                        ? 'Facebook will optimize for this conversion action'
-                                        : 'Track when visitors convert on your website'}
+                                        ? t('wizard.conversion_optimize_sales')
+                                        : t('wizard.conversion_optimize_leads')}
                                 </p>
                             </div>
                         </div>
                     ) : (
-                        <p className="text-sm text-red-400">⚠️ No pixels found. <a href={`/${locale}/learning`} className="text-blue-400 underline">Learn how to set it up</a></p>
+                        <p className="text-sm text-red-400">⚠️ {t('wizard.no_pixels')} <a href={`/${locale}/learning`} className="text-blue-400 underline">{t('wizard.learn_setup')}</a></p>
                     )}
                 </div>
             )}
@@ -987,17 +988,17 @@ export default function NewCampaignWizard() {
     // Render Creative Section
     const renderCreativeSection = () => (
         <div className="space-y-4">
-            <StepIndicator currentStep={3} />
-            <h2 className="text-xl font-bold text-gray-200">3. Create Your Ad</h2>
+            <StepIndicator currentStep={3} stepText={t('wizard.step_of', { current: 3, total: 3 })} />
+            <h2 className="text-xl font-bold text-gray-200">{t('wizard.step_3_title')}</h2>
 
             {/* Ad Name */}
             <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Ad Name <span className="text-gray-600">(Optional)</span></label>
+                <label className="text-sm font-medium text-gray-400">{t('wizard.ad_name_optional')}</label>
                 <input
                     type="text"
                     value={customNames.adName}
                     onChange={(e) => setCustomNames({ ...customNames, adName: e.target.value })}
-                    placeholder="Ad 12345"
+                    placeholder={`${t('wizard.ad_placeholder')} 12345`}
                     className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 />
             </div>
@@ -1024,7 +1025,7 @@ export default function NewCampaignWizard() {
                             ) : (
                                 <>
                                     <Upload className="w-8 h-8 text-gray-500" />
-                                    <p className="text-gray-400 text-sm">Upload image/video</p>
+                                    <p className="text-gray-400 text-sm">{t('wizard.upload_media')}</p>
                                 </>
                             )}
                         </div>
@@ -1033,28 +1034,28 @@ export default function NewCampaignWizard() {
                     {/* Text Inputs */}
                     <div className="space-y-3">
                         <div>
-                            <label className="text-xs uppercase text-gray-500 font-bold">Primary Text</label>
+                            <label className="text-xs uppercase text-gray-500 font-bold">{t('wizard.primary_text')}</label>
                             <textarea
                                 value={creative.body}
                                 onChange={(e) => setCreative({ ...creative, body: e.target.value })}
                                 className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 h-20 focus:border-blue-500 outline-none resize-none text-sm"
-                                placeholder="The main text above the image..."
+                                placeholder={t('wizard.primary_text_placeholder')}
                             />
                         </div>
                         <div>
-                            <label className="text-xs uppercase text-gray-500 font-bold">Headline</label>
+                            <label className="text-xs uppercase text-gray-500 font-bold">{t('wizard.headline')}</label>
                             <input
                                 value={creative.title}
                                 onChange={(e) => setCreative({ ...creative, title: e.target.value })}
                                 className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 focus:border-blue-500 outline-none text-sm"
-                                placeholder="Short, catchy headline"
+                                placeholder={t('wizard.headline_placeholder')}
                             />
                         </div>
 
                         {/* Conditional Fields */}
                         {leadType === 'WEBSITE' || goal !== 'LEADS' ? (
                             <div>
-                                <label className="text-xs uppercase text-gray-500 font-bold">Website URL</label>
+                                <label className="text-xs uppercase text-gray-500 font-bold">{t('wizard.website_url')}</label>
                                 <input
                                     value={creative.link}
                                     onChange={(e) => setCreative({ ...creative, link: e.target.value })}
@@ -1065,12 +1066,12 @@ export default function NewCampaignWizard() {
                         ) : (
                             <div>
                                 <label className="text-xs uppercase text-gray-500 font-bold text-blue-400">
-                                    Instant Form <span className="text-red-400">*</span>
+                                    {t('wizard.instant_form_label')} <span className="text-red-400">*</span>
                                 </label>
                                 {isLoadingForms ? (
                                     <div className="flex items-center gap-2 text-sm text-blue-400 py-2">
                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                        Loading forms...
+                                        {t('wizard.loading_forms')}
                                     </div>
                                 ) : leadForms.length > 0 ? (
                                     <select
@@ -1079,29 +1080,29 @@ export default function NewCampaignWizard() {
                                         className="w-full bg-gray-900 border border-blue-500/30 rounded-lg p-3 focus:border-blue-500 outline-none text-sm"
                                         required
                                     >
-                                        <option value="">-- Select Form --</option>
+                                        <option value="">{t('wizard.select_form')}</option>
                                         {leadForms.map((form) => (
                                             <option key={form.id} value={form.id}>{form.name}</option>
                                         ))}
                                     </select>
                                 ) : (
-                                    <p className="text-sm text-yellow-400 py-2">⚠️ No forms found. <a href={`/${locale}/learning`} className="text-blue-400 underline">Learn how to create one</a></p>
+                                    <p className="text-sm text-yellow-400 py-2">⚠️ {t('wizard.no_forms')} <a href={`/${locale}/learning`} className="text-blue-400 underline">{t('wizard.learn_create_form')}</a></p>
                                 )}
                             </div>
                         )}
 
                         <div>
-                            <label className="text-xs uppercase text-gray-500 font-bold">Call To Action</label>
+                            <label className="text-xs uppercase text-gray-500 font-bold">{t('wizard.call_to_action')}</label>
                             <select
                                 value={creative.cta}
                                 onChange={(e) => setCreative({ ...creative, cta: e.target.value })}
                                 className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 focus:border-blue-500 outline-none text-sm"
                             >
-                                <option value="LEARN_MORE">Learn More</option>
-                                <option value="SHOP_NOW">Shop Now</option>
-                                <option value="SIGN_UP">Sign Up</option>
-                                <option value="GET_OFFER">Get Offer</option>
-                                <option value="APPLY_NOW">Apply Now</option>
+                                <option value="LEARN_MORE">{t('wizard.cta_learn_more')}</option>
+                                <option value="SHOP_NOW">{t('wizard.cta_shop_now')}</option>
+                                <option value="SIGN_UP">{t('wizard.cta_sign_up')}</option>
+                                <option value="GET_OFFER">{t('wizard.cta_get_offer')}</option>
+                                <option value="APPLY_NOW">{t('wizard.cta_apply_now')}</option>
                             </select>
                         </div>
                     </div>
@@ -1116,14 +1117,14 @@ export default function NewCampaignWizard() {
                             onClick={() => setPreviewFormat('feed')}
                             className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${previewFormat === 'feed' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                         >
-                            Feed
+                            {t('wizard.preview_feed')}
                         </button>
                         <button
                             type="button"
                             onClick={() => setPreviewFormat('story')}
                             className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${previewFormat === 'story' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                         >
-                            Story
+                            {t('wizard.preview_story')}
                         </button>
                     </div>
 
@@ -1209,12 +1210,12 @@ export default function NewCampaignWizard() {
 
                     {/* Quality Checklist */}
                     <div className="p-3 bg-gray-900/50 rounded-lg border border-gray-800">
-                        <p className="text-xs font-bold text-gray-400 mb-2 uppercase">Quality Check</p>
+                        <p className="text-xs font-bold text-gray-400 mb-2 uppercase">{t('wizard.quality_check')}</p>
                         <div className="space-y-1.5">
-                            <QualityCheck passed={!!creative.file} label="Image/video uploaded" />
-                            <QualityCheck passed={creative.title.length > 0 && creative.title.length <= 40} label="Headline length (under 40 chars)" hint={creative.title.length > 0 ? `${creative.title.length}/40` : undefined} />
-                            <QualityCheck passed={creative.body.length >= 20} label="Primary text (20+ chars)" hint={creative.body.length > 0 ? `${creative.body.length} chars` : undefined} />
-                            <QualityCheck passed={!!creative.cta} label="Call-to-action selected" />
+                            <QualityCheck passed={!!creative.file} label={t('wizard.quality_image_uploaded')} />
+                            <QualityCheck passed={creative.title.length > 0 && creative.title.length <= 40} label={t('wizard.quality_headline_length')} hint={creative.title.length > 0 ? `${creative.title.length}/40` : undefined} />
+                            <QualityCheck passed={creative.body.length >= 20} label={t('wizard.quality_primary_text')} hint={creative.body.length > 0 ? `${creative.body.length} chars` : undefined} />
+                            <QualityCheck passed={!!creative.cta} label={t('wizard.quality_cta_selected')} />
                         </div>
                     </div>
                 </div>
@@ -1238,20 +1239,16 @@ export default function NewCampaignWizard() {
 
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.push(`/${locale}/uploader`)}
-                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <h1 className="text-xl font-bold">Create New Campaign</h1>
-                    </div>
-                    <a href={`/${locale}/uploader/add-creative`} className="text-sm text-blue-400 hover:text-blue-300">
-                        Add to existing campaign →
-                    </a>
+                <div className="flex items-center gap-4 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <button
+                        onClick={() => router.push(`/${locale}/uploader`)}
+                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors flex items-center gap-2 text-gray-400 hover:text-white"
+                    >
+                        <ArrowLeft className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
+                        <span className="text-sm">{t('edit.back_to_uploader')}</span>
+                    </button>
                 </div>
+                <h1 className="text-3xl font-bold mb-8">{t('wizard.create_new_campaign')}</h1>
 
                 {/* Page ID Warning - only show after accounts have loaded */}
                 {!isAccountLoading && selectedAccount && !selectedAccount.page_id && (
@@ -1259,12 +1256,12 @@ export default function NewCampaignWizard() {
                         <div className="flex items-center gap-3">
                             <span className="text-xl">⚠️</span>
                             <div className="flex-1">
-                                <span className="text-yellow-400 font-medium">Facebook Page not connected.</span>
+                                <span className="text-yellow-400 font-medium">{t('wizard.page_not_connected')}</span>
                                 <button
                                     onClick={() => router.push(`/${locale}/settings?tab=accounts`)}
                                     className="ml-2 text-blue-400 underline text-sm"
                                 >
-                                    Reconnect in Settings
+                                    {t('wizard.reconnect_settings')}
                                 </button>
                             </div>
                         </div>
@@ -1282,10 +1279,10 @@ export default function NewCampaignWizard() {
                 <div className="mt-8 pt-6 border-t border-gray-800">
                     <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-400">
-                            {!goal && "Select a goal to continue"}
-                            {goal === 'LEADS' && !leadType && "Select where to collect leads"}
-                            {goal && (goal !== 'LEADS' || leadType) && creative.file && !creative.title && "Add a headline"}
-                            {canSubmit && "Ready to launch!"}
+                            {!goal && t('wizard.select_goal_continue')}
+                            {goal === 'LEADS' && !leadType && t('wizard.select_lead_type')}
+                            {goal && (goal !== 'LEADS' || leadType) && creative.file && !creative.title && t('wizard.add_headline')}
+                            {canSubmit && t('wizard.ready_to_launch')}
                         </div>
                         <button
                             onClick={handleSubmit}
@@ -1293,7 +1290,7 @@ export default function NewCampaignWizard() {
                             className="bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors"
                         >
                             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-                            Launch Campaign
+                            {t('wizard.launch_campaign')}
                         </button>
                     </div>
 
