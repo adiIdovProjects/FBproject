@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from 'next';
 import Providers from '../../components/Providers';
 import "../globals.css";
+import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: "AdSolus: Total Control. Zero Middlemen.",

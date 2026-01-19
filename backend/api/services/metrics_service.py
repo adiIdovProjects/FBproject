@@ -34,6 +34,7 @@ from backend.api.schemas.responses import (
     CreativeComparisonMetrics,
     AdsetBreakdown,
     AdsetComparisonMetrics,
+    AdBreakdown,
     DayOfWeekBreakdown,
     EntityPlacementBreakdown,
     EntityPlatformBreakdown,
@@ -894,6 +895,51 @@ class MetricsService:
             adset_metrics.append(metrics)
 
         return adset_metrics
+
+    def get_ad_breakdown(
+        self,
+        start_date: date,
+        end_date: date,
+        campaign_status: Optional[List[str]] = None,
+        search_query: Optional[str] = None,
+        account_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
+    ) -> List[AdBreakdown]:
+        """
+        Get ad-level breakdown with calculated metrics.
+        """
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        ads = self.ad_repo.get_ad_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            campaign_filter=None,
+            adset_filter=None,
+            search_query=search_query,
+            account_ids=filtered_account_ids,
+            campaign_ids=campaign_ids
+        )
+
+        ad_metrics = []
+        for ad in ads:
+            metrics = AdBreakdown(
+                ad_id=ad['ad_id'],
+                ad_name=ad['ad_name'],
+                ad_status=ad.get('ad_status', 'ACTIVE'),
+                spend=ad['spend'],
+                clicks=ad['clicks'],
+                impressions=ad['impressions'],
+                ctr=self.calculator.ctr(ad['clicks'], ad['impressions']),
+                cpc=self.calculator.cpc(ad['spend'], ad['clicks']),
+                conversions=ad['conversions'],
+                conversion_value=ad['conversion_value'],
+                roas=self.calculator.roas(ad['conversion_value'], ad['spend'], ad['conversions']),
+                cpa=self.calculator.cpa(ad['spend'], ad['conversions'])
+            )
+            ad_metrics.append(metrics)
+
+        return ad_metrics
 
     def get_adset_breakdown_comparison(
         self,

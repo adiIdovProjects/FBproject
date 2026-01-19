@@ -144,6 +144,7 @@ export async function fetchBreakdown(
     'age-gender': '/api/v1/metrics/breakdowns/age-gender',
     'country': '/api/v1/metrics/breakdowns/country',
     'adset': '/api/v1/metrics/breakdowns/adset',
+    'ad': '/api/v1/metrics/breakdowns/ad',
   };
 
   const endpoint = endpointMap[breakdownType];
@@ -191,6 +192,7 @@ export async function fetchBreakdown(
     return data.map((item: any) => {
       let name = 'Unknown';
       if (breakdownType === 'adset') name = item.adset_name || 'Unknown Adset';
+      else if (breakdownType === 'ad') name = item.ad_name || 'Unknown Ad';
       else if (breakdownType === 'platform') name = item.platform || item.placement_name || 'Instagram';
       else if (breakdownType === 'placement') name = item.placement_name || 'Unknown Placement';
       else if (breakdownType === 'age-gender') {

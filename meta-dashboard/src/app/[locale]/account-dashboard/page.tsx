@@ -245,6 +245,7 @@ export default function PerformanceDashboard() {
               format="currency"
               isLoading={isLoading}
               currency={currency}
+              tooltipKey="metrics.spend_tooltip"
             />
 
             <MetricCard
@@ -254,6 +255,7 @@ export default function PerformanceDashboard() {
               icon={Repeat}
               format="percentage"
               isLoading={isLoading}
+              tooltipKey="metrics.ctr_tooltip"
             />
 
             <MetricCard
@@ -264,6 +266,7 @@ export default function PerformanceDashboard() {
               format="currency"
               isLoading={isLoading}
               currency={currency}
+              tooltipKey="metrics.cpc_tooltip"
             />
 
             <MetricCard
@@ -273,6 +276,7 @@ export default function PerformanceDashboard() {
               icon={MousePointer}
               format="number"
               isLoading={isLoading}
+              tooltipKey="metrics.clicks_tooltip"
             />
 
             <MetricCard
@@ -282,6 +286,7 @@ export default function PerformanceDashboard() {
               icon={ShoppingCart}
               format="number"
               isLoading={isLoading}
+              tooltipKey="metrics.conversions_tooltip"
             />
 
             <MetricCard
@@ -292,6 +297,7 @@ export default function PerformanceDashboard() {
               format="currency"
               isLoading={isLoading}
               currency={currency}
+              tooltipKey="metrics.cpa_tooltip"
             />
 
             {hasROAS && (
@@ -302,6 +308,7 @@ export default function PerformanceDashboard() {
                 icon={TrendingUp}
                 format="decimal"
                 isLoading={isLoading}
+                tooltipKey="metrics.roas_tooltip"
               />
             )}
           </>

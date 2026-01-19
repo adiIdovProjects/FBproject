@@ -1,17 +1,17 @@
 /**
  * ComparisonChart Component
- * Displays period-to-period comparison data as a bar chart
+ * Displays period-to-period comparison data as a line chart
  */
 
 'use client';
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ComparisonItem } from '../../services/reports.service';
 import { MetricKey } from './MetricPills';
 
-// Vibrant color palette for bars
+// Vibrant color palette for lines
 const CHART_COLORS = [
   '#3B82F6', // Blue
   '#10B981', // Emerald
@@ -137,11 +137,11 @@ export default function ComparisonChart({
   return (
     <div className="w-full h-[500px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
+        <LineChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis
             dataKey="name"
             stroke="#9CA3AF"
@@ -157,24 +157,26 @@ export default function ComparisonChart({
             tickLine={false}
             axisLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+          <Tooltip content={<CustomTooltip />} />
           <Legend
             wrapperStyle={{ paddingTop: '20px' }}
-            iconType="rect"
+            iconType="line"
           />
 
-          {/* Render bars for each selected metric with distinct colors */}
+          {/* Render lines for each selected metric with distinct colors */}
           {selectedMetrics.map((metric, idx) => (
-            <Bar
+            <Line
               key={metric}
+              type="monotone"
               dataKey={`${metric}_period1`}
               name={getMetricLabel(metric)}
-              fill={CHART_COLORS[idx % CHART_COLORS.length]}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={60}
+              stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+              strokeWidth={2}
+              dot={{ fill: CHART_COLORS[idx % CHART_COLORS.length], strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, strokeWidth: 2 }}
             />
           ))}
-        </BarChart>
+        </LineChart>
       </ResponsiveContainer>
 
       {/* Empty state */}

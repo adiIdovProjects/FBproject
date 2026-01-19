@@ -256,7 +256,7 @@ class AdMutationService:
             logger.error(f"Failed to fetch custom audiences for account {account_id}: {e}")
             return []  # Return empty list instead of crashing
 
-    def search_targeting_locations(self, query: str, location_types: List[str] = None) -> List[Dict[str, Any]]:
+    def search_targeting_locations(self, query: str, location_types: List[str] = None, locale: str = None) -> List[Dict[str, Any]]:
         """Search for targeting locations (countries, cities, regions) via Facebook API."""
         import requests
 
@@ -271,6 +271,8 @@ class AdMutationService:
                 'q': query,
                 'location_types': json.dumps(location_types)
             }
+            if locale:
+                params['locale'] = locale
             response = requests.get(url, params=params)
             data = response.json()
 

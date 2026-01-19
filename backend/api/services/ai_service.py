@@ -19,7 +19,10 @@ from backend.api.repositories.account_repository import AccountRepository
 
 from backend.api.repositories.metrics_repository import MetricsRepository
 from backend.api.repositories.campaign_repository import CampaignRepository
+from backend.api.repositories.adset_repository import AdSetRepository
+from backend.api.repositories.ad_repository import AdRepository
 from backend.api.repositories.timeseries_repository import TimeSeriesRepository
+from backend.api.repositories.breakdown_repository import BreakdownRepository
 from backend.api.schemas.responses import AIQueryResponse, ChartConfig
 from backend.api.services.budget_optimizer import SmartBudgetOptimizer
 from backend.api.services.comparison_service import ComparisonService
@@ -33,38 +36,33 @@ CACHE_TTL = 3600  # 1 hour
 
 # --- System Instruction for AI Investigator ---
 SYSTEM_INSTRUCTION = (
-    "You are a Senior Performance Marketing Strategist analyzing Facebook Ads data. "
-    "Provide concise, actionable insights.\n\n"
+    "You are a Facebook Ads analyst. BE BRIEF AND DIRECT.\n\n"
 
-    "## Benchmarks:\n"
-    "- CTR: >2% excellent, 0.9% average, <0.5% poor\n"
-    "- ROAS: >4x excellent, 2-4x good, <2x poor\n"
-    "- CPC: $0.50-$3.00 typical (varies by industry)\n\n"
+    "## CRITICAL: Response Length\n"
+    "- Maximum 150 words\n"
+    "- No lengthy explanations or methodology\n"
+    "- Skip obvious observations\n\n"
 
-    "## Response Format:\n\n"
+    "## Response Format:\n"
+    "1. **Answer** (1 sentence with the key number)\n"
+    "2. **Table** (3-5 rows max, only essential columns)\n"
+    "3. **Action** (1 sentence - what to do next)\n\n"
 
-    "**For simple questions** (best campaign, which country, etc.):\n"
-    "1. **Answer** (1-2 sentences) - Direct answer with key metric\n"
-    "2. **Top Results Table** - Top 3-5 items with relevant metrics\n"
-    "3. **Action** - One specific thing to do next\n\n"
-
-    "**For analysis questions** (compare, trending, why, underperforming):\n"
-    "1. **Summary** (2-3 sentences) - What changed and why it matters\n"
-    "2. **Metrics Table** - Current vs Previous with % change and status (✅/⚠️/🔴)\n"
-    "3. **Top 3 Actions** - Prioritized recommendations\n\n"
-
-    "**For scaling/budget questions:**\n"
-    "1. **Recommendation** - Clear scaling or budget action\n"
-    "2. **Campaigns Table** - Campaigns to scale/pause with ROAS, CPA, spend\n"
-    "3. **Execution Steps** - 2-3 specific steps to implement\n\n"
+    "## Example Good Response:\n"
+    "**Best converting age: 35-64** with 10 conversions.\n\n"
+    "| Age | Conversions | ROAS |\n"
+    "|-----|-------------|------|\n"
+    "| 35-64 | 10 | 2.5x |\n"
+    "| 18-34 | 0 | - |\n\n"
+    "**Action:** Focus budget on 35-64 age group.\n\n"
 
     "## Rules:\n"
-    "- Keep responses under 400 words\n"
-    "- Always include specific numbers ($, %, x)\n"
-    "- Use: ✅ good, ⚠️ warning, 🔴 critical\n"
-    "- End with ONE clear next step\n"
-    "- Don't repeat data without insight\n"
-    "- If data is insufficient, say so clearly"
+    "- Answer the question directly in the first line\n"
+    "- One small table with top 3-5 results\n"
+    "- One action item at the end\n"
+    "- Use ✅/⚠️/🔴 for status\n"
+    "- No analysis methodology explanations\n"
+    "- No caveats unless critical"
 )
 
 class AIService:
@@ -75,7 +73,10 @@ class AIService:
         self.user_id = user_id
         self.repository = MetricsRepository(db)
         self.campaign_repo = CampaignRepository(db)
+        self.adset_repo = AdSetRepository(db)
+        self.ad_repo = AdRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
+        self.breakdown_repo = BreakdownRepository(db)
         # Budget optimizer will be initialized with account_ids when needed
         self.budget_optimizer = None
 
@@ -312,6 +313,50 @@ class AIService:
                 account_ids=filtered_account_ids
             )
 
+            # Fetch ad set breakdown (already ordered by spend DESC in repository)
+            adset_data = self.adset_repo.get_adset_breakdown(
+                start_date=start_date,
+                end_date=end_date,
+                account_ids=filtered_account_ids
+            )[:10]  # Top 10
+
+            # Fetch ad breakdown (already ordered by spend DESC in repository)
+            ad_data = self.ad_repo.get_ad_breakdown(
+                start_date=start_date,
+                end_date=end_date,
+                account_ids=filtered_account_ids
+            )[:10]  # Top 10
+
+            # Fetch demographics breakdown (age/gender)
+            demographics = self.breakdown_repo.get_age_gender_breakdown(
+                start_date=start_date,
+                end_date=end_date,
+                group_by='both',
+                account_ids=filtered_account_ids
+            )
+
+            # Fetch placement breakdown
+            placements = self.breakdown_repo.get_placement_breakdown(
+                start_date=start_date,
+                end_date=end_date,
+                account_ids=filtered_account_ids
+            )
+
+            # Fetch country breakdown (top 10)
+            countries = self.breakdown_repo.get_country_breakdown(
+                start_date=start_date,
+                end_date=end_date,
+                top_n=10,
+                account_ids=filtered_account_ids
+            )
+
+            # Fetch platform breakdown
+            platforms = self.breakdown_repo.get_platform_breakdown(
+                start_date=start_date,
+                end_date=end_date,
+                account_ids=filtered_account_ids
+            )
+
             # SECURITY FIX: Fetch Account Context only if authorized
             account_context_str = ""
             if account_id and int(account_id) in user_account_ids:
@@ -339,26 +384,31 @@ class AIService:
                 "previous_period": f"{prev_start} to {prev_end}",
                 "current_overview": overview,
                 "previous_overview": prev_overview,
-                "campaign_breakdown_current": campaign_data,
+                "campaign_breakdown": campaign_data[:10],
+                "adset_breakdown": adset_data[:5],
+                "ad_breakdown": ad_data[:5],
+                "demographics_breakdown": demographics[:5],
+                "placement_breakdown": placements,
+                "country_breakdown": countries[:5],
+                "platform_breakdown": platforms,
                 "daily_trends": daily_trends
             }
             
             context_json = json.dumps(data_context, indent=2, ensure_ascii=False)
             
             prompt = (
-                f"You are analyzing data for a specific Facebook Ad Account.\n"
-                f"{account_context_str}\n"
-                f"Based on the following Facebook Ads data for the period {start_date} to {end_date}, "
-                f"answer this question: '{question}'\n\n"
-                f"Data Context:\n{context_json}\n\n"
-                "Provide a comprehensive answer in markdown."
+                f"{account_context_str}"
+                f"Question: {question}\n\n"
+                f"Period: {start_date} to {end_date}\n\n"
+                f"Data:\n{context_json}"
             )
 
-            # 3. Call Gemini
+            # 3. Call Gemini with system instruction
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_INSTRUCTION,
                     temperature=0.2
                 )
             )

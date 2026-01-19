@@ -29,6 +29,7 @@ type Tab = {
 
 const TABS: Tab[] = [
   { id: 'adset', labelKey: 'campaigns.adsets' },
+  { id: 'ad', labelKey: 'campaigns.ads' },
   { id: 'platform', labelKey: 'campaigns.platform' },
   { id: 'placement', labelKey: 'campaigns.placement' },
   { id: 'age-gender', labelKey: 'campaigns.demographics' },
@@ -256,6 +257,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                 <tr>
                   <th className={`px-4 py-3 text-xs font-medium text-gray-400 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
                     {activeTab === 'adset' && t('breakdown.ad_set_name')}
+                    {activeTab === 'ad' && t('breakdown.ad_name')}
                     {activeTab === 'platform' && t('campaigns.platform')}
                     {activeTab === 'placement' && t('campaigns.placement')}
                     {activeTab === 'age-gender' && t('campaigns.demographics')}

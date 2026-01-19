@@ -177,7 +177,7 @@ export default function CreativeAnalysisView({
                   .map(([theme, stats]) => (
                     <tr key={theme} className="border-b border-border-subtle/50 hover:bg-card-bg/60">
                       <td className="py-3 px-4 text-sm font-medium capitalize">
-                        {theme.replace(/_/g, ' ')}
+                        {t(`insights.themes.${theme}`) || theme.replace(/_/g, ' ')}
                       </td>
                       <td className="py-3 px-4 text-sm text-right">
                         {stats.creative_count}
@@ -221,7 +221,7 @@ export default function CreativeAnalysisView({
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <FormatIcon className="w-5 h-5 text-cyan-400" />
-                    <span className="font-semibold">{format.format_type}</span>
+                    <span className="font-semibold">{t(`creatives.types.${format.format_type.toLowerCase()}`)}</span>
                     <span className="ml-auto text-xs text-gray-400">{format.creative_count} {t('insights.ads')}</span>
                   </div>
                   <div className="space-y-2 text-sm">
@@ -264,18 +264,18 @@ export default function CreativeAnalysisView({
         <div className="bg-card-bg/40 border border-border-subtle rounded-xl p-6">
           <h3 className="text-lg font-bold mb-4">{t('insights.top_performing_ads')}</h3>
           <div className="space-y-3">
-            {analysisData.data.top_performers.map((creative: any) => {
+            {analysisData.data.top_performers.map((creative: any, idx: number) => {
               const FormatIcon = creative.format_type === 'Video' ? Video : creative.format_type === 'Carousel' ? LayoutGrid : Image;
               return (
                 <div
-                  key={creative.creative_id}
+                  key={`${creative.creative_id}-${idx}`}
                   className="bg-card-bg/60 border border-border-subtle rounded-lg p-4 hover:bg-card-bg/80 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <FormatIcon className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs text-gray-500 capitalize">{creative.format_type || 'Image'}</span>
+                        <span className="text-xs text-gray-500 capitalize">{t(`creatives.types.${(creative.format_type || 'image').toLowerCase()}`)}</span>
                       </div>
                       <div className="text-sm font-semibold mb-1 truncate">
                         {creative.ad_name || creative.title || `Ad #${creative.creative_id}`}
@@ -335,7 +335,7 @@ export default function CreativeAnalysisView({
       {/* Fatigue Summary */}
       {fatigueData?.summary && fatigueData.summary.total_fatigued > 0 && (
         <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 border border-orange-500/30 rounded-xl p-6 shadow-lg">
-          <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+          <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
             <AlertTriangle className="w-6 h-6 text-orange-400" />
             <h2 className="text-2xl font-bold text-orange-200">{t('insights.ad_fatigue_alert')}</h2>
           </div>

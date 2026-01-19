@@ -26,6 +26,7 @@ from backend.api.schemas.responses import (
     ErrorResponse,
     AdsetBreakdown,
     AdsetComparisonMetrics,
+    AdBreakdown,
     CampaignComparisonResponse,
     DayOfWeekBreakdown
 )
@@ -512,6 +513,43 @@ def get_adset_breakdown_comparison(
         )
     except Exception as e:
         raise DatabaseError(detail=f"Failed to get adset breakdown comparison: {str(e)}")
+
+
+@router.get(
+    "/breakdowns/ad",
+    response_model=List[AdBreakdown],
+    summary="Get ad breakdown",
+    description="Returns metrics broken down by ad"
+)
+def get_ad_breakdown(
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    status: Optional[List[str]] = Query(None, description="Filter by campaign status"),
+    search: Optional[str] = Query(None, description="Search by ad name"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
+    campaign_ids: Optional[List[int]] = Query(None, description="Filter by campaign IDs"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get ad performance breakdown.
+
+    Returns metrics aggregated by ad.
+    """
+    try:
+        service = MetricsService(db, current_user.id)
+        account_ids = [int(account_id)] if account_id else None
+
+        return service.get_ad_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            campaign_status=status,
+            search_query=search,
+            account_ids=account_ids,
+            campaign_ids=campaign_ids
+        )
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to get ad breakdown: {str(e)}")
 
 
 @router.get(

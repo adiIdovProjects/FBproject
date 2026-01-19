@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowUpDown, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import { TargetingRow } from '../../types/targeting.types';
 import { useAccount } from '../../context/AccountContext';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 type SortKey = keyof TargetingRow;
 
@@ -251,6 +252,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.spend_tooltip" size="sm" />
                   <span>{t('metrics.spend')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -263,6 +265,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                 onClick={() => handleSort('ctr')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.ctr_tooltip" size="sm" />
                   <span>{t('metrics.ctr')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -275,6 +278,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                 onClick={() => handleSort('cpc')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.cpc_tooltip" size="sm" />
                   <span>{t('metrics.cpc')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -287,6 +291,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.conversions_tooltip" size="sm" />
                   <span>{t('metrics.conversions')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -299,6 +304,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.cpa_tooltip" size="sm" />
                   <span>{t('metrics.cpa')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -312,6 +318,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   onClick={() => handleSort('roas')}
                 >
                   <div className="flex items-center justify-end gap-2">
+                    <InfoTooltip tooltipKey="metrics.roas_tooltip" size="sm" />
                     <span>{t('metrics.roas')}</span>
                     <ArrowUpDown className="w-3 h-3 opacity-50" />
                   </div>

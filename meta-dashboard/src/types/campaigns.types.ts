@@ -81,7 +81,7 @@ export interface BreakdownRow {
 export type TimeGranularity = 'day' | 'week' | 'month';
 
 // Breakdown type options
-export type BreakdownType = 'placement' | 'age-gender' | 'country' | 'platform' | 'adset';
+export type BreakdownType = 'placement' | 'age-gender' | 'country' | 'platform' | 'adset' | 'ad';
 
 // Aggregated campaign metrics for KPI cards
 export interface CampaignMetrics {

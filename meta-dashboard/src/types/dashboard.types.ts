@@ -48,6 +48,7 @@ export interface MetricCardProps {
   format: 'currency' | 'number' | 'decimal' | 'percentage';
   isLoading?: boolean;
   currency?: string;  // Currency code (e.g., "USD", "EUR", "ILS")
+  tooltipKey?: string;  // i18n key for metric explanation tooltip
 }
 
 // Chart Data Point

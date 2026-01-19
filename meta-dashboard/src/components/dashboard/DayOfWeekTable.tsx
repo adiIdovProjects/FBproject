@@ -9,6 +9,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DayOfWeekBreakdown } from '../../types/dashboard.types';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 interface DayOfWeekTableProps {
   data: DayOfWeekBreakdown[];
@@ -82,29 +83,53 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
                     {t('dashboard.day')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.spend')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.spend_tooltip" size="sm" />
+                      <span>{t('metrics.spend')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.impressions')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.impressions_tooltip" size="sm" />
+                      <span>{t('metrics.impressions')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.clicks')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.clicks_tooltip" size="sm" />
+                      <span>{t('metrics.clicks')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.ctr')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.ctr_tooltip" size="sm" />
+                      <span>{t('metrics.ctr')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.cpc')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.cpc_tooltip" size="sm" />
+                      <span>{t('metrics.cpc')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.conversions')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.conversions_tooltip" size="sm" />
+                      <span>{t('metrics.conversions')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                    {t('metrics.cpa')}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <InfoTooltip tooltipKey="metrics.cpa_tooltip" size="sm" />
+                      <span>{t('metrics.cpa')}</span>
+                    </div>
                   </th>
                   {hasAnyROAS && (
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                      {t('metrics.roas')}
+                      <div className="flex items-center justify-end gap-1.5">
+                        <InfoTooltip tooltipKey="metrics.roas_tooltip" size="sm" />
+                        <span>{t('metrics.roas')}</span>
+                      </div>
                     </th>
                   )}
                 </tr>

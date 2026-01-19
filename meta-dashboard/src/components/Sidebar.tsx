@@ -334,11 +334,11 @@ export const Sidebar: React.FC = () => {
                 {quizCompleted === false && selectedAccountId && (
                     <Link
                         href={`/${locale}/account-quiz?account_id=${selectedAccountId}`}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group ${isRTL ? 'flex-row-reverse' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group`}
                     >
-                        <Sparkles className="w-5 h-5 text-purple-400" />
+                        <Sparkles className={`w-5 h-5 text-purple-400 ${isRTL ? 'order-last' : ''}`} />
                         <span className="flex-1 text-white font-semibold">Complete Setup</span>
-                        <ArrowRight className="w-4 h-4 text-purple-400 group-hover:translate-x-0.5 transition-transform" />
+                        <ArrowRight className={`w-4 h-4 text-purple-400 transition-transform ${isRTL ? 'order-first group-hover:-translate-x-0.5 rotate-180' : 'group-hover:translate-x-0.5'}`} />
                     </Link>
                 )}
 
@@ -346,30 +346,30 @@ export const Sidebar: React.FC = () => {
                 {selectedAccountId && (
                     <Link
                         href={`/${locale}/accounts/${selectedAccountId}/settings`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-white/5 text-white' : ''} ${isRTL ? 'flex-row-reverse' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-white/5 text-white' : ''} `}
                     >
-                        <Settings className="w-5 h-5" />
-                        <span>{t('settings.account_settings')}</span>
+                        <Settings className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
+                        <span className={isRTL ? 'flex-1' : ''}>{t('settings.account_settings')}</span>
                     </Link>
                 )}
 
                 {/* User Settings */}
                 <Link
                     href={`/${locale}/settings`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-white/5 text-white' : ''} ${isRTL ? 'flex-row-reverse' : ''}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-white/5 text-white' : ''} `}
                 >
-                    <User className="w-5 h-5" />
-                    <span>{t('settings.user_settings')}</span>
+                    <User className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
+                    <span className={isRTL ? 'flex-1' : ''}>{t('settings.user_settings')}</span>
                 </Link>
 
                 {/* Admin Dashboard - Only visible for admins */}
                 {isAdmin && (
                     <Link
                         href={`/${locale}/admin`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-900/30 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-indigo-900/30 text-white' : ''} ${isRTL ? 'flex-row-reverse' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-900/30 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-indigo-900/30 text-white' : ''} `}
                     >
-                        <Shield className="w-5 h-5" />
-                        <span>Admin Dashboard</span>
+                        <Shield className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
+                        <span className={isRTL ? 'flex-1' : ''}>Admin Dashboard</span>
                     </Link>
                 )}
             </div>

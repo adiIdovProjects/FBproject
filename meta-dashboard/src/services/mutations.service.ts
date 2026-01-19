@@ -14,9 +14,12 @@ export interface SmartCreative {
 
 export interface GeoLocationTarget {
     key: string;
-    type: 'country' | 'region' | 'city';
+    type: 'country' | 'region' | 'city' | 'custom_location';
     name: string;
     country_code?: string;
+    latitude?: number;
+    longitude?: number;
+    radius?: number; // km for custom_location
 }
 
 export interface InterestTarget {
@@ -153,9 +156,9 @@ export const mutationsService = {
         return response.data;
     },
 
-    async searchLocations(query: string, locationTypes: string[] = ['country', 'region', 'city']): Promise<GeoLocation[]> {
+    async searchLocations(query: string, locationTypes: string[] = ['country', 'region', 'city'], locale?: string): Promise<GeoLocation[]> {
         const response = await apiClient.get('/api/mutations/targeting/search', {
-            params: { q: query, location_types: locationTypes.join(',') }
+            params: { q: query, location_types: locationTypes.join(','), ...(locale && { locale }) }
         });
         return response.data;
     },

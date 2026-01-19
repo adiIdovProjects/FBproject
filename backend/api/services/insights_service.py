@@ -694,6 +694,52 @@ class InsightsService:
             for i, camp in enumerate(campaigns, 1):
                 summary += f"{i}. {camp.get('campaign_name', 'Unknown')} - Spend: ${camp.get('spend', 0):.2f}, ROAS: {camp.get('roas', 0):.2f}x, Conversions: {camp.get('conversions', 0)}\n"
 
+        # Add ad sets with targeting info (top 5)
+        adsets = data.get('adsets', [])[:5]
+        if adsets:
+            summary += "\nTOP AD SETS (by spend):\n"
+            for i, adset in enumerate(adsets, 1):
+                targeting = adset.get('targeting_summary', 'N/A')
+                summary += f"{i}. {adset.get('adset_name', 'Unknown')} - Spend: ${adset.get('spend', 0):.2f}, Conversions: {adset.get('conversions', 0)}, Targeting: {targeting[:50] if targeting else 'N/A'}\n"
+
+        # Add top ads with creative info (top 5)
+        ads = data.get('ads', [])[:5]
+        if ads:
+            summary += "\nTOP ADS (by conversions):\n"
+            for i, ad in enumerate(ads, 1):
+                title = ad.get('creative_title', ad.get('ad_name', 'Unknown'))
+                summary += f"{i}. {ad.get('ad_name', 'Unknown')} - Conversions: {ad.get('conversions', 0)}, CTR: {ad.get('ctr', 0):.2f}%\n"
+
+        # Add demographics breakdown (top 3)
+        demographics = data.get('demographics', [])[:3]
+        if demographics:
+            summary += "\nTOP DEMOGRAPHICS (age/gender by spend):\n"
+            for i, demo in enumerate(demographics, 1):
+                age = demo.get('age_group', 'Unknown')
+                gender = demo.get('gender', 'Unknown')
+                summary += f"{i}. {age} {gender} - Spend: ${demo.get('spend', 0):.2f}, CTR: {demo.get('ctr', 0):.2f}%\n"
+
+        # Add placements (top 3)
+        placements = data.get('placements', [])[:3]
+        if placements:
+            summary += "\nTOP PLACEMENTS (by spend):\n"
+            for i, place in enumerate(placements, 1):
+                summary += f"{i}. {place.get('placement_name', 'Unknown')} - Spend: ${place.get('spend', 0):.2f}, CTR: {place.get('ctr', 0):.2f}%\n"
+
+        # Add countries (top 3)
+        countries = data.get('countries', [])[:3]
+        if countries:
+            summary += "\nTOP COUNTRIES (by spend):\n"
+            for i, country in enumerate(countries, 1):
+                summary += f"{i}. {country.get('country', 'Unknown')} - Spend: ${country.get('spend', 0):.2f}, CTR: {country.get('ctr', 0):.2f}%\n"
+
+        # Add platforms
+        platforms = data.get('platforms', [])
+        if platforms:
+            summary += "\nPLATFORM BREAKDOWN:\n"
+            for plat in platforms:
+                summary += f"- {plat.get('platform', 'Unknown')}: Spend ${plat.get('spend', 0):.2f}, CTR: {plat.get('ctr', 0):.2f}%\n"
+
         return summary
 
     def _calculate_metrics(self, overview: Dict[str, Any]) -> Dict[str, float]:

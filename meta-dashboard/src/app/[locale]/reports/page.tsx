@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { BarChart3, Table as TableIcon, Download, FileText, ChevronDown } from 'lucide-react';
+import { LineChart, Table as TableIcon, Download, FileText, ChevronDown } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -574,8 +574,8 @@ export default function ReportsPage() {
                 ${viewMode === 'chart' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}
               `}
             >
-              <BarChart3 className="w-4 h-4" />
-              <span>{t('reports.view_as_bar_chart')}</span>
+              <LineChart className="w-4 h-4" />
+              <span>{t('reports.view_as_line_chart')}</span>
             </button>
           </div>
 
@@ -597,7 +597,7 @@ export default function ReportsPage() {
           {/* Data Visualization */}
           {!isLoading && !error && (
             <div className="bg-card-bg/40 border border-border-subtle rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
-              <div className={`p-4 border-b border-border-subtle bg-white/5 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className="p-4 border-b border-border-subtle bg-white/5 flex items-center justify-start">
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   <div className="p-2 bg-blue-500/10 rounded-lg">
                     <FileText className="w-5 h-5 text-blue-400" />
@@ -606,8 +606,6 @@ export default function ReportsPage() {
                     {dimension === 'overview' ? t('reports.performance_overview') : t('reports.detailed_breakdown')}
                   </h3>
                 </div>
-
-
               </div>
 
               {/* Metrics Selection - above table */}

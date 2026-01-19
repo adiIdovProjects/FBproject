@@ -157,6 +157,22 @@ class AdsetBreakdown(BaseModel):
     cpa: float = 0.0
 
 
+class AdBreakdown(BaseModel):
+    """Ad breakdown metrics"""
+    ad_id: int
+    ad_name: str
+    ad_status: str = "ACTIVE"
+    spend: float
+    clicks: int
+    impressions: int
+    ctr: float
+    cpc: float
+    conversions: int = 0
+    conversion_value: float = 0.0
+    roas: Optional[float] = None
+    cpa: float = 0.0
+
+
 class CountryBreakdown(BaseModel):
     """Country breakdown metrics"""
     country: str

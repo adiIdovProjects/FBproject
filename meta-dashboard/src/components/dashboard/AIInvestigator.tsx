@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Search, Sparkles, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { queryAIInvestigator } from '../../services/ai.service';
 import ReactMarkdown from 'react-markdown';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const DEFAULT_QUESTIONS = [
     "ai_investigator.questions.compare_weeks",
@@ -20,6 +20,8 @@ const DEFAULT_QUESTIONS = [
 
 export const AIInvestigator: React.FC = () => {
     const t = useTranslations();
+    const locale = useLocale();
+    const isRTL = locale === 'he' || locale === 'ar';
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [response, setResponse] = useState<string | null>(null);
@@ -32,13 +34,14 @@ export const AIInvestigator: React.FC = () => {
         }
     }, [response, loading, error]);
 
-    const handleQuery = async (text: string) => {
+    const handleQuery = async (text: string, displayText?: string) => {
         if (!text.trim()) return;
 
         setLoading(true);
         setResponse(null);
         setError(null);
-        setQuery(text);
+        // Use displayText for the input field if provided, otherwise use the query text
+        setQuery(displayText || text);
 
         try {
             const result = await queryAIInvestigator(text);
@@ -56,10 +59,10 @@ export const AIInvestigator: React.FC = () => {
             <div className="text-center space-y-4 py-4">
                 <h1 className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-3">
                     <Sparkles className="w-8 h-8 text-accent animate-pulse" />
-                    {t('ai_investigator.title')}
+                    {t('ai_investigator.center_title')}
                 </h1>
                 <p className="text-gray-400 text-lg max-w-lg mx-auto font-medium">
-                    {t('ai_investigator.subtitle')}
+                    {t('ai_investigator.center_subtitle')}
                 </p>
             </div>
 
@@ -128,20 +131,23 @@ export const AIInvestigator: React.FC = () => {
                     <div className="space-y-4">
                         <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] px-2 text-center">{t('ai_investigator.suggested_questions')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {DEFAULT_QUESTIONS.map((q, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => handleQuery(q)}
-                                    className="p-6 bg-white/5 border border-white/5 rounded-2xl text-left hover:border-accent/40 hover:bg-white/10 transition-all group relative overflow-hidden active:scale-95"
-                                >
-                                    <p className="text-gray-400 group-hover:text-white transition-colors leading-relaxed font-bold text-sm">
-                                        {t(q as any)}
-                                    </p>
-                                    <div className="mt-4 flex items-center text-accent text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Ask Gemini <ChevronRight className="w-3 h-3 ml-1" />
-                                    </div>
-                                </button>
-                            ))}
+                            {DEFAULT_QUESTIONS.map((q, idx) => {
+                                const translatedQuestion = t(q as any);
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleQuery(translatedQuestion, translatedQuestion)}
+                                        className={`p-6 bg-white/5 border border-white/5 rounded-2xl hover:border-accent/40 hover:bg-white/10 transition-all group relative overflow-hidden active:scale-95 ${isRTL ? 'text-right' : 'text-left'}`}
+                                    >
+                                        <p className="text-gray-400 group-hover:text-white transition-colors leading-relaxed font-bold text-sm">
+                                            {translatedQuestion}
+                                        </p>
+                                        <div className={`mt-4 flex items-center text-accent text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                            {t('ai_investigator.ask_sol')} <ChevronRight className={`w-3 h-3 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

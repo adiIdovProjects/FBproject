@@ -71,6 +71,11 @@ interface AdAccountInfo {
     page_name?: string;
 }
 
+interface PixelInfo {
+    id: string;
+    name: string;
+}
+
 
 interface AdAccountSettingsProps {
     accountId: string;
@@ -87,6 +92,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
     const [activeTab, setActiveTab] = useState<TabType>(initialTab);
     const [quizData, setQuizData] = useState<AccountQuizData | null>(null);
     const [accountInfo, setAccountInfo] = useState<AdAccountInfo | null>(null);
+    const [pixelInfo, setPixelInfo] = useState<PixelInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // Business Description State
@@ -141,9 +147,21 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                 if (account) {
                     setAccountInfo(account);
                 } else {
-                    // Fallback: try to fetch specific account details if individual endpoint existed (not in this case based on previous context), 
+                    // Fallback: try to fetch specific account details if individual endpoint existed (not in this case based on previous context),
                     // or just set minimal info if not found in list (shouldn't happen if access control works)
                     console.warn(`Account ${accountId} not found in user's account list.`);
+                }
+
+                // 3. Load Pixel Info
+                try {
+                    const pixelsResponse = await apiClient.get<PixelInfo[]>('/api/mutations/pixels', {
+                        params: { account_id: accountId }
+                    });
+                    if (pixelsResponse.data && pixelsResponse.data.length > 0) {
+                        setPixelInfo(pixelsResponse.data[0]); // Use first pixel
+                    }
+                } catch (e) {
+                    console.error("Pixel fetch error", e);
                 }
 
             } catch (error) {
@@ -265,7 +283,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                     <Monitor className="w-5 h-5 text-accent" />
-                    Connected Assets
+                    {t('settings.connected_assets')}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -306,15 +324,19 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                     {/* Pixel Status */}
                     <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start justify-between group hover:bg-white/10 transition-colors">
                         <div>
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Pixel</p>
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">{t('settings.pixel')}</p>
                             <div className="flex items-center gap-2 text-white font-semibold">
                                 <MousePointer2 className="w-4 h-4 text-purple-500" />
-                                Detect via Ad Settings
+                                {pixelInfo?.name || t('settings.no_pixel')}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Managed in Business Mgr</p>
+                            {pixelInfo?.id && <p className="text-xs text-gray-500 mt-1 font-mono">ID: {pixelInfo.id}</p>}
                         </div>
-                        <div className="bg-blue-500/10 p-1.5 rounded-full">
-                            <CheckCircle className="w-5 h-5 text-blue-500" />
+                        <div className={`p-1.5 rounded-full ${pixelInfo ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                            {pixelInfo ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5 text-yellow-500" />
+                            )}
                         </div>
                     </div>
                 </div>
@@ -395,7 +417,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-lg font-bold text-white mb-1">{t('settings.optimization_preferences')}</h3>
-                            <p className="text-sm text-gray-400">Manage how our AI understands your business goals</p>
+                            <p className="text-sm text-gray-400">{t('settings.manage_ai_understanding')}</p>
                         </div>
 
                         {!isEditingOptimization ? (
@@ -404,7 +426,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                                 className="text-sm text-accent font-bold hover:text-accent/80 transition-colors flex items-center gap-1"
                             >
                                 <Edit2 className="w-4 h-4" />
-                                Edit Preferences
+                                {t('settings.edit_preferences')}
                             </button>
                         ) : (
                             <button
@@ -566,10 +588,10 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                             <div>
                                 <h4 className="text-md font-bold text-white flex items-center gap-2">
                                     <Briefcase className="w-4 h-4 text-gray-400" />
-                                    Tell us about your business
+                                    {t('settings.tell_us_about_business')}
                                 </h4>
                                 <p className="text-sm text-gray-400 mt-1">
-                                    Provide context so our AI can give better recommendations.
+                                    {t('settings.provide_context_for_ai')}
                                 </p>
                             </div>
                             {descriptionSaveSuccess && (
@@ -584,7 +606,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                             <textarea
                                 value={businessDescription}
                                 onChange={(e) => setBusinessDescription(e.target.value)}
-                                placeholder="Example: We sell premium coffee beans directly to consumers. Our main goal is to increase recurring subscriptions..."
+                                placeholder={t('settings.business_description_placeholder')}
                                 className="w-full h-32 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none placeholder-gray-600 leading-relaxed"
                             />
                             <div className="mt-3 flex justify-end">
@@ -601,7 +623,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                                     ) : (
                                         <>
                                             <Save className="w-4 h-4" />
-                                            Save Context
+                                            {t('settings.save_context')}
                                         </>
                                     )}
                                 </button>

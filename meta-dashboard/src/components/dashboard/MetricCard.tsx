@@ -7,6 +7,7 @@ import React from 'react';
 import { Card, Metric, Text } from '@tremor/react';
 import { Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import { MetricCardProps } from '../../types/dashboard.types';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 export const MetricCard: React.FC<MetricCardProps> = ({
   title,
@@ -16,6 +17,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   format,
   isLoading = false,
   currency = 'USD',  // Default to USD if not provided
+  tooltipKey,
 }) => {
   // Format the value based on type
   const formatValue = (val: number | string): string => {
@@ -102,7 +104,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
       {/* Header with Icon */}
       <div className="flex items-center justify-between mb-5 relative z-10">
-        <Text className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{title}</Text>
+        <div className="flex items-center gap-1.5">
+          <Text className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{title}</Text>
+          {tooltipKey && <InfoTooltip tooltipKey={tooltipKey} size="sm" />}
+        </div>
         <div className="p-2.5 bg-accent/10 rounded-xl group-hover:scale-110 transition-transform">
           <Icon className="w-4 h-4 text-accent" />
         </div>

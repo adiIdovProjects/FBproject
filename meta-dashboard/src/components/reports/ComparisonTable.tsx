@@ -10,6 +10,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { ComparisonItem, MetricsPeriod } from '../../services/reports.service';
 import { MetricKey } from './MetricPills';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 interface ComparisonTableProps {
   data: ComparisonItem[];
@@ -266,13 +267,10 @@ export default function ComparisonTable({
             {/* Primary breakdown column */}
             <th
               onClick={() => handleSort('primary')}
-              className={`
-                px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors
-                sticky left-0 bg-gray-800/50 z-10
-                ${isRTL ? 'text-right' : 'text-left'}
-              `}
+              className="px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors sticky left-0 bg-gray-800/50 z-10"
+              style={{ textAlign: isRTL ? 'right' : 'left' }}
             >
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
                 <span>{getNameColumnLabel()}</span>
                 {(sortKey === 'name' || sortKey === 'primary') && (
                   sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
@@ -284,12 +282,10 @@ export default function ComparisonTable({
             {hasSecondaryBreakdown && (
               <th
                 onClick={() => handleSort('secondary')}
-                className={`
-                  px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors
-                  ${isRTL ? 'text-right' : 'text-left'}
-                `}
+                className="px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                style={{ textAlign: isRTL ? 'right' : 'left' }}
               >
-                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
                   <span>{getBreakdownLabel(secondaryBreakdown)}</span>
                   {sortKey === 'secondary' && (
                     sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
@@ -302,12 +298,10 @@ export default function ComparisonTable({
             {hasTertiaryBreakdown && (
               <th
                 onClick={() => handleSort('tertiary')}
-                className={`
-                  px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors
-                  ${isRTL ? 'text-right' : 'text-left'}
-                `}
+                className="px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                style={{ textAlign: isRTL ? 'right' : 'left' }}
               >
-                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : 'flex-row'}`}>
                   <span>{getBreakdownLabel(tertiaryBreakdown)}</span>
                   {sortKey === 'tertiary' && (
                     sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
@@ -325,6 +319,7 @@ export default function ComparisonTable({
                   className="px-4 py-3 text-sm font-semibold text-gray-300 cursor-pointer hover:bg-gray-700/50 transition-colors text-center"
                 >
                   <div className="flex items-center justify-center gap-2">
+                    <InfoTooltip tooltipKey={`metrics.${metric}_tooltip`} size="sm" />
                     <span>{getMetricLabel(metric)}</span>
                     {sortKey === metric && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
@@ -349,11 +344,8 @@ export default function ComparisonTable({
               >
                 {/* Primary breakdown value */}
                 <td
-                  className={`
-                    px-4 py-3 text-sm text-gray-200 font-medium
-                    sticky left-0 bg-inherit z-10
-                    ${isRTL ? 'text-right' : 'text-left'}
-                  `}
+                  className="px-4 py-3 text-sm text-gray-200 font-medium sticky left-0 bg-inherit z-10"
+                  style={{ textAlign: isRTL ? 'right' : 'left' }}
                 >
                   {translateBreakdownValue(itemValues.primary, breakdown)}
                 </td>
@@ -361,10 +353,8 @@ export default function ComparisonTable({
                 {/* Secondary breakdown value (if applicable) */}
                 {hasSecondaryBreakdown && (
                   <td
-                    className={`
-                      px-4 py-3 text-sm text-gray-300
-                      ${isRTL ? 'text-right' : 'text-left'}
-                    `}
+                    className="px-4 py-3 text-sm text-gray-300"
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
                   >
                     {translateBreakdownValue(itemValues.secondary, secondaryBreakdown)}
                   </td>
@@ -373,10 +363,8 @@ export default function ComparisonTable({
                 {/* Tertiary breakdown value (if applicable) */}
                 {hasTertiaryBreakdown && (
                   <td
-                    className={`
-                      px-4 py-3 text-sm text-gray-300
-                      ${isRTL ? 'text-right' : 'text-left'}
-                    `}
+                    className="px-4 py-3 text-sm text-gray-300"
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
                   >
                     {translateBreakdownValue(itemValues.tertiary, tertiaryBreakdown)}
                   </td>

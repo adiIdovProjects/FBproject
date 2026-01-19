@@ -9,6 +9,8 @@ from typing import Dict, Any, List, Optional
 
 from .metrics_repository import MetricsRepository
 from .campaign_repository import CampaignRepository
+from .adset_repository import AdSetRepository
+from .ad_repository import AdRepository
 from .timeseries_repository import TimeSeriesRepository
 from .breakdown_repository import BreakdownRepository
 from backend.models.schema import DimAccount
@@ -22,6 +24,8 @@ class InsightsRepository:
         self.db = db
         self.metrics_repo = MetricsRepository(db)
         self.campaign_repo = CampaignRepository(db)
+        self.adset_repo = AdSetRepository(db)
+        self.ad_repo = AdRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
         self.breakdown_repo = BreakdownRepository(db)
         self.account_repo = AccountRepository(db)
@@ -87,11 +91,61 @@ class InsightsRepository:
         # Get account context
         account_context = self._get_account_context(account_ids)
 
+        # Get ad set breakdown (already ordered by spend DESC in repository)
+        adsets = self.adset_repo.get_adset_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids
+        )[:10]  # Top 10
+
+        # Get ad breakdown (already ordered by spend DESC in repository)
+        ads = self.ad_repo.get_ad_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids
+        )[:10]  # Top 10
+
+        # Get demographics breakdown (age/gender)
+        demographics = self.breakdown_repo.get_age_gender_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            group_by='both',
+            account_ids=account_ids
+        )
+
+        # Get placement breakdown
+        placements = self.breakdown_repo.get_placement_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids
+        )
+
+        # Get country breakdown (top 10)
+        countries = self.breakdown_repo.get_country_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            top_n=10,
+            account_ids=account_ids
+        )
+
+        # Get platform breakdown
+        platforms = self.breakdown_repo.get_platform_breakdown(
+            start_date=start_date,
+            end_date=end_date,
+            account_ids=account_ids
+        )
+
         result = {
             'overview': overview,
             'prev_overview': prev_overview,
             'campaigns': campaigns,
             'daily_trends': daily_trends,
+            'adsets': adsets,
+            'ads': ads,
+            'demographics': demographics,
+            'placements': placements,
+            'countries': countries,
+            'platforms': platforms,
             'period': f"{start_date} to {end_date}",
             'prev_period': f"{prev_start_date} to {prev_end_date}" if prev_start_date else None,
             'context': page_context,

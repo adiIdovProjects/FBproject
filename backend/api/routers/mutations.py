@@ -203,12 +203,13 @@ def get_custom_audiences(
 def search_targeting_locations(
     q: str = Query(..., min_length=2, description="Search query for location"),
     location_types: str = Query("country,region,city", description="Comma-separated location types"),
+    locale: str = Query(None, description="Locale for search (e.g., he_IL, ar_AR, de_DE, fr_FR)"),
     service: AdMutationService = Depends(get_mutation_service)
 ):
     """Search for targeting locations (countries, cities, regions) via Facebook API."""
     try:
         types_list = [t.strip() for t in location_types.split(",")]
-        return service.search_targeting_locations(q, types_list)
+        return service.search_targeting_locations(q, types_list, locale)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

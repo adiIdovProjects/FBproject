@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 export type MetricKey =
   | 'spend'
@@ -85,12 +86,29 @@ export default function MetricPills({
     return t(`metrics.${metric}`);
   };
 
+  const getTooltipKey = (metric: MetricKey): string => {
+    // Map metric to its tooltip key
+    const tooltipKeys: Record<MetricKey, string> = {
+      spend: 'metrics.spend_tooltip',
+      impressions: 'metrics.impressions_tooltip',
+      clicks: 'metrics.clicks_tooltip',
+      ctr: 'metrics.ctr_tooltip',
+      cpc: 'metrics.cpc_tooltip',
+      conversions: 'metrics.conversions_tooltip',
+      conversion_value: 'metrics.conversion_value_tooltip',
+      roas: 'metrics.roas_tooltip',
+      cpa: 'metrics.cpa_tooltip',
+      conversion_rate: 'metrics.conversion_rate_tooltip',
+    };
+    return tooltipKeys[metric];
+  };
+
   return (
     <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
       {/* Header with Select/Clear buttons */}
-      <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300">{t('reports.metric_select')}</h3>
-        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className="flex gap-2">
           <button
             onClick={selectAll}
             className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
@@ -112,20 +130,22 @@ export default function MetricPills({
         {availableMetrics.map((metric) => {
           const isSelected = selectedMetrics.includes(metric);
           return (
-            <button
-              key={metric}
-              onClick={() => toggleMetric(metric)}
-              className={`
-                px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                ${isSelected
-                  ? 'bg-blue-600 text-white border-2 border-blue-500 shadow-md'
-                  : 'bg-gray-800 text-gray-400 border-2 border-gray-700 hover:border-gray-600 hover:text-gray-300'
-                }
-              `}
-            >
-              {isSelected && '✓ '}
-              {getMetricLabel(metric)}
-            </button>
+            <div key={metric} className="flex items-center gap-1">
+              <button
+                onClick={() => toggleMetric(metric)}
+                className={`
+                  px-3 py-1.5 rounded-full text-sm font-medium transition-all
+                  ${isSelected
+                    ? 'bg-blue-600 text-white border-2 border-blue-500 shadow-md'
+                    : 'bg-gray-800 text-gray-400 border-2 border-gray-700 hover:border-gray-600 hover:text-gray-300'
+                  }
+                `}
+              >
+                {isSelected && '✓ '}
+                {getMetricLabel(metric)}
+              </button>
+              <InfoTooltip tooltipKey={getTooltipKey(metric)} size="sm" />
+            </div>
           );
         })}
       </div>

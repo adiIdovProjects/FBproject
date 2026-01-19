@@ -13,6 +13,7 @@ import { DateRange } from '../../types/dashboard.types';
 import FatigueBadge from './FatigueBadge';
 import CTRTrendChart from './CTRTrendChart';
 import { useAccount } from '../../context/AccountContext';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 type SortKey = keyof CreativeMetrics | 'ctr' | 'cpc' | 'cpa' | 'roas';
 
@@ -293,7 +294,10 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Fatigue */}
               <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
-                <span>{t('creatives.fatigue')}</span>
+                <div className="flex items-center gap-1.5">
+                  <InfoTooltip tooltipKey="creatives.fatigue_tooltip" size="sm" />
+                  <span>{t('creatives.fatigue')}</span>
+                </div>
               </th>
 
               {/* Spend */}
@@ -302,6 +306,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.spend_tooltip" size="sm" />
                   <span>{t('metrics.spend')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -318,6 +323,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('ctr')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.ctr_tooltip" size="sm" />
                   <span>{t('metrics.ctr')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -334,6 +340,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('cpc')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.cpc_tooltip" size="sm" />
                   <span>{t('metrics.cpc')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -350,6 +357,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.conversions_tooltip" size="sm" />
                   <span>{t('metrics.conversions')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -366,6 +374,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="metrics.cpa_tooltip" size="sm" />
                   <span>{t('metrics.cpa')}</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -383,6 +392,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   onClick={() => handleSort('roas')}
                 >
                   <div className="flex items-center justify-end gap-2">
+                    <InfoTooltip tooltipKey="metrics.roas_tooltip" size="sm" />
                     <span>{t('metrics.roas')}</span>
                     <ArrowUpDown className="w-3 h-3 opacity-50" />
                   </div>
@@ -395,6 +405,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('hook_rate')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="creatives.hook_rate_tooltip" size="sm" />
                   <span>Hook Rate</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
@@ -406,6 +417,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 onClick={() => handleSort('completion_rate')}
               >
                 <div className="flex items-center justify-end gap-2">
+                  <InfoTooltip tooltipKey="creatives.avg_completion_tooltip" size="sm" />
                   <span>Completion</span>
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>

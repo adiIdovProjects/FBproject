@@ -13,7 +13,8 @@ class AdRepository(BaseRepository):
         campaign_filter: Optional[str] = None,
         adset_filter: Optional[str] = None,
         search_query: Optional[str] = None,
-        account_ids: Optional[List[int]] = None
+        account_ids: Optional[List[int]] = None,
+        campaign_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
         Get ad-level metrics breakdown.
@@ -41,6 +42,15 @@ class AdRepository(BaseRepository):
             account_filter = f"AND f.account_id IN ({placeholders})"
             for i, acc_id in enumerate(account_ids):
                 param_account_ids[f'acc_id_{i}'] = acc_id
+
+        # Build campaign_ids filter
+        campaign_ids_filter = ""
+        param_campaign_ids = {}
+        if campaign_ids:
+            placeholders = ', '.join([f":camp_id_{i}" for i in range(len(campaign_ids))])
+            campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
+            for i, camp_id in enumerate(campaign_ids):
+                param_campaign_ids[f'camp_id_{i}'] = camp_id
 
         query = text(f"""
             SELECT
@@ -82,6 +92,7 @@ class AdRepository(BaseRepository):
                 {adset_sql}
                 {search_filter}
                 {account_filter}
+                {campaign_ids_filter}
             GROUP BY ad.ad_id, ad.ad_name, ad.ad_status
             ORDER BY spend DESC
         """)
@@ -89,7 +100,8 @@ class AdRepository(BaseRepository):
         params = {
             'start_date': start_date,
             'end_date': end_date,
-            **param_account_ids
+            **param_account_ids,
+            **param_campaign_ids
         }
 
         if campaign_filter:

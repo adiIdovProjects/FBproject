@@ -10,6 +10,7 @@ import {
 import { mutationsService, SmartCampaignRequest, GeoLocation, CustomAudience, Interest, InterestTarget } from '@/services/mutations.service';
 import { useAccount } from '@/context/AccountContext';
 import { useTranslations } from 'next-intl';
+import InteractiveLocationMap, { CustomPinLocation } from '@/components/uploader/InteractiveLocationMap';
 
 // Inline Tip component
 const Tip = ({ children }: { children: React.ReactNode }) => (
@@ -51,6 +52,16 @@ export default function NewCampaignWizard() {
     const locale = params.locale as string;
     const t = useTranslations();
     const isRTL = locale === 'he' || locale === 'ar';
+
+    // Map app locale to Facebook locale format
+    const fbLocaleMap: Record<string, string> = {
+        'en': 'en_US',
+        'he': 'he_IL',
+        'ar': 'ar_AR',
+        'de': 'de_DE',
+        'fr': 'fr_FR'
+    };
+    const fbLocale = fbLocaleMap[locale] || 'en_US';
     const { selectedAccountId, linkedAccounts, isLoading: isAccountLoading } = useAccount();
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
@@ -74,6 +85,9 @@ export default function NewCampaignWizard() {
     const [locationResults, setLocationResults] = useState<GeoLocation[]>([]);
     const [isSearchingLocations, setIsSearchingLocations] = useState(false);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+    // Custom pin locations (from map clicks)
+    const [customPins, setCustomPins] = useState<CustomPinLocation[]>([]);
 
     const [creative, setCreative] = useState({
         title: '',
@@ -224,7 +238,7 @@ export default function NewCampaignWizard() {
         const timer = setTimeout(async () => {
             setIsSearchingLocations(true);
             try {
-                const results = await mutationsService.searchLocations(locationSearch);
+                const results = await mutationsService.searchLocations(locationSearch, ['country', 'region', 'city'], fbLocale);
                 // Filter out already selected locations
                 const filtered = results.filter(
                     r => !selectedLocations.some(s => s.key === r.key && s.type === r.type)
@@ -240,7 +254,7 @@ export default function NewCampaignWizard() {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [locationSearch, selectedLocations]);
+    }, [locationSearch, selectedLocations, fbLocale]);
 
     const addLocation = (location: GeoLocation) => {
         setSelectedLocations(prev => [...prev, location]);
@@ -251,6 +265,19 @@ export default function NewCampaignWizard() {
 
     const removeLocation = (key: string, type: string) => {
         setSelectedLocations(prev => prev.filter(l => !(l.key === key && l.type === type)));
+    };
+
+    // Custom pin handlers
+    const addCustomPin = (pin: CustomPinLocation) => {
+        setCustomPins(prev => [...prev, pin]);
+    };
+
+    const updateCustomPin = (updatedPin: CustomPinLocation) => {
+        setCustomPins(prev => prev.map(p => p.id === updatedPin.id ? updatedPin : p));
+    };
+
+    const removeCustomPin = (id: string) => {
+        setCustomPins(prev => prev.filter(p => p.id !== id));
     };
 
     // Handle goal selection
@@ -385,17 +412,30 @@ export default function NewCampaignWizard() {
 
             // 2. Create Campaign
             const defaultCampaignName = `Smart Campaign - ${goal} - ${new Date().toISOString().split('T')[0]}`;
-            const payload: SmartCampaignRequest = {
-                account_id: selectedAccount.account_id,
-                page_id: selectedAccount.page_id!,
-                campaign_name: customNames.campaignName || defaultCampaignName,
-                objective: goal!,
-                geo_locations: selectedLocations.map(loc => ({
+            // Combine searched locations with custom pins
+            const allGeoLocations = [
+                ...selectedLocations.map(loc => ({
                     key: loc.key,
                     type: loc.type,
                     name: loc.name,
                     country_code: loc.country_code
                 })),
+                ...customPins.map(pin => ({
+                    key: pin.id,
+                    type: 'custom_location' as const,
+                    name: pin.name,
+                    latitude: pin.lat,
+                    longitude: pin.lng,
+                    radius: pin.radius
+                }))
+            ];
+
+            const payload: SmartCampaignRequest = {
+                account_id: selectedAccount.account_id,
+                page_id: selectedAccount.page_id!,
+                campaign_name: customNames.campaignName || defaultCampaignName,
+                objective: goal!,
+                geo_locations: allGeoLocations,
                 age_min: targeting.ageMin,
                 age_max: targeting.ageMax,
                 daily_budget_cents: targeting.budget * 100,
@@ -480,6 +520,18 @@ export default function NewCampaignWizard() {
             <StepIndicator currentStep={1} stepText={t('wizard.step_of', { current: 1, total: 3 })} />
             <h2 className="text-xl font-bold text-gray-200">{t('wizard.step_1_title')}</h2>
 
+            {/* Campaign Name - Above objective cards */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">{t('wizard.campaign_name_optional')}</label>
+                <input
+                    type="text"
+                    value={customNames.campaignName}
+                    onChange={(e) => setCustomNames({ ...customNames, campaignName: e.target.value })}
+                    placeholder={`${t('wizard.campaign_placeholder')} - ${goal || 'GOAL'} - ${new Date().toISOString().split('T')[0]}`}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* SALES */}
                 <div
@@ -552,18 +604,6 @@ export default function NewCampaignWizard() {
                     </div>
                 </div>
             </div>
-
-            {/* Campaign Name */}
-            <div className="mt-4 space-y-2">
-                <label className="text-sm font-medium text-gray-400">{t('wizard.campaign_name_optional')}</label>
-                <input
-                    type="text"
-                    value={customNames.campaignName}
-                    onChange={(e) => setCustomNames({ ...customNames, campaignName: e.target.value })}
-                    placeholder={`${t('wizard.campaign_placeholder')} - ${goal || 'GOAL'} - ${new Date().toISOString().split('T')[0]}`}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-            </div>
         </div>
     );
 
@@ -621,9 +661,9 @@ export default function NewCampaignWizard() {
             </div>
 
             {/* Location Search - Now above Audience Targeting */}
-            <div className="space-y-2">
+            <div className="space-y-2 relative z-20">
                 <label className="text-sm font-medium text-gray-400">{t('wizard.location')}</label>
-                <div className="relative">
+                <div>
                     <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
                         <Search className="w-4 h-4 text-gray-500" />
                         <input
@@ -637,9 +677,9 @@ export default function NewCampaignWizard() {
                         {isSearchingLocations && <Loader2 className="w-4 h-4 animate-spin text-blue-400" />}
                     </div>
 
-                    {/* Dropdown Results */}
+                    {/* Dropdown Results - opens downward, overlays on top of map */}
                     {showLocationDropdown && locationResults.length > 0 && (
-                        <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                        <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-96 overflow-y-auto">
                             {locationResults.map((loc) => (
                                 <button
                                     key={`${loc.type}-${loc.key}`}
@@ -657,9 +697,10 @@ export default function NewCampaignWizard() {
                     )}
                 </div>
 
-                {/* Selected Locations */}
-                {selectedLocations.length > 0 && (
+                {/* Selected Locations + Custom Pins */}
+                {(selectedLocations.length > 0 || customPins.length > 0) && (
                     <div className="flex flex-wrap gap-2 mt-2">
+                        {/* Searched locations (blue) */}
                         {selectedLocations.map((loc) => (
                             <div
                                 key={`${loc.type}-${loc.key}`}
@@ -675,12 +716,39 @@ export default function NewCampaignWizard() {
                                 </button>
                             </div>
                         ))}
+                        {/* Custom pins (red) */}
+                        {customPins.map((pin) => (
+                            <div
+                                key={pin.id}
+                                className="flex items-center gap-1 bg-red-500/20 border border-red-500/30 rounded-full px-3 py-1 text-sm"
+                            >
+                                <MapPin className="w-3 h-3 text-red-400" />
+                                <span className="text-red-200">{pin.name}</span>
+                                <span className="text-red-400/60 text-xs">({pin.radius}km)</span>
+                                <button
+                                    onClick={() => removeCustomPin(pin.id)}
+                                    className="ml-1 text-red-400 hover:text-red-300"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 )}
 
-                {selectedLocations.length === 0 && (
+                {selectedLocations.length === 0 && customPins.length === 0 && (
                     <p className="text-xs text-gray-500">{t('wizard.add_location_hint')}</p>
                 )}
+
+                {/* Interactive Location Map */}
+                <InteractiveLocationMap
+                    locations={selectedLocations}
+                    customPins={customPins}
+                    onRemoveLocation={removeLocation}
+                    onAddCustomPin={addCustomPin}
+                    onUpdateCustomPin={updateCustomPin}
+                    onRemoveCustomPin={removeCustomPin}
+                />
             </div>
 
             {/* Audience Mode Toggle */}
@@ -1223,10 +1291,10 @@ export default function NewCampaignWizard() {
         </div>
     );
 
-    // Check if form is ready to submit
+    // Check if form is ready to submit (locations OR custom pins required)
     const canSubmit = goal &&
         (goal !== 'LEADS' || leadType) &&
-        selectedLocations.length > 0 &&
+        (selectedLocations.length > 0 || customPins.length > 0) &&
         creative.file &&
         creative.title &&
         (!needsPixel || (selectedPixel && selectedConversionEvent)) &&
