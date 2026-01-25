@@ -146,14 +146,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
     formatFn?: (value: number) => string
   ) => {
     if (changePercent === undefined || changePercent === null || isNaN(changePercent)) {
-      return <span className="text-gray-500 text-sm">-</span>;
+      return <span className="text-text-muted text-sm">-</span>;
     }
 
     const isPositive = changePercent > 0;
     const isNegative = changePercent < 0;
 
     // Determine color based on metric type
-    let colorClass = 'text-gray-400'; // neutral default
+    let colorClass = 'text-text-muted'; // neutral default
     if (metricType === 'cost') {
       // For cost metrics (CPA, CPC), down is good
       colorClass = isNegative ? 'text-green-400' : 'text-red-400';
@@ -236,16 +236,16 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
     return (
       <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
-        <p className="text-gray-500 font-medium animate-pulse">Loading creatives...</p>
+        <p className="text-text-muted font-medium animate-pulse">{t('creatives.loading')}</p>
       </div>
     );
   }
 
   if (creatives.length === 0) {
     return (
-      <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px] text-gray-500">
-        <p className="text-lg font-bold">No creatives found</p>
-        <p className="text-sm">Try adjusting your search or date range</p>
+      <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px] text-text-muted">
+        <p className="text-lg font-bold">{t('creatives.no_results')}</p>
+        <p className="text-sm">{t('creatives.no_results_hint')}</p>
       </div>
     );
   }
@@ -267,18 +267,18 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                     }
                   }}
                   onChange={handleSelectAll}
-                  className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                  className="w-4 h-4 rounded border-border-subtle bg-secondary text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
                 />
               </th>
 
               {/* Thumbnail */}
-              <th className={`px-4 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
+              <th className={`px-4 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest`}>
                 <span>{t('creatives.preview')}</span>
               </th>
 
               {/* Creative Name */}
               <th
-                className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors`}
+                className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors`}
                 onClick={() => handleSort('title')}
               >
                 <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -288,12 +288,12 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
 
               {/* Type */}
-              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
+              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest`}>
                 <span>{t('creatives.type')}</span>
               </th>
 
               {/* Fatigue */}
-              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-gray-500 uppercase tracking-widest`}>
+              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest`}>
                 <div className="flex items-center gap-1.5">
                   <InfoTooltip tooltipKey="creatives.fatigue_tooltip" size="sm" />
                   <span>{t('creatives.fatigue')}</span>
@@ -302,7 +302,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Spend */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -312,14 +312,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CTR */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('ctr')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -329,14 +329,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CPC */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpc')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -346,14 +346,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* Conversions */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -363,14 +363,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CPA */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -380,7 +380,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
@@ -388,7 +388,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               {/* ROAS - Conditional */}
               {hasConversionValue && (
                 <th
-                  className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                  className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                   onClick={() => handleSort('roas')}
                 >
                   <div className="flex items-center justify-end gap-2">
@@ -401,7 +401,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Hook Rate (video only - show for all but display N/A for images) */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('hook_rate')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -413,7 +413,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Completion Rate (video only) */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('completion_rate')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -441,13 +441,13 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleCheckboxToggle(creative.creative_id)}
-                      className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                      className="w-4 h-4 rounded border-border-subtle bg-secondary text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
                     />
                   </td>
 
                   {/* Thumbnail */}
                   <td className="px-4 py-5">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-800/50 border border-border-subtle flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-secondary/50 border border-border-subtle flex items-center justify-center">
                       {creative.is_video && creative.video_url ? (
                         <video
                           src={creative.video_url}
@@ -475,17 +475,17 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                           href={creative.video_url || creative.image_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-white font-bold group-hover:text-accent transition-colors flex items-center gap-2"
+                          className="text-sm text-foreground font-bold group-hover:text-accent transition-colors flex items-center gap-2"
                         >
                           <span>{creative.title || `Creative ${creative.creative_id}`}</span>
                           <ExternalLink className="w-3.5 h-3.5 opacity-60" />
                         </a>
                       ) : (
-                        <span className="text-sm text-white font-bold">
+                        <span className="text-sm text-foreground font-bold">
                           {creative.title || `Creative ${creative.creative_id}`}
                         </span>
                       )}
-                      <span className="text-[10px] text-gray-500 font-mono mt-0.5">{creative.creative_id}</span>
+                      <span className="text-[10px] text-text-muted font-mono mt-0.5">{creative.creative_id}</span>
                     </div>
                   </td>
 
@@ -504,7 +504,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   </td>
 
                   {/* Spend */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatCurrency(creative.spend)}
                   </td>
                   {showComparison && (
@@ -514,7 +514,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   )}
 
                   {/* CTR */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     <button
                       onClick={() => {
                         setSelectedCreative({
@@ -536,7 +536,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   )}
 
                   {/* CPC */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(cpc)}
                   </td>
                   {showComparison && (
@@ -546,7 +546,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   )}
 
                   {/* Conversions */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatNumber(creative.conversions)}
                   </td>
                   {showComparison && (
@@ -556,7 +556,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                   )}
 
                   {/* CPA */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(creative.cpa)}
                   </td>
                   {showComparison && (
@@ -567,33 +567,33 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
                   {/* ROAS */}
                   {hasConversionValue && (
-                    <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                    <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                       {creative.roas !== null && creative.roas !== undefined && creative.roas > 0 ? (
                         <>
-                          <span className="text-gray-400 text-[10px] mr-1">x</span>
+                          <span className="text-text-muted text-[10px] mr-1">x</span>
                           {creative.roas.toFixed(2)}
                         </>
                       ) : (
-                        <span className="text-gray-500 italic text-[10px]">N/A</span>
+                        <span className="text-text-muted italic text-[10px]">N/A</span>
                       )}
                     </td>
                   )}
 
                   {/* Hook Rate */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {creative.is_video && creative.hook_rate !== null ? (
                       formatPercentage(creative.hook_rate)
                     ) : (
-                      <span className="text-gray-500 italic text-[10px]">N/A</span>
+                      <span className="text-text-muted italic text-[10px]">N/A</span>
                     )}
                   </td>
 
                   {/* Completion Rate */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {creative.is_video && creative.completion_rate !== null ? (
                       formatPercentage(creative.completion_rate)
                     ) : (
-                      <span className="text-gray-500 italic text-[10px]">N/A</span>
+                      <span className="text-text-muted italic text-[10px]">N/A</span>
                     )}
                   </td>
                 </tr>

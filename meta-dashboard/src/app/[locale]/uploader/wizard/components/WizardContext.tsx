@@ -16,6 +16,14 @@ export interface AdCreative {
     leadFormId: string;
     // For cloned campaigns - store the existing image URL for preview
     existingImageUrl?: string;
+    // For using existing FB/IG posts as ad creative
+    useExistingPost?: boolean;
+    objectStoryId?: string;  // Format: {page_id}_{post_id}
+    objectStoryPreview?: {
+        thumbnail?: string;
+        message: string;
+        source: 'facebook' | 'instagram';
+    };
 }
 
 // Full wizard state

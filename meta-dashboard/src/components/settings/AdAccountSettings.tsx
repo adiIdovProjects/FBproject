@@ -484,7 +484,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                                 className="text-sm text-gray-400 font-bold hover:text-white transition-colors flex items-center gap-1"
                             >
                                 <X className="w-4 h-4" />
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                         )}
                     </div>
@@ -620,12 +620,12 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                                 {isSavingDescription ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Saving...
+                                        {t('common.saving')}
                                     </>
                                 ) : (
                                     <>
                                         <Save className="w-4 h-4" />
-                                        Save Preferences
+                                        {t('common.save_changes')}
                                     </>
                                 )}
                             </button>
@@ -647,7 +647,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                             {descriptionSaveSuccess && (
                                 <span className="text-green-400 text-sm font-bold animate-in fade-in flex items-center gap-1">
                                     <CheckCircle className="w-4 h-4" />
-                                    Saved!
+                                    {t('common.saved_successfully')}
                                 </span>
                             )}
                         </div>
@@ -668,7 +668,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                                     {isSavingDescription ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                                            Saving...
+                                            {t('common.saving')}
                                         </>
                                     ) : (
                                         <>

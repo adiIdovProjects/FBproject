@@ -46,7 +46,8 @@ export default function LanguageSwitcher() {
       console.log('[LanguageSwitcher] Path without locale:', pathWithoutLocale);
       console.log('[LanguageSwitcher] New path:', newPath);
 
-      // Use window.location for a full page reload to ensure locale changes properly
+      // Full page reload is intentional - required to properly reinitialize i18n context
+      // and ensure all translations are loaded for the new locale
       window.location.href = newPath;
     });
   };

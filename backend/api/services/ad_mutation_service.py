@@ -103,12 +103,23 @@ class AdMutationService:
 
     def _build_creative_params(self, page_id: str, creative, creative_name: str = None) -> Dict[str, Any]:
         """
-        Shared logic for building AdCreative object_story_spec.
-        Handles both image/video creatives and lead form creatives.
+        Shared logic for building AdCreative params.
+        Handles:
+        - Existing post (object_story_id)
+        - Image/video creatives (object_story_spec)
+        - Lead form creatives (template_data)
         """
         if creative_name is None:
             creative_name = f"Creative - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
 
+        # If using an existing post, use object_story_id instead of object_story_spec
+        if hasattr(creative, 'object_story_id') and creative.object_story_id:
+            return {
+                AdCreative.Field.name: creative_name,
+                AdCreative.Field.object_story_id: creative.object_story_id,
+            }
+
+        # Standard creative with new content
         params = {
             AdCreative.Field.name: creative_name,
             AdCreative.Field.object_story_spec: {
@@ -379,6 +390,12 @@ class AdMutationService:
             Dict with form details including questions, privacy policy, context card, thank you page
         """
         import requests
+
+        # Validate inputs
+        if not form_id or not form_id.strip():
+            raise ValueError("Form ID is required")
+        if not page_id or not page_id.strip():
+            raise ValueError("Page ID is required")
 
         try:
             # Get page-specific access token
@@ -1942,3 +1959,118 @@ class AdMutationService:
         except Exception as e:
             logger.error(f"Failed to create lookalike audience: {str(e)}", exc_info=True)
             raise ValueError(f"Unable to create lookalike audience: {str(e)}")
+
+    def get_page_posts(self, page_id: str, account_id: str = None, limit: int = 20) -> List[Dict[str, Any]]:
+        """Fetch recent posts from a Facebook Page.
+
+        Returns posts that can be used as ad creatives via object_story_id.
+        """
+        try:
+            page_token = self._get_page_access_token(page_id, account_id)
+            api = FacebookAdsApi.get_default_api()
+
+            response = api.call(
+                'GET',
+                (page_id, 'posts'),
+                {
+                    'fields': 'id,message,created_time,full_picture,permalink_url,type,is_published',
+                    'limit': limit,
+                    'access_token': page_token
+                }
+            )
+            data = response.json()
+
+            posts = []
+            for post in data.get('data', []):
+                # Only include published posts
+                if post.get('is_published', True):
+                    posts.append({
+                        'id': post.get('id'),  # Format: {page_id}_{post_id}
+                        'message': post.get('message', ''),
+                        'created_time': post.get('created_time'),
+                        'full_picture': post.get('full_picture'),
+                        'permalink_url': post.get('permalink_url'),
+                        'type': post.get('type', 'status'),
+                        'source': 'facebook'
+                    })
+
+            logger.info(f"Fetched {len(posts)} posts from page {page_id}")
+            return posts
+
+        except Exception as e:
+            logger.error(f"Failed to fetch page posts: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to fetch page posts: {str(e)}")
+
+    def get_instagram_account_id(self, page_id: str, account_id: str = None) -> Optional[str]:
+        """Get the Instagram Business account ID connected to a Facebook Page."""
+        try:
+            page_token = self._get_page_access_token(page_id, account_id)
+            api = FacebookAdsApi.get_default_api()
+
+            response = api.call(
+                'GET',
+                (page_id,),
+                {
+                    'fields': 'instagram_business_account',
+                    'access_token': page_token
+                }
+            )
+            data = response.json()
+
+            ig_account = data.get('instagram_business_account')
+            if ig_account:
+                return ig_account.get('id')
+            return None
+
+        except Exception as e:
+            logger.warning(f"No Instagram account connected to page {page_id}: {str(e)}")
+            return None
+
+    def get_instagram_posts(self, page_id: str, account_id: str = None, limit: int = 20) -> List[Dict[str, Any]]:
+        """Fetch recent posts from the Instagram Business account connected to a Page.
+
+        Returns posts that can be used as ad creatives.
+        """
+        try:
+            # First get the Instagram account ID
+            ig_account_id = self.get_instagram_account_id(page_id, account_id)
+            if not ig_account_id:
+                return []
+
+            page_token = self._get_page_access_token(page_id, account_id)
+            api = FacebookAdsApi.get_default_api()
+
+            response = api.call(
+                'GET',
+                (ig_account_id, 'media'),
+                {
+                    'fields': 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp',
+                    'limit': limit,
+                    'access_token': page_token
+                }
+            )
+            data = response.json()
+
+            posts = []
+            for post in data.get('data', []):
+                media_type = post.get('media_type', 'IMAGE')
+                # Use thumbnail for videos, media_url for images
+                thumbnail = post.get('thumbnail_url') if media_type == 'VIDEO' else post.get('media_url')
+
+                posts.append({
+                    'id': post.get('id'),
+                    'message': post.get('caption', ''),
+                    'created_time': post.get('timestamp'),
+                    'full_picture': thumbnail,
+                    'permalink_url': post.get('permalink'),
+                    'type': media_type.lower(),
+                    'source': 'instagram',
+                    'ig_account_id': ig_account_id
+                })
+
+            logger.info(f"Fetched {len(posts)} Instagram posts for page {page_id}")
+            return posts
+
+        except Exception as e:
+            logger.error(f"Failed to fetch Instagram posts: {str(e)}", exc_info=True)
+            return []

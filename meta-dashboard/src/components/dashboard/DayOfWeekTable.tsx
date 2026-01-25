@@ -55,7 +55,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
     <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl">
       {/* Header */}
       <div className="bg-black/20 border-b border-border-subtle px-6 py-4">
-        <h3 className="text-white font-bold text-lg">
+        <h3 className="text-foreground font-bold text-lg">
           {t('dashboard.day_of_week_performance')}
         </h3>
       </div>
@@ -69,7 +69,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
         )}
 
         {!isLoading && data.length === 0 && (
-          <div className="flex items-center justify-center h-48 text-gray-400">
+          <div className="flex items-center justify-center h-48 text-text-muted">
             {t('common.no_data_available')}
           </div>
         )}
@@ -77,55 +77,55 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
         {!isLoading && data.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-750 border-b border-gray-700">
+              <thead className="bg-card border-b border-border-subtle">
                 <tr>
-                  <th className={`px-4 py-3 text-xs font-medium text-gray-400 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-4 py-3 text-xs font-medium text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
                     {t('dashboard.day')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.spend_tooltip" size="sm" />
                       <span>{t('metrics.spend')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.impressions_tooltip" size="sm" />
                       <span>{t('metrics.impressions')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.clicks_tooltip" size="sm" />
                       <span>{t('metrics.clicks')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.ctr_tooltip" size="sm" />
                       <span>{t('metrics.ctr')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.cpc_tooltip" size="sm" />
                       <span>{t('metrics.cpc')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.conversions_tooltip" size="sm" />
                       <span>{t('metrics.conversions')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     <div className="flex items-center justify-end gap-1.5">
                       <InfoTooltip tooltipKey="metrics.cpa_tooltip" size="sm" />
                       <span>{t('metrics.cpa')}</span>
                     </div>
                   </th>
                   {hasAnyROAS && (
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                       <div className="flex items-center justify-end gap-1.5">
                         <InfoTooltip tooltipKey="metrics.roas_tooltip" size="sm" />
                         <span>{t('metrics.roas')}</span>
@@ -135,55 +135,55 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-border-subtle">
                 {data.map((row, index) => (
                   <tr
                     key={row.day_of_week}
-                    className="hover:bg-gray-750 transition-colors duration-150"
+                    className="hover:bg-row-hover transition-colors duration-150"
                   >
                     {/* Day */}
-                    <td className={`px-4 py-4 text-sm text-gray-200 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <td className={`px-4 py-4 text-sm text-foreground font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
                       {t(`days.${row.day_of_week.toLowerCase()}`)}
                     </td>
 
                     {/* Spend */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatCurrency(row.spend, 0)}
                     </td>
 
                     {/* Impressions */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatNumber(row.impressions)}
                     </td>
 
                     {/* Clicks */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatNumber(row.clicks)}
                     </td>
 
                     {/* CTR */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatPercentage(row.ctr)}
                     </td>
 
                     {/* CPC */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatCurrency(row.cpc, 1)}
                     </td>
 
                     {/* Conversions */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatNumber(row.conversions)}
                     </td>
 
                     {/* CPA */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatCurrency(row.cpa, 1)}
                     </td>
 
                     {/* ROAS */}
                     {hasAnyROAS && (
-                      <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                      <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                         {row.roas !== null ? row.roas.toFixed(2) : '-'}
                       </td>
                     )}

@@ -928,3 +928,42 @@ def get_budget_recommendation(
             "min_budget": 100,
             "currency": currency
         }
+
+
+# --- Existing Post Endpoints ---
+
+@router.get("/page-posts")
+def get_page_posts(
+    account_id: str = Query(..., description="Ad Account ID"),
+    page_id: str = Query(..., description="Facebook Page ID"),
+    limit: int = Query(20, ge=1, le=50, description="Number of posts to fetch"),
+    service: AdMutationService = Depends(get_mutation_service)
+):
+    """Fetch recent posts from a Facebook Page for use as ad creatives."""
+    try:
+        posts = service.get_page_posts(page_id, account_id, limit)
+        return {"posts": posts, "source": "facebook"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/instagram-posts")
+def get_instagram_posts(
+    account_id: str = Query(..., description="Ad Account ID"),
+    page_id: str = Query(..., description="Facebook Page ID (linked to Instagram)"),
+    limit: int = Query(20, ge=1, le=50, description="Number of posts to fetch"),
+    service: AdMutationService = Depends(get_mutation_service)
+):
+    """Fetch recent posts from the Instagram account connected to a Facebook Page."""
+    try:
+        posts = service.get_instagram_posts(page_id, account_id, limit)
+        # Also return whether Instagram is connected
+        ig_account_id = service.get_instagram_account_id(page_id, account_id)
+        return {
+            "posts": posts,
+            "source": "instagram",
+            "instagram_connected": ig_account_id is not None,
+            "instagram_account_id": ig_account_id
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

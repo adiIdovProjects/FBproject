@@ -146,7 +146,7 @@ async def get_historical_analysis(
             account_ids = [int(account_id)]
         else:
             account_ids = service._get_user_account_ids()
-        result = await service.analyze_historical_trends(
+        result = service.analyze_historical_trends(
             lookback_days=lookback_days,
             campaign_id=campaign_id,
             account_ids=account_ids,
@@ -179,7 +179,7 @@ async def get_campaign_deep_dive(
             account_ids = [int(account_id)]
         else:
             account_ids = service._get_user_account_ids()
-        result = await service.get_campaign_deep_dive(
+        result = service.get_campaign_deep_dive(
             campaign_id=campaign_id,
             lookback_days=lookback_days,
             account_ids=account_ids
@@ -216,7 +216,7 @@ async def get_campaign_analysis(
 
         logger.info(f"[Campaign Analysis] account_id param: {account_id}, resolved account_ids: {account_ids}")
 
-        result = await service.analyze_campaign_performance(
+        result = service.analyze_campaign_performance(
             start_date=start_date,
             end_date=end_date,
             account_ids=account_ids,
@@ -255,7 +255,7 @@ async def get_creative_analysis(
             account_ids = [int(account_id)]
         else:
             account_ids = service._get_user_account_ids()
-        result = await service.analyze_creative_patterns(
+        result = service.analyze_creative_patterns(
             start_date=start_date,
             end_date=end_date,
             campaign_id=campaign_id,
@@ -293,7 +293,7 @@ async def get_creative_fatigue_report(
             account_ids = [int(account_id)]
         else:
             account_ids = service._get_user_account_ids()
-        result = await service.get_creative_fatigue_report(
+        result = service.get_creative_fatigue_report(
             lookback_days=lookback_days,
             locale=locale,
             account_ids=account_ids

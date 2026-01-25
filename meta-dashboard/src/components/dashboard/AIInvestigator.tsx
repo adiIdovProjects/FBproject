@@ -27,6 +27,15 @@ export const AIInvestigator: React.FC = () => {
     const [response, setResponse] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const isMountedRef = useRef(true);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -45,11 +54,18 @@ export const AIInvestigator: React.FC = () => {
 
         try {
             const result = await queryAIInvestigator(text);
-            setResponse(result.answer);
+            // Only update state if still mounted
+            if (isMountedRef.current) {
+                setResponse(result.answer);
+            }
         } catch (err: any) {
-            setError(err.message || t('common.error_loading'));
+            if (isMountedRef.current) {
+                setError(err.message || t('common.error_loading'));
+            }
         } finally {
-            setLoading(false);
+            if (isMountedRef.current) {
+                setLoading(false);
+            }
         }
     };
 

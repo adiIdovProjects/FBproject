@@ -33,7 +33,8 @@
     "loading": "Loading...",
     "next": "Next",
     "remove": "Remove",
-    "today": "today"
+    "today": "today",
+    "edit": "Edit"
   },
   "status": {
     "ACTIVE": "Active",
@@ -282,7 +283,20 @@
       "image": "Image",
       "video": "Video",
       "carousel": "Carousel"
-    }
+    },
+    "loading": "Loading creatives...",
+    "no_results": "No creatives found",
+    "no_results_hint": "Try adjusting your search or date range",
+    "no_preview": "No preview"
+  },
+  "chat": {
+    "welcome_message": "Hi! I'm here to help you learn about AdsAI and Facebook Ads optimization. How can I assist you today?",
+    "error_message": "Sorry, I'm having trouble responding. Please try again.",
+    "placeholder": "Type your message...",
+    "assistant_name": "AdsAI Assistant",
+    "typically_replies": "Typically replies instantly",
+    "open_chat": "Open chat",
+    "close_chat": "Close chat"
   },
   "targeting": {
     "title": "Targeting Analysis",
@@ -819,6 +833,10 @@
     "lead_type_website": "On My Website",
     "lead_type_website_desc": "Send people to your website landing page",
     "upload_media": "Upload image/video",
+    "media": "Media",
+    "cta": "CTA",
+    "lead_form": "Lead Form",
+    "url": "URL",
     "primary_text": "Primary Text",
     "primary_text_placeholder": "The main text above the image...",
     "headline": "Headline",

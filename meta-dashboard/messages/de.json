@@ -273,7 +273,20 @@
       "image": "Bild",
       "video": "Video",
       "carousel": "Karussell"
-    }
+    },
+    "loading": "Kreative werden geladen...",
+    "no_results": "Keine Kreative gefunden",
+    "no_results_hint": "Versuchen Sie, Ihre Suche oder den Datumsbereich anzupassen",
+    "no_preview": "Keine Vorschau"
+  },
+  "chat": {
+    "welcome_message": "Hallo! Ich bin hier, um Ihnen bei AdsAI und der Facebook-Anzeigenoptimierung zu helfen. Wie kann ich Ihnen heute helfen?",
+    "error_message": "Entschuldigung, ich habe Probleme beim Antworten. Bitte versuchen Sie es erneut.",
+    "placeholder": "Nachricht eingeben...",
+    "assistant_name": "AdsAI Assistent",
+    "typically_replies": "Antwortet normalerweise sofort",
+    "open_chat": "Chat öffnen",
+    "close_chat": "Chat schließen"
   },
   "targeting": {
     "title": "Zielgruppenanalyse",

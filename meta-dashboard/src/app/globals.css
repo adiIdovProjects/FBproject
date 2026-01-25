@@ -60,7 +60,7 @@
   color-scheme: dark;
 }
 
-/* === LIGHT MODE (Warm Cream) === */
+/* === LIGHT MODE (Warm Cream + Blue Accent) === */
 html.light {
   /* Backgrounds */
   --background: #FAFAF9;
@@ -73,9 +73,9 @@ html.light {
   --text-muted: #78716C;
   --text-disabled: #A8A29E;
 
-  /* Accent */
-  --accent: #6366F1;
-  --accent-hover: #4F46E5;
+  /* Accent - Blue */
+  --accent: #3B82F6;
+  --accent-hover: #2563EB;
   --accent-text: #FFFFFF;
 
   /* Secondary */
@@ -85,7 +85,7 @@ html.light {
 
   /* Borders */
   --border-color: #E7E5E4;
-  --border-focus: #6366F1;
+  --border-focus: #3B82F6;
 
   /* Status Colors */
   --success: #16A34A;
@@ -101,8 +101,8 @@ html.light {
   --row-hover: #F5F5F4;
   --row-selected: #E0E7FF;
 
-  /* Charts */
-  --chart-1: #6366F1;
+  /* Charts - Blue primary */
+  --chart-1: #3B82F6;
   --chart-2: #8B5CF6;
   --chart-3: #EC4899;
   --chart-4: #F59E0B;
@@ -115,57 +115,58 @@ html.light {
   color-scheme: light;
 }
 
-/* === COLORFUL MODE (Ocean) === */
+/* === COLORFUL MODE (Vibrant) === */
+/* Palette: #2364AA, #3DA5D9, #73BFB8, #FEC601, #EA7317 */
 html.colorful {
   /* Backgrounds */
-  --background: #0F172A;
-  --card-bg: #164E63;
-  --sidebar-bg: #0E7490;
-  --input-bg: #155E75;
+  --background: #0D1B2A;
+  --card-bg: #1B3A4B;
+  --sidebar-bg: #2364AA;
+  --input-bg: #1B3A4B;
 
   /* Text */
-  --foreground: #E0F2FE;
-  --text-muted: #7DD3FC;
-  --text-disabled: #38BDF8;
+  --foreground: #F0F4F8;
+  --text-muted: #A0C4E8;
+  --text-disabled: #6B9AC4;
 
-  /* Accent */
-  --accent: #14B8A6;
-  --accent-hover: #0D9488;
+  /* Accent - Deep Blue */
+  --accent: #3DA5D9;
+  --accent-hover: #2364AA;
   --accent-text: #FFFFFF;
 
   /* Secondary */
-  --secondary: #0E7490;
-  --secondary-hover: #0891B2;
-  --secondary-text: #E0F2FE;
+  --secondary: #2364AA;
+  --secondary-hover: #3DA5D9;
+  --secondary-text: #F0F4F8;
 
   /* Borders */
-  --border-color: #0891B2;
-  --border-focus: #14B8A6;
+  --border-color: #3DA5D9;
+  --border-focus: #FEC601;
 
   /* Status Colors */
-  --success: #2DD4BF;
-  --success-bg: #134E4A;
-  --warning: #FBBF24;
-  --warning-bg: #713F12;
-  --error: #FB7185;
-  --error-bg: #881337;
-  --info: #38BDF8;
-  --info-bg: #0C4A6E;
+  --success: #73BFB8;
+  --success-bg: #1B4B43;
+  --warning: #FEC601;
+  --warning-bg: #5C4A00;
+  --error: #EA7317;
+  --error-bg: #5C2E0A;
+  --info: #3DA5D9;
+  --info-bg: #0D3A5C;
 
   /* Table/List */
-  --row-hover: #155E75;
-  --row-selected: #115E59;
+  --row-hover: #1B3A4B;
+  --row-selected: #2364AA;
 
-  /* Charts - Ocean themed */
-  --chart-1: #14B8A6;
-  --chart-2: #0EA5E9;
-  --chart-3: #22D3EE;
-  --chart-4: #FBBF24;
-  --chart-5: #A78BFA;
-  --chart-positive: #2DD4BF;
-  --chart-negative: #FB7185;
-  --chart-grid: #0891B2;
-  --chart-axis: #7DD3FC;
+  /* Charts - Vibrant palette */
+  --chart-1: #2364AA;
+  --chart-2: #3DA5D9;
+  --chart-3: #73BFB8;
+  --chart-4: #FEC601;
+  --chart-5: #EA7317;
+  --chart-positive: #73BFB8;
+  --chart-negative: #EA7317;
+  --chart-grid: #2364AA;
+  --chart-axis: #A0C4E8;
 
   color-scheme: dark;
 }
@@ -250,8 +251,8 @@ html.light .glass-effect {
 }
 
 html.colorful .glass-effect {
-  background: rgba(22, 78, 99, 0.7);
-  border: 1px solid rgba(20, 184, 166, 0.2);
+  background: rgba(27, 58, 75, 0.7);
+  border: 1px solid rgba(61, 165, 217, 0.2);
 }
 
 /* === GRADIENTS === */
@@ -265,7 +266,7 @@ html.colorful .glass-effect {
 }
 
 html.colorful .text-glow {
-  text-shadow: 0 0 15px rgba(20, 184, 166, 0.4);
+  text-shadow: 0 0 15px rgba(61, 165, 217, 0.4);
 }
 
 /* === BORDER EFFECTS === */
@@ -274,7 +275,7 @@ html.colorful .text-glow {
 }
 
 html.colorful .border-glow {
-  box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+  box-shadow: 0 0 20px rgba(61, 165, 217, 0.15);
 }
 
 /* === RTL SUPPORT === */

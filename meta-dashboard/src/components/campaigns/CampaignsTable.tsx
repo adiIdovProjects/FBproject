@@ -139,7 +139,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     const statusColors: Record<string, string> = {
       ACTIVE: 'bg-green-900/30 text-green-400 border-green-600',
       PAUSED: 'bg-yellow-900/30 text-yellow-400 border-yellow-600',
-      ARCHIVED: 'bg-gray-700 text-gray-400 border-gray-600',
+      ARCHIVED: 'bg-secondary text-text-muted border-border-subtle',
     };
 
     const colorClass = statusColors[status.toUpperCase()] || statusColors.ARCHIVED;
@@ -159,14 +159,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     formatFn?: (value: number) => string
   ) => {
     if (changePercent === undefined || changePercent === null || isNaN(changePercent)) {
-      return <span className="text-gray-500 text-sm">-</span>;
+      return <span className="text-text-muted text-sm">-</span>;
     }
 
     const isPositive = changePercent > 0;
     const isNegative = changePercent < 0;
 
     // Determine color based on metric type
-    let colorClass = 'text-gray-400'; // neutral default
+    let colorClass = 'text-text-muted'; // neutral default
 
     if (metricType === 'cost') {
       // For cost metrics (CPA, CPC), down is good
@@ -199,14 +199,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
     return (
       <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
-        <p className="text-gray-500 font-medium animate-pulse">{t('campaigns.loading_campaigns')}</p>
+        <p className="text-text-muted font-medium animate-pulse">{t('campaigns.loading_campaigns')}</p>
       </div>
     );
   }
 
   if (campaigns.length === 0) {
     return (
-      <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px] text-gray-500">
+      <div className="card-gradient p-12 rounded-2xl border border-border-subtle flex flex-col items-center justify-center min-h-[400px] text-text-muted">
         <p className="text-lg font-bold">{t('campaigns.no_data')}</p>
         <p className="text-sm">{t('common.no_data_available')}</p>
       </div>
@@ -231,14 +231,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                       }
                     }}
                     onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                    className="w-4 h-4 rounded border-border-subtle bg-secondary text-accent focus:ring-accent focus:ring-offset-background cursor-pointer"
                   />
                 </th>
               )}
 
               {/* Campaign Name */}
               <th
-                className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-left text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('campaign_name')}
               >
                 <div className="flex items-center gap-2">
@@ -248,7 +248,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               </th>
 
               <th
-                className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-left text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('campaign_status')}
               >
                 <div className="flex items-center gap-2">
@@ -258,7 +258,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
 
               {/* Spend */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -268,14 +268,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CTR */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('ctr')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -285,14 +285,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CPC */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpc')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -302,14 +302,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* Conversions */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -319,14 +319,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CPA */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -336,14 +336,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* Conversion Rate */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
               // On-the-fly computed
               >
                 <div className="flex items-center justify-end gap-2">
@@ -352,7 +352,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
@@ -361,7 +361,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               {hasConversionValue && (
                 <>
                   <th
-                    className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                    className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                     onClick={() => handleSort('roas')}
                   >
                     <div className="flex items-center justify-end gap-2">
@@ -371,7 +371,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                     </div>
                   </th>
                   {showComparison && (
-                    <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                    <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
                       VS PREV
                     </th>
                   )}
@@ -381,7 +381,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-white/[0.03]">
+          <tbody className="divide-y divide-border-subtle">
             {sortedCampaigns.map((campaign) => {
               const isSelected = (selectedCampaignIds || []).includes(campaign.campaign_id);
 
@@ -401,7 +401,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
               return (
                 <tr
                   key={campaign.campaign_id}
-                  className={`group hover:bg-white/[0.02] transition-colors duration-150 ${isSelected ? 'bg-accent/5' : ''}`}
+                  className={`group hover:bg-row-hover transition-colors duration-150 ${isSelected ? 'bg-accent/5' : ''}`}
                 >
                   {/* Checkbox */}
                   {onSelectionChange && (
@@ -410,7 +410,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleCheckboxToggle(campaign.campaign_id)}
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                        className="w-4 h-4 rounded border-border-subtle bg-secondary text-accent focus:ring-accent focus:ring-offset-background cursor-pointer"
                       />
                     </td>
                   )}
@@ -418,8 +418,8 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   {/* Name */}
                   <td className="px-6 py-5">
                     <div className="flex flex-col">
-                      <span className="text-sm text-white font-bold group-hover:text-accent transition-colors">{campaign.campaign_name}</span>
-                      <span className="text-[10px] text-gray-500 font-mono mt-0.5">{campaign.campaign_id}</span>
+                      <span className="text-sm text-foreground font-bold group-hover:text-accent transition-colors">{campaign.campaign_name}</span>
+                      <span className="text-[10px] text-text-muted font-mono mt-0.5">{campaign.campaign_id}</span>
                     </div>
                   </td>
 
@@ -429,7 +429,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   </td>
 
                   {/* Spend */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatCurrency(campaign.spend)}
                   </td>
                   {showComparison && (
@@ -439,7 +439,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   )}
 
                   {/* CTR */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatPercentage(campaign.ctr)}
                   </td>
                   {showComparison && (
@@ -449,7 +449,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   )}
 
                   {/* CPC */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(campaign.cpc)}
                   </td>
                   {showComparison && (
@@ -459,7 +459,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   )}
 
                   {/* Conversions */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatNumber(campaign.conversions)}
                   </td>
                   {showComparison && (
@@ -469,7 +469,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   )}
 
                   {/* CPA */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {formatCurrencyDecimal(campaign.cpa)}
                   </td>
                   {showComparison && (
@@ -479,7 +479,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   )}
 
                   {/* Conv Rate (Conversions / Clicks) */}
-                  <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                  <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                     {campaign.clicks > 0 ? formatPercentage((campaign.conversions / campaign.clicks) * 100) : '0.00%'}
                   </td>
                   {showComparison && (
@@ -491,14 +491,14 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
                   {/* ROAS */}
                   {hasConversionValue && (
                     <>
-                      <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
+                      <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                         {campaign.roas !== null && campaign.roas !== undefined && campaign.roas > 0 ? (
                           <>
-                            <span className="text-gray-400 text-[10px] mr-1">x</span>
+                            <span className="text-text-muted text-[10px] mr-1">x</span>
                             {campaign.roas.toFixed(2)}
                           </>
                         ) : (
-                          <span className="text-gray-500 italic text-[10px]">N/A</span>
+                          <span className="text-text-muted italic text-[10px]">N/A</span>
                         )}
                       </td>
 

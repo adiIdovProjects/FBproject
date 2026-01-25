@@ -19,12 +19,12 @@ from sqlalchemy.orm import Session
 from backend.api.repositories.creative_analysis_repository import CreativeAnalysisRepository
 from backend.utils.creative_pattern_detector import CreativePatternDetector
 from backend.config.settings import GEMINI_MODEL
+from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
 
-# Creative analysis cache
-CREATIVE_CACHE = {}
-CACHE_TTL = 3600  # 1 hour
+# Creative analysis cache with size limit
+CREATIVE_CACHE = TTLCache(ttl_seconds=3600, max_size=100)
 
 CREATIVE_ANALYSIS_PROMPT = """Analyze creative/ad performance for the period {start_date} to {end_date} and provide SHORT insights.
 Respond in {target_lang}.
@@ -105,7 +105,7 @@ class CreativeInsightsService:
         key_str = f"creative:{start_date}:{end_date}:{campaign_id}:{locale}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
-    async def analyze_creative_patterns(
+    def analyze_creative_patterns(
         self,
         start_date: date,
         end_date: date,
@@ -135,13 +135,10 @@ class CreativeInsightsService:
         try:
             # Check cache
             cache_key = self._get_cache_key(start_date, end_date, campaign_id, locale)
-            if cache_key in CREATIVE_CACHE:
-                cached_time, cached_response = CREATIVE_CACHE[cache_key]
-                if time.time() - cached_time < CACHE_TTL:
-                    logger.info(f"Cache hit for creative analysis: {start_date} to {end_date}")
-                    return cached_response
-                else:
-                    del CREATIVE_CACHE[cache_key]
+            cached_response = CREATIVE_CACHE.get(cache_key)
+            if cached_response:
+                logger.info(f"Cache hit for creative analysis: {start_date} to {end_date}")
+                return cached_response
 
             # Fetch creative performance data
             creatives = self.repository.get_creative_performance(
@@ -271,7 +268,7 @@ class CreativeInsightsService:
             }
 
             # Cache the result
-            CREATIVE_CACHE[cache_key] = (time.time(), result)
+            CREATIVE_CACHE.set(cache_key, result)
             logger.info(f"Cached creative analysis for {start_date} to {end_date}")
 
             return result
@@ -284,7 +281,7 @@ class CreativeInsightsService:
                 'data': None
             }
 
-    async def get_creative_fatigue_report(
+    def get_creative_fatigue_report(
         self,
         lookback_days: int = 30,
         locale: str = "en",

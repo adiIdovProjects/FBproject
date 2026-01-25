@@ -82,13 +82,15 @@ export async function requestMagicLink(email: string): Promise<{ success: boolea
 /**
  * Verify a magic link token and log in
  * @param token Magic link token from email
+ * Security: Uses POST with token in body instead of GET with query param
+ * to prevent token exposure in logs, browser history, and Referer headers
  */
 export async function verifyMagicLink(token: string): Promise<{
     access_token: string;
     token_type: string;
     onboarding_status: any;
 }> {
-    const response = await apiClient.get(`/api/v1/auth/magic-link/verify?token=${token}`);
+    const response = await apiClient.post('/api/v1/auth/magic-link/verify', { token });
     return response.data;
 }
 

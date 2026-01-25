@@ -8,6 +8,18 @@ export interface SmartCreative {
     video_id?: string;
     link_url?: string;
     lead_form_id?: string;
+    object_story_id?: string;  // Existing post ID (format: {page_id}_{post_id})
+}
+
+export interface PagePost {
+    id: string;
+    message: string;
+    created_time: string;
+    full_picture?: string;
+    permalink_url?: string;
+    type: string;
+    source: 'facebook' | 'instagram';
+    ig_account_id?: string;
 }
 
 export interface GeoLocationTarget {
@@ -525,6 +537,30 @@ export const mutationsService = {
                 end_date: endDate
             },
             responseType: 'blob'
+        });
+        return response.data;
+    },
+
+    // --- Existing Posts ---
+
+    async getPagePosts(
+        accountId: string,
+        pageId: string,
+        limit: number = 20
+    ): Promise<{ posts: PagePost[]; source: string }> {
+        const response = await apiClient.get('/api/mutations/page-posts', {
+            params: { account_id: accountId, page_id: pageId, limit }
+        });
+        return response.data;
+    },
+
+    async getInstagramPosts(
+        accountId: string,
+        pageId: string,
+        limit: number = 20
+    ): Promise<{ posts: PagePost[]; source: string; instagram_connected: boolean; instagram_account_id?: string }> {
+        const response = await apiClient.get('/api/mutations/instagram-posts', {
+            params: { account_id: accountId, page_id: pageId, limit }
         });
         return response.data;
     }

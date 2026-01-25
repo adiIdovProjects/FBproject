@@ -1,6 +1,275 @@
 # Project Tasks & Progress
 
-## Current Task: Backend Optimization & Performance Improvements (COMPLETED)
+## Current Task: Add "Use Existing Post" to Campaign Uploader (COMPLETED)
+
+### Goal
+Allow users to use existing Facebook Page posts or Instagram posts as ad creatives instead of only uploading new media. This preserves social proof (likes, comments, shares) across ads.
+
+### Implementation Summary
+
+#### Backend Changes
+1. **Added Instagram scopes to Facebook Login** (`facebook_auth.py`)
+   - Added `instagram_basic` and `pages_read_user_content` permissions
+   - Users need to re-login to grant new permissions
+
+2. **Updated SmartCreative schema** (`mutations.py`)
+   - Added `object_story_id` field for existing post references
+   - Made title/body optional (can be empty when using existing post)
+
+3. **Added service methods** (`ad_mutation_service.py`)
+   - `get_page_posts()` - Fetches recent FB page posts
+   - `get_instagram_posts()` - Fetches IG posts (if connected)
+   - `get_instagram_account_id()` - Gets connected IG account
+   - Updated `_build_creative_params()` to use `object_story_id` when provided
+
+4. **Added API endpoints** (`mutations.py` router)
+   - `GET /api/mutations/page-posts` - Get Facebook page posts
+   - `GET /api/mutations/instagram-posts` - Get Instagram posts
+
+#### Frontend Changes
+5. **Updated mutations.service.ts**
+   - Added `PagePost` interface
+   - Added `object_story_id` to `SmartCreative`
+   - Added `getPagePosts()` and `getInstagramPosts()` methods
+
+6. **Updated WizardContext.tsx**
+   - Added `useExistingPost`, `objectStoryId`, `objectStoryPreview` to `AdCreative`
+
+7. **Created PostPicker.tsx** (new component)
+   - Modal with Facebook/Instagram tabs
+   - Displays posts with thumbnails
+   - Instagram tab disabled if not connected
+
+8. **Updated AdCard.tsx**
+   - Added toggle: "Create New" vs "Use Existing Post"
+   - Shows existing post preview when selected
+   - Hides text/CTA fields when using existing post
+
+9. **Updated page.tsx (wizard)**
+   - Skip media upload for existing posts
+   - Pass `object_story_id` to API
+   - Updated validation to accept existing posts
+
+10. **Updated StepReview.tsx**
+    - Updated valid ad count to include existing posts
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `backend/api/services/facebook_auth.py` | Added IG scopes |
+| `backend/api/schemas/mutations.py` | Added object_story_id |
+| `backend/api/services/ad_mutation_service.py` | Added post fetching + updated builder |
+| `backend/api/routers/mutations.py` | Added 2 GET endpoints |
+| `meta-dashboard/.../mutations.service.ts` | Added PagePost, API methods |
+| `meta-dashboard/.../WizardContext.tsx` | Added objectStoryId fields |
+| `meta-dashboard/.../PostPicker.tsx` | New component |
+| `meta-dashboard/.../AdCard.tsx` | Added toggle + picker |
+| `meta-dashboard/.../page.tsx` (wizard) | Updated submission |
+| `meta-dashboard/.../StepReview.tsx` | Updated validation |
+
+### How to Use
+1. Go to campaign uploader wizard, Step 6 (Ads)
+2. Click "Use Existing Post" button
+3. Select a post from Facebook or Instagram
+4. Complete the wizard - the existing post will be used as the ad creative
+
+### Notes
+- Instagram posts require a connected Instagram Business account
+- Using existing posts preserves all engagement (likes, comments, shares)
+- Users need to re-login to grant new Instagram permissions
+
+---
+
+## Previous Task: Comprehensive Meta-Dashboard Code Review (COMPLETED)
+
+### Goal
+Review entire meta-dashboard codebase for code errors, runtime problems, logic improvements, backend API connections, security issues, and code quality.
+
+### Issues Found & Fixed (58+ total)
+
+#### Phase 1: CRITICAL SECURITY FIXES
+1. **[x] Magic Link Token Exposure (HIGH)** - Token sent as URL query parameter, visible in logs/history
+   - **Fix:** Changed GET to POST with token in request body
+   - **Files:** `auth.service.ts`, `backend/api/routers/auth.py`
+
+2. **[x] CSRF State Validation (HIGH)** - OAuth state only logged, not strictly validated
+   - **Fix:** Block flow if state validation fails instead of just logging
+   - **File:** `connect/page.tsx`
+
+#### Phase 2: HIGH PRIORITY BUGS
+3. **[x] Hardcoded '/en/' Locale in Redirects** - Non-English users redirected to English after OAuth
+   - **Fix:** Use `useParams()` to get dynamic locale
+   - **Files:** `connect/page.tsx`, `account-dashboard/page.tsx`
+
+4. **[x] DateFilter Popover Blur Issue** - `onBlur` on div doesn't work reliably
+   - **Fix:** Replaced with click-outside detection using `useRef` and `mousedown` event listener
+   - **File:** `DateFilter.tsx`
+
+5. **[x] Missing Request Timeout** - No timeout configured, app hangs on slow network
+   - **Fix:** Added `timeout: 30000` (30 seconds) to axios config
+   - **File:** `apiClient.ts`
+
+#### Phase 3: INTERNATIONALIZATION FIXES
+6. **[x] Hardcoded Strings in ChatWidget.tsx** - Welcome message, error message in English
+   - **Fix:** Replaced with `t('chat.welcome_message')`, `t('chat.error_message')`, etc.
+   - **File:** `ChatWidget.tsx`
+
+7. **[x] Hardcoded Strings in CreativesTable.tsx** - "Loading creatives...", "No creatives found"
+   - **Fix:** Replaced with `t('creatives.loading')`, `t('creatives.no_results')`
+   - **File:** `CreativesTable.tsx`
+
+8. **[x] Hardcoded Strings in AdAccountSettings.tsx** - "Cancel", "Saving...", "Save Preferences"
+   - **Fix:** Replaced with proper translation keys
+   - **File:** `AdAccountSettings.tsx`
+
+9. **[x] Added Translation Keys** - Added all new keys to 5 language files
+   - **Files:** `en.json`, `he.json`, `ar.json`, `de.json`, `fr.json`
+
+#### Phase 4: REACT ISSUES
+10. **[x] ThemeContext Hydration Flash** - Returned `null` before mount causing flash
+    - **Fix:** Always render children, let theme apply via CSS classes
+    - **File:** `ThemeContext.tsx`
+
+11. **[x] Memory Leaks - ChatWidget** - No cleanup, state updates on unmounted component
+    - **Fix:** Added `isMountedRef`, `AbortController` for cleanup
+    - **File:** `ChatWidget.tsx`
+
+12. **[x] Memory Leaks - AIHelpPanel** - State updates after unmount
+    - **Fix:** Added `isMountedRef` with proper cleanup
+    - **File:** `AIHelpPanel.tsx`
+
+13. **[x] Memory Leaks - AIInvestigator** - State updates after unmount
+    - **Fix:** Added `isMountedRef` with proper cleanup
+    - **File:** `AIInvestigator.tsx`
+
+#### Phase 5: CODE QUALITY
+14. **[x] MetricCard Hardcoded Hebrew Detection** - Used `title.toLowerCase().includes('הוצאה')`
+    - **Fix:** Added `metricType` prop ('spend' | 'efficiency' | 'performance' | 'neutral')
+    - **Files:** `MetricCard.tsx`, `dashboard.types.ts`, `account-dashboard/page.tsx`
+
+15. **[x] Unused Variable in Sidebar** - `secondaryItems: any[]` never used
+    - **Fix:** Removed the unused variable
+    - **File:** `Sidebar.tsx`
+
+16. **[x] useInView Missing Deps Comment** - ESLint warning for empty dependency array
+    - **Fix:** Added eslint-disable comment explaining intentional behavior
+    - **File:** `useInView.ts`
+
+### Files Modified Summary
+
+**Backend:**
+- `backend/api/routers/auth.py` - Magic link POST change
+
+**Frontend Services:**
+- `meta-dashboard/src/services/auth.service.ts` - Magic link POST
+- `meta-dashboard/src/services/apiClient.ts` - Added timeout
+
+**Frontend Pages:**
+- `meta-dashboard/src/app/[locale]/connect/page.tsx` - CSRF fix, locale fix
+- `meta-dashboard/src/app/[locale]/account-dashboard/page.tsx` - Locale fix, metricType props
+
+**Frontend Components:**
+- `meta-dashboard/src/components/DateFilter.tsx` - Click-outside fix
+- `meta-dashboard/src/components/chat/ChatWidget.tsx` - i18n, memory leak fix
+- `meta-dashboard/src/components/creatives/CreativesTable.tsx` - i18n
+- `meta-dashboard/src/components/settings/AdAccountSettings.tsx` - i18n
+- `meta-dashboard/src/components/dashboard/MetricCard.tsx` - metricType prop
+- `meta-dashboard/src/components/campaigns/AIHelpPanel.tsx` - Memory leak fix
+- `meta-dashboard/src/components/dashboard/AIInvestigator.tsx` - Memory leak fix
+- `meta-dashboard/src/context/ThemeContext.tsx` - Hydration fix
+- `meta-dashboard/src/components/Sidebar.tsx` - Removed unused variable
+- `meta-dashboard/src/hooks/useInView.ts` - ESLint comment
+
+**Types:**
+- `meta-dashboard/src/types/dashboard.types.ts` - Added MetricType
+
+**Translation Files:**
+- `meta-dashboard/messages/en.json` - New chat/creatives keys
+- `meta-dashboard/messages/he.json` - New chat/creatives keys
+- `meta-dashboard/messages/ar.json` - New chat/creatives keys
+- `meta-dashboard/messages/de.json` - New chat/creatives keys
+- `meta-dashboard/messages/fr.json` - New chat/creatives keys
+
+### Verification
+- ✅ TypeScript compilation passed (no errors)
+- ✅ All 5 translation JSON files valid
+- ✅ Admin pages use separate local MetricCard (no changes needed)
+
+### Review Summary
+Fixed 16 specific issues across security, bugs, i18n, React patterns, and code quality. All changes follow the principle of minimal impact - each fix only touches code directly relevant to the issue. No over-engineering, no unnecessary refactoring.
+
+---
+
+## Previous Task: Theme System Phase 2 - Full Component Update (COMPLETED)
+
+### Goal
+Make themes actually work by replacing ALL hardcoded Tailwind colors with theme variables.
+
+### User's Color Choices
+- **Light Mode Accent:** Blue (#3B82F6)
+- **Dark Mode Accent:** Indigo (#6366F1) - kept current
+- **Colorful Mode Accent:** Teal (#14B8A6) - kept current
+
+### Plan
+1. [x] Update globals.css - Change Light mode accent to Blue (#3B82F6)
+2. [x] Update Sidebar.tsx - Replace hardcoded colors with theme variables
+3. [x] Update CampaignsTable.tsx - Replace hardcoded colors
+4. [x] Update BreakdownTabs.tsx - Replace hardcoded colors
+5. [x] Update CreativesTable.tsx - Replace hardcoded colors
+6. [x] Update DayOfWeekTable.tsx - Replace hardcoded colors
+7. [x] Update MetricCard.tsx - Replace hardcoded colors
+8. [x] Update CreativeCard.tsx - Replace hardcoded colors
+9. [x] Update FilterPanel.tsx - Replace hardcoded colors
+10. [x] Update ReportFilters.tsx - Replace hardcoded colors
+11. [x] Verify TypeScript compilation
+
+### Files Modified
+- `meta-dashboard/src/app/globals.css` - Updated Light mode accent to Blue
+- `meta-dashboard/src/components/Sidebar.tsx` - ~15 color replacements
+- `meta-dashboard/src/components/campaigns/CampaignsTable.tsx` - ~20 replacements
+- `meta-dashboard/src/components/campaigns/BreakdownTabs.tsx` - ~40 replacements
+- `meta-dashboard/src/components/creatives/CreativesTable.tsx` - ~24 replacements
+- `meta-dashboard/src/components/dashboard/DayOfWeekTable.tsx` - ~23 replacements
+- `meta-dashboard/src/components/dashboard/MetricCard.tsx` - ~8 replacements
+- `meta-dashboard/src/components/creatives/CreativeCard.tsx` - ~25 replacements
+- `meta-dashboard/src/components/reports/FilterPanel.tsx` - ~25 replacements
+- `meta-dashboard/src/components/reports/ReportFilters.tsx` - ~27 replacements
+
+**Total: ~160+ color replacements across 10 files**
+
+### Color Mappings Applied
+| Hardcoded | Theme Variable | Usage |
+|-----------|----------------|-------|
+| `text-gray-400/500` | `text-text-muted` | Secondary text |
+| `text-gray-200/100` | `text-foreground` | Primary text |
+| `text-white` | `text-foreground` | Headings |
+| `bg-gray-800/700` | `bg-secondary` | Buttons, inputs |
+| `bg-gray-900` | `bg-card` | Cards, dropdowns |
+| `hover:bg-gray-*` | `hover:bg-secondary` | Hover states |
+| `border-gray-*` | `border-border-subtle` | Borders |
+| `divide-gray-*` | `divide-border-subtle` | Table dividers |
+
+### Review
+- ✅ All 10 component files updated with theme variables
+- ✅ Light mode now uses Blue (#3B82F6) accent
+- ✅ Dark mode keeps Indigo (#6366F1) accent
+- ✅ Colorful mode keeps Teal (#14B8A6) accent
+- ✅ TypeScript compilation successful
+- ✅ Themes now change text, backgrounds, borders, hovers - not just backgrounds
+
+### How to Test
+1. Run `npm run dev` in meta-dashboard
+2. Open dashboard in browser
+3. Click theme buttons in sidebar (sun/moon/palette icons)
+4. Verify:
+   - Light mode: Warm cream background, blue accent, dark text
+   - Dark mode: Navy background, indigo accent, light text
+   - Colorful mode: Ocean teal cards, cyan sidebar, teal accent
+
+---
+
+## Previous Task: Backend Optimization & Performance Improvements (COMPLETED)
 
 ### Goal
 Comprehensive optimization of backend logic, database queries, runtime performance, and bug fixes.

@@ -18,6 +18,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   isLoading = false,
   currency = 'USD',  // Default to USD if not provided
   tooltipKey,
+  metricType = 'performance',  // Default to performance metric type
 }) => {
   // Format the value based on type
   const formatValue = (val: number | string): string => {
@@ -29,9 +30,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
     switch (format) {
       case 'currency':
-        const isSpend = title.toLowerCase().includes('spend') || title.toLowerCase().includes('הוצאה');
-        const isCpcCpa = title.toLowerCase().includes('cpc') || title.toLowerCase().includes('cpa');
-        const decimals = isSpend ? 0 : (isCpcCpa ? 1 : 2);
+        // Use metricType prop instead of string matching for locale independence
+        const isSpend = metricType === 'spend';
+        const isEfficiency = metricType === 'efficiency';
+        const decimals = isSpend ? 0 : (isEfficiency ? 1 : 2);
         return new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: currency,
@@ -51,24 +53,20 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     }
   };
 
-  // Determine trend style - Spend is neutral (no good/bad judgment), others have color coding
+  // Determine trend style based on metricType prop (not string matching)
   const getTrendStyle = (): { color: string; bgColor: string; icon: 'up' | 'down'; isGood: boolean } => {
     if (trend === undefined || trend === null || trend === 0) {
-      return { color: 'text-gray-400', bgColor: 'bg-gray-700', icon: 'up', isGood: false };
+      return { color: 'text-text-muted', bgColor: 'bg-secondary', icon: 'up', isGood: false };
     }
 
     const isPositive = trend > 0;
     const isNegative = trend < 0;
 
-    // Check metric type
-    const isSpendMetric = title.includes('Spend') || title.toLowerCase().includes('הוצאה');
-    const isEfficiencyMetric = title.includes('CPC') || title.includes('CPA');
-
-    // Spend is neutral - no judgment on whether up/down is good or bad
-    if (isSpendMetric) {
+    // Spend and neutral are neutral - no judgment on whether up/down is good or bad
+    if (metricType === 'spend' || metricType === 'neutral') {
       return {
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-700',
+        color: 'text-text-muted',
+        bgColor: 'bg-secondary',
         icon: isPositive ? 'up' : 'down',
         isGood: false
       };
@@ -76,7 +74,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
     let isGood = false;
 
-    if (isEfficiencyMetric) {
+    if (metricType === 'efficiency') {
       // For efficiency metrics (CPC, CPA): down is good (lower cost), up is bad (higher cost)
       isGood = isNegative;
     } else {
@@ -105,7 +103,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       {/* Header with Icon */}
       <div className="flex items-center justify-between mb-5 relative z-10">
         <div className="flex items-center gap-1.5">
-          <Text className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{title}</Text>
+          <Text className="text-text-muted text-[10px] font-black uppercase tracking-widest">{title}</Text>
           {tooltipKey && <InfoTooltip tooltipKey={tooltipKey} size="sm" />}
         </div>
         <div className="p-2.5 bg-accent/10 rounded-xl group-hover:scale-110 transition-transform">
@@ -115,12 +113,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
       {/* Value and Trend */}
       {isLoading ? (
-        <div className="flex items-center text-gray-400 py-3 relative z-10">
+        <div className="flex items-center text-text-muted py-3 relative z-10">
           <Loader2 className="w-6 h-6 animate-spin text-accent" />
         </div>
       ) : (
         <div className="flex flex-col gap-1 relative z-10">
-          <Metric className="text-white text-3xl font-black tracking-tighter text-glow">{formatValue(value)}</Metric>
+          <Metric className="text-foreground text-3xl font-black tracking-tighter text-glow">{formatValue(value)}</Metric>
 
           {trend !== undefined && trend !== null && trend !== 0 && (
             <div className={`mt-3 flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${trendStyle.bgColor} ${trendStyle.color}`}>

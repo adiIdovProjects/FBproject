@@ -186,8 +186,8 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
               className={`
                 px-6 py-5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative
                 ${activeTab === tab.id
-                  ? 'text-white'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'text-foreground'
+                  : 'text-text-muted hover:text-foreground'
                 }
               `}
             >
@@ -202,22 +202,22 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
 
       {/* Demographics Sub-tabs */}
       {activeTab === 'age-gender' && (
-        <div className="px-6 py-3 border-b border-gray-700 bg-gray-750/50 flex gap-2">
+        <div className="px-6 py-3 border-b border-border-subtle bg-card/50 flex gap-2">
           <button
             onClick={() => setDemographicSubTab('both')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'both' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-300 bg-gray-700'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'both' ? 'bg-indigo-600 text-foreground' : 'text-text-muted hover:text-foreground bg-secondary'}`}
           >
             {t('breakdown.both') || 'Both'}
           </button>
           <button
             onClick={() => setDemographicSubTab('age')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'age' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-300 bg-gray-700'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'age' ? 'bg-indigo-600 text-foreground' : 'text-text-muted hover:text-foreground bg-secondary'}`}
           >
             {t('breakdown.age') || 'Age'}
           </button>
           <button
             onClick={() => setDemographicSubTab('gender')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'gender' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-300 bg-gray-700'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demographicSubTab === 'gender' ? 'bg-indigo-600 text-foreground' : 'text-text-muted hover:text-foreground bg-secondary'}`}
           >
             {t('breakdown.gender') || 'Gender'}
           </button>
@@ -227,10 +227,10 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
       {/* Tab Content */}
       <div className="p-6">
         {!hasLoadedOnce && !isLoading && (
-          <div className="flex items-center justify-center h-64 text-gray-400">
+          <div className="flex items-center justify-center h-64 text-text-muted">
             <div className="text-center">
               <p className="text-lg font-medium mb-2">{t('campaigns.click_tab_to_load') || 'Click a tab to load breakdown data'}</p>
-              <p className="text-sm text-gray-500">{t('campaigns.breakdown_lazy_load') || 'Data will load when you select a breakdown type'}</p>
+              <p className="text-sm text-text-muted">{t('campaigns.breakdown_lazy_load') || 'Data will load when you select a breakdown type'}</p>
             </div>
           </div>
         )}
@@ -248,7 +248,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
         )}
 
         {!isLoading && !error && hasLoadedOnce && breakdownData.length === 0 && (
-          <div className="flex items-center justify-center h-64 text-gray-400">
+          <div className="flex items-center justify-center h-64 text-text-muted">
             {t('common.no_data_available')}
           </div>
         )}
@@ -256,12 +256,12 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
         {!isLoading && !error && hasLoadedOnce && breakdownData.length > 0 && (
           <div className="overflow-x-auto">
             {SPECIAL_BREAKDOWN_TABS.includes(activeTab) && (
-              <p className="text-xs text-gray-500 mb-3 px-1">{t('breakdown.no_conversion_data')}</p>
+              <p className="text-xs text-text-muted mb-3 px-1">{t('breakdown.no_conversion_data')}</p>
             )}
             <table className="w-full">
-              <thead className="bg-gray-750 border-b border-gray-700">
+              <thead className="bg-card border-b border-border-subtle">
                 <tr>
-                  <th className={`px-4 py-3 text-xs font-medium text-gray-400 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-4 py-3 text-xs font-medium text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
                     {activeTab === 'adset' && t('breakdown.ad_set_name')}
                     {activeTab === 'ad' && t('breakdown.ad_name')}
                     {activeTab === 'platform' && t('campaigns.platform')}
@@ -270,41 +270,41 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     {activeTab === 'country' && t('campaigns.country')}
                   </th>
                   {activeTab === 'adset' && (
-                    <th className={`px-4 py-3 text-xs font-medium text-gray-400 uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`px-4 py-3 text-xs font-medium text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>
                       {t('breakdown.targeting_type')}
                     </th>
                   )}
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase font-mono">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase font-mono">
                     {t('metrics.spend')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     {t('metrics.impressions')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     {t('metrics.clicks')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     {t('metrics.ctr')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                     {t('metrics.cpc')}
                   </th>
                   {hasConversionValue && (
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase">
                       {t('metrics.roas')}
                     </th>
                   )}
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-border-subtle">
                 {breakdownData.map((row, index) => (
                   <tr
                     key={index}
-                    className="hover:bg-gray-750 transition-colors duration-150"
+                    className="hover:bg-row-hover transition-colors duration-150"
                   >
                     {/* Name */}
-                    <td className={`px-4 py-4 text-sm text-gray-200 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <td className={`px-4 py-4 text-sm text-foreground font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>
                       {translateValue(row.name)}
                     </td>
 
@@ -321,7 +321,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                           row.targeting_type === 'Interest Audience' ? 'bg-green-900/40 text-green-300' :
                           row.targeting_type === 'Mix Audience' ? 'bg-indigo-900/40 text-indigo-300' :
                           row.targeting_type === 'Advantage+' ? 'bg-teal-900/40 text-teal-300' :
-                          'bg-gray-700 text-gray-300'
+                          'bg-secondary text-foreground'
                         }`}>
                           {t.has(`targeting.types.${row.targeting_type}`) ? t(`targeting.types.${row.targeting_type}`) : (row.targeting_type || t('targeting.types.Broad'))}
                         </span>
@@ -329,33 +329,33 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                     )}
 
                     {/* Spend */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatCurrency(row.spend)}
                     </td>
 
                     {/* Impressions */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatNumber(row.impressions)}
                     </td>
 
                     {/* Clicks */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatNumber(row.clicks)}
                     </td>
 
                     {/* CTR */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatPercentage(row.ctr)}
                     </td>
 
                     {/* CPC */}
-                    <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                    <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                       {formatCurrency(row.cpc)}
                     </td>
 
                     {/* ROAS */}
                     {hasConversionValue && (
-                      <td className="px-4 py-4 text-sm text-gray-200 text-right font-mono">
+                      <td className="px-4 py-4 text-sm text-foreground text-right font-mono">
                         {row.conversions > 0 ? row.roas.toFixed(2) : 'N/A'}
                       </td>
                     )}

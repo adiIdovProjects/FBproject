@@ -279,7 +279,20 @@
       "image": "Image",
       "video": "Vidéo",
       "carousel": "Carrousel"
-    }
+    },
+    "loading": "Chargement des créatifs...",
+    "no_results": "Aucun créatif trouvé",
+    "no_results_hint": "Essayez d'ajuster votre recherche ou la plage de dates",
+    "no_preview": "Pas d'aperçu"
+  },
+  "chat": {
+    "welcome_message": "Bonjour ! Je suis là pour vous aider à en savoir plus sur AdsAI et l'optimisation des publicités Facebook. Comment puis-je vous aider aujourd'hui ?",
+    "error_message": "Désolé, j'ai du mal à répondre. Veuillez réessayer.",
+    "placeholder": "Tapez votre message...",
+    "assistant_name": "Assistant AdsAI",
+    "typically_replies": "Répond généralement instantanément",
+    "open_chat": "Ouvrir le chat",
+    "close_chat": "Fermer le chat"
   },
   "targeting": {
     "title": "Analyse de ciblage",

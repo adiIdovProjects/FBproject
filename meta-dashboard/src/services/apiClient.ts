@@ -10,6 +10,8 @@ export const apiClient = axios.create({
     },
     // SECURITY: Include cookies in requests for HttpOnly auth token
     withCredentials: true,
+    // Timeout after 30 seconds to prevent hanging requests
+    timeout: 30000,
 });
 
 // Response Interceptor: Handle 401s

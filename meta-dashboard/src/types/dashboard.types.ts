@@ -39,6 +39,9 @@ export interface CalculatedMetrics {
   cpm: number;  // Cost per mille (1000 impressions)
 }
 
+// Metric type for determining trend color logic (avoid string matching translated titles)
+export type TrendMetricType = 'spend' | 'efficiency' | 'performance' | 'neutral';
+
 // Metric Card Props
 export interface MetricCardProps {
   title: string;
@@ -49,6 +52,7 @@ export interface MetricCardProps {
   isLoading?: boolean;
   currency?: string;  // Currency code (e.g., "USD", "EUR", "ILS")
   tooltipKey?: string;  // i18n key for metric explanation tooltip
+  metricType?: TrendMetricType;  // Type of metric for trend color logic
 }
 
 // Chart Data Point

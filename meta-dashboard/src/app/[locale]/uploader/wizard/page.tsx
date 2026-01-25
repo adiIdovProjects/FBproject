@@ -107,6 +107,12 @@ function WizardContent() {
 
     // Validate ad for submission
     const validateAd = (ad: AdCreative): string | null => {
+        // Existing posts are already complete
+        if (ad.useExistingPost) {
+            if (!ad.objectStoryId) return "Please select an existing post";
+            return null;  // Valid - no other fields needed
+        }
+
         // Allow either a file upload OR an existing image URL (for cloned campaigns)
         if (!ad.file && !ad.existingImageUrl) return "Please upload an image or video";
         if (!ad.title || ad.title.trim().length === 0) return "Please enter a headline";
@@ -175,9 +181,11 @@ function WizardContent() {
         setError(null);
 
         try {
-            // 1. Upload all media in parallel
+            // 1. Upload all media in parallel (skip for existing posts)
             const mediaUploads = await Promise.all(
                 validAds.map(async (ad) => {
+                    // Existing posts don't need media upload
+                    if (ad.useExistingPost) return { adId: ad.id, imageHash: undefined, videoId: undefined };
                     if (!ad.file) return { adId: ad.id, imageHash: undefined, videoId: undefined };
 
                     const isVideo = ad.file.type.startsWith('video/');
@@ -240,7 +248,8 @@ function WizardContent() {
                     video_id: firstMedia?.videoId,
                     lead_form_id: (state.objective === 'LEADS' && state.leadType === 'FORM')
                         ? firstAd.leadFormId
-                        : undefined
+                        : undefined,
+                    object_story_id: firstAd.useExistingPost ? firstAd.objectStoryId : undefined
                 },
                 custom_audiences: state.selectedAudiences.length > 0 ? state.selectedAudiences : undefined,
                 excluded_audiences: state.excludedAudiences.length > 0 ? state.excludedAudiences : undefined,
@@ -272,7 +281,8 @@ function WizardContent() {
                             video_id: media?.videoId,
                             lead_form_id: (state.objective === 'LEADS' && state.leadType === 'FORM')
                                 ? ad.leadFormId
-                                : undefined
+                                : undefined,
+                            object_story_id: ad.useExistingPost ? ad.objectStoryId : undefined
                         },
                         ad_name: `Ad ${i + 1}`
                     });
@@ -329,7 +339,7 @@ function WizardContent() {
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <button
-                        onClick={() => router.push(`/${locale}/uploader`)}
+                        onClick={() => state.currentStep === 1 ? router.push(`/${locale}/uploader`) : dispatch({ type: 'SET_STEP', step: (state.currentStep - 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 })}
                         className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />

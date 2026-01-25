@@ -68,8 +68,8 @@ export default function PerformanceDashboard() {
         const status = response.data;
 
         if (!status.onboarding_completed) {
-          // Redirect to appropriate step
-          router.push(`/en/${status.next_step}`);
+          // Redirect to appropriate step using current locale
+          router.push(`/${locale}/${status.next_step}`);
         }
       } catch (error) {
         console.error('Error checking onboarding:', error);
@@ -258,6 +258,7 @@ export default function PerformanceDashboard() {
               isLoading={isLoading}
               currency={currency}
               tooltipKey="metrics.spend_tooltip"
+              metricType="spend"
             />
 
             <MetricCard
@@ -268,6 +269,7 @@ export default function PerformanceDashboard() {
               format="percentage"
               isLoading={isLoading}
               tooltipKey="metrics.ctr_tooltip"
+              metricType="performance"
             />
 
             <MetricCard
@@ -279,6 +281,7 @@ export default function PerformanceDashboard() {
               isLoading={isLoading}
               currency={currency}
               tooltipKey="metrics.cpc_tooltip"
+              metricType="efficiency"
             />
 
             <MetricCard
@@ -289,6 +292,7 @@ export default function PerformanceDashboard() {
               format="number"
               isLoading={isLoading}
               tooltipKey="metrics.clicks_tooltip"
+              metricType="performance"
             />
 
             <MetricCard
@@ -299,6 +303,7 @@ export default function PerformanceDashboard() {
               format="number"
               isLoading={isLoading}
               tooltipKey="metrics.conversions_tooltip"
+              metricType="performance"
             />
 
             <MetricCard
@@ -310,6 +315,7 @@ export default function PerformanceDashboard() {
               isLoading={isLoading}
               currency={currency}
               tooltipKey="metrics.cpa_tooltip"
+              metricType="efficiency"
             />
 
             {hasROAS && (
@@ -321,6 +327,7 @@ export default function PerformanceDashboard() {
                 format="decimal"
                 isLoading={isLoading}
                 tooltipKey="metrics.roas_tooltip"
+                metricType="performance"
               />
             )}
           </>

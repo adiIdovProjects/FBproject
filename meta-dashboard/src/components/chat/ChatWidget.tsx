@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Message {
     id: string;
@@ -10,6 +11,7 @@ interface Message {
 }
 
 const ChatWidget: React.FC = () => {
+    const t = useTranslations();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -17,6 +19,18 @@ const ChatWidget: React.FC = () => {
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const isMountedRef = useRef(true);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+            // Abort any pending requests on unmount
+            abortControllerRef.current?.abort();
+        };
+    }, []);
 
     // Load initial suggestions and welcome message
     useEffect(() => {
@@ -25,7 +39,7 @@ const ChatWidget: React.FC = () => {
             setMessages([{
                 id: 'welcome',
                 role: 'assistant',
-                content: "Hi! I'm here to help you learn about AdsAI and Facebook Ads optimization. How can I assist you today?"
+                content: t('chat.welcome_message')
             }]);
         }
     }, [isOpen, messages.length]);
@@ -39,14 +53,18 @@ const ChatWidget: React.FC = () => {
         try {
             const res = await fetch('/api/v1/public/chat/suggestions');
             const data = await res.json();
-            setSuggestions(data.suggestions || []);
+            if (isMountedRef.current) {
+                setSuggestions(data.suggestions || []);
+            }
         } catch (error) {
             console.error('Failed to load suggestions', error);
-            setSuggestions([
-                "What is AdsAI?",
-                "How much does it cost?",
-                "How do I get started?"
-            ]);
+            if (isMountedRef.current) {
+                setSuggestions([
+                    "What is AdsAI?",
+                    "How much does it cost?",
+                    "How do I get started?"
+                ]);
+            }
         }
     };
 
@@ -63,6 +81,10 @@ const ChatWidget: React.FC = () => {
         setInputValue('');
         setIsLoading(true);
 
+        // Cancel any previous request
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = new AbortController();
+
         try {
             const history = messages
                 .filter(m => m.id !== 'welcome')
@@ -75,10 +97,14 @@ const ChatWidget: React.FC = () => {
                     message: text,
                     conversation_id: conversationId,
                     history: history
-                })
+                }),
+                signal: abortControllerRef.current.signal
             });
 
             const data = await res.json();
+
+            // Only update state if still mounted
+            if (!isMountedRef.current) return;
 
             if (!conversationId) {
                 setConversationId(data.conversation_id);
@@ -96,15 +122,22 @@ const ChatWidget: React.FC = () => {
                 setSuggestions(data.suggested_actions);
             }
         } catch (error) {
+            // Ignore abort errors
+            if ((error as Error).name === 'AbortError') return;
+
             console.error('Chat error', error);
+            if (!isMountedRef.current) return;
+
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: "Sorry, I'm having trouble responding. Please try again."
+                content: t('chat.error_message')
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
-            setIsLoading(false);
+            if (isMountedRef.current) {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -121,7 +154,7 @@ const ChatWidget: React.FC = () => {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="fixed bottom-6 right-16 rtl:right-auto rtl:left-16 z-50 w-14 h-14 rounded-full bg-accent text-white shadow-lg hover:bg-accent-hover transition-all flex items-center justify-center"
-                aria-label={isOpen ? "Close chat" : "Open chat"}
+                aria-label={isOpen ? t('chat.close_chat') : t('chat.open_chat')}
             >
                 {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
             </button>
@@ -135,8 +168,8 @@ const ChatWidget: React.FC = () => {
                             <Bot size={20} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-sm">AdsAI Assistant</h3>
-                            <p className="text-xs text-white/80">Typically replies instantly</p>
+                            <h3 className="font-bold text-sm">{t('chat.assistant_name')}</h3>
+                            <p className="text-xs text-white/80">{t('chat.typically_replies')}</p>
                         </div>
                     </div>
 
@@ -199,7 +232,7 @@ const ChatWidget: React.FC = () => {
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyPress}
-                                placeholder="Type your message..."
+                                placeholder={t('chat.placeholder')}
                                 className="flex-1 bg-background border-none rounded-full px-4 py-2 text-sm text-foreground placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
                                 disabled={isLoading}
                             />

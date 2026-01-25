@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { queryAIInvestigator } from '../../services/ai.service';
@@ -23,6 +23,15 @@ export function AIHelpPanel({ accountId }: AIHelpPanelProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [response, setResponse] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const isMountedRef = useRef(true);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     const handleAsk = async (q: string) => {
         if (!q.trim() || isLoading) return;
@@ -33,12 +42,18 @@ export function AIHelpPanel({ accountId }: AIHelpPanelProps) {
 
         try {
             const result = await queryAIInvestigator(q);
-            setResponse(result.answer || 'No response received');
+            if (isMountedRef.current) {
+                setResponse(result.answer || 'No response received');
+            }
         } catch (err) {
             console.error('AI query error:', err);
-            setError(t('ai_panel.error'));
+            if (isMountedRef.current) {
+                setError(t('ai_panel.error'));
+            }
         } finally {
-            setIsLoading(false);
+            if (isMountedRef.current) {
+                setIsLoading(false);
+            }
         }
     };
 

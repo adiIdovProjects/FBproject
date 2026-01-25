@@ -173,8 +173,6 @@ export const Sidebar: React.FC = () => {
         });
     };
 
-    const secondaryItems: any[] = [];
-
     return (
         <aside
             className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} w-64 bg-sidebar border-border-subtle flex flex-col z-50 transition-all duration-300`}
@@ -183,11 +181,11 @@ export const Sidebar: React.FC = () => {
             <div className="p-6 pb-2">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
-                        <BarChart3 className="text-white w-6 h-6" />
+                        <BarChart3 className="text-accent-text w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="font-bold text-lg tracking-tight">AdManager</h2>
-                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Analytics Platform</p>
+                        <h2 className="font-bold text-lg tracking-tight text-foreground">AdManager</h2>
+                        <p className="text-[10px] text-text-muted font-medium uppercase tracking-widest">Analytics Platform</p>
                     </div>
                 </div>
 
@@ -195,22 +193,22 @@ export const Sidebar: React.FC = () => {
                 <div className="relative mb-2">
                     <button
                         onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                        className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group"
+                        className="w-full flex items-center justify-between p-3 bg-secondary/50 hover:bg-secondary border border-border-subtle rounded-xl transition-all group"
                     >
                         <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center text-accent-text font-bold text-xs shrink-0">
                                 {selectedAccount ? selectedAccount.name[0].toUpperCase() : 'A'}
                             </div>
                             <div className="text-left min-w-0">
-                                <p className="text-xs font-bold text-white truncate w-32">
+                                <p className="text-xs font-bold text-foreground truncate w-32">
                                     {selectedAccount ? selectedAccount.name : 'Select Account'}
                                 </p>
-                                <p className="text-[10px] text-gray-400 font-mono truncate">
+                                <p className="text-[10px] text-text-muted font-mono truncate">
                                     ID: {selectedAccount ? selectedAccount.account_id : '---'}
                                 </p>
                             </div>
                         </div>
-                        <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isAccountMenuOpen ? 'rotate-90' : ''}`} />
+                        <ChevronRight className={`w-4 h-4 text-text-muted transition-transform ${isAccountMenuOpen ? 'rotate-90' : ''}`} />
                     </button>
 
                     {/* Dropdown */}
@@ -220,7 +218,7 @@ export const Sidebar: React.FC = () => {
                                 className="fixed inset-0 z-10"
                                 onClick={() => setIsAccountMenuOpen(false)}
                             />
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-20 max-h-60 overflow-y-auto">
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-20 max-h-60 overflow-y-auto">
                                 <div className="p-1 space-y-0.5">
                                     {linkedAccounts.length > 0 ? (
                                         linkedAccounts.map((account) => (
@@ -230,9 +228,9 @@ export const Sidebar: React.FC = () => {
                                                     setSelectedAccountId(account.account_id);
                                                     setIsAccountMenuOpen(false);
                                                 }}
-                                                className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${selectedAccountId === account.account_id ? 'bg-accent/20 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+                                                className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${selectedAccountId === account.account_id ? 'bg-accent/20 text-foreground' : 'text-text-muted hover:bg-secondary/50 hover:text-foreground'}`}
                                             >
-                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${selectedAccountId === account.account_id ? 'bg-accent text-white' : 'bg-gray-800'}`}>
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${selectedAccountId === account.account_id ? 'bg-accent text-accent-text' : 'bg-secondary'}`}>
                                                     {account.name[0]}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -245,7 +243,7 @@ export const Sidebar: React.FC = () => {
                                             </button>
                                         ))
                                     ) : (
-                                        <div className="p-3 text-center text-xs text-gray-500">
+                                        <div className="p-3 text-center text-xs text-text-muted">
                                             No accounts found.
                                             <br />
                                             <Link href={`/${locale}/settings`} className="text-accent hover:underline">Connect an account</Link>
@@ -266,7 +264,7 @@ export const Sidebar: React.FC = () => {
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 mb-4 ${
                         pathname === `/${locale}/homepage`
                             ? 'bg-accent/15 text-accent font-bold'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
                     } ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                     <Home className={`w-5 h-5 ${pathname === `/${locale}/homepage` ? 'text-accent' : ''}`} />
@@ -277,7 +275,7 @@ export const Sidebar: React.FC = () => {
                 </Link>
 
                 <div className="mb-4">
-                    <p className="px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Main Menu</p>
+                    <p className="px-2 text-[10px] font-semibold text-text-muted uppercase tracking-widest mb-2">Main Menu</p>
                     {navStructure.map((item) => {
                         // Section rendering
                         if (item.type === 'section') {
@@ -289,9 +287,9 @@ export const Sidebar: React.FC = () => {
                                 <div key={item.id}>
                                     <button
                                         onClick={() => toggleSection(item.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 group ${isRTL ? 'flex-row-reverse' : ''}`}
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted hover:text-foreground hover:bg-secondary/50 transition-all duration-200 group ${isRTL ? 'flex-row-reverse' : ''}`}
                                     >
-                                        <Icon className="w-5 h-5 group-hover:text-white" />
+                                        <Icon className="w-5 h-5 group-hover:text-foreground" />
                                         <span className={`text-sm flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{item.name}</span>
                                         <ChevronIcon className={`w-4 h-4 transition-transform duration-200 ${isRTL ? 'rotate-0' : ''}`} />
                                     </button>
@@ -309,10 +307,10 @@ export const Sidebar: React.FC = () => {
                                                         href={subItem.href}
                                                         className={`flex items-center gap-3 py-2 rounded-xl transition-all duration-200 group ${isRTL ? 'pr-12 pl-3' : 'pl-12 pr-3'} ${
                                                             isHighlight
-                                                                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 text-white font-semibold'
+                                                                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 text-foreground font-semibold'
                                                                 : isActive
                                                                     ? 'bg-accent/15 text-accent font-black shadow-sm'
-                                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                                                    : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
                                                         }`}
                                                     >
                                                         {isRTL ? (
@@ -320,7 +318,7 @@ export const Sidebar: React.FC = () => {
                                                                 {isActive && !isHighlight && (
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                                                                 )}
-                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
+                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-foreground'}`} />
                                                                 <span className="text-sm">{subItem.name}</span>
                                                             </>
                                                         ) : (
@@ -328,7 +326,7 @@ export const Sidebar: React.FC = () => {
                                                                 {isActive && !isHighlight && (
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                                                                 )}
-                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-white'}`} />
+                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-foreground'}`} />
                                                                 <span className="text-sm">{subItem.name}</span>
                                                             </>
                                                         )}
@@ -355,7 +353,7 @@ export const Sidebar: React.FC = () => {
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group`}
                     >
                         <Sparkles className={`w-5 h-5 text-purple-400 ${isRTL ? 'order-last' : ''}`} />
-                        <span className="flex-1 text-white font-semibold">Complete Setup</span>
+                        <span className="flex-1 text-foreground font-semibold">Complete Setup</span>
                         <ArrowRight className={`w-4 h-4 text-purple-400 transition-transform ${isRTL ? 'order-first group-hover:-translate-x-0.5 rotate-180' : 'group-hover:translate-x-0.5'}`} />
                     </Link>
                 )}
@@ -364,7 +362,7 @@ export const Sidebar: React.FC = () => {
                 {selectedAccountId && (
                     <Link
                         href={`/${locale}/accounts/${selectedAccountId}/settings`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-white/5 text-white' : ''} `}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-text-muted hover:text-foreground hover:bg-secondary transition-all text-sm ${pathname.includes(`/accounts/${selectedAccountId}/settings`) ? 'bg-secondary/50 text-foreground' : ''} `}
                     >
                         <Settings className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
                         <span className={isRTL ? 'flex-1' : ''}>{t('settings.account_settings')}</span>
@@ -374,7 +372,7 @@ export const Sidebar: React.FC = () => {
                 {/* User Settings */}
                 <Link
                     href={`/${locale}/settings`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-white/5 text-white' : ''} `}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-text-muted hover:text-foreground hover:bg-secondary transition-all text-sm ${pathname === `/${locale}/settings` ? 'bg-secondary/50 text-foreground' : ''} `}
                 >
                     <User className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
                     <span className={isRTL ? 'flex-1' : ''}>{t('settings.user_settings')}</span>
@@ -384,7 +382,7 @@ export const Sidebar: React.FC = () => {
                 {isAdmin && (
                     <Link
                         href={`/${locale}/admin`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-900/30 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-indigo-900/30 text-white' : ''} `}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-accent hover:text-foreground hover:bg-accent/20 transition-all text-sm ${pathname === `/${locale}/admin` ? 'bg-accent/20 text-foreground' : ''} `}
                     >
                         <Shield className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
                         <span className={isRTL ? 'flex-1' : ''}>Admin Dashboard</span>

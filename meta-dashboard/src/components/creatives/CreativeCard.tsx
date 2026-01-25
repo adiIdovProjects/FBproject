@@ -43,9 +43,9 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
             case 'PAUSED':
                 return 'bg-yellow-500/20 text-yellow-400';
             case 'ARCHIVED':
-                return 'bg-gray-500/20 text-gray-400';
+                return 'bg-gray-500/20 text-text-muted';
             default:
-                return 'bg-gray-500/20 text-gray-400';
+                return 'bg-gray-500/20 text-text-muted';
         }
     };
 
@@ -59,7 +59,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
         <Card className="bg-[#111827]/80 backdrop-blur-md border-gray-800/50 overflow-hidden group hover:border-indigo-500/50 transition-all duration-300 p-0 rounded-2xl">
             {/* Media Area */}
             <div
-                className={`relative aspect-[4/5] bg-gray-900 overflow-hidden cursor-pointer`}
+                className={`relative aspect-[4/5] bg-card overflow-hidden cursor-pointer`}
                 onClick={handleMediaClick}
             >
                 {creative.image_url ? (
@@ -92,7 +92,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                 {/* Video Duration Badge */}
                 {creative.is_video && (
-                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded border border-white/10 font-medium">
+                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded border border-border-subtle font-medium">
                         {creative.video_length_seconds ? `0:${creative.video_length_seconds.toString().padStart(2, '0')}` : 'Video'}
                     </div>
                 )}
@@ -117,10 +117,10 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
             {/* Info Area */}
             <div className="p-4 bg-gradient-to-b from-[#111827] to-[#0f172a]">
                 <div className="flex justify-between items-start mb-3">
-                    <h4 className="text-sm font-semibold text-gray-100 truncate pr-2 w-full" title={creative.title}>
+                    <h4 className="text-sm font-semibold text-foreground truncate pr-2 w-full" title={creative.title}>
                         {creative.title || t('common.search').replace('...', '')}
                     </h4>
-                    <button className="text-gray-500 hover:text-gray-300">
+                    <button className="text-text-muted hover:text-foreground">
                         <Text className="font-bold">...</Text>
                     </button>
                 </div>
@@ -129,30 +129,30 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                 <div className="grid grid-cols-2 gap-y-3 gap-x-6">
                     {/* Item 1: Spend */}
                     <div className="space-y-0.5">
-                        <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                            <DollarSign className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                        <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                            <DollarSign className="w-2.5 h-2.5 mr-1 text-text-muted" />
                             {t('metrics.spend')}
                         </div>
-                        <div className="text-sm font-bold text-gray-200">{formatCurrency(creative.spend)}</div>
+                        <div className="text-sm font-bold text-foreground">{formatCurrency(creative.spend)}</div>
                     </div>
 
                     {/* Item 2: ROAS - Only show if there is conversion value */}
                     {(creative.conversion_value || 0) > 0 && (
                         creative.conversions > 0 ? (
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                    <TrendingUp className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                    <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('metrics.roas')}
                                 </div>
                                 <div className="text-sm font-bold text-indigo-400">{(creative.roas || 0).toFixed(1)}x</div>
                             </div>
                         ) : (
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                    <TrendingUp className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                    <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('metrics.roas')}
                                 </div>
-                                <div className="text-sm font-bold text-gray-500 italic">N/A</div>
+                                <div className="text-sm font-bold text-text-muted italic">N/A</div>
                             </div>
                         )
                     )}
@@ -160,30 +160,30 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                     {/* Item 3: CPA */}
                     {creative.conversions > 0 ? (
                         <div className="space-y-0.5">
-                            <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                <Target className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                            <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                <Target className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                 {t('metrics.cpa')}
                             </div>
-                            <div className="text-sm font-bold text-gray-200">{formatCurrency(creative.cpa)}</div>
+                            <div className="text-sm font-bold text-foreground">{formatCurrency(creative.cpa)}</div>
                         </div>
                     ) : (
                         <div className="space-y-0.5">
-                            <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                <Target className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                            <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                <Target className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                 {t('metrics.cpa')}
                             </div>
-                            <div className="text-sm font-bold text-gray-500 italic">N/A</div>
+                            <div className="text-sm font-bold text-text-muted italic">N/A</div>
                         </div>
                     )}
                     Suggesting "N/A" rather than hiding entirely to maintain grid consistency in CreativeCard.
 
                     {/* Item 4: CTR */}
                     <div className="space-y-0.5">
-                        <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                            <MousePointer className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                        <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                            <MousePointer className="w-2.5 h-2.5 mr-1 text-text-muted" />
                             {t('metrics.ctr')}
                         </div>
-                        <div className="text-sm font-bold text-gray-200">{(creative.ctr || 0).toFixed(2)}%</div>
+                        <div className="text-sm font-bold text-foreground">{(creative.ctr || 0).toFixed(2)}%</div>
                     </div>
 
                     {/* Video Metrics */}
@@ -191,8 +191,8 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                         <>
                             {/* Thumbstop (Hook Rate) */}
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                    <Zap className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                    <Zap className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('creatives.hook_rate')}
                                 </div>
                                 <div className="text-sm font-bold text-blue-400">{(creative.hook_rate || 0).toFixed(1)}%</div>
@@ -200,8 +200,8 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                             {/* Hold Rate */}
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                    <Play className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                    <Play className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('creatives.hold_rate')}
                                 </div>
                                 <div className="text-sm font-bold text-emerald-400">{(creative.hold_rate || 0).toFixed(1)}%</div>
@@ -210,18 +210,18 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                             {/* Completion & Watch Time row */}
                             <div className="col-span-2 grid grid-cols-2 gap-4 pt-2 border-t border-gray-800/50 mt-1">
                                 <div className="space-y-0.5">
-                                    <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                        <TrendingUp className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                                    <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                        <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                         {t('creatives.avg_completion')}
                                     </div>
-                                    <div className="text-xs font-bold text-gray-300">{(creative.completion_rate || 0).toFixed(1)}%</div>
+                                    <div className="text-xs font-bold text-foreground">{(creative.completion_rate || 0).toFixed(1)}%</div>
                                 </div>
                                 <div className="space-y-0.5">
-                                    <div className="flex items-center text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                                        <Play className="w-2.5 h-2.5 mr-1 text-gray-500" />
+                                    <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                        <Play className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                         {t('creatives.avg_watch_time')}
                                     </div>
-                                    <div className="text-xs font-bold text-gray-300">
+                                    <div className="text-xs font-bold text-foreground">
                                         {creative.video_length_seconds && creative.video_length_seconds > 0
                                             ? `${((creative.avg_watch_time || 0) / creative.video_length_seconds * 100).toFixed(1)}%`
                                             : `${(creative.avg_watch_time || 0).toFixed(1)}s`

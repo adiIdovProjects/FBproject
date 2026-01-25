@@ -56,9 +56,12 @@ export default function StepReview({ t, isSubmitting, onSubmit }: Props) {
     // Helper to get valid ads count
     const getValidAdsCount = () => {
         return state.ads.filter(ad => {
+            // Existing posts are already complete
+            if (ad.useExistingPost && ad.objectStoryId) return true;
+            // New ads need media, title, and body
             const hasMedia = !!ad.file || !!ad.existingImageUrl;
             const hasTitle = ad.title.length > 0;
-            const hasBody = ad.body.length >= 20;
+            const hasBody = ad.body.length > 0;
             return hasMedia && hasTitle && hasBody;
         }).length;
     };

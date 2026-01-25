@@ -36,7 +36,7 @@ async def get_suggested_questions(
     """
     try:
         service = AIService(db, user_id=current_user.id)
-        return await service.get_suggested_questions()
+        return service.get_suggested_questions()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate suggestions: {str(e)}")
 
@@ -65,6 +65,6 @@ async def query_ai(
         if query_request.context and 'accountId' in query_request.context:
             account_id = str(query_request.context['accountId'])
 
-        return await service.query_data(query_request.question, account_id)
+        return service.query_data(query_request.question, account_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Query failed: {str(e)}")

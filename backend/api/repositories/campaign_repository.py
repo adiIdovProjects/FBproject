@@ -25,8 +25,9 @@ class CampaignRepository(BaseRepository):
         """
         # Build status filter
         status_filter = ""
+        status_params = {}
         if campaign_status and campaign_status != ['ALL']:
-            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            placeholders, status_params = self.build_in_clause(campaign_status, 'status')
             status_filter = f"AND c.campaign_status IN ({placeholders})"
             
         # Build search filter
@@ -38,10 +39,8 @@ class CampaignRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
             logger.debug(f"[CampaignRepository.get_campaign_breakdown] account_filter: {account_filter}")
         else:
             logger.debug(f"[CampaignRepository.get_campaign_breakdown] No account_ids provided")
@@ -106,16 +105,12 @@ class CampaignRepository(BaseRepository):
             'start_date': start_date,
             'end_date': end_date,
             'limit': limit,
-            **param_account_ids
+            **param_account_ids,
+            **status_params
         }
-        
+
         if search_query:
             params['search_query'] = f"%{search_query.lower()}%"
-
-        # Add status params
-        if campaign_status and campaign_status != ['ALL']:
-            for i, status in enumerate(campaign_status):
-                params[f'status_{i}'] = status
 
         results = self.db.execute(query, params).fetchall()
 

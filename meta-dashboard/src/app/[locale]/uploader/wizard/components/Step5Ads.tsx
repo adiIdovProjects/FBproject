@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Copy } from 'lucide-react';
+import { Plus, Copy } from 'lucide-react';
 import { useWizard, AdCreative } from './WizardContext';
 import WizardNavigation from './WizardNavigation';
 import AdCard from './AdCard';
@@ -36,7 +36,7 @@ export default function Step5Ads({ t, locale, pageId, accountId, isSubmitting, o
     const isAdValid = (ad: AdCreative): boolean => {
         const hasMedia = !!ad.file || !!ad.existingImageUrl;
         const hasTitle = ad.title.length > 0 && ad.title.length <= 40;
-        const hasBody = ad.body.length >= 20;
+        const hasBody = ad.body.length > 0;
         // WhatsApp and Calls don't need URL or form - they use page contact info
         const hasDestination = isLeadForm ? !!ad.leadFormId : (needsUrl ? !!ad.link : true);
 
@@ -116,32 +116,6 @@ export default function Step5Ads({ t, locale, pageId, accountId, isSubmitting, o
                     {t('wizard_simple.add_another_ad') || 'Add Another Ad'}
                 </button>
             )}
-
-            {/* Validation Summary */}
-            <div className="p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-                <p className="text-sm font-bold text-gray-400 mb-3">{t('wizard.quality_check')}</p>
-                <div className="space-y-2">
-                    {state.ads.map((ad, index) => {
-                        const valid = isAdValid(ad);
-                        return (
-                            <div key={ad.id} className="flex items-center gap-2">
-                                <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                                    valid ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-500'
-                                }`}>
-                                    {valid ? (
-                                        <CheckCircle className="w-3 h-3" />
-                                    ) : (
-                                        <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                                    )}
-                                </div>
-                                <span className={valid ? 'text-green-400 text-sm' : 'text-gray-500 text-sm'}>
-                                    Ad {index + 1}: {valid ? 'Ready' : 'Incomplete'}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
 
             <WizardNavigation
                 onSubmit={onSubmit}

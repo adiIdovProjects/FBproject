@@ -73,7 +73,7 @@ async def public_chat(request: Request, chat_request: ChatRequest):
         conversation_id = chat_request.conversation_id or str(uuid.uuid4())
 
         # Process message
-        result = await chatbot_service.chat(
+        result = chatbot_service.chat(
             message=chat_request.message,
             conversation_history=chat_request.history
         )

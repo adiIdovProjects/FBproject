@@ -232,7 +232,7 @@ export default function FilterPanel({
               ? 'bg-blue-500/30 text-blue-300 border-blue-500/50 shadow-sm'
               : isTertiary
                 ? 'bg-purple-500/30 text-purple-300 border-purple-500/50 shadow-sm'
-                : 'bg-gray-800/60 text-gray-300 border-gray-700 hover:bg-gray-700 hover:border-gray-600'
+                : 'bg-secondary/60 text-foreground border-border-subtle hover:bg-secondary hover:border-border-subtle'
           }
         `}
       >
@@ -265,7 +265,7 @@ export default function FilterPanel({
             <Filter className="w-5 h-5 text-blue-400" />
           </div>
           {onToggle && (
-            <button onClick={onToggle} className="text-gray-400 hover:text-gray-300 transition-colors">
+            <button onClick={onToggle} className="text-text-muted hover:text-foreground transition-colors">
               <Plus className="w-5 h-5" />
             </button>
           )}
@@ -287,10 +287,10 @@ export default function FilterPanel({
       <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <Filter className="w-5 h-5 text-blue-400" />
-          <h2 className="text-lg font-bold text-gray-100">{t('reports.builder.title')}</h2>
+          <h2 className="text-lg font-bold text-foreground">{t('reports.builder.title')}</h2>
         </div>
         {onToggle && (
-          <button onClick={onToggle} className="text-gray-400 hover:text-gray-300 transition-colors">
+          <button onClick={onToggle} className="text-text-muted hover:text-foreground transition-colors">
             <Minus className="w-5 h-5" />
           </button>
         )}
@@ -298,7 +298,7 @@ export default function FilterPanel({
 
       {/* Section 1: Entity Selection */}
       <div className="space-y-3">
-        <label className={`block text-xs font-semibold text-gray-400 uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
+        <label className={`block text-xs font-semibold text-text-muted uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
           {t('reports.builder.analyze_by')}
         </label>
         <div className="flex flex-wrap gap-2">
@@ -310,7 +310,7 @@ export default function FilterPanel({
 
       {/* Section 2: Time Selection */}
       <div className="space-y-3">
-        <label className={`block text-xs font-semibold text-gray-400 uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
+        <label className={`block text-xs font-semibold text-text-muted uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
           {t('reports.builder.by_time')}
         </label>
         <div className="flex flex-wrap gap-2">
@@ -322,7 +322,7 @@ export default function FilterPanel({
 
       {/* Section 3: Audience Insights (Special) */}
       <div className="space-y-3">
-        <label className={`block text-xs font-semibold text-gray-400 uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
+        <label className={`block text-xs font-semibold text-text-muted uppercase tracking-wide ${isRTL ? 'text-right' : 'text-left'}`}>
           {t('reports.builder.audience')}
         </label>
         <div className="flex flex-wrap gap-2">
@@ -332,18 +332,18 @@ export default function FilterPanel({
           <Chip value="gender">{t('reports.builder.gender')}</Chip>
           <Chip value="country">{t('reports.builder.country')}</Chip>
         </div>
-        <p className="text-[10px] text-gray-500">{t('breakdown.no_conversion_data')}</p>
+        <p className="text-[10px] text-text-muted">{t('breakdown.no_conversion_data')}</p>
       </div>
 
       {/* Section 5: Current Selection Summary */}
-      <div className="border-t border-gray-700/50"></div>
-      <div className="p-4 bg-gray-800/40 rounded-xl space-y-3">
+      <div className="border-t border-border-subtle/50"></div>
+      <div className="p-4 bg-secondary/40 rounded-xl space-y-3">
         <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <span className="text-sm font-medium text-blue-400">{getSummary()}</span>
           {breakdown !== 'none' && (
             <button
               onClick={handleClear}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+              className="flex items-center gap-1 text-xs text-text-muted hover:text-foreground transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
               {t('reports.builder.clear')}
@@ -358,7 +358,7 @@ export default function FilterPanel({
             value={campaignFilter}
             onChange={(e) => onCampaignFilterChange(e.target.value)}
             placeholder={t('reports.builder.filter_campaign')}
-            className={`w-full bg-gray-900/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
+            className={`w-full bg-card/50 border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground placeholder-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
           />
         )}
         {showAdSetFilter && (
@@ -367,7 +367,7 @@ export default function FilterPanel({
             value={adSetFilter}
             onChange={(e) => onAdSetFilterChange(e.target.value)}
             placeholder={t('reports.builder.filter_adset')}
-            className={`w-full bg-gray-900/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
+            className={`w-full bg-card/50 border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground placeholder-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
           />
         )}
         {showAdFilter && (
@@ -376,7 +376,7 @@ export default function FilterPanel({
             value={adFilter}
             onChange={(e) => onAdFilterChange(e.target.value)}
             placeholder={t('reports.builder.filter_ad')}
-            className={`w-full bg-gray-900/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
+            className={`w-full bg-card/50 border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground placeholder-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
           />
         )}
       </div>

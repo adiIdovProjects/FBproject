@@ -18,12 +18,12 @@ from sqlalchemy.orm import Session
 
 from backend.api.repositories.insights_repository import InsightsRepository
 from backend.config.settings import GEMINI_MODEL
+from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
 
-# Campaign analysis cache
-CAMPAIGN_CACHE = {}
-CACHE_TTL = 3600  # 1 hour
+# Campaign analysis cache with size limit
+CAMPAIGN_CACHE = TTLCache(ttl_seconds=3600, max_size=100)
 
 CAMPAIGN_ANALYSIS_PROMPT = """Analyze campaign performance for the period {start_date} to {end_date} and provide SHORT insights.
 Respond in {target_lang}.
@@ -90,7 +90,7 @@ class CampaignInsightsService:
         key_str = f"campaign_analysis:{start_date}:{end_date}:{account_ids}:{locale}"
         return hashlib.md5(key_str.encode()).hexdigest()
 
-    async def analyze_campaign_performance(
+    def analyze_campaign_performance(
         self,
         start_date: date,
         end_date: date,
@@ -110,13 +110,10 @@ class CampaignInsightsService:
         try:
             # Check cache
             cache_key = self._get_cache_key(start_date, end_date, account_ids, locale)
-            if cache_key in CAMPAIGN_CACHE:
-                cached_time, cached_response = CAMPAIGN_CACHE[cache_key]
-                if time.time() - cached_time < CACHE_TTL:
-                    logger.info(f"Cache hit for campaign analysis")
-                    return cached_response
-                else:
-                    del CAMPAIGN_CACHE[cache_key]
+            cached_response = CAMPAIGN_CACHE.get(cache_key)
+            if cached_response:
+                logger.info(f"Cache hit for campaign analysis")
+                return cached_response
 
             # Fetch campaign data (reuse get_insights_data for efficiency or call repo directly)
             # We'll use get_insights_data to get the processed campaign list
@@ -220,8 +217,8 @@ class CampaignInsightsService:
                 }
             }
 
-            # Cache
-            CAMPAIGN_CACHE[cache_key] = (time.time(), result)
+            # Cache result
+            CAMPAIGN_CACHE.set(cache_key, result)
             
             return result
 

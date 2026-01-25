@@ -41,10 +41,8 @@ class CreativeAnalysisRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         query = text(f"""
             SELECT
@@ -173,10 +171,8 @@ class CreativeAnalysisRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         query = text(f"""
             SELECT
@@ -361,10 +357,8 @@ class CreativeAnalysisRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         # Simpler approach: Get active creatives first, then check each for fatigue
         query = text(f"""
@@ -436,10 +430,8 @@ class CreativeAnalysisRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         query = text(f"""
             SELECT

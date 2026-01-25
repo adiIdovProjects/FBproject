@@ -3,14 +3,18 @@ from datetime import date
 from pydantic import BaseModel, Field, HttpUrl
 
 class SmartCreative(BaseModel):
-    title: str = Field(..., min_length=1, max_length=255, description="Headline of the ad")
-    body: str = Field(..., description="Primary text of the ad")
+    # When using existing post, title/body/cta can be empty
+    title: str = Field("", max_length=255, description="Headline of the ad")
+    body: str = Field("", description="Primary text of the ad")
     call_to_action: str = Field("LEARN_MORE", description="Call to action button text")
-    
-    # Media (One of these should be present)
+
+    # Media (One of these should be present, OR object_story_id for existing post)
     image_hash: Optional[str] = Field(None, description="Hash of the uploaded image")
     video_id: Optional[str] = Field(None, description="ID of the uploaded video")
-    
+
+    # Existing post (alternative to uploading new media)
+    object_story_id: Optional[str] = Field(None, description="Existing post ID (format: {page_id}_{post_id})")
+
     # Destination
     link_url: Optional[HttpUrl] = Field(None, description="Website URL")
     lead_form_id: Optional[str] = Field(None, description="Instant Form ID (for Leads)")

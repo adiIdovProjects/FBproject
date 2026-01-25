@@ -38,19 +38,15 @@ class AdRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         # Build campaign_ids filter
         campaign_ids_filter = ""
         param_campaign_ids = {}
         if campaign_ids:
-            placeholders = ', '.join([f":camp_id_{i}" for i in range(len(campaign_ids))])
+            placeholders, param_campaign_ids = self.build_in_clause(campaign_ids, 'camp_id')
             campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
-            for i, camp_id in enumerate(campaign_ids):
-                param_campaign_ids[f'camp_id_{i}'] = camp_id
 
         query = text(f"""
             SELECT
@@ -147,10 +143,8 @@ class AdRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         query = text(f"""
             SELECT

@@ -27,12 +27,12 @@ from backend.api.schemas.responses import AIQueryResponse, ChartConfig
 from backend.api.services.budget_optimizer import SmartBudgetOptimizer
 from backend.api.services.comparison_service import ComparisonService
 from backend.config.settings import GEMINI_MODEL
+from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
 
-# Query result cache (in-memory)
-QUERY_CACHE = {}
-CACHE_TTL = 3600  # 1 hour
+# Query result cache with size limit
+QUERY_CACHE = TTLCache(ttl_seconds=3600, max_size=200)
 
 # --- System Instruction for AI Investigator ---
 SYSTEM_INSTRUCTION = (
@@ -117,7 +117,7 @@ class AIService:
         question_lower = question.lower()
         return any(keyword in question_lower for keyword in budget_keywords)
 
-    async def _generate_budget_recommendations(self, start_date: date, end_date: date, account_ids: Optional[List[int]] = None) -> str:
+    def _generate_budget_recommendations(self, start_date: date, end_date: date, account_ids: Optional[List[int]] = None) -> str:
         """Generate smart budget optimization recommendations with comparative analysis"""
         try:
             # Initialize budget optimizer with account filtering
@@ -225,7 +225,7 @@ class AIService:
             logger.error(f"Error generating smart budget recommendations: {e}")
             return f"I encountered an error while analyzing your budget optimization: {str(e)}"
 
-    async def query_data(self, question: str, account_id: Optional[str] = None) -> AIQueryResponse:
+    def query_data(self, question: str, account_id: Optional[str] = None) -> AIQueryResponse:
         """
         Processes a natural language query about the ads data.
         SECURITY: Only queries data from accounts the user has access to.
@@ -265,23 +265,19 @@ class AIService:
             start_date = end_date - timedelta(days=30)
             cache_key = self._get_cache_key(f"{question}:{account_id}", start_date, end_date)
 
-            if cache_key in QUERY_CACHE:
-                cached_time, cached_response = QUERY_CACHE[cache_key]
-                if time.time() - cached_time < CACHE_TTL:
-                    logger.info(f"Cache hit for question: {question[:50]}...")
-                    return cached_response
-                else:
-                    # Cache expired, remove it
-                    del QUERY_CACHE[cache_key]
+            cached_response = QUERY_CACHE.get(cache_key)
+            if cached_response:
+                logger.info(f"Cache hit for question: {question[:50]}...")
+                return cached_response
 
             # Check if this is a budget optimization query
             if self._is_budget_optimization_query(question):
                 logger.info("Budget optimization query detected")
                 # SECURITY FIX: Pass account_ids for filtering
-                budget_answer = await self._generate_budget_recommendations(start_date, end_date, account_ids=filtered_account_ids)
+                budget_answer = self._generate_budget_recommendations(start_date, end_date, account_ids=filtered_account_ids)
                 ai_response = AIQueryResponse(answer=budget_answer, data=None)
                 # Cache the response
-                QUERY_CACHE[cache_key] = (time.time(), ai_response)
+                QUERY_CACHE.set(cache_key, ai_response)
                 return ai_response
 
             # Cache miss, proceed with query
@@ -422,7 +418,7 @@ class AIService:
             )
 
             # 5. Cache the response
-            QUERY_CACHE[cache_key] = (time.time(), ai_response)
+            QUERY_CACHE.set(cache_key, ai_response)
             logger.info(f"Cached response for question: {question[:50]}...")
 
             return ai_response
@@ -434,7 +430,7 @@ class AIService:
                 data=None
             )
 
-    async def get_suggested_questions(self) -> Dict[str, List[str]]:
+    def get_suggested_questions(self) -> Dict[str, List[str]]:
         """
         Generate dynamic suggested questions based on available data.
         SECURITY: Only checks data from user's accounts.

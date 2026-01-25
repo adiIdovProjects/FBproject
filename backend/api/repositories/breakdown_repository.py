@@ -27,22 +27,25 @@ class BreakdownRepository(BaseRepository):
             campaign_filter = "AND f.campaign_id = :campaign_id"
 
         creative_filter = ""
+        param_creative_ids = {}
         if creative_ids is not None and len(creative_ids) > 0:
-            placeholders = ', '.join([f":creative_id_{i}" for i in range(len(creative_ids))])
+            placeholders, param_creative_ids = self.build_in_clause(creative_ids, 'creative_id')
             creative_filter = f"AND f.creative_id IN ({placeholders})"
 
         # Build status filter
         status_filter = ""
+        param_status = {}
         if campaign_status and campaign_status != ['ALL']:
-            placeholders = ', '.join([f":status_{i}" for i in range(len(campaign_status))])
+            placeholders, param_status = self.build_in_clause(campaign_status, 'status')
             status_filter = f"AND c.campaign_status IN ({placeholders})"
-            
+
         # Build account filter
         account_filter = ""
+        param_account_ids = {}
         if account_ids is not None:
             if len(account_ids) == 0:
                 return []
-            placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'account_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
 
         # Build search filter
@@ -52,8 +55,9 @@ class BreakdownRepository(BaseRepository):
 
         # Build campaign_ids filter
         campaign_ids_filter = ""
+        param_campaign_ids = {}
         if campaign_ids is not None and len(campaign_ids) > 0:
-            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            placeholders, param_campaign_ids = self.build_in_clause(campaign_ids, 'campaign_ids')
             campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
 
         # Always fetch both dimensions from DB
@@ -83,33 +87,18 @@ class BreakdownRepository(BaseRepository):
 
         params = {
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            **param_creative_ids,
+            **param_status,
+            **param_account_ids,
+            **param_campaign_ids
         }
 
         if campaign_id is not None:
             params['campaign_id'] = campaign_id
 
-        if creative_ids:
-            for i, cid in enumerate(creative_ids):
-                params[f'creative_id_{i}'] = cid
-
         if search_query:
             params['search_query'] = f"%{search_query.lower()}%"
-
-        # Add status params
-        if campaign_status and campaign_status != ['ALL']:
-            for i, status in enumerate(campaign_status):
-                params[f'status_{i}'] = status
-
-        # Add account params
-        if account_ids:
-            for i, aid in enumerate(account_ids):
-                params[f'account_id_{i}'] = aid
-
-        # Add campaign_ids params
-        if campaign_ids:
-            for i, cid in enumerate(campaign_ids):
-                params[f'campaign_ids_{i}'] = cid
 
         results = self.db.execute(query, params).fetchall()
 

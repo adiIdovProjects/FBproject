@@ -25,9 +25,11 @@ class FacebookAuthService:
             'email',
             'pages_show_list',
             'pages_read_engagement',
+            'pages_read_user_content',
             'pages_manage_ads',
             'pages_manage_metadata',
-            'leads_retrieval'
+            'leads_retrieval',
+            'instagram_basic',
         ]
         scope_str = ','.join(scopes)
         return (

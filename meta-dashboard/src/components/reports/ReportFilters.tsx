@@ -64,43 +64,43 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
       <div className={`flex flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
         {/* Primary Breakdown */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-text-muted uppercase tracking-wide">
             {t('reports.primary_breakdown')}
           </label>
           <div className="relative">
             <select
               value={primaryBreakdown}
               onChange={(e) => onPrimaryChange(e.target.value as ReportBreakdown)}
-              className="appearance-none bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:outline-none focus:border-accent min-w-[180px]"
+              className="appearance-none bg-secondary/50 border border-border-subtle rounded-lg px-4 py-2.5 pr-10 text-sm text-foreground focus:outline-none focus:border-accent min-w-[180px]"
             >
               {PRIMARY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-gray-900">
+                <option key={opt.value} value={opt.value} className="bg-card">
                   {t(opt.labelKey)}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
           </div>
         </div>
 
         {/* Secondary Breakdown */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-text-muted uppercase tracking-wide">
             {t('reports.secondary_breakdown')}
           </label>
           <div className="relative">
             <select
               value={secondaryBreakdown}
               onChange={(e) => onSecondaryChange(e.target.value as ReportBreakdown)}
-              className="appearance-none bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:outline-none focus:border-accent min-w-[180px]"
+              className="appearance-none bg-secondary/50 border border-border-subtle rounded-lg px-4 py-2.5 pr-10 text-sm text-foreground focus:outline-none focus:border-accent min-w-[180px]"
             >
               {BREAKDOWN_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-gray-900">
+                <option key={opt.value} value={opt.value} className="bg-card">
                   {t(opt.labelKey)}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
       <div className={`flex flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
         {/* Campaign Filter */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-text-muted uppercase tracking-wide">
             {t('reports.filter_campaign')}
           </label>
           <input
@@ -117,13 +117,13 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
             value={campaignFilter}
             onChange={(e) => onCampaignFilterChange(e.target.value)}
             placeholder={t('reports.filter_placeholder')}
-            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent min-w-[180px]"
+            className="bg-secondary/50 border border-border-subtle rounded-lg px-4 py-2.5 text-sm text-foreground placeholder-text-disabled focus:outline-none focus:border-accent min-w-[180px]"
           />
         </div>
 
         {/* Ad Set Filter */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-text-muted uppercase tracking-wide">
             {t('reports.filter_adset')}
           </label>
           <input
@@ -131,13 +131,13 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
             value={adSetFilter}
             onChange={(e) => onAdSetFilterChange(e.target.value)}
             placeholder={t('reports.filter_placeholder')}
-            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent min-w-[180px]"
+            className="bg-secondary/50 border border-border-subtle rounded-lg px-4 py-2.5 text-sm text-foreground placeholder-text-disabled focus:outline-none focus:border-accent min-w-[180px]"
           />
         </div>
 
         {/* Ad Filter */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-text-muted uppercase tracking-wide">
             {t('reports.filter_ad')}
           </label>
           <input
@@ -145,7 +145,7 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
             value={adFilter}
             onChange={(e) => onAdFilterChange(e.target.value)}
             placeholder={t('reports.filter_placeholder')}
-            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent min-w-[180px]"
+            className="bg-secondary/50 border border-border-subtle rounded-lg px-4 py-2.5 text-sm text-foreground placeholder-text-disabled focus:outline-none focus:border-accent min-w-[180px]"
           />
         </div>
       </div>

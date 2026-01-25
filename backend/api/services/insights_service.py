@@ -19,12 +19,12 @@ from backend.api.repositories.user_repository import UserRepository
 from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.services.comparison_service import ComparisonService
 from backend.config.settings import GEMINI_MODEL
+from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
 
-# In-memory cache for insights
-INSIGHTS_CACHE = {}
-CACHE_TTL = 3600  # 1 hour
+# In-memory cache for insights with size limit
+INSIGHTS_CACHE = TTLCache(ttl_seconds=3600, max_size=200)
 
 # AI Prompts
 SUMMARY_PROMPT_TEMPLATE = """Analyze this Facebook Ads data and provide exactly 3 actionable insights for a {page_context} page.
@@ -352,12 +352,10 @@ class InsightsService:
             start_date, end_date, f"summary_{page_context}",
             campaign_filter, breakdown_type, breakdown_group_by, user_id, account_id, locale
         )
-        if cache_key in INSIGHTS_CACHE:
-            cached = INSIGHTS_CACHE[cache_key]
-            cache_ttl = self._get_cache_ttl(has_filters)
-            if time.time() - cached['timestamp'] < cache_ttl:
-                logger.info(f"Returning cached summary insights for {page_context} (filters: {has_filters})")
-                return cached['data']
+        cached = INSIGHTS_CACHE.get(cache_key)
+        if cached:
+            logger.info(f"Returning cached summary insights for {page_context}")
+            return cached
 
         # Determine comparison period
         prev_start, prev_end = ComparisonService.calculate_previous_period(start_date, end_date)
@@ -397,7 +395,7 @@ class InsightsService:
                 "period": f"{start_date} to {end_date}",
                 "message": "Your data is being synced. Insights will appear once your Facebook ad data is loaded."
             }
-            INSIGHTS_CACHE[cache_key] = {'data': result, 'timestamp': time.time()}
+            INSIGHTS_CACHE.set(cache_key, result)
             return result
 
         # Prepare data summary for AI with filter context
@@ -460,11 +458,8 @@ class InsightsService:
             'generated_at': datetime.utcnow().isoformat()
         }
 
-        # Cache the result with filter-aware TTL
-        INSIGHTS_CACHE[cache_key] = {
-            'data': result,
-            'timestamp': time.time()
-        }
+        # Cache the result
+        INSIGHTS_CACHE.set(cache_key, result)
 
         return result
 
@@ -482,11 +477,10 @@ class InsightsService:
         """
         # Check cache
         cache_key = self._get_cache_key(start_date, end_date, "deep_analysis", user_id=user_id, account_id=account_id, locale=locale)
-        if cache_key in INSIGHTS_CACHE:
-            cached = INSIGHTS_CACHE[cache_key]
-            if time.time() - cached['timestamp'] < CACHE_TTL:
-                logger.info("Returning cached deep analysis")
-                return cached['data']
+        cached = INSIGHTS_CACHE.get(cache_key)
+        if cached:
+            logger.info("Returning cached deep analysis")
+            return cached
 
         # Determine comparison period
         prev_start, prev_end = ComparisonService.calculate_previous_period(start_date, end_date)
@@ -524,7 +518,7 @@ class InsightsService:
                 "opportunities": [],
                 "period": f"{start_date} to {end_date}"
             }
-            INSIGHTS_CACHE[cache_key] = {'data': result, 'timestamp': time.time()}
+            INSIGHTS_CACHE.set(cache_key, result)
             return result
 
         # Prepare comprehensive data for AI
@@ -579,10 +573,7 @@ class InsightsService:
                 result = self._generate_fallback_deep_analysis(data)
 
         # Cache the result
-        INSIGHTS_CACHE[cache_key] = {
-            'data': result,
-            'timestamp': time.time()
-        }
+        INSIGHTS_CACHE.set(cache_key, result)
 
         return result
 
@@ -1267,11 +1258,10 @@ class InsightsService:
             today - timedelta(days=30), today, "overview_summary",
             user_id=user_id, account_id=account_id, locale=locale
         )
-        if cache_key in INSIGHTS_CACHE:
-            cached = INSIGHTS_CACHE[cache_key]
-            if time.time() - cached['timestamp'] < 300:  # 5 min cache
-                logger.info("Returning cached overview summary")
-                return cached['data']
+        cached = INSIGHTS_CACHE.get(cache_key)
+        if cached:
+            logger.info("Returning cached overview summary")
+            return cached
 
         # Generate all insights
         daily_insight = self._generate_period_insight(
@@ -1323,7 +1313,7 @@ class InsightsService:
         }
 
         # Cache result
-        INSIGHTS_CACHE[cache_key] = {'data': result, 'timestamp': time.time()}
+        INSIGHTS_CACHE.set(cache_key, result)
 
         return result
 

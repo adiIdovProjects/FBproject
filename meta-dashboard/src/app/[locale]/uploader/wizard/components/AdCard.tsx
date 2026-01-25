@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Upload, CheckCircle, X, Loader2, ExternalLink, RefreshCw, Plus, Copy, Lightbulb, ChevronDown } from 'lucide-react';
+import { Upload, CheckCircle, X, Loader2, ExternalLink, RefreshCw, Plus, Copy, Lightbulb, ChevronDown, Image as ImageIcon } from 'lucide-react';
 import { AdCreative, useWizard } from './WizardContext';
-import { mutationsService } from '@/services/mutations.service';
+import { mutationsService, PagePost } from '@/services/mutations.service';
+import PostPicker from './PostPicker';
 
 interface LeadForm {
     id: string;
@@ -75,11 +76,20 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
     const [formError, setFormError] = useState<string | null>(null);
     const [isDuplicatingForm, setIsDuplicatingForm] = useState(false);
     const [showFormTips, setShowFormTips] = useState(false);
+    const [showPostPicker, setShowPostPicker] = useState(false);
 
     const isLeadForm = state.objective === 'LEADS' && state.leadType === 'FORM';
     const isWhatsApp = state.objective === 'WHATSAPP';
     const isCalls = state.objective === 'CALLS';
     const needsUrl = !isLeadForm && !isWhatsApp && !isCalls;
+
+    // Validation checks for checklist
+    const usingExistingPost = !!ad.useExistingPost && !!ad.objectStoryId;
+    const hasMedia = usingExistingPost || !!ad.file || !!ad.existingImageUrl;
+    const hasTitle = usingExistingPost || (ad.title.length > 0 && ad.title.length <= 40);
+    const hasBody = usingExistingPost || ad.body.length > 0;
+    const hasDestination = isLeadForm ? !!ad.leadFormId : (needsUrl ? !!ad.link : true);
+    const hasCTA = usingExistingPost || !!ad.cta;
 
     // Get CTA options based on objective
     const getCTAOptions = () => {
@@ -139,6 +149,30 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
         if (canRemove) {
             dispatch({ type: 'REMOVE_AD', id: ad.id });
         }
+    };
+
+    const handleSelectExistingPost = (post: PagePost) => {
+        updateAd({
+            useExistingPost: true,
+            objectStoryId: post.id,
+            objectStoryPreview: {
+                thumbnail: post.full_picture,
+                message: post.message,
+                source: post.source
+            },
+            // Clear upload-related fields when using existing post
+            file: null,
+            previewUrl: post.full_picture || null
+        });
+        setShowPostPicker(false);
+    };
+
+    const handleSwitchToNewAd = () => {
+        updateAd({
+            useExistingPost: false,
+            objectStoryId: undefined,
+            objectStoryPreview: undefined
+        });
     };
 
     // Create lead form via API
@@ -224,6 +258,19 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
     const handleDuplicateForm = async (formId: string) => {
         setIsDuplicatingForm(true);
         setFormError(null);
+
+        // Validate inputs before making API call
+        if (!formId) {
+            setFormError('No form selected to duplicate.');
+            setIsDuplicatingForm(false);
+            return;
+        }
+        if (!pageId) {
+            setFormError('No Facebook Page is connected to this account. Please connect a page first.');
+            setIsDuplicatingForm(false);
+            return;
+        }
+
         try {
             const details = await mutationsService.getLeadFormDetails(formId, pageId, accountId);
 
@@ -317,85 +364,165 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                 <h3 className="font-bold text-gray-200">
                     {t('wizard_simple.ad_number', { number: index + 1 })}
                 </h3>
-                {canRemove && (
-                    <button
-                        type="button"
-                        onClick={removeAd}
-                        className="text-gray-500 hover:text-red-400 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                )}
+                <div className="flex items-center gap-2">
+                    {/* Toggle: Create New vs Use Existing Post */}
+                    <div className="flex bg-gray-800 rounded-lg p-0.5">
+                        <button
+                            type="button"
+                            onClick={handleSwitchToNewAd}
+                            className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                                !ad.useExistingPost
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            {t('wizard_simple.create_new') || 'Create New'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowPostPicker(true)}
+                            className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                                ad.useExistingPost
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            {t('wizard_simple.use_existing') || 'Use Existing Post'}
+                        </button>
+                    </div>
+                    {canRemove && (
+                        <button
+                            type="button"
+                            onClick={removeAd}
+                            className="text-gray-500 hover:text-red-400 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Inputs */}
                 <div className="space-y-3">
-                    {/* File Upload */}
-                    <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 text-center hover:border-blue-500 transition-colors relative">
-                        <input
-                            type="file"
-                            accept="image/*,video/*"
-                            onChange={handleFileChange}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div className="flex flex-col items-center gap-2 pointer-events-none">
-                            {ad.file ? (
-                                <>
-                                    <CheckCircle className="w-6 h-6 text-green-500" />
-                                    <p className="font-medium text-green-400 text-xs truncate max-w-full">
-                                        {ad.file.name}
+                    {/* Existing Post Mode */}
+                    {ad.useExistingPost ? (
+                        <div className="border-2 border-blue-500/30 bg-blue-500/5 rounded-xl p-4">
+                            {ad.objectStoryPreview ? (
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-blue-400 text-xs font-medium">
+                                        <CheckCircle className="w-4 h-4" />
+                                        {ad.objectStoryPreview.source === 'instagram'
+                                            ? (t('wizard_simple.using_instagram_post') || 'Using Instagram post')
+                                            : (t('wizard_simple.using_facebook_post') || 'Using Facebook post')
+                                        }
+                                    </div>
+                                    {ad.objectStoryPreview.thumbnail && (
+                                        <img
+                                            src={ad.objectStoryPreview.thumbnail}
+                                            alt="Selected post"
+                                            className="w-full aspect-video object-cover rounded-lg"
+                                        />
+                                    )}
+                                    <p className="text-sm text-gray-300 line-clamp-2">
+                                        {ad.objectStoryPreview.message || '(No caption)'}
                                     </p>
-                                </>
-                            ) : ad.existingImageUrl ? (
-                                <>
-                                    <CheckCircle className="w-6 h-6 text-blue-500" />
-                                    <p className="font-medium text-blue-400 text-xs">
-                                        {t('wizard_simple.using_existing_image') || 'Using existing image'}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPostPicker(true)}
+                                        className="text-xs text-blue-400 hover:text-blue-300"
+                                    >
+                                        {t('wizard_simple.change_post') || 'Change post'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPostPicker(true)}
+                                    className="w-full flex flex-col items-center gap-2 py-4"
+                                >
+                                    <ImageIcon className="w-8 h-8 text-blue-400" />
+                                    <p className="text-blue-400 text-sm font-medium">
+                                        {t('wizard_simple.select_existing_post') || 'Select an existing post'}
                                     </p>
                                     <p className="text-gray-500 text-xs">
-                                        {t('wizard_simple.click_to_replace') || 'Click to replace'}
+                                        {t('wizard_simple.existing_post_hint') || 'Preserves likes, comments and shares'}
                                     </p>
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="w-6 h-6 text-gray-500" />
-                                    <p className="text-gray-400 text-xs">{t('wizard.upload_media')}</p>
-                                </>
+                                </button>
                             )}
                         </div>
-                    </div>
+                    ) : (
+                        /* File Upload - Normal Mode */
+                        <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 text-center hover:border-blue-500 transition-colors relative">
+                            <input
+                                type="file"
+                                accept="image/*,video/*"
+                                onChange={handleFileChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div className="flex flex-col items-center gap-2 pointer-events-none">
+                                {ad.file ? (
+                                    <>
+                                        <CheckCircle className="w-6 h-6 text-green-500" />
+                                        <p className="font-medium text-green-400 text-xs truncate max-w-full">
+                                            {ad.file.name}
+                                        </p>
+                                    </>
+                                ) : ad.existingImageUrl ? (
+                                    <>
+                                        <CheckCircle className="w-6 h-6 text-blue-500" />
+                                        <p className="font-medium text-blue-400 text-xs">
+                                            {t('wizard_simple.using_existing_image') || 'Using existing image'}
+                                        </p>
+                                        <p className="text-gray-500 text-xs">
+                                            {t('wizard_simple.click_to_replace') || 'Click to replace'}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-6 h-6 text-gray-500" />
+                                        <p className="text-gray-400 text-xs">{t('wizard.upload_media')}</p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-                    {/* Primary Text */}
-                    <div>
-                        <label className="text-xs uppercase text-gray-500 font-bold">
-                            {t('wizard.primary_text')}
-                        </label>
-                        <textarea
-                            value={ad.body}
-                            onChange={(e) => updateAd({ body: e.target.value })}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 h-16 focus:border-blue-500 outline-none resize-none text-sm"
-                            placeholder={t('wizard.primary_text_placeholder')}
-                        />
-                    </div>
+                    {/* Primary Text - Only show when NOT using existing post */}
+                    {!ad.useExistingPost && (
+                        <div>
+                            <label className="text-xs uppercase text-gray-500 font-bold">
+                                {t('wizard.primary_text')}
+                            </label>
+                            <textarea
+                                value={ad.body}
+                                onChange={(e) => updateAd({ body: e.target.value })}
+                                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 h-16 focus:border-blue-500 outline-none resize-none text-sm"
+                                placeholder={t('wizard.primary_text_placeholder')}
+                            />
+                        </div>
+                    )}
 
-                    {/* Headline */}
-                    <div>
-                        <label className="text-xs uppercase text-gray-500 font-bold">
-                            {t('wizard.headline')}
-                        </label>
-                        <input
-                            value={ad.title}
-                            onChange={(e) => updateAd({ title: e.target.value })}
-                            className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 focus:border-blue-500 outline-none text-sm"
-                            placeholder={t('wizard.headline_placeholder')}
-                            maxLength={40}
-                        />
-                        <span className="text-xs text-gray-500">{ad.title.length}/40</span>
-                    </div>
+                    {/* Headline - Only show when NOT using existing post */}
+                    {!ad.useExistingPost && (
+                        <div>
+                            <label className="text-xs uppercase text-gray-500 font-bold">
+                                {t('wizard.headline')}
+                            </label>
+                            <input
+                                value={ad.title}
+                                onChange={(e) => updateAd({ title: e.target.value })}
+                                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 focus:border-blue-500 outline-none text-sm"
+                                placeholder={t('wizard.headline_placeholder')}
+                                maxLength={40}
+                            />
+                            <span className="text-xs text-gray-500">{ad.title.length}/40</span>
+                        </div>
+                    )}
 
-                    {/* URL, Lead Form, or No Destination (WhatsApp/Calls) */}
-                    {(isWhatsApp || isCalls) ? (
+                    {/* URL, Lead Form, or No Destination (WhatsApp/Calls) - Only show when NOT using existing post */}
+                    {!ad.useExistingPost && (
+                        (isWhatsApp || isCalls) ? (
                         <div className={`p-3 rounded-lg border ${isWhatsApp ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
                             <p className={`text-sm ${isWhatsApp ? 'text-emerald-400' : 'text-amber-400'}`}>
                                 {isWhatsApp
@@ -520,10 +647,12 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 </div>
                             )}
                         </div>
+                    )
                     )}
 
-                    {/* CTA */}
-                    <div>
+                    {/* CTA - Only show when NOT using existing post */}
+                    {!ad.useExistingPost && (
+                        <div>
                         <label className="text-xs uppercase text-gray-500 font-bold">
                             {t('wizard.call_to_action')}
                         </label>
@@ -538,7 +667,8 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 </option>
                             ))}
                         </select>
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Preview */}
@@ -646,6 +776,32 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Ad Checklist */}
+            <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-800">
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasMedia ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                    {hasMedia ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                    {t('wizard.media') || 'Media'}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasBody ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                    {hasBody ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                    {t('wizard.primary_text') || 'Primary Text'}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasTitle ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                    {hasTitle ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                    {t('wizard.headline') || 'Headline'}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasCTA ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                    {hasCTA ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                    {t('wizard.cta') || 'CTA'}
+                </span>
+                {(needsUrl || isLeadForm) && (
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasDestination ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                        {hasDestination ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                        {isLeadForm ? (t('wizard.lead_form') || 'Lead Form') : (t('wizard.url') || 'URL')}
+                    </span>
+                )}
             </div>
 
             {/* Lead Form Builder Modal */}
@@ -951,6 +1107,16 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                     </div>
                 </div>
             )}
+
+            {/* Post Picker Modal */}
+            <PostPicker
+                isOpen={showPostPicker}
+                onClose={() => setShowPostPicker(false)}
+                onSelect={handleSelectExistingPost}
+                accountId={accountId}
+                pageId={pageId}
+                t={t}
+            />
         </div>
     );
 }

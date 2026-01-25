@@ -21,6 +21,8 @@ export function useInView(options?: IntersectionObserverInit): [RefObject<HTMLDi
 
     observer.observe(element);
     return () => observer.disconnect();
+    // Note: options is intentionally not in deps as it's only used once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return [ref, isInView];

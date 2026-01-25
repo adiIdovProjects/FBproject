@@ -49,11 +49,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_KEY, newTheme);
     };
 
-    // Prevent flash of wrong theme
-    if (!mounted) {
-        return null;
-    }
-
+    // Provide context even before mounting to prevent flash
+    // The default theme (dark) is applied, and once mounted, the real theme is set
     return (
         <ThemeContext.Provider value={{ theme, setTheme }}>
             {children}

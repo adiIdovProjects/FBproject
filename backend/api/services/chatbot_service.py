@@ -11,12 +11,12 @@ from typing import Optional, List, Dict
 import google.genai as genai
 from google.genai import types
 from backend.config.settings import GEMINI_MODEL
+from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
 
-# Simple in-memory cache for responses
-CHAT_CACHE: Dict[str, tuple] = {}
-CACHE_TTL = 3600  # 1 hour
+# Chat response cache with size limit
+CHAT_CACHE = TTLCache(ttl_seconds=3600, max_size=100)
 
 CHATBOT_SYSTEM_INSTRUCTION = """
 You are a helpful support assistant for AdsAI, a Facebook Ads analytics platform.
@@ -78,7 +78,7 @@ class ChatbotService:
         normalized = message.lower().strip()
         return hashlib.md5(normalized.encode()).hexdigest()
 
-    async def chat(self, message: str, conversation_history: Optional[List[dict]] = None) -> dict:
+    def chat(self, message: str, conversation_history: Optional[List[dict]] = None) -> dict:
         """
         Process a chat message and return AI response.
         conversation_history format: [{"role": "user"|"assistant", "content": "..."}]
@@ -93,10 +93,9 @@ class ChatbotService:
             # Check cache for common questions (only if no conversation history)
             if not conversation_history:
                 cache_key = self._get_cache_key(message)
-                if cache_key in CHAT_CACHE:
-                    cached_time, cached_response = CHAT_CACHE[cache_key]
-                    if time.time() - cached_time < CACHE_TTL:
-                        return cached_response
+                cached_response = CHAT_CACHE.get(cache_key)
+                if cached_response:
+                    return cached_response
 
             # Build conversation context
             contents = []
@@ -129,7 +128,7 @@ class ChatbotService:
 
             # Cache common questions (only if no conversation history)
             if not conversation_history:
-                CHAT_CACHE[self._get_cache_key(message)] = (time.time(), result)
+                CHAT_CACHE.set(self._get_cache_key(message), result)
 
             return result
 

@@ -31,11 +31,10 @@ class AdSetRepository(BaseRepository):
 
         # Build account filter
         account_filter = ""
+        param_account_ids = {}
         if account_ids:
-             # Just use the first one if multiple for now to be safe, or expand
-             # The pattern used is manual expansion
-             placeholders = ', '.join([f":account_id_{i}" for i in range(len(account_ids))])
-             account_filter = f"AND f.account_id IN ({placeholders})"
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'account_id')
+            account_filter = f"AND f.account_id IN ({placeholders})"
             
         # Build search filter - search by campaign name (not adset name)
         search_filter = ""
@@ -98,7 +97,8 @@ class AdSetRepository(BaseRepository):
 
         params = {
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            **param_account_ids
         }
 
         if campaign_id is not None:
@@ -111,11 +111,6 @@ class AdSetRepository(BaseRepository):
         if campaign_status and campaign_status != ['ALL']:
             for i, status in enumerate(campaign_status):
                 params[f'status_{i}'] = status
-
-        # Add account params
-        if account_ids:
-            for i, aid in enumerate(account_ids):
-                params[f'account_id_{i}'] = aid
 
         # Add campaign_ids params
         if campaign_ids:
@@ -180,10 +175,8 @@ class AdSetRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         query = text(f"""
             SELECT

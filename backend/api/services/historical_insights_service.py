@@ -18,12 +18,12 @@ from sqlalchemy.orm import Session
 
 from backend.api.repositories.historical_repository import HistoricalRepository
 from backend.config.settings import GEMINI_MODEL
+from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
 
-# Historical analysis cache
-HISTORICAL_CACHE = {}
-CACHE_TTL = 3600  # 1 hour
+# Historical analysis cache with size limit
+HISTORICAL_CACHE = TTLCache(ttl_seconds=3600, max_size=100)
 
 HISTORICAL_ANALYSIS_PROMPT = """Analyze 90-day Facebook Ads performance and provide SHORT, actionable insights.
 Respond in {target_lang}.
@@ -165,7 +165,7 @@ class HistoricalInsightsService:
             'worst_days': worst_days
         }
 
-    async def analyze_historical_trends(
+    def analyze_historical_trends(
         self,
         lookback_days: int = 90,
         campaign_id: Optional[int] = None,
@@ -193,13 +193,10 @@ class HistoricalInsightsService:
         try:
             # Check cache
             cache_key = self._get_cache_key(lookback_days, campaign_id, account_ids, locale)
-            if cache_key in HISTORICAL_CACHE:
-                cached_time, cached_response = HISTORICAL_CACHE[cache_key]
-                if time.time() - cached_time < CACHE_TTL:
-                    logger.info(f"Cache hit for historical analysis: {lookback_days} days")
-                    return cached_response
-                else:
-                    del HISTORICAL_CACHE[cache_key]
+            cached_response = HISTORICAL_CACHE.get(cache_key)
+            if cached_response:
+                logger.info(f"Cache hit for historical analysis: {lookback_days} days")
+                return cached_response
 
             # Fetch historical data
             weekly_trends = self.repository.get_weekly_trends(
@@ -280,7 +277,7 @@ class HistoricalInsightsService:
             }
 
             # Cache the result
-            HISTORICAL_CACHE[cache_key] = (time.time(), result)
+            HISTORICAL_CACHE.set(cache_key, result)
             logger.info(f"Cached historical analysis for {lookback_days} days")
 
             return result
@@ -293,7 +290,7 @@ class HistoricalInsightsService:
                 'data': None
             }
 
-    async def get_campaign_deep_dive(
+    def get_campaign_deep_dive(
         self,
         campaign_id: int,
         lookback_days: int = 90,

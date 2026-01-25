@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Calendar, ChevronDown, Clock, X, SlidersHorizontal } from 'lucide-react';
 
 // *** ייבוא מעודכן מ-utils/date.ts ***
@@ -45,6 +45,21 @@ const DateFilter: React.FC<DateFilterProps> = ({
 
     const [selectedKey, setSelectedKey] = useState<QuickSelectKey>(DEFAULT_DATE_RANGE_KEY);
     const [isOpen, setIsOpen] = useState(false);
+    const popoverRef = useRef<HTMLDivElement>(null);
+
+    // Click outside detection for reliable popover closing
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
 
     // מצב לטווח תאריכים מותאם אישית. 
     const [customStartDate, setCustomStartDate] = useState<string | null>(externalStartDate || formatDate(initialDates.start));
@@ -149,13 +164,8 @@ const DateFilter: React.FC<DateFilterProps> = ({
             {/* 2. Popover */}
             {isOpen && (
                 <div
+                    ref={popoverRef}
                     className={`absolute ${popoverPositionClass} mt-2 w-72 bg-[#0f172a] border border-border-subtle rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden border-glow z-[100]`}
-                    onBlur={(e) => {
-                        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                            setIsOpen(false);
-                        }
-                    }}
-                    tabIndex={-1}
                 >
                     {/* Header with Date Range */}
                     <div className="p-4 flex flex-col bg-white/[0.03] border-b border-white/[0.05] gap-2">

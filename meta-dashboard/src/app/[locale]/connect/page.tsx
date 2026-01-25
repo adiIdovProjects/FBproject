@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { verifyState, generateState } from '@/utils/csrf';
 import { useTranslations } from 'next-intl';
 import { Loader2, ShieldAlert, Facebook, CheckCircle } from 'lucide-react';
@@ -10,6 +10,8 @@ import { getFacebookLoginUrl, fetchCurrentUser, UserProfile } from '@/services/a
 export default function ConnectPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const params = useParams();
+    const locale = (params.locale as string) || 'en';
     const t = useTranslations();
     const [status, setStatus] = useState<'verifying' | 'connect_facebook' | 'success' | 'error'>('verifying');
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -19,12 +21,14 @@ export default function ConnectPage() {
         const state = searchParams.get('state');
         const step = searchParams.get('step'); // 'google_done' or 'facebook_connected'
 
-        // CSRF Check for Facebook callback
+        // CSRF Check for Facebook callback - block if invalid
         if (step === 'facebook_connected' && state) {
             const isValidState = verifyState(state);
             if (!isValidState) {
-                // Log warning but don't block - JWT token provides security
-                console.warn('CSRF state mismatch - state:', state, 'This may indicate an issue with OAuth flow');
+                console.error('CSRF state validation failed - blocking OAuth flow');
+                setStatus('error');
+                setErrorMessage('Security validation failed. Please try connecting again.');
+                return;
             }
         }
 
@@ -43,7 +47,7 @@ export default function ConnectPage() {
                 setStatus('success');
                 // Redirect to account selection page after successful FB connection
                 setTimeout(() => {
-                    router.push('/en/select-accounts');
+                    router.push(`/${locale}/select-accounts`);
                 }, 1500);
             } else {
                 setStatus('connect_facebook');
@@ -97,7 +101,7 @@ export default function ConnectPage() {
                         </button>
 
                         <button
-                            onClick={() => router.push('/en/account-dashboard')}
+                            onClick={() => router.push(`/${locale}/account-dashboard`)}
                             className="text-gray-500 text-xs hover:text-gray-300 transition-colors"
                         >
                             {t('auth.skip_for_now')}
@@ -123,7 +127,7 @@ export default function ConnectPage() {
                         <h2 className="text-xl font-bold text-white">{t('auth.connection_failed')}</h2>
                         <p className="text-red-400 text-sm px-4">{errorMessage}</p>
                         <button
-                            onClick={() => router.push('/en/login')}
+                            onClick={() => router.push(`/${locale}/login`)}
                             className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-bold"
                         >
                             {t('auth.return_to_login')}

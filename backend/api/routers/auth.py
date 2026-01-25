@@ -488,8 +488,11 @@ async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(ge
             detail="Failed to send magic link. Please try again."
         )
 
-@router.get("/magic-link/verify")
-async def verify_magic_link(token: str, response: Response, db: Session = Depends(get_db)):
+class MagicLinkVerifyRequest(BaseModel):
+    token: str
+
+@router.post("/magic-link/verify")
+async def verify_magic_link(request: MagicLinkVerifyRequest, response: Response, db: Session = Depends(get_db)):
     """
     Verify a magic link token and log the user in
     Creates a new user if they don't exist
@@ -499,8 +502,8 @@ async def verify_magic_link(token: str, response: Response, db: Session = Depend
         magic_link_repo = MagicLinkRepository(db)
         user_repo = UserRepository(db)
 
-        # Verify token
-        email = magic_link_repo.verify_token(token)
+        # Verify token (extracted from request body for security)
+        email = magic_link_repo.verify_token(request.token)
 
         if not email:
             logger.warning(f"Invalid or expired magic link token")

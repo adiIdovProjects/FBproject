@@ -35,28 +35,22 @@ class TimeSeriesRepository(BaseRepository):
         account_filter = ""
         param_account_ids = {}
         if account_ids:
-            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            placeholders, param_account_ids = self.build_in_clause(account_ids, 'acc_id')
             account_filter = f"AND f.account_id IN ({placeholders})"
-            for i, acc_id in enumerate(account_ids):
-                param_account_ids[f'acc_id_{i}'] = acc_id
 
         # Build creative filter
         creative_filter = ""
         param_creative_ids = {}
         if creative_ids:
-            placeholders = ', '.join([f":creative_id_{i}" for i in range(len(creative_ids))])
+            placeholders, param_creative_ids = self.build_in_clause(creative_ids, 'creative_id')
             creative_filter = f"AND f.creative_id IN ({placeholders})"
-            for i, creative_id in enumerate(creative_ids):
-                param_creative_ids[f'creative_id_{i}'] = creative_id
 
         # Build campaign_ids filter
         campaign_ids_filter = ""
         param_campaign_ids = {}
         if campaign_ids:
-            placeholders = ', '.join([f":campaign_ids_{i}" for i in range(len(campaign_ids))])
+            placeholders, param_campaign_ids = self.build_in_clause(campaign_ids, 'campaign_ids')
             campaign_ids_filter = f"AND f.campaign_id IN ({placeholders})"
-            for i, cid in enumerate(campaign_ids):
-                param_campaign_ids[f'campaign_ids_{i}'] = cid
 
         query = text(f"""
             SELECT
