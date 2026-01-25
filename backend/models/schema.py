@@ -136,6 +136,10 @@ class DimActionType(Base):
     action_type = Column(String(100), nullable=False, unique=True)
     is_conversion = Column(Boolean, default=False)
 
+    __table_args__ = (
+        Index('idx_dim_action_type_conversion', 'is_conversion'),
+    )
+
 
 class DimInsightHistory(Base):
     """
@@ -203,6 +207,8 @@ class FactCoreMetrics(Base):
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
                         name='uq_fact_core'),
         Index('idx_fact_core_date', 'date_id'),
+        Index('idx_fact_core_account', 'account_id'),
+        Index('idx_fact_core_account_date', 'account_id', 'date_id'),
         Index('idx_fact_core_campaign', 'campaign_id'),
         Index('idx_fact_core_adset', 'adset_id'),
         Index('idx_fact_core_ad', 'ad_id'),
@@ -229,6 +235,7 @@ class FactPlacementMetrics(Base):
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'placement_id',
                         name='uq_fact_placement'),
         Index('idx_fact_placement_date', 'date_id'),
+        Index('idx_fact_placement_account', 'account_id'),
         Index('idx_fact_placement_campaign', 'campaign_id'),
     )
 
@@ -253,6 +260,7 @@ class FactAgeGenderMetrics(Base):
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id',
                         'age_id', 'gender_id', name='uq_fact_age_gender'),
         Index('idx_fact_age_gender_date', 'date_id'),
+        Index('idx_fact_age_gender_account', 'account_id'),
         Index('idx_fact_age_gender_campaign', 'campaign_id'),
     )
 
@@ -276,6 +284,7 @@ class FactCountryMetrics(Base):
         UniqueConstraint('date_id', 'account_id', 'campaign_id', 'adset_id', 'ad_id', 'creative_id', 'country_id',
                         name='uq_fact_country'),
         Index('idx_fact_country_date', 'date_id'),
+        Index('idx_fact_country_account', 'account_id'),
         Index('idx_fact_country_campaign', 'campaign_id'),
     )
 
@@ -301,6 +310,7 @@ class FactActionMetrics(Base):
                         'action_type_id', 'attribution_window', name='uq_fact_action'),
         Index('idx_fact_action_type', 'action_type_id'),
         Index('idx_fact_action_date', 'date_id'),
+        Index('idx_fact_action_account', 'account_id'),
     )
 
 class AuditLog(Base):

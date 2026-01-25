@@ -111,8 +111,8 @@ export interface ReportsComparisonResponse {
   dimension: string;
   period1_start: string;
   period1_end: string;
-  period2_start: string;
-  period2_end: string;
+  period2_start: string | null;
+  period2_end: string | null;
   overview: ComparisonItem | null;
   items: ComparisonItem[];
   currency: string;
@@ -124,7 +124,7 @@ export interface ComparisonParams {
   period2Start?: string;
   period2End?: string;
   dimension?: 'overview' | 'campaign' | 'ad';
-  breakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month';
+  breakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age' | 'gender' | 'country';
   secondaryBreakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age' | 'gender' | 'country';
   tertiaryBreakdown?: 'none' | 'campaign_name' | 'ad_set_name' | 'ad_name' | 'date' | 'week' | 'month' | 'placement' | 'platform' | 'age' | 'gender' | 'country';
   campaignFilter?: string;

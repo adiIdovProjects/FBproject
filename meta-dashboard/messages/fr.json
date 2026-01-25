@@ -13,6 +13,7 @@
     "search": "Recherche...",
     "all_statuses": "Tous les statuts",
     "all_types": "Tous les types",
+    "all_campaigns": "Toutes les campagnes",
     "currency": "Devise",
     "daily_trend": "Tendances quotidiennes",
     "weekly_trend": "Tendances hebdomadaires",
@@ -29,7 +30,8 @@
     "saving": "Économie...",
     "saved_successfully": "Sauvegarde réussie",
     "actions": "Actes",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "today": "aujourd'hui"
   },
   "status": {
     "ACTIVE": "Actif",
@@ -146,7 +148,9 @@
     "country": "Pays",
     "click_tab_to_load": "Cliquez sur un onglet pour charger les données détaillées",
     "breakdown_lazy_load": "Les données se chargeront lorsque vous sélectionnerez un type de ventilation.",
-    "leads": "Conduit"
+    "leads": "Prospects",
+    "download_leads": "Télécharger les Prospects",
+    "download_csv": "Télécharger CSV"
   },
   "reports": {
     "title": "Rapports avancés",
@@ -659,6 +663,7 @@
     "age_and_gender": "Âge et genre",
     "click_tab_to_load": "Cliquez sur un onglet pour charger les données détaillées",
     "lazy_load": "Les données détaillées se chargent lorsque vous sélectionnez un onglet.",
+    "no_conversion_data": "* Facebook ne fournit pas de données de conversion pour cette répartition",
     "ad_set_name": "Nom du groupe d'annonces",
     "ad_name": "Nom de l'annonce",
     "targeting_type": "Type de ciblage",
@@ -800,6 +805,14 @@
     "interest_hint": "Ciblez les utilisateurs en fonction de leurs centres d'intérêt, de leurs loisirs et de leurs comportements",
     "interest_placeholder": "Rechercher des centres d'intérêt (par exemple, remise en forme, cuisine, voyage...)",
     "age": "Âge",
+    "gender": "Genre",
+    "gender_all": "Tous",
+    "gender_male": "Homme",
+    "gender_female": "Femme",
+    "platform": "Plateforme",
+    "platform_all": "Tous",
+    "platform_facebook": "Facebook",
+    "platform_instagram": "Instagram",
     "daily_budget": "Budget quotidien",
     "facebook_pixel": "Pixel Facebook",
     "loading_pixels": "Chargement des pixels...",
@@ -853,7 +866,46 @@
     "lead": "Prospect",
     "complete_registration": "Terminer l'inscription",
     "contact": "Contact",
-    "submit_application": "Soumettre la candidature"
+    "submit_application": "Soumettre la candidature",
+    "create_audience": "Créer une audience depuis le pixel",
+    "audience_name": "Nom de l'audience",
+    "audience_name_placeholder": "ex: Visiteurs du site - 30 jours",
+    "event_type": "Type d'événement",
+    "event_pageview": "Vue de page (Tous les visiteurs)",
+    "event_viewcontent": "Vue de contenu (Ont vu des produits)",
+    "event_addtocart": "Ajout au panier",
+    "event_purchase": "Achat",
+    "event_lead": "Prospect",
+    "retention_days": "Période de rétention",
+    "days": "jours",
+    "day": "jour",
+    "create": "Créer",
+    "website_visitors": "Site web",
+    "page_engagement": "Page",
+    "lookalike": "Similaire",
+    "page_audience_placeholder": "ex: Abonnés de page - 365 jours",
+    "engagement_type": "Type d'engagement",
+    "engagement_all": "Tout l'engagement de la page",
+    "engagement_visited": "A visité la page",
+    "engagement_liked": "A aimé la page",
+    "engagement_saved": "A enregistré la page",
+    "engagement_messaged": "A contacté la page",
+    "select_page_first": "Veuillez d'abord sélectionner une page Facebook à l'étape 1",
+    "lookalike_placeholder": "ex: 1% Similaire - FR",
+    "source_audience": "Audience source",
+    "select_source": "Sélectionner l'audience source...",
+    "no_source_audiences": "Créez d'abord une audience personnalisée",
+    "country_code": "Pays cible (code ISO)",
+    "lookalike_size": "Taille de l'audience similaire",
+    "lookalike_hint": "% plus petit = plus similaire à l'audience source",
+    "schedule_campaign": "Planifier les dates de début/fin de campagne",
+    "start_date": "Date de début",
+    "end_date": "Date de fin",
+    "start_date_hint": "Laisser vide pour démarrer immédiatement",
+    "end_date_hint": "Laisser vide pour exécuter indéfiniment",
+    "language_targeting": "Ciblage linguistique",
+    "language_optional": "Facultatif",
+    "language_hint": "Ciblez les utilisateurs parlant des langues spécifiques. Laissez vide pour toutes les langues."
   },
   "ai_panel": {
     "title": "Demandez à l'assistant IA",
@@ -984,5 +1036,51 @@
     "page_not_connected_title": "Page Facebook non connectée",
     "page_not_connected_desc": "Votre compte doit être reconnecté pour récupérer les informations de votre page Facebook.",
     "go_to_settings": "Aller aux Paramètres → Reconnecter le compte"
+  },
+  "homepage": {
+    "title": "Accueil",
+    "subtitle": "Votre centre de contrôle pour les publicités Facebook",
+    "quick_stats": {
+      "spent": "Dépenses",
+      "this_week": "cette semaine",
+      "results": "Résultats",
+      "active_campaigns": "Campagnes actives"
+    },
+    "campaigns": {
+      "title": "Vos campagnes",
+      "view_all": "Voir toutes les campagnes",
+      "no_campaigns": "Pas encore de campagnes",
+      "health_great": "Excellent",
+      "health_attention": "Nécessite attention",
+      "health_problem": "Problème",
+      "reason_looking_good": "Ça a l'air bien !",
+      "reason_getting_results": "Obtient des résultats !",
+      "reason_good_engagement": "Bon engagement",
+      "reason_low_ctr": "Faible taux de clics - essayez de nouveaux créatifs",
+      "reason_no_conversions": "Pas encore de conversions",
+      "reason_no_results": "Dépense sans résultats - vérifiez le ciblage"
+    },
+    "actions": {
+      "title": "Que voulez-vous faire ?",
+      "create_campaign": "Créer une campagne",
+      "analyze_results": "Analyser les résultats",
+      "talk_to_ai": "Parler à l'IA"
+    },
+    "recommendations": {
+      "title": "Recommandations",
+      "no_recommendations": "Tout semble parfait !",
+      "add_creatives": "Ajouter des créatifs",
+      "increase_budget": "Augmenter le budget",
+      "view_details": "Voir les détails",
+      "campaign_problem": "\"{name}\" dépense mais n'obtient pas de résultats",
+      "campaign_low_ctr": "\"{name}\" a un faible taux de clics - essayez d'ajouter des créatifs",
+      "campaign_no_conversions": "\"{name}\" obtient des clics mais pas encore de conversions"
+    },
+    "creatives": {
+      "title": "Meilleurs créatifs",
+      "view_all": "Voir tous les créatifs",
+      "no_creatives": "Pas encore de créatifs",
+      "results_label": "résultats"
+    }
   }
 }

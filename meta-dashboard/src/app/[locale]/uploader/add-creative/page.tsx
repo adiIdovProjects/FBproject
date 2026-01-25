@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
     ArrowLeft, CheckCircle, Upload, Loader2
 } from 'lucide-react';
@@ -13,11 +13,16 @@ import { useTranslations } from 'next-intl';
 export default function AddCreativePage() {
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const locale = params.locale as string;
     const t = useTranslations();
     const isRTL = locale === 'he' || locale === 'ar';
     const { selectedAccountId, linkedAccounts, isLoading: isAccountLoading } = useAccount();
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
+
+    // Get pre-selected campaign and adset from URL
+    const preSelectedCampaignId = searchParams.get('campaign') || '';
+    const preSelectedAdSetId = searchParams.get('adset') || '';
 
     // Data Loading State
     const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -49,6 +54,16 @@ export default function AddCreativePage() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Initialize with pre-selected values from URL
+    useEffect(() => {
+        if (preSelectedCampaignId) {
+            setSelectedCampaignId(preSelectedCampaignId);
+        }
+        if (preSelectedAdSetId) {
+            setSelectedAdSetId(preSelectedAdSetId);
+        }
+    }, [preSelectedCampaignId, preSelectedAdSetId]);
 
     // Fetch Campaigns when Account changes
     useEffect(() => {

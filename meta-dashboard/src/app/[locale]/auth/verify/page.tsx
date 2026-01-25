@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { verifyMagicLink } from '@/services/auth.service';
+import { verifyMagicLink, syncTimezone } from '@/services/auth.service';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function VerifyMagicLinkPage() {
@@ -24,12 +24,13 @@ export default function VerifyMagicLinkPage() {
         }
 
         // Verify the magic link token
+        // The backend sets HttpOnly cookie automatically
         verifyMagicLink(token)
-            .then((response) => {
-                // Store JWT token
-                localStorage.setItem('token', response.access_token);
-
+            .then(async (response) => {
                 setStatus('success');
+
+                // Sync user's browser timezone (non-blocking)
+                syncTimezone().catch(() => {});
 
                 // Route based on onboarding status
                 const { onboarding_status } = response;
@@ -49,11 +50,11 @@ export default function VerifyMagicLinkPage() {
                                 router.push(`/${locale}/quiz`);
                                 break;
                             default:
-                                router.push(`/${locale}/account-dashboard`);
+                                router.push(`/${locale}/homepage`);
                         }
                     } else {
-                        // User is fully onboarded
-                        router.push(`/${locale}/account-dashboard`);
+                        // User is fully onboarded - go to homepage
+                        router.push(`/${locale}/homepage`);
                     }
                 }, 1500);
             })

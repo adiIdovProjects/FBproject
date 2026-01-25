@@ -17,12 +17,16 @@ class UserProfileResponse(BaseModel):
     google_id: Optional[str] = None
     job_title: Optional[str] = None
     years_experience: Optional[str] = None
+    timezone: Optional[str] = 'UTC'
     is_active: bool = True
     is_admin: bool = False
     created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+class TimezoneUpdateRequest(BaseModel):
+    timezone: str  # e.g., "America/New_York", "Europe/London"
 
 @router.get("/me", response_model=UserProfileResponse)
 async def get_current_user_profile(current_user=Depends(get_current_user)):
@@ -38,6 +42,7 @@ async def get_current_user_profile(current_user=Depends(get_current_user)):
         "google_id": current_user.google_id if hasattr(current_user, 'google_id') else None,
         "job_title": current_user.job_title if hasattr(current_user, 'job_title') else None,
         "years_experience": current_user.years_experience if hasattr(current_user, 'years_experience') else None,
+        "timezone": getattr(current_user, 'timezone', 'UTC'),
         "is_active": getattr(current_user, 'is_active', True),
         "is_admin": getattr(current_user, 'is_admin', False),
         "created_at": current_user.created_at if hasattr(current_user, 'created_at') else None
@@ -144,6 +149,30 @@ async def update_user_profile(
         "google_id": updated_user.google_id,
         "job_title": updated_user.job_title,
         "years_experience": updated_user.years_experience,
+        "timezone": getattr(updated_user, 'timezone', 'UTC'),
         "is_active": True,
         "created_at": updated_user.created_at
     }
+
+@router.patch("/me/timezone")
+async def update_timezone(
+    request: TimezoneUpdateRequest,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update user's timezone preference.
+    Called automatically on login to sync browser timezone.
+    """
+    # Validate timezone string (basic check)
+    import pytz
+    try:
+        pytz.timezone(request.timezone)
+    except pytz.UnknownTimeZoneError:
+        raise HTTPException(status_code=400, detail=f"Invalid timezone: {request.timezone}")
+
+    # Update user
+    current_user.timezone = request.timezone
+    db.commit()
+
+    return {"success": True, "timezone": request.timezone}

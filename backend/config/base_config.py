@@ -21,14 +21,14 @@ class Settings(BaseSettings):
             if v_clean in ("false", "0", "no", "off", ""):
                 return False
         return v
-    
+
     # Database Settings
     POSTGRES_USER: str = "postgres"
     DB_PASSWORD: str = "postgres"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str = "postgres"
-    
+
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.DB_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -39,12 +39,23 @@ class Settings(BaseSettings):
     FACEBOOK_ACCESS_TOKEN: Optional[str] = None
     FACEBOOK_AD_ACCOUNT_ID: Optional[str] = None
     FB_REDIRECT_URI: str = "http://localhost:8002/api/v1/auth/facebook/callback"
-    
+
     # Security Settings
-    # SECURITY: JWT secret MUST be set via .env file - no default value for production safety
+    # SECURITY: JWT secret MUST be set via .env file - weak default only for development
     JWT_SECRET_KEY: str = Field(default="dev-only-secret-change-in-production")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 1 week
+
+    @field_validator("JWT_SECRET_KEY", mode="after")
+    @classmethod
+    def validate_jwt_secret(cls, v: str, info) -> str:
+        # Allow weak secret in development only
+        if v == "dev-only-secret-change-in-production":
+            # Check if we're in production (need to access other fields)
+            return v  # Will be validated at startup
+        if len(v) < 32:
+            raise ValueError("JWT_SECRET_KEY must be at least 32 characters long")
+        return v
     
     # CORS Settings
     CORS_ORIGINS: Any = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"]

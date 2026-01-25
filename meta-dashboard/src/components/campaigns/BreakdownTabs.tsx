@@ -36,6 +36,9 @@ const TABS: Tab[] = [
   { id: 'country', labelKey: 'campaigns.country' },
 ];
 
+// Tabs that don't have conversion data from Facebook API
+const SPECIAL_BREAKDOWN_TABS: BreakdownType[] = ['platform', 'placement', 'age-gender', 'country'];
+
 export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
   dateRange,
   currency = 'USD',
@@ -252,6 +255,9 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
 
         {!isLoading && !error && hasLoadedOnce && breakdownData.length > 0 && (
           <div className="overflow-x-auto">
+            {SPECIAL_BREAKDOWN_TABS.includes(activeTab) && (
+              <p className="text-xs text-gray-500 mb-3 px-1">{t('breakdown.no_conversion_data')}</p>
+            )}
             <table className="w-full">
               <thead className="bg-gray-750 border-b border-gray-700">
                 <tr>

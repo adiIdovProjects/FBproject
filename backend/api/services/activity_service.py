@@ -71,9 +71,13 @@ class ActivityService:
             or_(*filters)
         ).limit(limit).all()
 
+        # Batch fetch subscriptions to avoid N+1 query
+        user_ids = [user.id for user in users]
+        subscriptions_map = self.subscription_repo.get_subscriptions_by_user_ids(user_ids)
+
         results = []
         for user in users:
-            subscription = self.subscription_repo.get_subscription_by_user(user.id)
+            subscription = subscriptions_map.get(user.id)
             results.append({
                 "id": user.id,
                 "email": user.email,
@@ -165,9 +169,13 @@ class ActivityService:
             User.created_at.desc()
         ).offset(offset).limit(limit).all()
 
+        # Batch fetch subscriptions to avoid N+1 query
+        user_ids = [user.id for user in users]
+        subscriptions_map = self.subscription_repo.get_subscriptions_by_user_ids(user_ids)
+
         results = []
         for user in users:
-            subscription = self.subscription_repo.get_subscription_by_user(user.id)
+            subscription = subscriptions_map.get(user.id)
             results.append({
                 "id": user.id,
                 "email": user.email,

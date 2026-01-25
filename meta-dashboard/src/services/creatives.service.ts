@@ -11,7 +11,7 @@ import { DateRange } from '../types/dashboard.types';
  * Fetch performance metrics for all creatives
  */
 export async function fetchCreatives(filter: CreativesFilter, accountId?: string | null): Promise<CreativeMetrics[]> {
-    const { dateRange, is_video, min_spend, sort_by, search_query, ad_status } = filter;
+    const { dateRange, is_video, min_spend, sort_by, search_query, ad_status, campaign_name } = filter;
     const { startDate, endDate } = dateRange;
 
     const params: any = {
@@ -38,6 +38,10 @@ export async function fetchCreatives(filter: CreativesFilter, accountId?: string
 
     if (ad_status) {
         params.ad_status = ad_status;
+    }
+
+    if (campaign_name) {
+        params.campaign_name = campaign_name;
     }
 
     try {

@@ -148,6 +148,184 @@ class AdMutationService:
 
         return params
 
+    def create_lead_form(
+        self,
+        page_id: str,
+        form_name: str,
+        questions: List[str],
+        privacy_policy_url: str,
+        account_id: str = None,
+        headline: str = None,
+        description: str = None,
+        custom_questions: List[Dict[str, Any]] = None,
+        thank_you_title: str = None,
+        thank_you_body: str = None,
+        thank_you_button_text: str = None,
+        thank_you_url: str = None
+    ) -> Dict[str, Any]:
+        """Create a new lead gen form for a page using Page Access Token.
+
+        Args:
+            page_id: Facebook Page ID
+            form_name: Name for the lead form
+            questions: List of question types (e.g., ['EMAIL', 'FULL_NAME', 'PHONE_NUMBER'])
+            privacy_policy_url: URL to privacy policy (required by Facebook)
+            account_id: Optional ad account ID for getting page token
+            headline: Form headline (max 60 chars)
+            description: Form intro text (max 800 chars)
+            custom_questions: List of custom questions with label, field_type, options
+            thank_you_title: Thank you page title
+            thank_you_body: Thank you page message
+            thank_you_button_text: Thank you button text
+            thank_you_url: Website URL for thank you button
+
+        Returns:
+            Dict with form id and name
+        """
+        import requests
+
+        try:
+            # Get page-specific access token
+            page_token = self._get_page_access_token(page_id, account_id)
+
+            # Build questions array for Facebook API
+            fb_questions = []
+            for q_type in questions:
+                fb_questions.append({
+                    "type": q_type,
+                    "key": q_type.lower()
+                })
+
+            # Add custom questions (only Multiple Choice with options)
+            if custom_questions:
+                for i, cq in enumerate(custom_questions):
+                    # Skip questions without a label
+                    label = cq.get('label', '').strip()
+                    if not label:
+                        continue
+
+                    # Get and filter options
+                    options = cq.get('options', [])
+                    valid_options = [opt.strip() for opt in options if opt and opt.strip()]
+
+                    # Skip if no valid options (Multiple Choice requires options)
+                    if not valid_options:
+                        logger.warning(f"Skipping custom question '{label}' - no valid options")
+                        continue
+
+                    # Build the custom question with options
+                    # Keys must be lowercase alphanumeric with underscores only
+                    def sanitize_key(text, fallback_idx):
+                        import re
+                        key = re.sub(r'[^a-z0-9_]', '', text.lower().replace(' ', '_'))
+                        return key if key else f"option_{fallback_idx}"
+
+                    custom_q = {
+                        "type": "CUSTOM",
+                        "key": f"custom_question_{i}",
+                        "label": label,
+                        "options": [{'key': sanitize_key(opt, idx), 'value': opt} for idx, opt in enumerate(valid_options)]
+                    }
+
+                    fb_questions.append(custom_q)
+
+            # Build payload
+            payload = {
+                'access_token': page_token,
+                'name': form_name,
+                'questions': json.dumps(fb_questions),
+                'privacy_policy': json.dumps({'url': privacy_policy_url}),
+            }
+
+            # Add optional context card (intro)
+            if headline or description:
+                context_card = {'style': 'PARAGRAPH_STYLE'}
+                if headline:
+                    context_card['title'] = headline
+                if description:
+                    context_card['content'] = [description]
+                payload['context_card'] = json.dumps(context_card)
+
+            # Add thank you screen with "Go to website" button (only if URL is provided)
+            if thank_you_url:
+                thank_you = {
+                    'title': thank_you_title or 'Thank you!',
+                    'body': thank_you_body or 'Thank you for your interest. We will be in touch soon.',
+                    'button_type': 'VIEW_WEBSITE',
+                    'button_text': thank_you_button_text or 'Go to website',
+                    'website_url': thank_you_url
+                }
+                payload['thank_you_page'] = json.dumps(thank_you)
+
+            # Set follow-up action URL (where button goes after form)
+            payload['follow_up_action_url'] = thank_you_url or privacy_policy_url
+
+            # Create the lead form
+            url = f"https://graph.facebook.com/v24.0/{page_id}/leadgen_forms"
+            logger.info(f"Creating lead form with payload keys: {list(payload.keys())}")
+            logger.info(f"Questions JSON being sent to Facebook: {payload.get('questions')}")
+            logger.info(f"Full fb_questions list: {fb_questions}")
+            response = requests.post(url, data=payload)
+            data = response.json()
+            logger.info(f"Lead form creation response: {data}")
+
+            if 'error' in data:
+                error_info = data['error']
+                # Prefer user-friendly message from Facebook if available
+                error_message = error_info.get('error_user_msg') or error_info.get('message', 'Unknown error')
+                logger.error(f"Facebook API error creating lead form: {error_message}")
+                raise ValueError(f"{error_message}")
+
+            form_id = data.get('id')
+            logger.info(f"Created lead form {form_id} for page {page_id}")
+
+            return {
+                'id': form_id,
+                'name': form_name,
+                'status': 'ACTIVE'
+            }
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to create lead form for page {page_id}: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to create lead form: {str(e)}")
+
+    def check_whatsapp_connection(self, page_id: str) -> Dict[str, Any]:
+        """Check if a Facebook Page has WhatsApp Business connected.
+
+        Args:
+            page_id: Facebook Page ID to check
+
+        Returns:
+            Dict with 'connected' boolean and 'whatsapp_business_account_id' if connected
+        """
+        import requests
+
+        try:
+            url = f"https://graph.facebook.com/v24.0/{page_id}"
+            params = {
+                'access_token': self.access_token,
+                'fields': 'whatsapp_business_account'
+            }
+            response = requests.get(url, params=params)
+            data = response.json()
+
+            if 'error' in data:
+                error_info = data['error']
+                error_message = error_info.get('message', 'Unknown error')
+                raise ValueError(f"Facebook API error: {error_message}")
+
+            whatsapp_account = data.get('whatsapp_business_account')
+            return {
+                'connected': bool(whatsapp_account),
+                'whatsapp_business_account_id': whatsapp_account.get('id') if whatsapp_account else None
+            }
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to check WhatsApp connection for page {page_id}: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to check WhatsApp status: {str(e)}")
+
     def get_lead_forms(self, page_id: str, account_id: str = None) -> List[Dict[str, Any]]:
         """Fetch available lead gen forms for a page using Page Access Token"""
         import requests
@@ -188,6 +366,208 @@ class AdMutationService:
         except Exception as e:
             logger.error(f"Failed to fetch lead forms for page {page_id}: {str(e)}", exc_info=True)
             raise ValueError(f"Unable to fetch lead forms. This may be due to connectivity issues or invalid permissions. Details: {str(e)}")
+
+    def get_lead_form_details(self, form_id: str, page_id: str, account_id: str = None) -> Dict[str, Any]:
+        """Fetch detailed configuration of a lead form for duplication purposes.
+
+        Args:
+            form_id: The lead form ID to fetch details for
+            page_id: Facebook Page ID that owns the form
+            account_id: Optional ad account ID for getting page token
+
+        Returns:
+            Dict with form details including questions, privacy policy, context card, thank you page
+        """
+        import requests
+
+        try:
+            # Get page-specific access token
+            page_token = self._get_page_access_token(page_id, account_id)
+
+            # Call Facebook API with expanded fields
+            url = f"https://graph.facebook.com/v24.0/{form_id}"
+            params = {
+                'access_token': page_token,
+                'fields': 'id,name,status,questions,privacy_policy,context_card,thank_you_page,created_time'
+            }
+            response = requests.get(url, params=params)
+            data = response.json()
+
+            # Check for Facebook API error
+            if 'error' in data:
+                error_info = data['error']
+                error_message = error_info.get('message', 'Unknown error')
+                raise ValueError(f"Facebook API error: {error_message}")
+
+            # Parse the response into a cleaner format
+            result = {
+                'id': data.get('id'),
+                'name': data.get('name'),
+                'status': data.get('status'),
+                'created_time': data.get('created_time'),
+                'questions': [],
+                'custom_questions': [],
+                'privacy_policy_url': None,
+                'headline': None,
+                'description': None,
+                'thank_you_title': None,
+                'thank_you_body': None,
+                'thank_you_button_text': None,
+                'thank_you_url': None,
+            }
+
+            # Parse questions - separate standard from custom
+            standard_question_types = {'EMAIL', 'FULL_NAME', 'PHONE_NUMBER', 'CITY', 'COUNTRY', 'JOB_TITLE', 'COMPANY_NAME'}
+            if 'questions' in data:
+                for q in data['questions']:
+                    q_type = q.get('type', '')
+                    if q_type in standard_question_types:
+                        result['questions'].append(q_type)
+                    elif q_type == 'CUSTOM':
+                        # Custom question
+                        custom_q = {
+                            'label': q.get('label', ''),
+                            'field_type': 'SELECT',  # Facebook custom questions are typically SELECT
+                            'options': [],
+                            'allow_multiple': False
+                        }
+                        # Parse options if present
+                        if 'options' in q:
+                            custom_q['options'] = [opt.get('value', '') for opt in q['options']]
+                        result['custom_questions'].append(custom_q)
+
+            # Parse privacy policy
+            if 'privacy_policy' in data:
+                result['privacy_policy_url'] = data['privacy_policy'].get('url')
+
+            # Parse context card (intro/headline/description)
+            if 'context_card' in data:
+                ctx = data['context_card']
+                result['headline'] = ctx.get('title')
+                result['description'] = ctx.get('content')
+
+            # Parse thank you page
+            if 'thank_you_page' in data:
+                ty = data['thank_you_page']
+                result['thank_you_title'] = ty.get('title')
+                result['thank_you_body'] = ty.get('body')
+                result['thank_you_button_text'] = ty.get('button_text')
+                result['thank_you_url'] = ty.get('website_url')
+
+            return result
+
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to fetch lead form details for form {form_id}: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to fetch lead form details: {str(e)}")
+
+    def get_leads(self, lead_form_id: str, page_id: str, account_id: str = None,
+                   start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+        """Fetch leads submitted to a lead form.
+
+        Args:
+            lead_form_id: The lead form ID to fetch leads from
+            page_id: Facebook Page ID that owns the form
+            account_id: Optional ad account ID for getting page token
+            start_date: Optional start date filter (YYYY-MM-DD). Leads on or after this date.
+            end_date: Optional end date filter (YYYY-MM-DD). Leads on or before this date (inclusive, includes today).
+
+        Returns:
+            List of leads with id, created_time, and field_data flattened to key-value pairs
+        """
+        import requests
+        from datetime import datetime, timedelta
+
+        try:
+            # Get page-specific access token (required for leads endpoint)
+            page_token = self._get_page_access_token(page_id, account_id)
+
+            # Fetch leads from the form
+            url = f"https://graph.facebook.com/v24.0/{lead_form_id}/leads"
+            params = {
+                'access_token': page_token,
+                'fields': 'id,created_time,field_data'
+            }
+
+            # Parse date filters for comparison
+            start_dt = None
+            end_dt = None
+            logger.info(f"get_leads called with start_date={repr(start_date)}, end_date={repr(end_date)}")
+            if start_date and start_date != 'None':
+                start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+                logger.info(f"Parsed start_dt: {start_dt} (date: {start_dt.date()})")
+            if end_date and end_date != 'None':
+                # End date is inclusive - include the entire day (until end of day)
+                end_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+                logger.info(f"Parsed end_dt: {end_dt} (date: {end_dt.date()})")
+
+            all_leads = []
+
+            # Handle pagination
+            while url:
+                response = requests.get(url, params=params)
+                data = response.json()
+
+                if 'error' in data:
+                    error_info = data['error']
+                    error_message = error_info.get('message', 'Unknown error')
+                    raise ValueError(f"Facebook API error: {error_message}")
+
+                # Process leads and flatten field_data
+                for lead in data.get('data', []):
+                    # Filter by date if specified
+                    created_time = lead.get('created_time')
+                    logger.debug(f"Processing lead {lead.get('id')}, created_time={created_time}")
+
+                    # Only filter if we have date filters AND the lead has a created_time
+                    if (start_dt or end_dt) and created_time:
+                        try:
+                            # Parse Facebook's ISO format - handle various formats
+                            # Examples: "2025-01-21T10:00:00+0000", "2025-01-21T10:00:00+00:00"
+                            # First, try to extract just the date part (YYYY-MM-DD)
+                            lead_date_str = created_time[:10]  # Get "YYYY-MM-DD" part
+                            lead_date = datetime.strptime(lead_date_str, '%Y-%m-%d').date()
+
+                            logger.debug(f"Lead {lead['id']}: parsed date {lead_date} from {created_time}")
+
+                            if start_dt and lead_date < start_dt.date():
+                                logger.info(f"Skipping lead {lead['id']} - {lead_date} is before {start_dt.date()}")
+                                continue  # Skip leads before start_date
+                            if end_dt and lead_date >= end_dt.date():
+                                logger.info(f"Skipping lead {lead['id']} - {lead_date} is on/after {end_dt.date()}")
+                                continue  # Skip leads after end_date (end_dt is already +1 day)
+
+                            logger.debug(f"Including lead {lead['id']} - {lead_date} is within range")
+                        except (ValueError, AttributeError, IndexError) as e:
+                            # If date parsing fails, include the lead (don't filter it out)
+                            logger.warning(f"Could not parse lead date '{created_time}': {e}")
+
+                    lead_record = {
+                        'id': lead['id'],
+                        'created_time': created_time,
+                    }
+                    # Flatten field_data array to key-value pairs
+                    for field in lead.get('field_data', []):
+                        field_name = field.get('name', '')
+                        field_values = field.get('values', [])
+                        lead_record[field_name] = field_values[0] if field_values else ''
+
+                    all_leads.append(lead_record)
+
+                # Check for next page
+                paging = data.get('paging', {})
+                url = paging.get('next')
+                params = {}  # Next URL already includes params
+
+            logger.info(f"Returning {len(all_leads)} leads after date filtering (start_dt={start_dt}, end_dt={end_dt})")
+            return all_leads
+
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to fetch leads for form {lead_form_id}: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to fetch leads. Details: {str(e)}")
 
     def get_pixels(self, account_id: str) -> List[Dict[str, Any]]:
         """Fetch Facebook Pixels for an ad account"""
@@ -292,6 +672,8 @@ class AdMutationService:
                     'region_id': item.get('region_id'),
                     'supports_city': item.get('supports_city', False),
                     'supports_region': item.get('supports_region', False),
+                    'latitude': item.get('latitude'),
+                    'longitude': item.get('longitude'),
                 }
                 # Build display name
                 parts = [item.get('name')]
@@ -371,6 +753,10 @@ class AdMutationService:
             campaign_params[Campaign.Field.objective] = "OUTCOME_TRAFFIC"
         elif request.objective == "ENGAGEMENT":
             campaign_params[Campaign.Field.objective] = "OUTCOME_ENGAGEMENT"
+        elif request.objective == "WHATSAPP":
+            campaign_params[Campaign.Field.objective] = "OUTCOME_MESSAGES"
+        elif request.objective == "CALLS":
+            campaign_params[Campaign.Field.objective] = "OUTCOME_CALLS"
         
         logger.info(f"Creating Campaign: {request.campaign_name} for account {request.account_id}")
         campaign = account.create_campaign(params=campaign_params)
@@ -410,6 +796,11 @@ class AdMutationService:
             "age_max": request.age_max,
         }
 
+        # Add gender targeting if specified (1 = male, 2 = female)
+        if request.genders and len(request.genders) > 0:
+            targeting["genders"] = request.genders
+            logger.info(f"Adding gender targeting: {request.genders}")
+
         # Add custom audiences if provided (lookalikes, saved audiences)
         if request.custom_audiences and len(request.custom_audiences) > 0:
             targeting["custom_audiences"] = [{"id": aud_id} for aud_id in request.custom_audiences]
@@ -427,6 +818,16 @@ class AdMutationService:
             }]
             logger.info(f"Adding {len(request.interests)} interests to targeting")
 
+        # Add publisher_platforms if specified (facebook, instagram)
+        if request.publisher_platforms and len(request.publisher_platforms) > 0:
+            targeting["publisher_platforms"] = request.publisher_platforms
+            logger.info(f"Adding publisher_platforms targeting: {request.publisher_platforms}")
+
+        # Add language targeting if specified (Facebook locale codes)
+        if request.locales and len(request.locales) > 0:
+            targeting["locales"] = request.locales
+            logger.info(f"Adding language targeting: {request.locales}")
+
         adset_params = {
             AdSet.Field.name: adset_name,
             AdSet.Field.campaign_id: campaign_id,
@@ -437,6 +838,21 @@ class AdMutationService:
             AdSet.Field.targeting: targeting,
             # Placements: Default is Auto (Advantage+)
         }
+
+        # Add scheduling if provided
+        if request.start_date:
+            # Facebook expects Unix timestamp for start_time
+            from datetime import datetime, timezone
+            start_datetime = datetime.combine(request.start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+            adset_params[AdSet.Field.start_time] = int(start_datetime.timestamp())
+            logger.info(f"Campaign scheduled to start on {request.start_date}")
+
+        if request.end_date:
+            from datetime import datetime, timezone
+            # End at end of day
+            end_datetime = datetime.combine(request.end_date, datetime.max.time().replace(microsecond=0)).replace(tzinfo=timezone.utc)
+            adset_params[AdSet.Field.end_time] = int(end_datetime.timestamp())
+            logger.info(f"Campaign scheduled to end on {request.end_date}")
 
         # Optimization Goals & Promoted Object
         if request.objective == "SALES":
@@ -463,6 +879,17 @@ class AdMutationService:
 
         elif request.objective == "ENGAGEMENT":
             adset_params[AdSet.Field.optimization_goal] = "POST_ENGAGEMENT"
+
+        elif request.objective == "WHATSAPP":
+            adset_params[AdSet.Field.optimization_goal] = "CONVERSATIONS"
+            adset_params[AdSet.Field.destination_type] = "WHATSAPP"
+            adset_params[AdSet.Field.promoted_object] = {"page_id": request.page_id}
+            logger.info(f"Setting up WhatsApp campaign for page {request.page_id}")
+
+        elif request.objective == "CALLS":
+            adset_params[AdSet.Field.optimization_goal] = "QUALITY_CALL"
+            adset_params[AdSet.Field.promoted_object] = {"page_id": request.page_id}
+            logger.info(f"Setting up Calls campaign for page {request.page_id}")
 
         logger.info(f"Creating AdSet under Campaign {campaign_id}")
         adset = account.create_ad_set(params=adset_params)
@@ -1132,3 +1559,386 @@ class AdMutationService:
         except Exception as e:
             logger.error(f"Failed to fetch ad {ad_id} creative: {str(e)}")
             raise
+
+    def get_campaign_clone_data(self, campaign_id: str) -> Dict[str, Any]:
+        """
+        Fetch all data needed to clone a campaign.
+        Returns campaign info, first adset targeting + budget, and all ad creatives.
+        """
+        import requests
+
+        try:
+            logger.info(f"Fetching clone data for campaign {campaign_id}")
+
+            # 1. Get campaign basic info and objective
+            campaign = Campaign(campaign_id)
+            campaign_data = campaign.api_get(fields=[
+                Campaign.Field.name,
+                Campaign.Field.objective,
+                Campaign.Field.status,
+                Campaign.Field.daily_budget
+            ])
+
+            result = {
+                'campaign_id': campaign_id,
+                'campaign_name': campaign_data.get(Campaign.Field.name, ''),
+                'objective': campaign_data.get(Campaign.Field.objective, ''),
+                'targeting': {},
+                'budget': {},
+                'ads': []
+            }
+
+            # Map FB objectives to our simplified objectives
+            fb_objective = campaign_data.get(Campaign.Field.objective, '')
+            objective_mapping = {
+                'OUTCOME_SALES': 'SALES',
+                'OUTCOME_LEADS': 'LEADS',
+                'OUTCOME_TRAFFIC': 'TRAFFIC',
+                'OUTCOME_ENGAGEMENT': 'ENGAGEMENT',
+                # Legacy objectives
+                'CONVERSIONS': 'SALES',
+                'LEAD_GENERATION': 'LEADS',
+                'LINK_CLICKS': 'TRAFFIC',
+                'POST_ENGAGEMENT': 'ENGAGEMENT',
+            }
+            result['objective'] = objective_mapping.get(fb_objective, 'TRAFFIC')
+
+            # 2. Get first adset for targeting and budget
+            adsets = campaign.get_ad_sets(fields=[
+                AdSet.Field.id,
+                AdSet.Field.name,
+                AdSet.Field.targeting,
+                AdSet.Field.daily_budget,
+                AdSet.Field.lifetime_budget,
+                AdSet.Field.promoted_object
+            ])
+
+            adset_list = list(adsets)
+            if adset_list:
+                first_adset = adset_list[0]
+                adset_id = first_adset.get('id')
+
+                # Get targeting from first adset
+                targeting = first_adset.get('targeting', {})
+
+                # Parse geo_locations
+                geo_locations = targeting.get('geo_locations', {})
+                locations = []
+
+                for country_code in geo_locations.get('countries', []):
+                    locations.append({
+                        'key': country_code,
+                        'type': 'country',
+                        'name': country_code,
+                        'country_code': country_code
+                    })
+
+                for region in geo_locations.get('regions', []):
+                    locations.append({
+                        'key': region.get('key'),
+                        'type': 'region',
+                        'name': region.get('name', ''),
+                        'country_code': region.get('country')
+                    })
+
+                for city in geo_locations.get('cities', []):
+                    locations.append({
+                        'key': city.get('key'),
+                        'type': 'city',
+                        'name': city.get('name', ''),
+                        'country_code': city.get('country')
+                    })
+
+                result['targeting'] = {
+                    'locations': locations,
+                    'age_min': targeting.get('age_min', 18),
+                    'age_max': targeting.get('age_max', 65),
+                    'genders': targeting.get('genders', []),
+                    'publisher_platforms': targeting.get('publisher_platforms', [])
+                }
+
+                # Get budget
+                daily_budget = first_adset.get('daily_budget')
+                result['budget'] = {
+                    'daily_budget_cents': int(daily_budget) if daily_budget else 2000  # Default $20
+                }
+
+                # Get pixel info from promoted_object
+                promoted_object = first_adset.get('promoted_object', {})
+                result['pixel_id'] = promoted_object.get('pixel_id', '')
+                result['conversion_event'] = promoted_object.get('custom_event_type', '')
+
+                # 3. Get all ads from this adset
+                adset_obj = AdSet(adset_id)
+                ads = adset_obj.get_ads(fields=[Ad.Field.id, Ad.Field.name, Ad.Field.creative])
+
+                for ad in ads:
+                    ad_id = ad.get('id')
+                    try:
+                        creative_data = self.get_ad_creative(ad_id)
+                        result['ads'].append({
+                            'ad_id': ad_id,
+                            'ad_name': ad.get('name', ''),
+                            **creative_data
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to fetch creative for ad {ad_id}: {e}")
+
+            logger.info(f"Clone data for campaign {campaign_id}: targeting locations={len(result['targeting'].get('locations', []))}, ads={len(result['ads'])}")
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to fetch campaign clone data for {campaign_id}: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to fetch campaign data for cloning: {str(e)}")
+
+    def create_custom_audience_from_pixel(
+        self,
+        account_id: str,
+        name: str,
+        pixel_id: str,
+        event_type: str = "PageView",
+        retention_days: int = 30
+    ) -> Dict[str, Any]:
+        """Create a custom audience from pixel data (website visitors).
+
+        Args:
+            account_id: Ad Account ID
+            name: Audience name
+            pixel_id: Facebook Pixel ID
+            event_type: Pixel event type (PageView, ViewContent, AddToCart, Purchase, Lead)
+            retention_days: Days to retain users in audience (1-180)
+
+        Returns:
+            Dict with audience id and name
+        """
+        import requests
+
+        try:
+            # Handle both "act_123" and "123" formats
+            clean_id = account_id.replace("act_", "")
+
+            # Build the rule for website custom audience
+            # retention_seconds = days * 24 * 60 * 60
+            retention_seconds = retention_days * 86400
+
+            rule = {
+                "inclusions": {
+                    "operator": "or",
+                    "rules": [{
+                        "event_sources": [{
+                            "id": pixel_id,
+                            "type": "pixel"
+                        }],
+                        "retention_seconds": retention_seconds,
+                        "filter": {
+                            "operator": "and",
+                            "filters": [{
+                                "field": "event",
+                                "operator": "eq",
+                                "value": event_type
+                            }]
+                        }
+                    }]
+                }
+            }
+
+            # Create the custom audience via Facebook Graph API
+            url = f"https://graph.facebook.com/v24.0/act_{clean_id}/customaudiences"
+            payload = {
+                'access_token': self.access_token,
+                'name': name,
+                'subtype': 'WEBSITE',
+                'rule': json.dumps(rule)
+            }
+
+            logger.info(f"Creating custom audience '{name}' from pixel {pixel_id} with event {event_type}")
+            response = requests.post(url, data=payload)
+            data = response.json()
+
+            if 'error' in data:
+                error_info = data['error']
+                error_message = error_info.get('error_user_msg') or error_info.get('message', 'Unknown error')
+                logger.error(f"Facebook API error creating custom audience: {error_message}")
+                raise ValueError(f"{error_message}")
+
+            audience_id = data.get('id')
+            logger.info(f"Created custom audience {audience_id} from pixel {pixel_id}")
+
+            return {
+                'id': audience_id,
+                'name': name,
+                'subtype': 'WEBSITE',
+                'pixel_id': pixel_id,
+                'event_type': event_type,
+                'retention_days': retention_days
+            }
+
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to create custom audience from pixel: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to create custom audience: {str(e)}")
+
+    def create_page_engagement_audience(
+        self,
+        account_id: str,
+        name: str,
+        page_id: str,
+        engagement_type: str = "page_engaged",
+        retention_days: int = 365
+    ) -> Dict[str, Any]:
+        """Create a custom audience from Facebook Page engagement.
+
+        Args:
+            account_id: Ad Account ID
+            name: Audience name
+            page_id: Facebook Page ID
+            engagement_type: Type of engagement (page_engaged, page_visited, page_liked, page_saved, page_messaged)
+            retention_days: Days to retain users in audience (1-365)
+
+        Returns:
+            Dict with audience id and name
+        """
+        import requests
+
+        try:
+            clean_id = account_id.replace("act_", "")
+            retention_seconds = retention_days * 86400
+
+            # Map engagement types to Facebook's rule format
+            engagement_rules = {
+                "page_engaged": "page_engaged",      # Anyone who engaged with page
+                "page_visited": "page_visited",      # People who visited page
+                "page_liked": "page_liked",          # People who liked page
+                "page_saved": "page_saved_post",     # People who saved page/posts
+                "page_messaged": "page_messaged"     # People who messaged page
+            }
+
+            rule_type = engagement_rules.get(engagement_type, "page_engaged")
+
+            rule = {
+                "inclusions": {
+                    "operator": "or",
+                    "rules": [{
+                        "event_sources": [{
+                            "id": page_id,
+                            "type": "page"
+                        }],
+                        "retention_seconds": retention_seconds,
+                        "filter": {
+                            "operator": "and",
+                            "filters": [{
+                                "field": "event",
+                                "operator": "eq",
+                                "value": rule_type
+                            }]
+                        }
+                    }]
+                }
+            }
+
+            url = f"https://graph.facebook.com/v24.0/act_{clean_id}/customaudiences"
+            payload = {
+                'access_token': self.access_token,
+                'name': name,
+                'subtype': 'ENGAGEMENT',
+                'rule': json.dumps(rule)
+            }
+
+            logger.info(f"Creating page engagement audience '{name}' from page {page_id} with type {engagement_type}")
+            response = requests.post(url, data=payload)
+            data = response.json()
+
+            if 'error' in data:
+                error_info = data['error']
+                error_message = error_info.get('error_user_msg') or error_info.get('message', 'Unknown error')
+                logger.error(f"Facebook API error creating page engagement audience: {error_message}")
+                raise ValueError(f"{error_message}")
+
+            audience_id = data.get('id')
+            logger.info(f"Created page engagement audience {audience_id} from page {page_id}")
+
+            return {
+                'id': audience_id,
+                'name': name,
+                'subtype': 'ENGAGEMENT',
+                'page_id': page_id,
+                'engagement_type': engagement_type,
+                'retention_days': retention_days
+            }
+
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to create page engagement audience: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to create page engagement audience: {str(e)}")
+
+    def create_lookalike_audience(
+        self,
+        account_id: str,
+        name: str,
+        source_audience_id: str,
+        country_code: str,
+        ratio: float = 0.01
+    ) -> Dict[str, Any]:
+        """Create a lookalike audience from an existing custom audience.
+
+        Args:
+            account_id: Ad Account ID
+            name: Audience name
+            source_audience_id: Source custom audience ID
+            country_code: Target country (ISO code, e.g., US, IL, DE)
+            ratio: Lookalike ratio (0.01 = 1%, 0.10 = 10%)
+
+        Returns:
+            Dict with audience id and name
+        """
+        import requests
+
+        try:
+            clean_id = account_id.replace("act_", "")
+
+            # Lookalike spec
+            lookalike_spec = {
+                "type": "similarity",
+                "country": country_code.upper(),
+                "ratio": ratio,
+                "starting_ratio": 0.0
+            }
+
+            url = f"https://graph.facebook.com/v24.0/act_{clean_id}/customaudiences"
+            payload = {
+                'access_token': self.access_token,
+                'name': name,
+                'subtype': 'LOOKALIKE',
+                'origin_audience_id': source_audience_id,
+                'lookalike_spec': json.dumps(lookalike_spec)
+            }
+
+            logger.info(f"Creating lookalike audience '{name}' from source {source_audience_id} in {country_code} at {ratio*100}%")
+            response = requests.post(url, data=payload)
+            data = response.json()
+
+            if 'error' in data:
+                error_info = data['error']
+                error_message = error_info.get('error_user_msg') or error_info.get('message', 'Unknown error')
+                logger.error(f"Facebook API error creating lookalike audience: {error_message}")
+                raise ValueError(f"{error_message}")
+
+            audience_id = data.get('id')
+            logger.info(f"Created lookalike audience {audience_id}")
+
+            return {
+                'id': audience_id,
+                'name': name,
+                'subtype': 'LOOKALIKE',
+                'source_audience_id': source_audience_id,
+                'country_code': country_code,
+                'ratio': ratio
+            }
+
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to create lookalike audience: {str(e)}", exc_info=True)
+            raise ValueError(f"Unable to create lookalike audience: {str(e)}")

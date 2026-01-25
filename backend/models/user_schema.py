@@ -37,6 +37,9 @@ class User(Base):
     onboarding_completed = Column(Boolean, default=False)
     onboarding_step = Column(String(50))  # 'connect_facebook', 'select_accounts', 'complete_profile', 'completed'
 
+    # User preferences
+    timezone = Column(String(50), default='UTC')  # e.g., "America/New_York", "Europe/London"
+
     # Admin access
     is_admin = Column(Boolean, default=False)
 

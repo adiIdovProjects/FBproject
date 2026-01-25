@@ -8,7 +8,7 @@ from backend.api.repositories.user_repository import UserRepository
 from backend.api.repositories.magic_link_repository import MagicLinkRepository
 from backend.api.services.audit_service import AuditService
 from backend.api.services.email_service import send_magic_link
-from backend.api.utils.security import create_access_token, verify_password, get_password_hash
+from backend.api.utils.security import create_access_token, verify_password, get_password_hash, set_auth_cookie, clear_auth_cookie
 from backend.api.routers.sync import init_sync_status, update_sync_status, mark_sync_completed, mark_sync_failed
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
@@ -227,18 +227,19 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
 
         # 5. Create app JWT (always needed for redirect)
         app_token = create_access_token(subject=user.id)
-        
-        # Redirect back to frontend
+
+        # Redirect back to frontend with token in URL
+        # Frontend will call /api/v1/auth/session to set cookie via proxy
         from backend.config.base_config import settings
-        frontend_base = settings.FACEBOOK_OAUTH_REDIRECT_URL.split('?')[0] # Remove any query params if present in config
-        # If FACEBOOK_OAUTH_REDIRECT_URL is http://localhost:3000, we append
-        
+
         if is_connect_flow:
             # Connect flow always goes to select-accounts to add/manage accounts
-            return RedirectResponse(f"{settings.FRONTEND_URL}/en/callback?token={app_token}&redirect=select-accounts")
+            redirect_url = f"{settings.FRONTEND_URL}/en/callback?redirect=select-accounts&token={app_token}"
         else:
-             # Normal login redirect - go through callback
-            return RedirectResponse(f"{settings.FACEBOOK_OAUTH_REDIRECT_URL}?token={app_token}&state={state}")
+            # Normal login redirect - go through callback
+            redirect_url = f"{settings.FACEBOOK_OAUTH_REDIRECT_URL}?state={state}&token={app_token}"
+
+        return RedirectResponse(redirect_url)
         
     except Exception as e:
         logger.error(f"Facebook Auth failed: {str(e)}", exc_info=True)
@@ -488,7 +489,7 @@ async def request_magic_link(request: MagicLinkRequest, db: Session = Depends(ge
         )
 
 @router.get("/magic-link/verify")
-async def verify_magic_link(token: str, db: Session = Depends(get_db)):
+async def verify_magic_link(token: str, response: Response, db: Session = Depends(get_db)):
     """
     Verify a magic link token and log the user in
     Creates a new user if they don't exist
@@ -545,7 +546,10 @@ async def verify_magic_link(token: str, db: Session = Depends(get_db)):
         # Create JWT access token
         access_token = create_access_token(subject=user.id)
 
-        # Return token and onboarding status
+        # Set HttpOnly cookie with the token
+        set_auth_cookie(response, access_token)
+
+        # Return token and onboarding status (token also in cookie for security)
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -560,6 +564,47 @@ async def verify_magic_link(token: str, db: Session = Depends(get_db)):
             status_code=500,
             detail="Failed to verify magic link. Please try again."
         )
+
+class SetSessionRequest(BaseModel):
+    token: str
+
+@router.post("/session")
+async def set_session(request: SetSessionRequest, response: Response, db: Session = Depends(get_db)):
+    """
+    Set auth cookie from a token. Used by frontend after OAuth redirect.
+    Validates token before setting cookie for security.
+    """
+    try:
+        # Validate the token first
+        from jose import JWTError, jwt as jose_jwt
+        from backend.config.base_config import settings
+
+        payload = jose_jwt.decode(
+            request.token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        # Verify user exists
+        from backend.models.user_schema import User
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        # Set the cookie
+        set_auth_cookie(response, request.token)
+        return {"success": True}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@router.post("/logout")
+async def logout(response: Response):
+    """Clear auth cookie to log out user."""
+    clear_auth_cookie(response)
+    return {"success": True, "message": "Logged out successfully"}
 
 @router.get("/onboarding/status")
 async def get_onboarding_status(

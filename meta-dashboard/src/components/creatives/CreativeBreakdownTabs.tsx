@@ -242,6 +242,7 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
+            <p className="text-xs text-gray-500 mb-3 px-6">{t('breakdown.no_conversion_data')}</p>
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-black/20 border-b border-border-subtle">

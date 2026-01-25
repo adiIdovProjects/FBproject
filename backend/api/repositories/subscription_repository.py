@@ -23,6 +23,15 @@ class SubscriptionRepository:
             UserSubscription.user_id == user_id
         ).first()
 
+    def get_subscriptions_by_user_ids(self, user_ids: List[int]) -> Dict[int, UserSubscription]:
+        """Get subscriptions for multiple users in a single query (batch operation)"""
+        if not user_ids:
+            return {}
+        subscriptions = self.db.query(UserSubscription).filter(
+            UserSubscription.user_id.in_(user_ids)
+        ).all()
+        return {sub.user_id: sub for sub in subscriptions}
+
     def get_subscription_by_stripe_customer(self, customer_id: str) -> Optional[UserSubscription]:
         """Get subscription by Stripe customer ID"""
         return self.db.query(UserSubscription).filter(

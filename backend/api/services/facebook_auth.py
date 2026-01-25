@@ -26,7 +26,8 @@ class FacebookAuthService:
             'pages_show_list',
             'pages_read_engagement',
             'pages_manage_ads',
-            'pages_manage_metadata'
+            'pages_manage_metadata',
+            'leads_retrieval'
         ]
         scope_str = ','.join(scopes)
         return (

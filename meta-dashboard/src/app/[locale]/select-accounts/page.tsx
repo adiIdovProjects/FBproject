@@ -1,45 +1,47 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AccountSelector } from '@/components/connect/AccountSelector';
 import { fetchAvailableAccounts, linkAccounts, AdAccount } from '@/services/accounts.service';
 import { apiClient } from '@/services/apiClient';
+import { useAccount } from '@/context/AccountContext';
 
 export default function SelectAccountsPage() {
     const router = useRouter();
     const { locale } = useParams();
+    const searchParams = useSearchParams();
     const t = useTranslations();
+    const { refreshAccounts, setSelectedAccountId } = useAccount();
     const [accounts, setAccounts] = useState<AdAccount[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Watch for 'refresh' param to trigger refetch when coming from callback
+    const refresh = searchParams.get('refresh');
+
     useEffect(() => {
         // Token is now handled by /callback page before redirecting here
-        // Load accounts immediately
+        // Load accounts immediately (also refetches when refresh param changes)
         loadAccounts();
-    }, []);
+    }, [refresh]);
 
     const loadAccounts = async () => {
         try {
             setIsLoading(true);
             setError(null);
 
-            // Check if user has auth token
-            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-            if (!token) {
-                router.push(`/${locale}/login`);
-                return;
-            }
-
+            // Auth is now handled via HttpOnly cookies - apiClient handles 401s
             // Fetch available accounts from Facebook
             const availableAccounts = await fetchAvailableAccounts();
             setAccounts(availableAccounts);
         } catch (err: any) {
-            console.error('Error loading accounts:', err);
-            setError(err.message || 'Failed to load Facebook ad accounts. Please try again.');
+            // 401 errors are handled by apiClient interceptor (redirect to login)
+            if (err.response?.status !== 401) {
+                setError(err.message || 'Failed to load Facebook ad accounts. Please try again.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -52,6 +54,14 @@ export default function SelectAccountsPage() {
 
             // Show success message briefly
             console.log(`Successfully linked ${response.linked_count} accounts`);
+
+            // Refresh the account context so new accounts appear in sidebar/dropdown
+            await refreshAccounts();
+
+            // Auto-select the first newly linked account
+            if (selectedAccounts.length > 0) {
+                setSelectedAccountId(selectedAccounts[0].account_id);
+            }
 
             // Check if user has already completed onboarding
             const onboardingStatus = await apiClient.get('/api/v1/auth/onboarding/status');

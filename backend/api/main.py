@@ -25,7 +25,7 @@ load_dotenv(dotenv_path=env_path)
 
 from backend.api.dependencies import get_db
 from sqlalchemy.orm import Session
-from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts, mutations, admin, stripe, activity
+from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts, mutations, admin, stripe, activity, public_chat
 from backend.models import create_schema
 from backend.utils.db_utils import get_db_engine
 from backend.utils.logging_utils import setup_logging, get_logger
@@ -114,6 +114,7 @@ app.include_router(mutations.router)
 app.include_router(admin.router)
 app.include_router(stripe.router)
 app.include_router(activity.router)
+app.include_router(public_chat.router)
 
 @app.get("/ping", tags=["health"])
 def ping():
@@ -153,9 +154,28 @@ async def startup_event():
     logger.info("=" * 60)
     logger.info(f"🚀 {settings.APP_NAME} Starting Up")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"DEV_BYPASS_AUTH: {settings.DEV_BYPASS_AUTH}")
     logger.info("=" * 60)
-    
+
+    # SECURITY: Production safety checks
+    if settings.ENVIRONMENT == "production":
+        # Block weak JWT secret in production
+        if settings.JWT_SECRET_KEY == "dev-only-secret-change-in-production":
+            logger.critical("❌ FATAL: JWT_SECRET_KEY is not set! Cannot start in production with default secret.")
+            raise RuntimeError("JWT_SECRET_KEY must be configured in production")
+
+        # Block auth bypass in production
+        if settings.DEV_BYPASS_AUTH:
+            logger.critical("❌ FATAL: DEV_BYPASS_AUTH=True is not allowed in production!")
+            raise RuntimeError("DEV_BYPASS_AUTH must be False in production")
+
+        logger.info("✅ Security checks passed")
+    else:
+        # Development mode warnings
+        if settings.DEV_BYPASS_AUTH:
+            logger.warning("⚠️ DEV_BYPASS_AUTH is enabled - authentication bypassed!")
+        if settings.JWT_SECRET_KEY == "dev-only-secret-change-in-production":
+            logger.warning("⚠️ Using development JWT secret - change for production!")
+
     # Ensure schema exists
     try:
         engine = get_db_engine()
@@ -163,7 +183,7 @@ async def startup_event():
         logger.info("✅ Database schema verified/created")
     except Exception as e:
         logger.error(f"❌ Failed to verify/create schema: {e}")
-        
+
     logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
     logger.info("=" * 60)
 

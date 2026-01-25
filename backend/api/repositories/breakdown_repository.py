@@ -186,7 +186,8 @@ class BreakdownRepository(BaseRepository):
         search_query: Optional[str] = None,
         account_ids: Optional[List[int]] = None,
         creative_ids: Optional[List[int]] = None,
-        campaign_ids: Optional[List[int]] = None
+        campaign_ids: Optional[List[int]] = None,
+        limit: int = 50
     ) -> List[Dict[str, Any]]:
         """
         Get placement breakdown metrics.
@@ -245,11 +246,13 @@ class BreakdownRepository(BaseRepository):
                 {campaign_ids_filter}
             GROUP BY p.placement_name
             ORDER BY spend DESC
+            LIMIT :limit
         """)
 
         params = {
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            'limit': limit
         }
 
         if campaign_id is not None:
@@ -279,7 +282,6 @@ class BreakdownRepository(BaseRepository):
 
         results = self.db.execute(query, params).fetchall()
 
-        breakdowns = []
         breakdowns = []
         for row in results:
             spend = float(row.spend or 0)

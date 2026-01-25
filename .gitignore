@@ -28,12 +28,24 @@ node_modules/
 dist/
 build/
 .DS_Store
-*.log
 
 .eslintcache
 
 # Logs
+*.log
 backend/logs/
+
+# Debug/test scripts (should not be in production)
+debug_*.py
+test_*.py
+check_*.py
+repro_*.py
+verify_*.py
+backend/scripts/debug/
+backend/scripts/checks/
+backend/scripts/migrations/
+backend/scripts/tests/
+backend/tests/
 
 # Misc
 .claude/

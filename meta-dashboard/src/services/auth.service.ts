@@ -5,7 +5,10 @@
 
 import { apiClient } from './apiClient';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+// Support both env var names, with dev fallback
+const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
+const isDev = process.env.NODE_ENV === 'development';
+const API_BASE_URL = envUrl || (isDev ? 'http://localhost:8000' : '');
 
 export interface UserProfile {
     id: number;
@@ -13,7 +16,40 @@ export interface UserProfile {
     full_name?: string;
     profile_image?: string;
     facebook_id?: string;
+    timezone?: string;
     is_active: boolean;
+}
+
+/**
+ * Get the browser's timezone
+ */
+export function getBrowserTimezone(): string {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+        return 'UTC';
+    }
+}
+
+/**
+ * Update user's timezone on the server
+ */
+export async function updateTimezone(timezone: string): Promise<{ success: boolean }> {
+    const response = await apiClient.patch('/api/v1/users/me/timezone', { timezone });
+    return response.data;
+}
+
+/**
+ * Sync browser timezone to server (call after login)
+ */
+export async function syncTimezone(): Promise<void> {
+    try {
+        const timezone = getBrowserTimezone();
+        await updateTimezone(timezone);
+    } catch (error) {
+        // Silently fail - timezone sync is not critical
+        console.warn('Failed to sync timezone:', error);
+    }
 }
 
 /**
@@ -86,11 +122,16 @@ export async function fetchCurrentUser(): Promise<UserProfile> {
 }
 
 /**
- * Logout
+ * Logout - clears the HttpOnly cookie via backend and redirects
  */
-export function logout() {
+export async function logout() {
     if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
+        try {
+            // Call backend to clear the HttpOnly cookie
+            await apiClient.post('/api/v1/auth/logout');
+        } catch (error) {
+            // Ignore errors - proceed with redirect anyway
+        }
         // Extract locale from current URL path (e.g., /he/dashboard -> he)
         const pathParts = window.location.pathname.split('/');
         const locale = pathParts[1] || 'en';

@@ -16,40 +16,20 @@ export default function ConnectPage() {
     const [user, setUser] = useState<UserProfile | null>(null);
 
     useEffect(() => {
-        const token = searchParams.get('token');
         const state = searchParams.get('state');
         const step = searchParams.get('step'); // 'google_done' or 'facebook_connected'
 
-        if (!token) {
-            // If no token in URL, check if we already have one
-            const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-            if (storedToken) {
-                checkFacebookConnection();
-            } else {
-                setStatus('error');
-                setErrorMessage('Status Check Failed: No authentication token received.');
-            }
-            return;
-        }
-
         // CSRF Check for Facebook callback
-        if (step === 'facebook_connected') {
+        if (step === 'facebook_connected' && state) {
             const isValidState = verifyState(state);
             if (!isValidState) {
                 // Log warning but don't block - JWT token provides security
                 console.warn('CSRF state mismatch - state:', state, 'This may indicate an issue with OAuth flow');
-                // Continue anyway since we have a valid JWT token
             }
         }
 
-        // Store token
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('token', token);
-            document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-
-            // Now check user profile to see if FB is connected
-            checkFacebookConnection();
-        }
+        // Auth is now handled via HttpOnly cookies - just check Facebook connection
+        checkFacebookConnection();
 
     }, [searchParams, router]);
 

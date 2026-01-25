@@ -20,13 +20,16 @@ from backend.config.base_config import settings
 LOOKUP_CACHE: Dict[str, Dict[str, int]] = {}
 
 def get_db_engine():
-    """Create and return SQLAlchemy engine"""
-    
+    """Create and return SQLAlchemy engine with optimized pool settings"""
+
     try:
         engine = create_engine(
             settings.DATABASE_URL,
-            pool_recycle=3600,
-            pool_pre_ping=True
+            pool_size=20,          # Base number of connections to keep open
+            max_overflow=40,       # Allow up to 60 total connections under load
+            pool_timeout=30,       # Wait up to 30s for a connection
+            pool_recycle=3600,     # Recycle connections after 1 hour
+            pool_pre_ping=True     # Test connections before use
         )
         logger.info("✅ Database engine created successfully")
         return engine

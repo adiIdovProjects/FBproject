@@ -25,6 +25,7 @@ import MetricCard from '../../../components/dashboard/MetricCard';
 import SkeletonMetricCard from '../../../components/dashboard/SkeletonMetricCard';
 import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsChart';
 import DayOfWeekTable from '../../../components/dashboard/DayOfWeekTable';
+import DownloadLeadsSection from '../../../components/campaigns/DownloadLeadsSection';
 
 // Services & Types
 import { fetchMetricsWithTrends, fetchDayOfWeekBreakdown } from '../../../services/dashboard.service';
@@ -46,7 +47,14 @@ export default function PerformanceDashboard() {
   const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar' || locale === 'he';
-  const { selectedAccountId, hasROAS } = useAccount(); // Use context
+  const { selectedAccountId, hasROAS, linkedAccounts } = useAccount(); // Use context
+
+  // Get page_id for the selected account (for lead forms)
+  const selectedPageId = useMemo(() => {
+    if (!selectedAccountId || !linkedAccounts.length) return null;
+    const account = linkedAccounts.find(a => a.account_id === selectedAccountId);
+    return account?.page_id || null;
+  }, [selectedAccountId, linkedAccounts]);
   const router = useRouter();
 
   // Debug logging
@@ -83,21 +91,16 @@ export default function PerformanceDashboard() {
   useEffect(() => {
     const checkSyncStatus = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/sync/status', {
-          headers: {
-            'Authorization': `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') : ''}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Track if we ever saw in_progress state
-          if (data.status === 'in_progress') {
-            setSawSyncInProgress(true);
-          }
-          setSyncStatus(data);
+        // Use apiClient which handles auth via HttpOnly cookies
+        const response = await apiClient.get('/api/v1/sync/status');
+        const data = response.data;
+        // Track if we ever saw in_progress state
+        if (data.status === 'in_progress') {
+          setSawSyncInProgress(true);
         }
+        setSyncStatus(data);
       } catch (error) {
-        console.error('Error fetching sync status:', error);
+        // 401 errors handled by apiClient interceptor
       }
     };
 
@@ -226,6 +229,15 @@ export default function PerformanceDashboard() {
           <p className="text-sm mt-1">{error}</p>
         </div>
       )}
+
+      {/* Download Leads Section */}
+      <DownloadLeadsSection
+        pageId={selectedPageId}
+        accountId={selectedAccountId}
+        startDate={startDate}
+        endDate={endDate}
+        t={t}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">

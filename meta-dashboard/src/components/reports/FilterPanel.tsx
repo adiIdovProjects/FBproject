@@ -332,6 +332,7 @@ export default function FilterPanel({
           <Chip value="gender">{t('reports.builder.gender')}</Chip>
           <Chip value="country">{t('reports.builder.country')}</Chip>
         </div>
+        <p className="text-[10px] text-gray-500">{t('breakdown.no_conversion_data')}</p>
       </div>
 
       {/* Section 5: Current Selection Summary */}

@@ -14,6 +14,7 @@ class CreativeRepository(BaseRepository):
         min_spend: float = 0,
         search_query: Optional[str] = None,
         ad_status: Optional[str] = None,
+        campaign_name: Optional[str] = None,
         account_ids: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
@@ -30,6 +31,10 @@ class CreativeRepository(BaseRepository):
         status_filter = ""
         if ad_status:
             status_filter = "AND ad.ad_status = :ad_status"
+
+        campaign_filter = ""
+        if campaign_name:
+            campaign_filter = "AND campaign.campaign_name = :campaign_name"
 
         account_filter = ""
         params = {
@@ -59,6 +64,9 @@ class CreativeRepository(BaseRepository):
 
         if ad_status:
             params['ad_status'] = ad_status
+
+        if campaign_name:
+            params['campaign_name'] = campaign_name
 
         query = text(f"""
             SELECT
@@ -123,6 +131,7 @@ class CreativeRepository(BaseRepository):
                 {video_filter}
                 {search_filter}
                 {status_filter}
+                {campaign_filter}
                 {account_filter}
             GROUP BY cr.creative_id, cr.title, cr.body, cr.is_video, cr.is_carousel,
                      cr.video_length_seconds, cr.image_url, cr.video_url,

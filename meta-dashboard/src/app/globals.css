@@ -1,32 +1,233 @@
 @import "tailwindcss";
 
+/* ============================================
+   THEME SYSTEM - All colors in one place
+   To change any color, just edit one line below
+   ============================================ */
+
+/* === DARK MODE (Default) === */
 :root {
+  /* Backgrounds */
   --background: #0B1120;
-  /* Vibrant Deep Navy */
-  --foreground: #F1F5F9;
   --card-bg: #1E293B;
-  /* Lighter Slate/Blue for cards */
   --sidebar-bg: #0F172A;
-  /* Slate Sidebar */
+  --input-bg: #1E293B;
+
+  /* Text */
+  --foreground: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-disabled: #64748B;
+
+  /* Accent (Primary buttons, links) */
   --accent: #6366F1;
   --accent-hover: #4F46E5;
+  --accent-text: #FFFFFF;
+
+  /* Secondary (Secondary buttons) */
+  --secondary: #334155;
+  --secondary-hover: #475569;
+  --secondary-text: #F1F5F9;
+
+  /* Borders */
   --border-color: #334155;
-  /* More visible blueish border */
+  --border-focus: #6366F1;
+
+  /* Status Colors */
+  --success: #10B981;
+  --success-bg: #064E3B;
+  --warning: #F59E0B;
+  --warning-bg: #78350F;
+  --error: #EF4444;
+  --error-bg: #7F1D1D;
+  --info: #3B82F6;
+  --info-bg: #1E3A5F;
+
+  /* Table/List */
+  --row-hover: #1E293B;
+  --row-selected: #312E81;
+
+  /* Charts */
+  --chart-1: #6366F1;
+  --chart-2: #8B5CF6;
+  --chart-3: #EC4899;
+  --chart-4: #F59E0B;
+  --chart-5: #10B981;
+  --chart-positive: #10B981;
+  --chart-negative: #EF4444;
+  --chart-grid: #334155;
+  --chart-axis: #94A3B8;
+
   color-scheme: dark;
 }
 
+/* === LIGHT MODE (Warm Cream) === */
+html.light {
+  /* Backgrounds */
+  --background: #FAFAF9;
+  --card-bg: #FFFFFF;
+  --sidebar-bg: #F5F5F4;
+  --input-bg: #FFFFFF;
+
+  /* Text */
+  --foreground: #1C1917;
+  --text-muted: #78716C;
+  --text-disabled: #A8A29E;
+
+  /* Accent */
+  --accent: #6366F1;
+  --accent-hover: #4F46E5;
+  --accent-text: #FFFFFF;
+
+  /* Secondary */
+  --secondary: #E7E5E4;
+  --secondary-hover: #D6D3D1;
+  --secondary-text: #1C1917;
+
+  /* Borders */
+  --border-color: #E7E5E4;
+  --border-focus: #6366F1;
+
+  /* Status Colors */
+  --success: #16A34A;
+  --success-bg: #DCFCE7;
+  --warning: #CA8A04;
+  --warning-bg: #FEF9C3;
+  --error: #DC2626;
+  --error-bg: #FEE2E2;
+  --info: #2563EB;
+  --info-bg: #DBEAFE;
+
+  /* Table/List */
+  --row-hover: #F5F5F4;
+  --row-selected: #E0E7FF;
+
+  /* Charts */
+  --chart-1: #6366F1;
+  --chart-2: #8B5CF6;
+  --chart-3: #EC4899;
+  --chart-4: #F59E0B;
+  --chart-5: #10B981;
+  --chart-positive: #16A34A;
+  --chart-negative: #DC2626;
+  --chart-grid: #E7E5E4;
+  --chart-axis: #78716C;
+
+  color-scheme: light;
+}
+
+/* === COLORFUL MODE (Ocean) === */
+html.colorful {
+  /* Backgrounds */
+  --background: #0F172A;
+  --card-bg: #164E63;
+  --sidebar-bg: #0E7490;
+  --input-bg: #155E75;
+
+  /* Text */
+  --foreground: #E0F2FE;
+  --text-muted: #7DD3FC;
+  --text-disabled: #38BDF8;
+
+  /* Accent */
+  --accent: #14B8A6;
+  --accent-hover: #0D9488;
+  --accent-text: #FFFFFF;
+
+  /* Secondary */
+  --secondary: #0E7490;
+  --secondary-hover: #0891B2;
+  --secondary-text: #E0F2FE;
+
+  /* Borders */
+  --border-color: #0891B2;
+  --border-focus: #14B8A6;
+
+  /* Status Colors */
+  --success: #2DD4BF;
+  --success-bg: #134E4A;
+  --warning: #FBBF24;
+  --warning-bg: #713F12;
+  --error: #FB7185;
+  --error-bg: #881337;
+  --info: #38BDF8;
+  --info-bg: #0C4A6E;
+
+  /* Table/List */
+  --row-hover: #155E75;
+  --row-selected: #115E59;
+
+  /* Charts - Ocean themed */
+  --chart-1: #14B8A6;
+  --chart-2: #0EA5E9;
+  --chart-3: #22D3EE;
+  --chart-4: #FBBF24;
+  --chart-5: #A78BFA;
+  --chart-positive: #2DD4BF;
+  --chart-negative: #FB7185;
+  --chart-grid: #0891B2;
+  --chart-axis: #7DD3FC;
+
+  color-scheme: dark;
+}
+
+/* === TAILWIND THEME MAPPING === */
 @theme inline {
+  /* Backgrounds */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card-bg);
   --color-sidebar: var(--sidebar-bg);
+  --color-input: var(--input-bg);
+
+  /* Text */
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+
+  /* Accent */
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+
+  /* Secondary */
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-text: var(--secondary-text);
+
+  /* Borders */
   --color-border-subtle: var(--border-color);
+  --color-border-focus: var(--border-focus);
+
+  /* Status */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+
+  /* Table */
+  --color-row-hover: var(--row-hover);
+  --color-row-selected: var(--row-selected);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-positive: var(--chart-positive);
+  --color-chart-negative: var(--chart-negative);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis: var(--chart-axis);
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* === BASE STYLES === */
 body {
   background: var(--background);
   color: var(--foreground);
@@ -35,7 +236,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism effects */
+/* === GLASSMORPHISM EFFECTS === */
 .glass-effect {
   background: rgba(30, 41, 59, 0.6);
   backdrop-filter: blur(16px);
@@ -43,19 +244,40 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.card-gradient {
-  background: linear-gradient(135deg, #1E293B 0%, #0B1120 100%);
+html.light .glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+html.colorful .glass-effect {
+  background: rgba(22, 78, 99, 0.7);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+/* === GRADIENTS === */
+.card-gradient {
+  background: linear-gradient(135deg, var(--card-bg) 0%, var(--background) 100%);
+}
+
+/* === TEXT EFFECTS === */
 .text-glow {
   text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
 
+html.colorful .text-glow {
+  text-shadow: 0 0 15px rgba(20, 184, 166, 0.4);
+}
+
+/* === BORDER EFFECTS === */
 .border-glow {
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
 }
 
-/* RTL support for flex layouts */
+html.colorful .border-glow {
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+}
+
+/* === RTL SUPPORT === */
 [dir="rtl"] .rtl-reverse {
   flex-direction: row-reverse;
 }

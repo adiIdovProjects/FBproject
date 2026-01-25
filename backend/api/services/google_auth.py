@@ -13,14 +13,9 @@ class GoogleAuthService:
         self.redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/v1/auth/google/callback")
 
     def get_login_url(self, state: str) -> str:
-        """Generate the Google OAuth login URL"""
-        scopes = [
-            'openid',
-            'email',
-            'profile',
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive.file',
-        ]
+        """Generate the Google OAuth login URL with minimum required scopes"""
+        # Only request email and basic profile - minimum for authentication
+        scopes = ['openid', 'email', 'profile']
         scope_str = ' '.join(scopes)
         return (
             f"https://accounts.google.com/o/oauth2/v2/auth?"
@@ -28,9 +23,7 @@ class GoogleAuthService:
             f"redirect_uri={self.redirect_uri}&"
             f"response_type=code&"
             f"scope={scope_str}&"
-            f"state={state}&"
-            f"access_type=offline&"
-            f"prompt=consent"
+            f"state={state}"
         )
 
     async def get_access_token(self, code: str) -> Dict[str, Any]:

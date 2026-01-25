@@ -39,9 +39,11 @@ import { useInView } from '../../../hooks/useInView';
 
 // Services & Types
 import { fetchCreatives, fetchCreativesWithComparison } from '../../../services/creatives.service';
+import { fetchCampaignsWithComparison } from '../../../services/campaigns.service';
 // Output removed by refactor
 
 import { fetchTrendData } from '../../../services/campaigns.service';
+import { CampaignRow } from '../../../types/campaigns.types';
 import { CreativeMetrics, VideoInsightsResponse, CreativeSortMetric } from '../../../types/creatives.types';
 import { DateRange, MetricType } from '../../../types/dashboard.types';
 import { TimeGranularity } from '../../../types/campaigns.types';
@@ -70,6 +72,8 @@ export default function CreativesPage() {
     const [showComparison, setShowComparison] = useState(false);
     const [typeFilter, setTypeFilter] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<string>('');
+    const [campaignFilter, setCampaignFilter] = useState<string>('');
+    const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
     const [selectedCreativeIds, setSelectedCreativeIds] = useState<number[]>([]);
     const [showComparisonModal, setShowComparisonModal] = useState(false);
 
@@ -165,6 +169,26 @@ export default function CreativesPage() {
         return () => clearTimeout(timer);
     }, [searchValue]);
 
+    // Fetch campaigns for filter dropdown
+    useEffect(() => {
+        async function loadCampaigns() {
+            try {
+                const campaignsData = await fetchCampaignsWithComparison(
+                    dateRange,
+                    [],
+                    '',
+                    'spend',
+                    'desc',
+                    selectedAccountId
+                );
+                setCampaigns(campaignsData);
+            } catch (error) {
+                console.error('[Creatives Page] Failed to load campaigns:', error);
+            }
+        }
+        loadCampaigns();
+    }, [dateRange, selectedAccountId]);
+
     // Load Data
     useEffect(() => {
         async function loadData() {
@@ -180,6 +204,7 @@ export default function CreativesPage() {
                     search_query: searchQuery,
                     is_video: isVideoParam,
                     ad_status: statusFilter || undefined,
+                    campaign_name: campaignFilter || undefined,
                 };
 
                 // Use comparison endpoint when showComparison is enabled
@@ -206,7 +231,7 @@ export default function CreativesPage() {
         }
 
         loadData();
-    }, [dateRange, sortBy, mediaFilter, searchQuery, typeFilter, statusFilter, selectedAccountId, showComparison]);
+    }, [dateRange, sortBy, mediaFilter, searchQuery, typeFilter, statusFilter, campaignFilter, selectedAccountId, showComparison]);
 
     // Fetch trend data when granularity changes
     useEffect(() => {
@@ -281,6 +306,28 @@ export default function CreativesPage() {
                                 onChange={(e) => setSearchValue(e.target.value)}
                                 className={`w-full bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all placeholder:text-gray-600`}
                             />
+                        </div>
+
+                        {/* Campaign Filter */}
+                        <div className="relative">
+                            <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+                            <select
+                                value={campaignFilter}
+                                onChange={(e) => setCampaignFilter(e.target.value)}
+                                className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[160px] max-w-[200px] truncate`}
+                            >
+                                <option value="" className="bg-gray-900 text-white">{t('common.all_campaigns')}</option>
+                                {campaigns.map((campaign) => (
+                                    <option key={campaign.campaign_id} value={campaign.campaign_name} className="bg-gray-900 text-white">
+                                        {campaign.campaign_name}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                         </div>
 
                         {/* Type Filter */}

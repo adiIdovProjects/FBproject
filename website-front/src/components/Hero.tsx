@@ -61,11 +61,11 @@ const Hero = () => {
                             </button>
                         </div>
 
-                        <div className="flex items-center justify-center lg:justify-start gap-4 text-sm text-slate-500 dark:text-slate-500 mt-4">
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-sm text-slate-500 dark:text-slate-400 mt-4">
                             {hero.trustBadges.map((badge, i) => (
-                                <div key={i} className="flex items-center gap-1">
-                                    <span className={`material-symbols-outlined text-green-500 text-lg`}>{badge.icon}</span>
-                                    <span>{badge.text}</span>
+                                <div key={i} className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+                                    <span className={`material-symbols-outlined text-[#135bec] text-base`}>{badge.icon}</span>
+                                    <span className="font-medium">{badge.text}</span>
                                 </div>
                             ))}
                         </div>
@@ -130,13 +130,14 @@ const Hero = () => {
                             transition={{ duration: 4, repeat: Infinity }}
                             className="absolute -bottom-6 -right-6 h-24 w-32 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-3 hidden sm:block z-20"
                         >
-                            <div className="text-[10px] text-slate-500 mb-1">Weekly Report</div>
-                            <div className="flex items-end gap-1 h-8">
-                                <div className="w-2 bg-[#135bec]/40 h-[40%] rounded-t-sm"></div>
-                                <div className="w-2 bg-[#135bec]/60 h-[60%] rounded-t-sm"></div>
-                                <div className="w-2 bg-[#135bec] h-[90%] rounded-t-sm"></div>
+                            <div className="text-[10px] text-slate-500 mb-1 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[#135bec] text-xs">auto_awesome</span>
+                                AI Insight
                             </div>
-                            <div className="text-xs font-bold mt-1 text-[#135bec]">+28% Optimization</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-300 leading-tight">
+                                "Increase budget on Ad Set #3 for better ROAS"
+                            </div>
+                            <div className="text-[10px] font-bold mt-1.5 text-green-500">Potential +18% ROI</div>
                         </motion.div>
                     </motion.div>
                 </div>

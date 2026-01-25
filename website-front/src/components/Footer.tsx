@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 
@@ -41,15 +43,16 @@ const Footer = () => {
                     <div>
                         <h4 className="font-bold text-sm mb-4 dark:text-white">Legal</h4>
                         <ul className="space-y-2 text-sm text-slate-500">
-                            <li><Link href="#" className="hover:text-[#135bec] transition-colors">Privacy Policy</Link></li>
-                            <li><Link href="#" className="hover:text-[#135bec] transition-colors">Terms of Service</Link></li>
-                            <li><Link href="#" className="hover:text-[#135bec] transition-colors">Cookie Policy</Link></li>
+                            <li><Link href="/privacy-policy" className="hover:text-[#135bec] transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="/terms" className="hover:text-[#135bec] transition-colors">Terms of Service</Link></li>
+                            <li><Link href="/cookie-policy" className="hover:text-[#135bec] transition-colors">Cookie Policy</Link></li>
+                            <li><button onClick={() => { localStorage.removeItem('cookie_consent'); window.location.reload(); }} className="hover:text-[#135bec] transition-colors">Cookie Settings</button></li>
                         </ul>
                     </div>
                 </div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-slate-200 dark:border-[#232f48]">
-                    <p className="text-xs text-slate-500">© 2024 AdsAI Inc. All rights reserved.</p>
+                    <p className="text-xs text-slate-500">© {new Date().getFullYear()} AdsAI Inc. All rights reserved.</p>
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2 text-xs text-slate-500">
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>

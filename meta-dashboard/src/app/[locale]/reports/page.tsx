@@ -118,15 +118,6 @@ export default function ReportsPage() {
     console.log('[Reports] URL params:', Object.fromEntries(urlParams.entries()));
 
     if (urlParams.get('google_connected') === 'true') {
-      console.log('[Reports] ✅ Detected post-OAuth return!');
-
-      // Also handle token in URL if present
-      const token = urlParams.get('token');
-      if (token) {
-        console.log('[Reports] Found token in URL, storing...');
-        localStorage.setItem('token', token);
-      }
-
       // Clean URL (remove query params)
       window.history.replaceState({}, '', window.location.pathname);
 
@@ -215,6 +206,7 @@ export default function ReportsPage() {
                 clicks: row.clicks,
                 ctr: row.ctr,
                 cpc: row.cpc,
+                cpm: row.impressions > 0 ? (row.spend / row.impressions) * 1000 : 0,
                 conversions: row.conversions,
                 conversion_value: row.conversion_value,
                 roas: row.roas,
@@ -222,11 +214,11 @@ export default function ReportsPage() {
                 conversion_rate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
               },
               period2: {
-                spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0,
+                spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0, cpm: 0,
                 conversions: 0, conversion_value: 0, roas: 0, cpa: 0, conversion_rate: 0,
               },
               change_pct: {
-                spend: null, impressions: null, clicks: null, ctr: null, cpc: null,
+                spend: null, impressions: null, clicks: null, ctr: null, cpc: null, cpm: null,
                 conversions: null, conversion_value: null, roas: null, cpa: null, conversion_rate: null,
               },
               change_abs: {},
@@ -267,6 +259,7 @@ export default function ReportsPage() {
             clicks: row.clicks,
             ctr: row.ctr,
             cpc: row.cpc,
+            cpm: row.impressions > 0 ? (row.spend / row.impressions) * 1000 : 0,
             conversions: row.conversions,
             conversion_value: row.conversion_value,
             roas: row.roas,
@@ -274,11 +267,11 @@ export default function ReportsPage() {
             conversion_rate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
           },
           period2: {
-            spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0,
+            spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0, cpm: 0,
             conversions: 0, conversion_value: 0, roas: 0, cpa: 0, conversion_rate: 0,
           },
           change_pct: {
-            spend: null, impressions: null, clicks: null, ctr: null, cpc: null,
+            spend: null, impressions: null, clicks: null, ctr: null, cpc: null, cpm: null,
             conversions: null, conversion_value: null, roas: null, cpa: null, conversion_rate: null,
           },
           change_abs: {},
@@ -447,8 +440,9 @@ export default function ReportsPage() {
     };
     const stateParam = encodeURIComponent(JSON.stringify(stateData));
 
-    // Get API base URL from environment or default to localhost
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // Get API base URL from environment (support both env var names)
+    const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
+    const apiBaseUrl = envUrl || (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : '');
     const oauthUrl = `${apiBaseUrl}/api/v1/auth/google/login?state=${stateParam}`;
 
     console.log('[Reports] Redirecting to OAuth URL:', oauthUrl);

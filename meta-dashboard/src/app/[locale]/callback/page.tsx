@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiClient } from '@/services/apiClient';
+import { syncTimezone } from '@/services/auth.service';
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -12,30 +14,48 @@ export default function CallbackPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const redirect = searchParams.get('redirect');
+    const handleCallback = async () => {
+      const redirect = searchParams.get('redirect');
+      const error = searchParams.get('error');
+      const token = searchParams.get('token');
 
-    // Set initial message
-    setMessage(t('auth.completing_login'));
+      // Set initial message
+      setMessage(t('auth.completing_login'));
 
-    // Handle login/connect flow
-    if (token) {
+      // Check for errors
+      if (error) {
+        setMessage(t('auth.login_failed_redirecting'));
+        setTimeout(() => router.push(`/${locale}/login?error=${error}`), 2000);
+        return;
+      }
+
+      // If we have a token, set the session cookie via the API
+      if (token) {
+        try {
+          await apiClient.post('/api/v1/auth/session', { token });
+        } catch (err) {
+          console.error('Failed to set session:', err);
+          router.push(`/${locale}/login?error=session_failed`);
+          return;
+        }
+      }
+
       setMessage(t('auth.setting_up_account'));
 
-      // Store token
-      localStorage.setItem('token', token);
-      document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      // Sync user's browser timezone (non-blocking)
+      syncTimezone().catch(() => {});
 
       // Redirect based on redirect param or default to select-accounts
-      const redirectPath = redirect === 'select-accounts' ? `/${locale}/select-accounts` :
-                          redirect === 'settings' ? `/${locale}/settings?tab=accounts` :
-                          `/${locale}/select-accounts`;
+      // The redirect param can be a path like 'select-accounts', 'account-dashboard', etc.
+      // Add refresh param with timestamp to force refetch of accounts
+      const refreshParam = `refresh=${Date.now()}`;
+      const redirectPath = redirect
+        ? `/${locale}/${redirect}${redirect.includes('?') ? '&' : '?'}${refreshParam}`
+        : `/${locale}/select-accounts?${refreshParam}`;
       setTimeout(() => router.push(redirectPath), 500);
-    } else {
-      // No token - error occurred
-      setMessage(t('auth.login_failed_redirecting'));
-      setTimeout(() => router.push(`/${locale}/login?error=auth_failed`), 2000);
-    }
+    };
+
+    handleCallback();
   }, [router, searchParams, locale, t]);
 
   return (

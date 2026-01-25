@@ -1,7 +1,5 @@
 import { apiClient } from './apiClient';
 
-const API_Base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export interface SmartCreative {
     title: string;
     body: string;
@@ -31,18 +29,24 @@ export interface SmartCampaignRequest {
     account_id: string;
     page_id: string;
     campaign_name: string;
-    objective: 'SALES' | 'LEADS' | 'TRAFFIC' | 'ENGAGEMENT';
+    objective: 'SALES' | 'LEADS' | 'TRAFFIC' | 'ENGAGEMENT' | 'WHATSAPP' | 'CALLS';
     geo_locations: GeoLocationTarget[];
     age_min: number;
     age_max: number;
+    genders?: number[];  // [1] = male, [2] = female, undefined = all
+    publisher_platforms?: string[];  // ['facebook'], ['instagram'], or undefined for all
     daily_budget_cents: number;
     custom_audiences?: string[];  // Optional custom audience IDs (lookalikes, saved audiences)
     excluded_audiences?: string[];  // Optional custom audience IDs to exclude
     interests?: InterestTarget[];  // Optional interest targeting
+    locales?: number[];  // Optional language targeting (Facebook locale codes)
     pixel_id?: string;  // Required for SALES objective
+    conversion_event?: string;  // Conversion event for pixel optimization
     creative: SmartCreative;
     adset_name?: string;  // Optional custom ad set name
     ad_name?: string;     // Optional custom ad name
+    start_date?: string;  // Campaign start date (YYYY-MM-DD)
+    end_date?: string;    // Campaign end date (YYYY-MM-DD)
 }
 
 export interface AddCreativeRequest {
@@ -71,6 +75,61 @@ export interface UpdateAdCreativeRequest {
     video_id?: string;
     link_url?: string;
     lead_form_id?: string;
+}
+
+export interface LeadFormDetails {
+    id: string;
+    name: string;
+    status: string;
+    created_time?: string;
+    questions: string[];  // Standard question types like EMAIL, FULL_NAME, etc.
+    custom_questions: Array<{
+        label: string;
+        field_type: string;
+        options: string[];
+        allow_multiple?: boolean;
+    }>;
+    privacy_policy_url?: string;
+    headline?: string;
+    description?: string;
+    thank_you_title?: string;
+    thank_you_body?: string;
+    thank_you_button_text?: string;
+    thank_you_url?: string;
+}
+
+export interface CampaignCloneData {
+    campaign_id: string;
+    campaign_name: string;
+    objective: 'SALES' | 'LEADS' | 'TRAFFIC' | 'ENGAGEMENT' | 'WHATSAPP' | 'CALLS';
+    targeting: {
+        locations: Array<{
+            key: string;
+            type: 'country' | 'region' | 'city';
+            name: string;
+            country_code?: string;
+        }>;
+        age_min: number;
+        age_max: number;
+        genders?: number[];
+        publisher_platforms?: string[];
+    };
+    budget: {
+        daily_budget_cents: number;
+    };
+    pixel_id?: string;
+    conversion_event?: string;
+    ads: Array<{
+        ad_id: string;
+        ad_name: string;
+        title: string;
+        body: string;
+        link_url: string;
+        call_to_action: string;
+        lead_form_id?: string;
+        image_url?: string;
+        video_url?: string;
+    }>;
 }
 
 export interface Pixel {
@@ -111,6 +170,8 @@ export interface GeoLocation {
     region?: string;
     region_id?: string;
     display_name: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 export interface AdSetTargeting {
@@ -129,6 +190,19 @@ export interface AdCreativeData {
     video_url: string | null;
 }
 
+export interface BudgetRecommendation {
+    has_historical_data: boolean;
+    average_daily_spend: number;
+    recommended_budget: {
+        SALES: number;
+        LEADS: number;
+        TRAFFIC: number;
+        ENGAGEMENT: number;
+    };
+    min_budget: number;
+    currency: string;
+}
+
 export const mutationsService = {
     async createSmartCampaign(data: SmartCampaignRequest) {
         const response = await apiClient.post('/api/mutations/smart-campaign', data);
@@ -138,6 +212,51 @@ export const mutationsService = {
     async getLeadForms(pageId: string, accountId?: string) {
         const response = await apiClient.get('/api/mutations/lead-forms', {
             params: { page_id: pageId, account_id: accountId }
+        });
+        return response.data;
+    },
+
+    async getLeadFormDetails(formId: string, pageId: string, accountId?: string): Promise<LeadFormDetails> {
+        const response = await apiClient.get(`/api/mutations/lead-forms/${formId}`, {
+            params: { page_id: pageId, account_id: accountId }
+        });
+        return response.data;
+    },
+
+    async checkWhatsAppStatus(pageId: string): Promise<{ connected: boolean; whatsapp_business_account_id: string | null }> {
+        const response = await apiClient.get(`/api/mutations/pages/${pageId}/whatsapp-status`);
+        return response.data;
+    },
+
+    async createLeadForm(
+        pageId: string,
+        formName: string,
+        questions: string[],
+        privacyPolicyUrl: string,
+        accountId?: string,
+        options?: {
+            headline?: string;
+            description?: string;
+            customQuestions?: Array<{ label: string; field_type: string; options?: string[]; allow_multiple?: boolean }>;
+            thankYouTitle?: string;
+            thankYouBody?: string;
+            thankYouButtonText?: string;
+            thankYouUrl?: string;
+        }
+    ): Promise<{ id: string; name: string; status: string }> {
+        const response = await apiClient.post('/api/mutations/lead-forms', {
+            page_id: pageId,
+            form_name: formName,
+            questions: questions,
+            privacy_policy_url: privacyPolicyUrl,
+            account_id: accountId,
+            headline: options?.headline,
+            description: options?.description,
+            custom_questions: options?.customQuestions,
+            thank_you_title: options?.thankYouTitle,
+            thank_you_body: options?.thankYouBody,
+            thank_you_button_text: options?.thankYouButtonText,
+            thank_you_url: options?.thankYouUrl
         });
         return response.data;
     },
@@ -152,6 +271,57 @@ export const mutationsService = {
     async getCustomAudiences(accountId: string): Promise<CustomAudience[]> {
         const response = await apiClient.get('/api/mutations/custom-audiences', {
             params: { account_id: accountId }
+        });
+        return response.data;
+    },
+
+    async createCustomAudience(
+        accountId: string,
+        name: string,
+        pixelId: string,
+        eventType: string = 'PageView',
+        retentionDays: number = 30
+    ): Promise<CustomAudience> {
+        const response = await apiClient.post('/api/mutations/custom-audiences', {
+            account_id: accountId,
+            name: name,
+            pixel_id: pixelId,
+            event_type: eventType,
+            retention_days: retentionDays
+        });
+        return response.data;
+    },
+
+    async createPageEngagementAudience(
+        accountId: string,
+        name: string,
+        pageId: string,
+        engagementType: string = 'page_engaged',
+        retentionDays: number = 365
+    ): Promise<CustomAudience> {
+        const response = await apiClient.post('/api/mutations/page-engagement-audiences', {
+            account_id: accountId,
+            name: name,
+            page_id: pageId,
+            engagement_type: engagementType,
+            retention_days: retentionDays
+        });
+        return response.data;
+    },
+
+    async createLookalikeAudience(
+        accountId: string,
+        name: string,
+        sourceAudienceId: string,
+        countryCode: string,
+        ratio: number = 0.01
+    ): Promise<CustomAudience> {
+        const response = await apiClient.post('/api/mutations/lookalike-audiences', {
+            account_id: accountId,
+            name: name,
+            source_audience_id: sourceAudienceId,
+            country_code: countryCode,
+            ratio: ratio
         });
         return response.data;
     },
@@ -175,6 +345,11 @@ export const mutationsService = {
         const response = await apiClient.get('/api/mutations/campaigns-list', {
             params: { account_id: accountId }
         });
+        return response.data;
+    },
+
+    async getCampaignCloneData(campaignId: string): Promise<CampaignCloneData> {
+        const response = await apiClient.get(`/api/mutations/campaigns/${campaignId}/clone-data`);
         return response.data;
     },
 
@@ -301,6 +476,56 @@ export const mutationsService = {
 
     async getAdCreative(adId: string): Promise<AdCreativeData> {
         const response = await apiClient.get(`/api/mutations/ads/${adId}/creative`);
+        return response.data;
+    },
+
+    // --- Budget Recommendation ---
+
+    async getBudgetRecommendation(accountId: string): Promise<BudgetRecommendation> {
+        const response = await apiClient.get('/api/mutations/budget-recommendation', {
+            params: { account_id: accountId }
+        });
+        return response.data;
+    },
+
+    // --- Lead Retrieval ---
+
+    async getLeads(
+        leadFormId: string,
+        pageId: string,
+        accountId?: string,
+        startDate?: string,
+        endDate?: string
+    ): Promise<{ leads: Record<string, string>[]; total: number }> {
+        const response = await apiClient.get('/api/mutations/leads', {
+            params: {
+                lead_form_id: leadFormId,
+                page_id: pageId,
+                account_id: accountId,
+                start_date: startDate,
+                end_date: endDate
+            }
+        });
+        return response.data;
+    },
+
+    async exportLeadsCsv(
+        leadFormId: string,
+        pageId: string,
+        accountId?: string,
+        startDate?: string,
+        endDate?: string
+    ): Promise<Blob> {
+        const response = await apiClient.get('/api/mutations/leads/export', {
+            params: {
+                lead_form_id: leadFormId,
+                page_id: pageId,
+                account_id: accountId,
+                start_date: startDate,
+                end_date: endDate
+            },
+            responseType: 'blob'
+        });
         return response.data;
     }
 };

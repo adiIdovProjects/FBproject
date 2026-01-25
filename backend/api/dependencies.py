@@ -6,7 +6,7 @@ primarily for database session management.
 """
 
 import os
-from typing import Generator
+from typing import Generator, Optional
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -21,8 +21,8 @@ engine = get_db_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Request, Cookie
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status
 from backend.api.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/facebook/login", auto_error=False)
@@ -39,11 +39,13 @@ def get_db() -> Generator[Session, None, None]:
 
 
 async def get_current_user(
+    request: Request,
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
     """
     Validates JWT token and returns current user.
+    Supports both Authorization header (Bearer token) and HttpOnly cookie.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -51,13 +53,18 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if token is None:
+    # Try token from header first, then fall back to cookie
+    auth_token = token
+    if auth_token is None:
+        auth_token = request.cookies.get("auth_token")
+
+    if auth_token is None:
         raise credentials_exception
 
     try:
         # Decode JWT token
         payload = jwt.decode(
-            token,
+            auth_token,
             settings.JWT_SECRET_KEY,
             algorithms=[settings.ALGORITHM]
         )

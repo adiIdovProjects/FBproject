@@ -1,32 +1,16 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-
-console.log('[API Client] Using base URL:', API_BASE_URL);
-
+// API calls use relative URLs - Next.js rewrites proxy them to the backend
+// This avoids cross-origin cookie issues in development
+// In production, the rewrites point to the production backend URL
 export const apiClient = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: '',  // Empty = relative URLs, proxied via Next.js rewrites
     headers: {
         'Content-Type': 'application/json',
     },
+    // SECURITY: Include cookies in requests for HttpOnly auth token
+    withCredentials: true,
 });
-
-// Request Interceptor: Attach Token
-apiClient.interceptors.request.use(
-    (config) => {
-        // We need to be careful about accessing localStorage on the server
-        if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('token');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
 
 // Response Interceptor: Handle 401s
 apiClient.interceptors.response.use(
@@ -40,14 +24,11 @@ apiClient.interceptors.response.use(
                 // Only redirect for actual authentication failures
                 // Check if we are already on the login page to avoid loops
                 if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                    // Clear invalid token
-                    localStorage.removeItem('token');
                     // Extract locale from current URL path (e.g., /he/dashboard -> he)
                     const pathParts = window.location.pathname.split('/');
                     const locale = pathParts[1] || 'en';
                     // Redirect to login preserving locale
                     window.location.href = `/${locale}/login`;
-                    console.warn('Unauthorized: Token expired or invalid');
                 }
             }
         }

@@ -33,7 +33,7 @@ export function AIHelpPanel({ accountId }: AIHelpPanelProps) {
 
         try {
             const result = await queryAIInvestigator(q);
-            setResponse(result.response || result.answer || 'No response received');
+            setResponse(result.answer || 'No response received');
         } catch (err) {
             console.error('AI query error:', err);
             setError(t('ai_panel.error'));

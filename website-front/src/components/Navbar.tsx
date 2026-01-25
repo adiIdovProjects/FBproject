@@ -19,7 +19,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'How it Works', href: '#how-it-works' },
     { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' },
+    { name: 'Pricing', href: '/pricing' },
     { name: 'About Us', href: '#about' },
   ];
 
@@ -56,7 +56,7 @@ const Navbar = () => {
           {/* CTA */}
           <div className="flex items-center gap-4">
             <Link href="/login" className="hidden sm:flex h-10 items-center justify-center rounded-lg bg-[#135bec] px-5 text-sm font-bold text-white transition-all hover:bg-opacity-90 hover:shadow-lg hover:shadow-[#135bec]/25 active:scale-95">
-              Connect Now
+              Start Free Trial
             </Link>
             <button
               className="md:hidden p-2 text-slate-600 dark:text-slate-300"
@@ -91,7 +91,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <Link href="/login" className="w-full h-12 flex items-center justify-center rounded-lg bg-[#135bec] text-white font-bold" onClick={() => setIsMobileMenuOpen(false)}>
-                Connect Now
+                Start Free Trial
               </Link>
             </div>
           </motion.div>

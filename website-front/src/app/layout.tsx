@@ -3,6 +3,8 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ChatWidget from "../components/ChatWidget";
+import CookieConsent from "../components/CookieConsent";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -37,6 +39,8 @@ export default function RootLayout({
         <Navbar />
         <main>{children}</main>
         <Footer />
+        <ChatWidget />
+        <CookieConsent />
       </body>
     </html>
   );

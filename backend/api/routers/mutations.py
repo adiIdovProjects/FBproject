@@ -8,7 +8,8 @@ from backend.api.dependencies import get_db, get_current_user
 from backend.api.repositories.campaign_repository import CampaignRepository
 from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.repositories.ad_repository import AdRepository
-from backend.api.schemas.mutations import SmartCampaignRequest, AddCreativeRequest, StatusUpdateRequest, BudgetUpdateRequest, UpdateAdSetTargetingRequest, UpdateAdCreativeRequest
+from backend.api.repositories.metrics_repository import MetricsRepository
+from backend.api.schemas.mutations import SmartCampaignRequest, AddCreativeRequest, StatusUpdateRequest, BudgetUpdateRequest, UpdateAdSetTargetingRequest, UpdateAdCreativeRequest, CreateLeadFormRequest, LeadsResponse, LeadRecord, CreateCustomAudienceRequest, CreatePageEngagementAudienceRequest, CreateLookalikeAudienceRequest
 from backend.models.user_schema import User
 from backend.api.services.ad_mutation_service import AdMutationService
 
@@ -165,6 +166,186 @@ def get_lead_forms(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/lead-forms/{form_id}")
+def get_lead_form_details(
+    form_id: str,
+    page_id: str = Query(..., description="Facebook Page ID that owns the form"),
+    account_id: str = Query(None, description="Ad account ID (optional)"),
+    service: AdMutationService = Depends(get_mutation_service)
+):
+    """Get detailed configuration of a lead form for duplication."""
+    try:
+        return service.get_lead_form_details(form_id, page_id, account_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/pages/{page_id}/whatsapp-status")
+def check_whatsapp_status(
+    page_id: str,
+    service: AdMutationService = Depends(get_mutation_service)
+):
+    """Check if a Facebook Page has WhatsApp Business connected."""
+    try:
+        return service.check_whatsapp_connection(page_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/leads", response_model=LeadsResponse)
+def get_leads(
+    lead_form_id: str = Query(..., description="Lead form ID to fetch leads from"),
+    page_id: str = Query(..., description="Facebook Page ID that owns the form"),
+    account_id: str = Query(None, description="Ad account ID (optional, helps get page token)"),
+    start_date: date = Query(None, description="Filter leads from this date (YYYY-MM-DD)"),
+    end_date: date = Query(None, description="Filter leads until this date inclusive (YYYY-MM-DD)"),
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Get leads submitted to a lead form. Returns flattened lead data."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} fetching leads for form {lead_form_id}")
+        logger.info(f"Date params received: start_date={repr(start_date)} (type={type(start_date).__name__}), end_date={repr(end_date)} (type={type(end_date).__name__})")
+        leads = service.get_leads(
+            lead_form_id, page_id, account_id,
+            start_date=str(start_date) if start_date else None,
+            end_date=str(end_date) if end_date else None
+        )
+        logger.info(f"Found {len(leads)} leads for form {lead_form_id}")
+        return LeadsResponse(
+            leads=[LeadRecord(**lead) for lead in leads],
+            total=len(leads)
+        )
+    except ValueError as e:
+        logger.warning(f"User {user.id} failed to fetch leads: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"User {user.id} failed to fetch leads: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/leads/export")
+def export_leads_csv(
+    lead_form_id: str = Query(..., description="Lead form ID to export leads from"),
+    page_id: str = Query(..., description="Facebook Page ID that owns the form"),
+    account_id: str = Query(None, description="Ad account ID (optional)"),
+    start_date: date = Query(None, description="Filter leads from this date (YYYY-MM-DD)"),
+    end_date: date = Query(None, description="Filter leads until this date inclusive (YYYY-MM-DD)"),
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Export leads as CSV file download."""
+    import logging
+    import csv
+    import io
+    from fastapi.responses import StreamingResponse
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} exporting leads CSV for form {lead_form_id}")
+        logger.info(f"CSV export date params: start_date={repr(start_date)}, end_date={repr(end_date)}")
+        leads = service.get_leads(
+            lead_form_id, page_id, account_id,
+            start_date=str(start_date) if start_date else None,
+            end_date=str(end_date) if end_date else None
+        )
+
+        if not leads:
+            raise HTTPException(status_code=404, detail="No leads found for this form")
+
+        # Build CSV in memory with UTF-8 BOM for Excel Hebrew support
+        output = io.StringIO()
+
+        # Get all field names from leads (they may vary)
+        all_fields = set()
+        for lead in leads:
+            all_fields.update(lead.keys())
+
+        # Order fields: id, created_time first, then alphabetically
+        priority_fields = ['id', 'created_time']
+        other_fields = sorted([f for f in all_fields if f not in priority_fields])
+        fieldnames = priority_fields + other_fields
+
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(leads)
+
+        # Get CSV content and add UTF-8 BOM for Excel compatibility with Hebrew/Arabic
+        csv_content = output.getvalue()
+        # UTF-8 BOM: \ufeff (tells Excel to use UTF-8 encoding)
+        csv_with_bom = '\ufeff' + csv_content
+        # Encode to bytes for proper streaming
+        csv_bytes = csv_with_bom.encode('utf-8')
+
+        logger.info(f"Exported {len(leads)} leads to CSV for form {lead_form_id}")
+
+        return StreamingResponse(
+            iter([csv_bytes]),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f"attachment; filename=leads_{lead_form_id}.csv"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"User {user.id} failed to export leads: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/lead-forms", status_code=status.HTTP_201_CREATED)
+def create_lead_form(
+    request: CreateLeadFormRequest,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Create a new lead form for a Facebook page."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} creating lead form '{request.form_name}' for page {request.page_id}")
+
+        # Convert custom questions to dict format
+        custom_questions = None
+        if request.custom_questions:
+            custom_questions = [
+                {'label': cq.label, 'field_type': cq.field_type, 'options': cq.options, 'allow_multiple': cq.allow_multiple}
+                for cq in request.custom_questions
+            ]
+
+        result = service.create_lead_form(
+            page_id=request.page_id,
+            form_name=request.form_name,
+            questions=request.questions,
+            privacy_policy_url=request.privacy_policy_url,
+            account_id=request.account_id,
+            headline=request.headline,
+            description=request.description,
+            custom_questions=custom_questions,
+            thank_you_title=request.thank_you_title,
+            thank_you_body=request.thank_you_body,
+            thank_you_button_text=request.thank_you_button_text,
+            thank_you_url=request.thank_you_url
+        )
+        logger.info(f"User {user.id} successfully created lead form {result.get('id')}")
+        return result
+    except ValueError as e:
+        logger.warning(f"User {user.id} failed to create lead form: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"User {user.id} failed to create lead form: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/pixels")
 def get_pixels(
     account_id: str,
@@ -198,6 +379,94 @@ def get_custom_audiences(
     except Exception as e:
         logger.error(f"Failed to fetch custom audiences for account {account_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/custom-audiences", status_code=status.HTTP_201_CREATED)
+def create_custom_audience(
+    request: CreateCustomAudienceRequest,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Create a custom audience from pixel data (website visitors)."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} creating custom audience '{request.name}' from pixel {request.pixel_id}")
+        result = service.create_custom_audience_from_pixel(
+            account_id=request.account_id,
+            name=request.name,
+            pixel_id=request.pixel_id,
+            event_type=request.event_type,
+            retention_days=request.retention_days
+        )
+        logger.info(f"User {user.id} successfully created custom audience {result.get('id')}")
+        return result
+    except ValueError as e:
+        logger.warning(f"User {user.id} failed to create custom audience: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"User {user.id} failed to create custom audience: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/page-engagement-audiences", status_code=status.HTTP_201_CREATED)
+def create_page_engagement_audience(
+    request: CreatePageEngagementAudienceRequest,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Create a custom audience from Facebook Page engagement."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} creating page engagement audience '{request.name}' from page {request.page_id}")
+        result = service.create_page_engagement_audience(
+            account_id=request.account_id,
+            name=request.name,
+            page_id=request.page_id,
+            engagement_type=request.engagement_type,
+            retention_days=request.retention_days
+        )
+        logger.info(f"User {user.id} successfully created page engagement audience {result.get('id')}")
+        return result
+    except ValueError as e:
+        logger.warning(f"User {user.id} failed to create page engagement audience: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"User {user.id} failed to create page engagement audience: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/lookalike-audiences", status_code=status.HTTP_201_CREATED)
+def create_lookalike_audience(
+    request: CreateLookalikeAudienceRequest,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Create a lookalike audience from an existing custom audience."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} creating lookalike audience '{request.name}' from source {request.source_audience_id}")
+        result = service.create_lookalike_audience(
+            account_id=request.account_id,
+            name=request.name,
+            source_audience_id=request.source_audience_id,
+            country_code=request.country_code,
+            ratio=request.ratio
+        )
+        logger.info(f"User {user.id} successfully created lookalike audience {result.get('id')}")
+        return result
+    except ValueError as e:
+        logger.warning(f"User {user.id} failed to create lookalike audience: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"User {user.id} failed to create lookalike audience: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/targeting/search")
 def search_targeting_locations(
@@ -379,6 +648,29 @@ def get_adset_budgets(
     try:
         return service.get_adset_budgets(adset_ids)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Clone Data Endpoint ---
+
+@router.get("/campaigns/{campaign_id}/clone-data")
+def get_campaign_clone_data(
+    campaign_id: str,
+    service: AdMutationService = Depends(get_mutation_service),
+    user: User = Depends(get_current_user)
+):
+    """Get all data needed to clone a campaign (targeting, budget, ads)."""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"User {user.id} fetching clone data for campaign {campaign_id}")
+        result = service.get_campaign_clone_data(campaign_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"User {user.id} failed to get clone data for campaign {campaign_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -572,3 +864,67 @@ def update_ad_creative(
     except Exception as e:
         logger.error(f"User {user.id} failed to update ad {ad_id} creative: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Budget Recommendation Endpoint ---
+
+@router.get("/budget-recommendation")
+def get_budget_recommendation(
+    account_id: str = Query(..., description="Ad account ID"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get budget recommendation based on account historical data.
+    Returns recommended daily budget (in cents) by objective, with fallback for new accounts.
+    """
+    # Clean account ID
+    clean_id = int(account_id.replace("act_", ""))
+
+    repo = MetricsRepository(db)
+
+    # Get last 30 days of spend data
+    end_date = date.today()
+    start_date = end_date - timedelta(days=30)
+
+    metrics = repo.get_aggregated_metrics(
+        start_date=start_date,
+        end_date=end_date,
+        account_ids=[clean_id]
+    )
+
+    total_spend = float(metrics.get('spend', 0) or 0)
+    currency = repo.get_account_currency([clean_id])
+
+    # Calculate average daily spend (over 30 days)
+    avg_daily_spend = total_spend / 30 if total_spend > 0 else 0
+
+    if avg_daily_spend >= 1:  # At least $1/day average = has historical data
+        # Recommend based on average, adjusted by objective
+        base_cents = int(avg_daily_spend * 100)
+        return {
+            "has_historical_data": True,
+            "average_daily_spend": round(avg_daily_spend, 2),
+            "recommended_budget": {
+                "SALES": int(base_cents * 1.5),      # Conversions cost more
+                "LEADS": int(base_cents * 1.2),      # Leads moderate cost
+                "TRAFFIC": base_cents,                # Base recommendation
+                "ENGAGEMENT": int(base_cents * 0.8)  # Engagement cheaper
+            },
+            "min_budget": 100,  # $1 minimum
+            "currency": currency
+        }
+    else:
+        # Fallback for new accounts - best practices
+        return {
+            "has_historical_data": False,
+            "average_daily_spend": 0,
+            "recommended_budget": {
+                "SALES": 2000,      # $20/day for conversions
+                "LEADS": 1500,      # $15/day for leads
+                "TRAFFIC": 1000,    # $10/day for traffic
+                "ENGAGEMENT": 1000  # $10/day for engagement
+            },
+            "min_budget": 100,
+            "currency": currency
+        }

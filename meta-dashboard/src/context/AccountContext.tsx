@@ -20,9 +20,19 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [isLoading, setIsLoading] = useState(true);
     const [hasROAS, setHasROAS] = useState<boolean | null>(null);
 
-    // Initial load
+    // Initial load - skip on public pages (login, callback, verify)
     useEffect(() => {
-        loadAccounts();
+        if (typeof window !== 'undefined') {
+            const path = window.location.pathname;
+            const isPublicPage = path.includes('/login') ||
+                                 path.includes('/callback') ||
+                                 path.includes('/auth/verify');
+            if (!isPublicPage) {
+                loadAccounts();
+            } else {
+                setIsLoading(false);
+            }
+        }
     }, []);
 
     // Load selected account from local storage on mount
@@ -40,15 +50,6 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Fetch hasROAS when selectedAccountId changes
     useEffect(() => {
         const fetchHasROAS = async () => {
-            // Skip if no token (not authenticated)
-            if (typeof window !== 'undefined') {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    setHasROAS(null);
-                    return;
-                }
-            }
-
             if (!selectedAccountId) {
                 setHasROAS(null);
                 return;
@@ -57,15 +58,11 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const response = await accountsService.getConversionTypes(selectedAccountId);
                 setHasROAS(response.data.has_purchase_value);
             } catch (error: any) {
-                console.error('Failed to fetch account ROAS status:', error);
-
+                // If 401/403, the apiClient interceptor will handle redirect
                 // If 403 Forbidden, it means the user no longer has access to this account
-                // (stale localStorage data). We should clear it.
                 if (error.response && error.response.status === 403) {
-                    console.warn(`Access denied to account ${selectedAccountId}. Clearing selection.`);
                     setSelectedAccountId(null);
                 }
-
                 setHasROAS(false); // Default to false on error
             }
         };
@@ -75,16 +72,7 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     const loadAccounts = async () => {
         try {
             setIsLoading(true);
-
-            // Skip loading if no auth token exists (e.g., on login page)
-            if (typeof window !== 'undefined') {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    setIsLoading(false);
-                    return;
-                }
-            }
-
+            // Auth is now handled via HttpOnly cookies - apiClient handles 401s
             const accounts = await fetchLinkedAccounts();
             setLinkedAccounts(accounts);
 

@@ -97,37 +97,33 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         # 4. Create app JWT
         app_token = create_access_token(subject=user.id)
 
-        # 5. Determine redirect based on state parameter or onboarding status
+        # 5. All OAuth flows go through /callback which handles token → cookie conversion
         from backend.config.base_config import settings
 
         # Priority 1: Check if state has return_to (for just-in-time auth flows)
         if state_data.get('return_to'):
             return_to = state_data['return_to']
-            # Add google_connected flag and token to return URL
-            separator = '&' if '?' in return_to else '?'
-            redirect_url = f"{settings.FRONTEND_URL}{return_to}{separator}google_connected=true&token={app_token}"
-            logger.info(f"[Google OAuth] Redirecting to return_to: {redirect_url}")
+            redirect_url = f"{settings.FRONTEND_URL}/en/callback?redirect={return_to}&google_connected=true&token={app_token}"
+            logger.info(f"[Google OAuth] Redirecting via callback to: {return_to}")
             return RedirectResponse(redirect_url)
 
-        # Priority 2: Check if user has Facebook connected
+        # Priority 2: Determine next step based on onboarding status
         if not user.fb_user_id:
-            # Needs to connect Facebook
-            redirect_url = f"{settings.FRONTEND_URL}/en/onboard/connect-facebook?token={app_token}"
+            next_step = 'onboard/connect-facebook'
         elif is_new_user or not user.onboarding_completed:
-            # Check onboarding status
             onboarding_status = repo.get_onboarding_status(user.id)
-            next_step = onboarding_status.get('next_step', 'dashboard')
+            step = onboarding_status.get('next_step', 'dashboard')
 
-            if next_step == 'select_accounts':
-                redirect_url = f"{settings.FRONTEND_URL}/en/select-accounts?token={app_token}"
-            elif next_step == 'complete_profile':
-                redirect_url = f"{settings.FRONTEND_URL}/en/quiz?token={app_token}"
+            if step == 'select_accounts':
+                next_step = 'select-accounts'
+            elif step == 'complete_profile':
+                next_step = 'quiz'
             else:
-                redirect_url = f"{settings.FRONTEND_URL}/en/dashboard?token={app_token}"
+                next_step = 'account-dashboard'
         else:
-            # Returning user, go to dashboard
-            redirect_url = f"{settings.FRONTEND_URL}/en/dashboard?token={app_token}"
+            next_step = 'account-dashboard'
 
+        redirect_url = f"{settings.FRONTEND_URL}/en/callback?redirect={next_step}&token={app_token}"
         return RedirectResponse(redirect_url)
         
     except Exception as e:

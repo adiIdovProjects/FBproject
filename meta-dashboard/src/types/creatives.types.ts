@@ -77,6 +77,7 @@ export interface CreativesFilter {
     sort_by: CreativeSortMetric;
     search_query?: string;
     ad_status?: string;
+    campaign_name?: string;
 }
 
 export interface CreativeComparisonMetric {

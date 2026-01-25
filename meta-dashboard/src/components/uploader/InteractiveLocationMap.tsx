@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Minus, Plus, Trash2, Move } from 'lucide-react';
 import { GeoLocation } from '@/services/mutations.service';
 import dynamic from 'next/dynamic';
@@ -19,7 +19,7 @@ interface InteractiveLocationMapProps {
     customPins: CustomPinLocation[];
     onRemoveLocation: (key: string, type: string) => void;
     onAddCustomPin: (pin: CustomPinLocation) => void;
-    onUpdateCustomPin: (pin: CustomPinLocation) => void;
+    onUpdateCustomPin: (id: string, updates: Partial<CustomPinLocation>) => void;
     onRemoveCustomPin: (id: string) => void;
 }
 
@@ -42,7 +42,45 @@ const LOCATION_COORDS: Record<string, [number, number]> = {
     'AU': [-25.3, 133.8], 'NZ': [-40.9, 174.9],
 };
 
+// Cache for geocoded coordinates
+const geocodeCache: Record<string, [number, number]> = {};
+
+// Forward geocoding using OpenStreetMap Nominatim (free)
+async function forwardGeocode(query: string): Promise<[number, number] | null> {
+    // Check cache first
+    if (geocodeCache[query]) {
+        return geocodeCache[query];
+    }
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+            { headers: { 'Accept-Language': 'en' } }
+        );
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (data && data.length > 0) {
+            const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            geocodeCache[query] = coords;
+            return coords;
+        }
+        return null;
+    } catch (error) {
+        console.error('Forward geocoding error:', error);
+        return null;
+    }
+}
+
 function getLocationCoords(location: GeoLocation): [number, number] | null {
+    // Use API-provided coordinates first (for cities/regions)
+    if (location.latitude && location.longitude) {
+        return [location.latitude, location.longitude];
+    }
+    // Check geocode cache
+    const cacheKey = location.display_name || location.name;
+    if (geocodeCache[cacheKey]) {
+        return geocodeCache[cacheKey];
+    }
+    // Fallback to hardcoded country coordinates
     if (location.country_code) {
         return LOCATION_COORDS[location.country_code.toUpperCase()] || null;
     }
@@ -91,7 +129,17 @@ function MapContent({
     const [L, setL] = useState<any>(null);
     const [MapComponents, setMapComponents] = useState<any>(null);
     const [selectedPin, setSelectedPin] = useState<string | null>(null);
+    const [isPinMode, setIsPinMode] = useState(false);
+    const [geocodeTrigger, setGeocodeTrigger] = useState(0); // Trigger re-render when geocode completes
     const mapRef = useRef<any>(null);
+    const prevPointCountRef = useRef(0);
+    const isPinModeRef = useRef(isPinMode);
+    const lastProcessedLocationLengthRef = useRef(locations.length); // Track processed locations
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        isPinModeRef.current = isPinMode;
+    }, [isPinMode]);
 
     // Dynamic import of leaflet on client side
     useEffect(() => {
@@ -131,9 +179,9 @@ function MapContent({
         shadowSize: [41, 41],
     });
 
-    // Custom red icon for custom pins
-    const redIcon = new L.Icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    // Custom orange icon for custom pins
+    const orangeIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -141,12 +189,80 @@ function MapContent({
         shadowSize: [41, 41],
     });
 
+    // Component to geocode new locations and zoom to them once
+    function GeocodeAndZoom() {
+        const map = MapComponents.useMap();
+
+        useEffect(() => {
+            // Only run when a new location is added (use parent-level ref to persist across re-renders)
+            if (locations.length <= lastProcessedLocationLengthRef.current) {
+                return;
+            }
+
+            // Get the newest location
+            const newLoc = locations[locations.length - 1];
+            lastProcessedLocationLengthRef.current = locations.length;
+
+            const processNew = async () => {
+                let coords: [number, number] | null = null;
+
+                if (newLoc.latitude && newLoc.longitude) {
+                    coords = [newLoc.latitude, newLoc.longitude];
+                } else {
+                    const query = newLoc.display_name || newLoc.name;
+                    coords = await forwardGeocode(query);
+                    if (!coords && newLoc.country_code) {
+                        coords = LOCATION_COORDS[newLoc.country_code.toUpperCase()] || null;
+                    }
+                    setGeocodeTrigger(prev => prev + 1);
+                }
+
+                if (coords) {
+                    map.setView(coords, 6);
+                }
+            };
+
+            processNew();
+        }, [locations.length, map]);
+
+        return null;
+    }
+
+    // Get resolved coordinates for a location (for marker rendering)
+    const getResolvedCoords = (loc: GeoLocation): [number, number] | null => {
+        // First check API coords
+        if (loc.latitude && loc.longitude) {
+            return [loc.latitude, loc.longitude];
+        }
+        // Check cache
+        const cacheKey = loc.display_name || loc.name;
+        if (geocodeCache[cacheKey]) {
+            return geocodeCache[cacheKey];
+        }
+        // Fallback to country
+        if (loc.country_code) {
+            return LOCATION_COORDS[loc.country_code.toUpperCase()] || null;
+        }
+        return null;
+    };
+
     // Click handler component
     function MapClickHandler() {
+        const map = MapComponents.useMap();
+
         useMapEvents({
             click: async (e: any) => {
+                // Only add pin when pin mode is active (use ref for latest value)
+                if (!isPinModeRef.current) return;
+
                 const { lat, lng } = e.latlng;
                 const pinId = `pin-${Date.now()}`;
+
+                // Deactivate pin mode first
+                setIsPinMode(false);
+
+                // Zoom to the clicked location
+                map.flyTo([lat, lng], 8, { duration: 0.5 });
 
                 // Add pin immediately with loading name
                 const newPin: CustomPinLocation = {
@@ -161,7 +277,7 @@ function MapContent({
 
                 // Fetch actual location name
                 const locationName = await reverseGeocode(lat, lng);
-                onUpdateCustomPin({ ...newPin, name: locationName });
+                onUpdateCustomPin(pinId, { name: locationName });
             },
         });
         return null;
@@ -171,7 +287,7 @@ function MapContent({
     function RadiusControl({ pin }: { pin: CustomPinLocation }) {
         const adjustRadius = (delta: number) => {
             const newRadius = Math.max(1, Math.min(500, pin.radius + delta));
-            onUpdateCustomPin({ ...pin, radius: newRadius });
+            onUpdateCustomPin(pin.id, { radius: newRadius });
         };
 
         return (
@@ -205,23 +321,24 @@ function MapContent({
     }
 
     return (
-        <div className="relative z-0">
+        <div className="relative h-[300px]">
             <MapContainer
                 ref={mapRef}
                 center={[30, 20]}
                 zoom={2}
-                className="w-full h-[300px] rounded-xl"
+                className="w-full h-full rounded-xl"
                 style={{ background: '#1f2937' }}
             >
                 <TileLayer
                     attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
                 <MapClickHandler />
+                <GeocodeAndZoom />
 
                 {/* Render searched/selected locations */}
                 {locations.map((loc) => {
-                    const coords = getLocationCoords(loc);
+                    const coords = getResolvedCoords(loc);
                     if (!coords) return null;
                     return (
                         <Marker key={`${loc.type}-${loc.key}`} position={coords} icon={blueIcon}>
@@ -244,36 +361,34 @@ function MapContent({
 
                 {/* Render custom pins with radius circles */}
                 {customPins.map((pin) => (
-                    <div key={pin.id}>
+                    <React.Fragment key={pin.id}>
                         <Circle
                             center={[pin.lat, pin.lng]}
                             radius={pin.radius * 1000} // Convert km to meters
                             pathOptions={{
-                                color: '#ef4444',
-                                fillColor: '#ef4444',
+                                color: '#f97316',
+                                fillColor: '#f97316',
                                 fillOpacity: 0.15,
                                 weight: 2,
                             }}
                         />
                         <Marker
                             position={[pin.lat, pin.lng]}
-                            icon={redIcon}
+                            icon={orangeIcon}
                             draggable={true}
                             eventHandlers={{
                                 dragend: async (e: any) => {
                                     const marker = e.target;
                                     const position = marker.getLatLng();
                                     // Update position immediately with loading name
-                                    onUpdateCustomPin({
-                                        ...pin,
+                                    onUpdateCustomPin(pin.id, {
                                         lat: position.lat,
                                         lng: position.lng,
                                         name: 'Loading...',
                                     });
                                     // Fetch new location name
                                     const locationName = await reverseGeocode(position.lat, position.lng);
-                                    onUpdateCustomPin({
-                                        ...pin,
+                                    onUpdateCustomPin(pin.id, {
                                         lat: position.lat,
                                         lng: position.lng,
                                         name: locationName,
@@ -285,25 +400,33 @@ function MapContent({
                                 <RadiusControl pin={pin} />
                             </Popup>
                         </Marker>
-                    </div>
+                    </React.Fragment>
                 ))}
             </MapContainer>
 
+            {/* Drop Pin button - bottom right corner */}
+            <button
+                onClick={() => setIsPinMode(!isPinMode)}
+                style={{ zIndex: 1000 }}
+                className={`absolute bottom-2 right-2 px-3 py-1.5 rounded flex items-center gap-2 text-sm transition-colors shadow-lg ${
+                    isPinMode
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+            >
+                <MapPin className="w-4 h-4" />
+                {isPinMode ? 'Click map to place' : 'Drop Pin'}
+            </button>
+
             {/* Instructions overlay */}
-            <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-2">
-                <MapPin className="w-3 h-3" />
-                Click map to add pin
-                <span className="text-gray-400">|</span>
+            <div
+                style={{ zIndex: 1000 }}
+                className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-2"
+            >
                 <Move className="w-3 h-3" />
-                Drag to move
+                Drag pins to move
             </div>
 
-            {/* Pin count */}
-            {(locations.length > 0 || customPins.length > 0) && (
-                <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    {locations.length + customPins.length} location{locations.length + customPins.length !== 1 ? 's' : ''}
-                </div>
-            )}
         </div>
     );
 }

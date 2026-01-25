@@ -19,9 +19,8 @@ export function usePageTracking() {
       return;
     }
 
-    // Skip tracking if user is not logged in
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (!token) {
+    // Skip tracking on login/auth pages (user likely not authenticated)
+    if (pathname.includes('/login') || pathname.includes('/auth/')) {
       return;
     }
 

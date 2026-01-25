@@ -623,6 +623,7 @@ class MetricsService:
         sort_by: str = "spend",
         search_query: Optional[str] = None,
         ad_status: Optional[str] = None,
+        campaign_name: Optional[str] = None,
         account_ids: Optional[List[int]] = None
     ) -> List[CreativeMetrics]:
         """
@@ -636,6 +637,7 @@ class MetricsService:
             sort_by: Metric to sort by
             search_query: Search by creative title
             ad_status: Filter by ad status (ACTIVE, PAUSED, ARCHIVED)
+            campaign_name: Filter by campaign name
             account_ids: Optional list of account IDs
 
         Returns:
@@ -645,7 +647,7 @@ class MetricsService:
         filtered_account_ids = self._resolve_account_ids(account_ids)
 
         creatives = self.creative_repo.get_creative_metrics(
-            start_date, end_date, is_video, min_spend, search_query, ad_status, filtered_account_ids
+            start_date, end_date, is_video, min_spend, search_query, ad_status, campaign_name, filtered_account_ids
         )
 
         # Calculate derived metrics for each creative

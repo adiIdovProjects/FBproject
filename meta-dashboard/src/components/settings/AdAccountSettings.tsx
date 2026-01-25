@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import {
     Settings,
@@ -19,7 +19,9 @@ import {
     Building2,
     ArrowUpRight,
     Edit2,
-    Save
+    Save,
+    RefreshCw,
+    Loader2
 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
@@ -83,6 +85,7 @@ interface AdAccountSettingsProps {
 
 export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId }) => {
     const t = useTranslations();
+    const locale = useLocale();
     const searchParams = useSearchParams();
 
     // Initialize tab from URL or default to 'overview'
@@ -99,6 +102,10 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
     const [businessDescription, setBusinessDescription] = useState('');
     const [isSavingDescription, setIsSavingDescription] = useState(false);
     const [descriptionSaveSuccess, setDescriptionSaveSuccess] = useState(false);
+
+    // Reconnect Page State
+    const [isReconnecting, setIsReconnecting] = useState(false);
+    const [reconnectSuccess, setReconnectSuccess] = useState(false);
 
     // Edit Mode State for Optimization
     const [isEditingOptimization, setIsEditingOptimization] = useState(false);
@@ -178,6 +185,29 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
 
 
 
+
+    // Handle reconnect Facebook page
+    const handleReconnectPage = async () => {
+        setIsReconnecting(true);
+        setReconnectSuccess(false);
+        try {
+            await apiClient.post('/api/v1/auth/facebook/reconnect');
+
+            // Refresh account info to get updated page_id
+            const accountsResponse = await apiClient.get<AdAccountInfo[]>('/api/v1/users/me/accounts');
+            const account = accountsResponse.data.find(acc => String(acc.account_id) === String(accountId));
+            if (account) {
+                setAccountInfo(account);
+            }
+
+            setReconnectSuccess(true);
+            setTimeout(() => setReconnectSuccess(false), 3000);
+        } catch (error) {
+            console.error('Failed to reconnect Facebook page:', error);
+        } finally {
+            setIsReconnecting(false);
+        }
+    };
 
     // Update URL when tab changes
     const handleTabChange = (tab: TabType) => {
@@ -304,13 +334,33 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
 
                     {/* Page Status */}
                     <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start justify-between group hover:bg-white/10 transition-colors">
-                        <div>
+                        <div className="flex-1">
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Facebook Page</p>
                             <div className="flex items-center gap-2 text-white font-semibold">
                                 <Globe className="w-4 h-4 text-blue-400" />
                                 {accountInfo?.page_name || (accountInfo?.page_id ? 'Connected' : 'Not Connected')}
                             </div>
                             {accountInfo?.page_id && <p className="text-xs text-gray-500 mt-1 font-mono">ID: {accountInfo.page_id}</p>}
+                            {!accountInfo?.page_id && (
+                                <button
+                                    onClick={handleReconnectPage}
+                                    disabled={isReconnecting}
+                                    className="mt-2 flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 font-medium transition-colors disabled:opacity-50"
+                                >
+                                    {isReconnecting ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                        <RefreshCw className="w-3 h-3" />
+                                    )}
+                                    {isReconnecting ? t('common.loading') : t('accounts.reconnect_facebook')}
+                                </button>
+                            )}
+                            {reconnectSuccess && (
+                                <p className="mt-2 text-xs text-green-400 flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" />
+                                    {t('settings.reconnect_success')}
+                                </p>
+                            )}
                         </div>
                         <div className={`p-1.5 rounded-full ${accountInfo?.page_id ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
                             {accountInfo?.page_id ? (
@@ -400,7 +450,7 @@ export const AdAccountSettings: React.FC<AdAccountSettingsProps> = ({ accountId 
                             {t('settings.complete_setup_first')}
                         </p>
                         <a
-                            href={`/en/account-quiz?account_id=${accountId}`}
+                            href={`/${locale}/account-quiz?account_id=${accountId}`}
                             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-accent/20 hover:scale-105"
                         >
                             <TrendingUp className="w-4 h-4" />

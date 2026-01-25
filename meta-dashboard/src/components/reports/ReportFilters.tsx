@@ -35,7 +35,8 @@ const BREAKDOWN_OPTIONS: { value: ReportBreakdown; labelKey: string }[] = [
   { value: 'ad_name', labelKey: 'reports.breakdown.ad' },
   { value: 'placement', labelKey: 'reports.breakdown.placement' },
   { value: 'platform', labelKey: 'reports.breakdown.platform' },
-  { value: 'age-gender', labelKey: 'reports.breakdown.demographics' },
+  { value: 'age', labelKey: 'reports.breakdown.age' },
+  { value: 'gender', labelKey: 'reports.breakdown.gender' },
   { value: 'country', labelKey: 'reports.breakdown.country' },
 ];
 

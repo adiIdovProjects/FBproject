@@ -25,6 +25,7 @@ const METRIC_OPTIONS: MetricOption[] = [
   { value: 'clicks', label: 'metrics.clicks', format: 'number' },
   { value: 'ctr', label: 'metrics.ctr', format: 'percentage' },
   { value: 'cpc', label: 'metrics.cpc', format: 'currency' },
+  { value: 'cpa', label: 'metrics.cpa', format: 'currency' },
   { value: 'impressions', label: 'metrics.impressions', format: 'number' },
   { value: 'conversion_rate', label: 'metrics.conversion_rate', format: 'percentage' },
 ];
@@ -57,6 +58,8 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
         return day.total_impressions > 0 ? (day.total_clicks / day.total_impressions) * 100 : 0;
       case 'cpc':
         return day.total_clicks > 0 ? day.total_spend / day.total_clicks : 0;
+      case 'cpa':
+        return (day.total_conversions || 0) > 0 ? day.total_spend / (day.total_conversions || 0) : 0;
       case 'conversion_rate':
         return day.total_clicks > 0 ? ((day.total_conversions || 0) / day.total_clicks) * 100 : 0;
       case 'impressions':

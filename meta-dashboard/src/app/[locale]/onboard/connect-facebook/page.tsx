@@ -3,10 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { generateState } from '@/utils/csrf';
 import { Facebook, ArrowRight, Info } from 'lucide-react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+import { apiClient } from '@/services/apiClient';
 
 export default function ConnectFacebookPage() {
     const router = useRouter();
@@ -18,33 +16,20 @@ export default function ConnectFacebookPage() {
         setConnecting(true);
 
         try {
-            // Get current token
-            const token = localStorage.getItem('token');
+            // Call the connect endpoint (auth via HttpOnly cookie)
+            const response = await apiClient.get('/api/v1/auth/facebook/connect');
 
-            if (!token) {
-                router.push(`/${locale}/login`);
-                return;
-            }
-
-            // Call the connect endpoint (requires auth)
-            const response = await fetch(`${API_BASE_URL}/api/v1/auth/facebook/connect`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            const data = await response.json();
-
-            if (data.url) {
+            if (response.data.url) {
                 // Redirect to Facebook OAuth
-                window.location.href = data.url;
+                window.location.href = response.data.url;
             } else {
-                console.error('No URL returned from connect endpoint');
                 setConnecting(false);
             }
-        } catch (error) {
-            console.error('Error connecting to Facebook:', error);
-            setConnecting(false);
+        } catch (error: any) {
+            // 401 errors handled by apiClient interceptor
+            if (error.response?.status !== 401) {
+                setConnecting(false);
+            }
         }
     };
 

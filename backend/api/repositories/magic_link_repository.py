@@ -4,9 +4,13 @@ Magic Link Repository - Database operations for magic link tokens
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from jose import jwt
 from backend.config.base_config import settings
+from backend.utils.logging_utils import get_logger
 import secrets
+
+logger = get_logger(__name__)
 
 
 class MagicLinkRepository:
@@ -42,10 +46,10 @@ class MagicLinkRepository:
         token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM)
 
         # Store token in database
-        insert_query = """
+        insert_query = text("""
             INSERT INTO magic_link_tokens (email, token, expires_at, used)
             VALUES (:email, :token, :expires_at, FALSE)
-        """
+        """)
 
         self.db.execute(
             insert_query,
@@ -82,54 +86,40 @@ class MagicLinkRepository:
 
             # Verify token type
             if token_type != "magic_link":
-                print(f"Invalid token type: {token_type}")
+                logger.warning(f"Invalid token type: {token_type}")
                 return None
 
-            # Check if token exists in database and hasn't been used
-            check_query = """
-                SELECT email, used, expires_at
-                FROM magic_link_tokens
-                WHERE token = :token
-            """
-
-            result = self.db.execute(check_query, {"token": token}).fetchone()
-
-            if not result:
-                print(f"Token not found in database: {token[:20]}...")
-                return None
-
-            db_email, used, expires_at = result
-
-            # Check if already used
-            if used:
-                print(f"Token already used for {email}")
-                return None
-
-            # Check expiry (redundant with JWT but extra security)
-            if expires_at < datetime.utcnow():
-                print(f"Token expired for {email}")
-                return None
-
-            # Mark token as used
-            update_query = """
+            # Atomically mark token as used and return email if valid
+            # This prevents race conditions where the same token could be used twice
+            update_query = text("""
                 UPDATE magic_link_tokens
                 SET used = TRUE
                 WHERE token = :token
-            """
+                  AND used = FALSE
+                  AND expires_at >= :now
+                RETURNING email
+            """)
 
-            self.db.execute(update_query, {"token": token})
+            result = self.db.execute(
+                update_query,
+                {"token": token, "now": datetime.utcnow()}
+            ).fetchone()
             self.db.commit()
 
-            return email
+            if not result:
+                logger.warning(f"Token not found, already used, or expired for {email}")
+                return None
+
+            return result[0]
 
         except jwt.ExpiredSignatureError:
-            print("Token has expired (JWT validation)")
+            logger.warning("Token has expired (JWT validation)")
             return None
         except jwt.JWTError as e:
-            print(f"Invalid token (JWT error): {e}")
+            logger.warning(f"Invalid token (JWT error): {e}")
             return None
         except Exception as e:
-            print(f"Error verifying token: {e}")
+            logger.error(f"Error verifying token: {e}")
             return None
 
     def cleanup_expired_tokens(self, days_old: int = 7) -> int:
@@ -144,16 +134,16 @@ class MagicLinkRepository:
         """
         cutoff_date = datetime.utcnow() - timedelta(days=days_old)
 
-        delete_query = """
+        delete_query = text("""
             DELETE FROM magic_link_tokens
             WHERE expires_at < :cutoff_date OR used = TRUE
-        """
+        """)
 
         result = self.db.execute(delete_query, {"cutoff_date": cutoff_date})
         self.db.commit()
 
         deleted_count = result.rowcount
-        print(f"Cleaned up {deleted_count} old/used magic link tokens")
+        logger.info(f"Cleaned up {deleted_count} old/used magic link tokens")
 
         return deleted_count
 
@@ -168,11 +158,11 @@ class MagicLinkRepository:
             Optional[Dict]: Token information or None
         """
         try:
-            query = """
+            query = text("""
                 SELECT email, expires_at, used, created_at
                 FROM magic_link_tokens
                 WHERE token = :token
-            """
+            """)
 
             result = self.db.execute(query, {"token": token}).fetchone()
 
@@ -190,5 +180,5 @@ class MagicLinkRepository:
             }
 
         except Exception as e:
-            print(f"Error getting token info: {e}")
+            logger.error(f"Error getting token info: {e}")
             return None

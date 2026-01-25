@@ -26,12 +26,14 @@ import {
     Shield,
     TrendingUp,
     FileText,
-    GraduationCap
+    GraduationCap,
+    Home
 } from 'lucide-react';
 import { useAccount } from '@/context/AccountContext';
 import { useLocale, useTranslations } from 'next-intl';
 import { accountsService } from '@/services/accounts.service';
 import { apiClient } from '@/services/apiClient';
+import ThemeSelector from '@/components/ThemeSelector';
 
 export const Sidebar: React.FC = () => {
     const t = useTranslations();
@@ -258,6 +260,22 @@ export const Sidebar: React.FC = () => {
 
             {/* Main Navigation */}
             <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+                {/* Home Link - Always visible at top */}
+                <Link
+                    href={`/${locale}/homepage`}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 mb-4 ${
+                        pathname === `/${locale}/homepage`
+                            ? 'bg-accent/15 text-accent font-bold'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    } ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                    <Home className={`w-5 h-5 ${pathname === `/${locale}/homepage` ? 'text-accent' : ''}`} />
+                    <span className="text-sm">{t('homepage.title')}</span>
+                    {pathname === `/${locale}/homepage` && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-accent ml-auto" />
+                    )}
+                </Link>
+
                 <div className="mb-4">
                     <p className="px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Main Menu</p>
                     {navStructure.map((item) => {
@@ -372,6 +390,14 @@ export const Sidebar: React.FC = () => {
                         <span className={isRTL ? 'flex-1' : ''}>Admin Dashboard</span>
                     </Link>
                 )}
+
+                {/* Theme Selector */}
+                <div className="pt-2 border-t border-border-subtle mt-2">
+                    <div className={`flex items-center gap-2 px-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className="text-xs text-text-muted">{t('theme.label')}</span>
+                        <ThemeSelector />
+                    </div>
+                </div>
             </div>
         </aside>
     );

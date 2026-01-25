@@ -51,6 +51,7 @@ def get_creatives(
     sort_by: str = Query("spend", description="Metric to sort by"),
     search_query: Optional[str] = Query(None, description="Search by creative title"),
     ad_status: Optional[str] = Query(None, description="Filter by ad status (ACTIVE, PAUSED, ARCHIVED)"),
+    campaign_name: Optional[str] = Query(None, description="Filter by campaign name"),
     account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
@@ -73,6 +74,7 @@ def get_creatives(
             sort_by=sort_by,
             search_query=search_query,
             ad_status=ad_status,
+            campaign_name=campaign_name,
             account_ids=[account_id] if account_id else None
         )
     except Exception as e:

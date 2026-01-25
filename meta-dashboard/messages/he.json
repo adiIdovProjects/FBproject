@@ -13,6 +13,7 @@
     "search": "חיפוש...",
     "all_statuses": "כל הסטטוסים",
     "all_types": "כל הסוגים",
+    "all_campaigns": "כל הקמפיינים",
     "currency": "מטבע",
     "daily_trend": "מגמה יומית",
     "weekly_trend": "מגמה שבועית",
@@ -29,7 +30,8 @@
     "saving": "שומר...",
     "saved_successfully": "נשמר בהצלחה",
     "actions": "פעולות",
-    "loading": "טוען..."
+    "loading": "טוען...",
+    "today": "היום"
   },
   "status": {
     "ACTIVE": "פעיל",
@@ -146,7 +148,9 @@
     "country": "מדינה",
     "click_tab_to_load": "לחץ על כרטיסייה כדי לטעון נתוני פירוט",
     "breakdown_lazy_load": "הנתונים ייטענו בעת בחירת סוג פירוט",
-    "leads": "לידים"
+    "leads": "לידים",
+    "download_leads": "הורדת לידים",
+    "download_csv": "הורדת CSV"
   },
   "reports": {
     "title": "דוחות מתקדמים",
@@ -660,6 +664,7 @@
     "age_and_gender": "גיל ומגדר",
     "click_tab_to_load": "לחץ על כרטיסייה כדי לטעון נתוני פירוט",
     "lazy_load": "נתוני פירוט נטענים בעת בחירת כרטיסייה",
+    "no_conversion_data": "* פייסבוק לא מספק נתוני המרות עבור פירוט זה",
     "ad_set_name": "שם סט המודעות",
     "ad_name": "שם המודעה",
     "targeting_type": "סוג טרגוט",
@@ -801,6 +806,14 @@
     "interest_hint": "טרגט משתמשים על סמך תחומי העניין, התחביבים וההתנהגויות שלהם",
     "interest_placeholder": "חפש תחומי עניין (לדוגמה: כושר, בישול, טיולים...)",
     "age": "גיל",
+    "gender": "מגדר",
+    "gender_all": "הכל",
+    "gender_male": "זכר",
+    "gender_female": "נקבה",
+    "platform": "פלטפורמה",
+    "platform_all": "הכל",
+    "platform_facebook": "פייסבוק",
+    "platform_instagram": "אינסטגרם",
     "daily_budget": "תקציב יומי",
     "facebook_pixel": "פיקסל פייסבוק",
     "loading_pixels": "טוען פיקסלים...",
@@ -854,7 +867,46 @@
     "lead": "ליד",
     "complete_registration": "השלמת הרשמה",
     "contact": "יצירת קשר",
-    "submit_application": "שליחת בקשה"
+    "submit_application": "שליחת בקשה",
+    "create_audience": "יצירת קהל מפיקסל",
+    "audience_name": "שם הקהל",
+    "audience_name_placeholder": "לדוגמה: מבקרי האתר - 30 יום",
+    "event_type": "סוג אירוע",
+    "event_pageview": "צפייה בעמוד (כל המבקרים)",
+    "event_viewcontent": "צפייה בתוכן (צפו במוצרים)",
+    "event_addtocart": "הוספה לעגלה",
+    "event_purchase": "רכישה",
+    "event_lead": "ליד",
+    "retention_days": "תקופת שמירה",
+    "days": "ימים",
+    "day": "יום",
+    "create": "צור",
+    "website_visitors": "אתר",
+    "page_engagement": "עמוד",
+    "lookalike": "דומה",
+    "page_audience_placeholder": "לדוגמה: עוקבי עמוד - 365 ימים",
+    "engagement_type": "סוג מעורבות",
+    "engagement_all": "כל המעורבות בעמוד",
+    "engagement_visited": "ביקרו בעמוד",
+    "engagement_liked": "עשו לייק לעמוד",
+    "engagement_saved": "שמרו את העמוד",
+    "engagement_messaged": "שלחו הודעה לעמוד",
+    "select_page_first": "אנא בחר עמוד פייסבוק בשלב 1 קודם",
+    "lookalike_placeholder": "לדוגמה: 1% דומה - ישראל",
+    "source_audience": "קהל מקור",
+    "select_source": "בחר קהל מקור...",
+    "no_source_audiences": "צור קהל מותאם אישית קודם",
+    "country_code": "מדינת יעד (קוד ISO)",
+    "lookalike_size": "גודל קהל דומה",
+    "lookalike_hint": "אחוז קטן יותר = דומה יותר לקהל המקור",
+    "schedule_campaign": "תזמן תאריכי התחלה/סיום של הקמפיין",
+    "start_date": "תאריך התחלה",
+    "end_date": "תאריך סיום",
+    "start_date_hint": "השאר ריק להתחלה מיידית",
+    "end_date_hint": "השאר ריק להפעלה ללא הגבלה",
+    "language_targeting": "טרגוט לפי שפה",
+    "language_optional": "אופציונלי",
+    "language_hint": "טרגט משתמשים שדוברים שפות ספציפיות. השאר ריק לכל השפות."
   },
   "ai_panel": {
     "title": "שאל את עוזר ה-AI",
@@ -985,5 +1037,51 @@
     "page_not_connected_title": "דף פייסבוק לא מחובר",
     "page_not_connected_desc": "יש לחבר מחדש את החשבון שלך כדי לקבל את פרטי דף הפייסבוק.",
     "go_to_settings": "עבור להגדרות ← חבר חשבון מחדש"
+  },
+  "homepage": {
+    "title": "דף הבית",
+    "subtitle": "מרכז הבקרה שלך לפרסום בפייסבוק",
+    "quick_stats": {
+      "spent": "הוצאה",
+      "this_week": "השבוע",
+      "results": "תוצאות",
+      "active_campaigns": "קמפיינים פעילים"
+    },
+    "campaigns": {
+      "title": "הקמפיינים שלך",
+      "view_all": "צפה בכל הקמפיינים",
+      "no_campaigns": "אין קמפיינים עדיין",
+      "health_great": "מצוין",
+      "health_attention": "דורש תשומת לב",
+      "health_problem": "בעיה",
+      "reason_looking_good": "נראה טוב!",
+      "reason_getting_results": "מקבל תוצאות!",
+      "reason_good_engagement": "מעורבות טובה",
+      "reason_low_ctr": "אחוז הקלקות נמוך - נסה קריאייטיבים חדשים",
+      "reason_no_conversions": "אין המרות עדיין",
+      "reason_no_results": "מוציא תקציב אבל אין תוצאות - בדוק טירגוט"
+    },
+    "actions": {
+      "title": "מה תרצה לעשות?",
+      "create_campaign": "צור קמפיין",
+      "analyze_results": "נתח תוצאות",
+      "talk_to_ai": "שוחח עם AI"
+    },
+    "recommendations": {
+      "title": "המלצות",
+      "no_recommendations": "הכל נראה מעולה!",
+      "add_creatives": "הוסף קריאייטיבים",
+      "increase_budget": "הגדל תקציב",
+      "view_details": "צפה בפרטים",
+      "campaign_problem": "\"{name}\" מוציא תקציב אבל לא מקבל תוצאות",
+      "campaign_low_ctr": "\"{name}\" עם אחוז הקלקות נמוך - נסה להוסיף קריאייטיבים",
+      "campaign_no_conversions": "\"{name}\" מקבל הקלקות אבל אין המרות עדיין"
+    },
+    "creatives": {
+      "title": "קריאייטיבים מובילים",
+      "view_all": "צפה בכל הקריאייטיבים",
+      "no_creatives": "אין קריאייטיבים עדיין",
+      "results_label": "תוצאות"
+    }
   }
 }
