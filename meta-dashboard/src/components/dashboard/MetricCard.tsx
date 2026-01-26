@@ -83,8 +83,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     }
 
     return {
-      color: isGood ? 'text-green-400' : 'text-red-400',
-      bgColor: isGood ? 'bg-green-900/30' : 'bg-red-900/30',
+      color: isGood ? 'text-success' : 'text-error',
+      bgColor: isGood ? 'bg-success-bg' : 'bg-error-bg',
       icon: isPositive ? 'up' : 'down',
       isGood
     };

@@ -114,10 +114,27 @@ class AdMutationService:
 
         # If using an existing post, use object_story_id instead of object_story_spec
         if hasattr(creative, 'object_story_id') and creative.object_story_id:
-            return {
+            params = {
                 AdCreative.Field.name: creative_name,
                 AdCreative.Field.object_story_id: creative.object_story_id,
             }
+            # Add call_to_action with lead form if provided
+            if hasattr(creative, 'lead_form_id') and creative.lead_form_id:
+                params[AdCreative.Field.call_to_action] = {
+                    "type": "SIGN_UP",
+                    "value": {
+                        "lead_gen_form_id": creative.lead_form_id
+                    }
+                }
+            # Otherwise add call_to_action with link if URL is provided
+            elif hasattr(creative, 'link_url') and creative.link_url:
+                params[AdCreative.Field.call_to_action] = {
+                    "type": creative.call_to_action if hasattr(creative, 'call_to_action') and creative.call_to_action else "LEARN_MORE",
+                    "value": {
+                        "link": str(creative.link_url)
+                    }
+                }
+            return params
 
         # Standard creative with new content
         params = {
@@ -225,17 +242,12 @@ class AdMutationService:
                         continue
 
                     # Build the custom question with options
-                    # Keys must be lowercase alphanumeric with underscores only
-                    def sanitize_key(text, fallback_idx):
-                        import re
-                        key = re.sub(r'[^a-z0-9_]', '', text.lower().replace(' ', '_'))
-                        return key if key else f"option_{fallback_idx}"
-
+                    # Use simple indexed keys to guarantee uniqueness
                     custom_q = {
                         "type": "CUSTOM",
                         "key": f"custom_question_{i}",
                         "label": label,
-                        "options": [{'key': sanitize_key(opt, idx), 'value': opt} for idx, opt in enumerate(valid_options)]
+                        "options": [{'key': f'opt_{idx}', 'value': opt} for idx, opt in enumerate(valid_options)]
                     }
 
                     fb_questions.append(custom_q)
@@ -405,7 +417,7 @@ class AdMutationService:
             url = f"https://graph.facebook.com/v24.0/{form_id}"
             params = {
                 'access_token': page_token,
-                'fields': 'id,name,status,questions,privacy_policy,context_card,thank_you_page,created_time'
+                'fields': 'id,name,status,questions,privacy_policy_url,context_card,thank_you_page,created_time'
             }
             response = requests.get(url, params=params)
             data = response.json()
@@ -454,14 +466,19 @@ class AdMutationService:
                         result['custom_questions'].append(custom_q)
 
             # Parse privacy policy
-            if 'privacy_policy' in data:
-                result['privacy_policy_url'] = data['privacy_policy'].get('url')
+            if 'privacy_policy_url' in data:
+                result['privacy_policy_url'] = data['privacy_policy_url']
 
             # Parse context card (intro/headline/description)
             if 'context_card' in data:
                 ctx = data['context_card']
                 result['headline'] = ctx.get('title')
-                result['description'] = ctx.get('content')
+                # content is an array from Facebook, join into a single string
+                content = ctx.get('content')
+                if isinstance(content, list):
+                    result['description'] = '\n'.join(content) if content else None
+                else:
+                    result['description'] = content
 
             # Parse thank you page
             if 'thank_you_page' in data:
@@ -1965,20 +1982,22 @@ class AdMutationService:
 
         Returns posts that can be used as ad creatives via object_story_id.
         """
+        import requests
+
         try:
             page_token = self._get_page_access_token(page_id, account_id)
-            api = FacebookAdsApi.get_default_api()
 
-            response = api.call(
-                'GET',
-                (page_id, 'posts'),
-                {
-                    'fields': 'id,message,created_time,full_picture,permalink_url,type,is_published',
-                    'limit': limit,
-                    'access_token': page_token
-                }
-            )
+            url = f"https://graph.facebook.com/v18.0/{page_id}/posts"
+            params = {
+                'fields': 'id,message,created_time,full_picture,permalink_url,is_published',
+                'limit': limit,
+                'access_token': page_token
+            }
+            response = requests.get(url, params=params)
             data = response.json()
+
+            if 'error' in data:
+                raise ValueError(data['error'].get('message', 'Unknown Facebook API error'))
 
             posts = []
             for post in data.get('data', []):
@@ -1990,32 +2009,37 @@ class AdMutationService:
                         'created_time': post.get('created_time'),
                         'full_picture': post.get('full_picture'),
                         'permalink_url': post.get('permalink_url'),
-                        'type': post.get('type', 'status'),
+                        'type': 'photo' if post.get('full_picture') else 'status',
                         'source': 'facebook'
                     })
 
             logger.info(f"Fetched {len(posts)} posts from page {page_id}")
             return posts
 
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"Failed to fetch page posts: {str(e)}", exc_info=True)
             raise ValueError(f"Unable to fetch page posts: {str(e)}")
 
     def get_instagram_account_id(self, page_id: str, account_id: str = None) -> Optional[str]:
         """Get the Instagram Business account ID connected to a Facebook Page."""
+        import requests
+
         try:
             page_token = self._get_page_access_token(page_id, account_id)
-            api = FacebookAdsApi.get_default_api()
 
-            response = api.call(
-                'GET',
-                (page_id,),
-                {
-                    'fields': 'instagram_business_account',
-                    'access_token': page_token
-                }
-            )
+            url = f"https://graph.facebook.com/v18.0/{page_id}"
+            params = {
+                'fields': 'instagram_business_account',
+                'access_token': page_token
+            }
+            response = requests.get(url, params=params)
             data = response.json()
+
+            if 'error' in data:
+                logger.warning(f"Error fetching IG account for page {page_id}: {data['error'].get('message')}")
+                return None
 
             ig_account = data.get('instagram_business_account')
             if ig_account:
@@ -2031,6 +2055,8 @@ class AdMutationService:
 
         Returns posts that can be used as ad creatives.
         """
+        import requests
+
         try:
             # First get the Instagram account ID
             ig_account_id = self.get_instagram_account_id(page_id, account_id)
@@ -2038,18 +2064,19 @@ class AdMutationService:
                 return []
 
             page_token = self._get_page_access_token(page_id, account_id)
-            api = FacebookAdsApi.get_default_api()
 
-            response = api.call(
-                'GET',
-                (ig_account_id, 'media'),
-                {
-                    'fields': 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp',
-                    'limit': limit,
-                    'access_token': page_token
-                }
-            )
+            url = f"https://graph.facebook.com/v18.0/{ig_account_id}/media"
+            params = {
+                'fields': 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp',
+                'limit': limit,
+                'access_token': page_token
+            }
+            response = requests.get(url, params=params)
             data = response.json()
+
+            if 'error' in data:
+                logger.warning(f"Error fetching IG posts: {data['error'].get('message')}")
+                return []
 
             posts = []
             for post in data.get('data', []):

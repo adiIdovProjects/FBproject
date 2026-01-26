@@ -171,7 +171,8 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
         updateAd({
             useExistingPost: false,
             objectStoryId: undefined,
-            objectStoryPreview: undefined
+            objectStoryPreview: undefined,
+            previewUrl: null  // Clear the preview image from existing post
         });
     };
 
@@ -517,6 +518,119 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 maxLength={40}
                             />
                             <span className="text-xs text-gray-500">{ad.title.length}/40</span>
+                        </div>
+                    )}
+
+                    {/* URL and CTA fields - show when using existing post AND needs URL (SALES, TRAFFIC, ENGAGEMENT, LEADS+WEBSITE) */}
+                    {ad.useExistingPost && needsUrl && (
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-xs uppercase text-gray-500 font-bold">
+                                    {t('wizard.website_url')} <span className="text-gray-500 text-xs font-normal">({t('wizard_simple.optional') || 'Optional'})</span>
+                                </label>
+                                <input
+                                    value={ad.link}
+                                    onChange={(e) => updateAd({ link: e.target.value })}
+                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 focus:border-blue-500 outline-none text-sm"
+                                    placeholder="https://yourwebsite.com"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {t('wizard_simple.existing_post_url_hint') || 'Add a destination URL for the CTA button'}
+                                </p>
+                            </div>
+                            {/* CTA selector - only show if URL is provided */}
+                            {ad.link && (
+                                <div>
+                                    <label className="text-xs uppercase text-gray-500 font-bold">
+                                        {t('wizard.call_to_action')}
+                                    </label>
+                                    <select
+                                        value={ad.cta}
+                                        onChange={(e) => updateAd({ cta: e.target.value })}
+                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 focus:border-blue-500 outline-none text-sm"
+                                    >
+                                        {ctaOptions.map((cta) => (
+                                            <option key={cta} value={cta}>
+                                                {t(`wizard.cta_${cta.toLowerCase()}`) || cta.replace(/_/g, ' ')}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Lead Form selector - show when using existing post AND LEADS+FORM objective */}
+                    {ad.useExistingPost && isLeadForm && (
+                        <div>
+                            <label className="text-xs uppercase text-gray-500 font-bold text-blue-400">
+                                {t('wizard.instant_form_label')} <span className="text-red-400">*</span>
+                            </label>
+                            <p className="text-xs text-gray-500 mb-2">
+                                {t('wizard_simple.existing_post_form_hint') || 'Select a lead form - clicking the ad will open this form'}
+                            </p>
+                            {isLoadingForms ? (
+                                <div className="flex items-center gap-2 text-sm text-blue-400 py-2">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    {t('wizard.loading_forms')}
+                                </div>
+                            ) : leadForms.length > 0 ? (
+                                <div className="space-y-2">
+                                    <select
+                                        value={ad.leadFormId}
+                                        onChange={(e) => updateAd({ leadFormId: e.target.value })}
+                                        className="w-full bg-gray-900 border border-blue-500/30 rounded-lg p-2 focus:border-blue-500 outline-none text-sm"
+                                        required
+                                    >
+                                        <option value="">{t('wizard.select_form')}</option>
+                                        {leadForms.map((form) => (
+                                            <option key={form.id} value={form.id}>{form.name}</option>
+                                        ))}
+                                    </select>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <button
+                                            type="button"
+                                            onClick={loadLeadForms}
+                                            className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                                        >
+                                            <RefreshCw className="w-3 h-3" />
+                                            {t('wizard_simple.refresh_forms') || 'Refresh'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowFormBuilder(true)}
+                                            className="text-xs text-green-400 hover:text-green-300 flex items-center gap-1"
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                            {t('wizard_simple.create_lead_form') || 'Create New Form'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-yellow-400">
+                                        {t('wizard_simple.no_forms_found') || 'No lead forms found'}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={loadLeadForms}
+                                            className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                                        >
+                                            <RefreshCw className="w-3 h-3" />
+                                            {t('wizard_simple.refresh_forms') || 'Refresh'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowFormBuilder(true)}
+                                            className="text-xs text-green-400 hover:text-green-300 flex items-center gap-1"
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                            {t('wizard_simple.create_lead_form') || 'Create New Form'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

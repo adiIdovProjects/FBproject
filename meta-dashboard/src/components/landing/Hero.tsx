@@ -20,7 +20,7 @@ const Hero = () => {
 
     return (
         <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-40 overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[#135bec]/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[#1a2b4a]/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
@@ -30,10 +30,10 @@ const Hero = () => {
                         transition={{ duration: 0.8 }}
                         className="flex flex-col gap-6 text-center lg:text-left"
                     >
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#135bec]/30 bg-[#135bec]/10 px-3 py-1 text-xs font-semibold text-[#135bec] w-fit mx-auto lg:mx-0">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#0d9488]/30 bg-[#0d9488]/10 px-3 py-1 text-xs font-semibold text-[#0d9488] w-fit mx-auto lg:mx-0">
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#135bec] opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#135bec]"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0d9488] opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0d9488]"></span>
                             </span>
                             {hero.trustBadges[0].text}
                         </div>
@@ -41,7 +41,7 @@ const Hero = () => {
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight dark:text-white">
                             {hero.headline.split('.').map((part, i) => (
                                 <React.Fragment key={i}>
-                                    {i === 1 ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-[#135bec]">{part}</span> : part}
+                                    {i === 1 ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0d9488] to-[#1a2b4a]">{part}</span> : part}
                                     {i === 0 && <span className="block"></span>}
                                 </React.Fragment>
                             ))}
@@ -52,7 +52,7 @@ const Hero = () => {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-2">
-                            <Link href={`/${locale}/login`} className="h-12 px-8 rounded-lg bg-[#135bec] text-white font-bold text-base transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-[#135bec]/30 flex items-center justify-center gap-2 active:scale-95">
+                            <Link href={`/${locale}/login`} className="h-12 px-8 rounded-lg bg-[#0d9488] text-white font-bold text-base transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-[#0d9488]/30 flex items-center justify-center gap-2 active:scale-95">
                                 <span>{hero.cta}</span>
                                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
                             </Link>
@@ -65,7 +65,7 @@ const Hero = () => {
                         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-sm text-slate-500 dark:text-slate-400 mt-4">
                             {hero.trustBadges.map((badge, i) => (
                                 <div key={i} className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
-                                    <span className="material-symbols-outlined text-[#135bec] text-base">{badge.icon}</span>
+                                    <span className="material-symbols-outlined text-[#0d9488] text-base">{badge.icon}</span>
                                     <span className="font-medium">{badge.text}</span>
                                 </div>
                             ))}
@@ -100,13 +100,13 @@ const Hero = () => {
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="h-3 w-24 bg-slate-600 rounded"></div>
-                                        <div className="h-4 px-2 bg-[#135bec]/20 text-blue-400 text-[10px] flex items-center justify-center rounded font-bold uppercase tracking-wider">Analysis</div>
+                                        <div className="h-4 px-2 bg-[#0d9488]/20 text-[#0d9488] text-[10px] flex items-center justify-center rounded font-bold uppercase tracking-wider">Analysis</div>
                                     </div>
                                     <div className="space-y-3">
                                         <div className="h-2 w-full bg-slate-700/50 rounded"></div>
                                         <div className="h-2 w-[80%] bg-slate-700/50 rounded"></div>
                                         <div className="grid grid-cols-3 gap-3 pt-2">
-                                            <div className="h-12 bg-[#135bec]/10 border border-[#135bec]/20 rounded p-2 flex flex-col justify-center items-center">
+                                            <div className="h-12 bg-[#0d9488]/10 border border-[#0d9488]/20 rounded p-2 flex flex-col justify-center items-center">
                                                 <div className="text-[10px] text-slate-500 uppercase">CTR</div>
                                                 <div className="text-xs font-bold text-white">4.2%</div>
                                             </div>
@@ -114,9 +114,9 @@ const Hero = () => {
                                                 <div className="text-[10px] text-slate-500 uppercase">ROAS</div>
                                                 <div className="text-xs font-bold text-green-400">3.8x</div>
                                             </div>
-                                            <div className="h-12 bg-[#135bec]/10 border border-[#135bec]/20 rounded p-2 flex flex-col justify-center items-center">
+                                            <div className="h-12 bg-[#0d9488]/10 border border-[#0d9488]/20 rounded p-2 flex flex-col justify-center items-center">
                                                 <div className="text-[10px] text-slate-500 uppercase">Growth</div>
-                                                <div className="text-xs font-bold text-blue-400">+12%</div>
+                                                <div className="text-xs font-bold text-[#0d9488]">+12%</div>
                                             </div>
                                         </div>
                                     </div>
@@ -130,7 +130,7 @@ const Hero = () => {
                             className="absolute -bottom-6 -right-6 h-24 w-32 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-3 hidden sm:block z-20"
                         >
                             <div className="text-[10px] text-slate-500 mb-1 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[#135bec] text-xs">auto_awesome</span>
+                                <span className="material-symbols-outlined text-[#0d9488] text-xs">auto_awesome</span>
                                 AI Insight
                             </div>
                             <div className="text-xs text-slate-600 dark:text-slate-300 leading-tight">

@@ -25,6 +25,19 @@ const getCurrencySymbol = (currencyCode: string): string => {
     return symbols[currencyCode] || currencyCode;
 };
 
+// Minimum budget in local currency (Facebook requires ~$5 USD equivalent)
+// Rates are approximate and rounded up for safety
+const getMinBudget = (currencyCode: string): number => {
+    const minBudgets: Record<string, number> = {
+        'USD': 5, 'EUR': 5, 'GBP': 4, 'ILS': 20, 'JPY': 750,
+        'CAD': 7, 'AUD': 8, 'CHF': 5, 'CNY': 36, 'INR': 420,
+        'BRL': 25, 'MXN': 100, 'KRW': 6700, 'RUB': 450, 'TRY': 160,
+        'PLN': 20, 'SEK': 55, 'NOK': 55, 'DKK': 35, 'NZD': 9,
+        'SGD': 7, 'HKD': 40, 'ZAR': 95, 'AED': 19, 'SAR': 19,
+    };
+    return minBudgets[currencyCode] || 5; // Default to 5 if unknown
+};
+
 // Conversion events by objective
 const CONVERSION_EVENTS = {
     SALES: ['PURCHASE', 'ADD_TO_CART', 'INITIATE_CHECKOUT', 'ADD_PAYMENT_INFO'],
@@ -67,7 +80,8 @@ export default function Step4Budget({ t, accountId, currency }: Props) {
     // Allow proceeding even without pixel (warning only, not blocking)
     // User can still try to run campaign - Facebook will show error if pixel required
     const hasPixelSetup = Boolean(state.selectedPixel && state.selectedConversionEvent);
-    const canProceed = state.dailyBudget >= 1 && (!needsPixel || hasPixelSetup || pixels.length === 0);
+    const MIN_BUDGET = getMinBudget(currency); // Facebook minimum ~$5 USD equivalent
+    const canProceed = state.dailyBudget >= MIN_BUDGET && (!needsPixel || hasPixelSetup || pixels.length === 0);
 
     const handleNext = () => {
         if (canProceed) {
@@ -90,12 +104,20 @@ export default function Step4Budget({ t, accountId, currency }: Props) {
                     </span>
                     <input
                         type="number"
-                        min="1"
+                        min={MIN_BUDGET}
                         value={state.dailyBudget}
-                        onChange={(e) => dispatch({ type: 'SET_DAILY_BUDGET', budget: parseInt(e.target.value) || 1 })}
-                        className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-8 pr-3 py-3 text-lg font-bold focus:ring-2 focus:ring-green-500 outline-none"
+                        onChange={(e) => dispatch({ type: 'SET_DAILY_BUDGET', budget: parseInt(e.target.value) || MIN_BUDGET })}
+                        className={`w-full bg-gray-900 border rounded-lg pl-8 pr-3 py-3 text-lg font-bold focus:ring-2 focus:ring-green-500 outline-none ${state.dailyBudget < MIN_BUDGET ? 'border-red-500' : 'border-gray-700'}`}
                     />
                 </div>
+
+                {/* Minimum budget warning */}
+                {state.dailyBudget < MIN_BUDGET && (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-300">
+                        <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
+                        <span>{`Minimum daily budget is ${getCurrencySymbol(currency)}${MIN_BUDGET}. Facebook requires at least ~$5 USD/day.`}</span>
+                    </div>
+                )}
 
                 {/* Budget tip */}
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-300">

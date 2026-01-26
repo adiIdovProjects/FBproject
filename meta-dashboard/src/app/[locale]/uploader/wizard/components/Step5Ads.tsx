@@ -80,7 +80,7 @@ export default function Step5Ads({ t, locale, pageId, accountId, isSubmitting, o
             {/* Ad Cards */}
             <div className="space-y-4">
                 {state.ads.map((ad, index) => (
-                    <div key={ad.id} className="relative">
+                    <div key={ad.id}>
                         <AdCard
                             ad={ad}
                             index={index}
@@ -90,31 +90,32 @@ export default function Step5Ads({ t, locale, pageId, accountId, isSubmitting, o
                             pageId={pageId}
                             accountId={accountId}
                         />
-                        {/* Duplicate button */}
-                        {state.ads.length < MAX_ADS && (
-                            <button
-                                type="button"
-                                onClick={() => duplicateAd(ad.id)}
-                                className="absolute top-4 right-12 text-gray-500 hover:text-blue-400 transition-colors"
-                                title={t('wizard_simple.duplicate_ad') || 'Duplicate Ad'}
-                            >
-                                <Copy className="w-5 h-5" />
-                            </button>
-                        )}
                     </div>
                 ))}
             </div>
 
-            {/* Add Another Ad Button */}
+            {/* Add New / Duplicate Ad Buttons */}
             {state.ads.length < MAX_ADS && (
-                <button
-                    type="button"
-                    onClick={addAd}
-                    className="w-full py-3 border-2 border-dashed border-gray-700 rounded-xl text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Plus className="w-5 h-5" />
-                    {t('wizard_simple.add_another_ad') || 'Add Another Ad'}
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        type="button"
+                        onClick={addAd}
+                        className="flex-1 py-3 border-2 border-dashed border-gray-700 rounded-xl text-gray-400 hover:border-green-500 hover:text-green-400 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        {t('wizard_simple.add_new_ad') || 'Add New Ad'}
+                    </button>
+                    {state.ads.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => duplicateAd(state.ads[state.ads.length - 1].id)}
+                            className="flex-1 py-3 border-2 border-dashed border-gray-700 rounded-xl text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Copy className="w-5 h-5" />
+                            {t('wizard_simple.duplicate_last_ad') || 'Duplicate Last Ad'}
+                        </button>
+                    )}
+                </div>
             )}
 
             <WizardNavigation

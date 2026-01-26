@@ -827,6 +827,7 @@
     "platform_facebook": "فيسبوك",
     "platform_instagram": "إنستغرام",
     "daily_budget": "الميزانية اليومية",
+    "min_budget_error": "الحد الأدنى للميزانية اليومية هو 5$. فيسبوك يتطلب 5$ على الأقل يومياً.",
     "facebook_pixel": "بكسل فيسبوك",
     "loading_pixels": "جارٍ تحميل البكسلات...",
     "no_pixels": "لم يتم العثور على بكسلات.",

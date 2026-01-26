@@ -828,6 +828,7 @@
     "platform_facebook": "פייסבוק",
     "platform_instagram": "אינסטגרם",
     "daily_budget": "תקציב יומי",
+    "min_budget_error": "תקציב יומי מינימלי הוא $5. פייסבוק דורש לפחות $5 ליום.",
     "facebook_pixel": "פיקסל פייסבוק",
     "loading_pixels": "טוען פיקסלים...",
     "no_pixels": "לא נמצאו פיקסלים.",

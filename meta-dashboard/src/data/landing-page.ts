@@ -1,7 +1,7 @@
 export const landingPageData = {
     hero: {
-        headline: "Stop Paying Agencies. Start Running Your Own Ads.",
-        subheadline: "The all-in-one platform that makes Facebook advertising simple. AI-powered insights, guided recommendations, and professional reports — no marketing degree required.",
+        headline: "Take Control of Your Ads.",
+        subheadline: "Navigate smarter with AI-powered insights. No agency needed, no marketing degree required.",
         cta: "Start Free Trial",
         trustBadges: [
             { text: "7-Day Free Trial", icon: "check_circle" },
@@ -103,12 +103,12 @@ export const landingPageData = {
         title: "Why Pay Agency Prices?",
         subtitle: "Get better results for a fraction of the cost.",
         items: [
-            { feature: "Monthly Cost", agency: "$1,000 - $5,000+", adsai: "Starting at $25/month" },
-            { feature: "Contract Lock-in", agency: "3-12 months", adsai: "Cancel anytime" },
-            { feature: "Control", agency: "They decide", adsai: "You decide" },
-            { feature: "Transparency", agency: "Monthly reports", adsai: "Real-time data" },
-            { feature: "Response Time", agency: "Days", adsai: "Instant AI" },
-            { feature: "Your Data", agency: "They own insights", adsai: "You own everything" }
+            { feature: "Monthly Cost", agency: "$1,000 - $5,000+", adcaptain: "Starting at $25/month" },
+            { feature: "Contract Lock-in", agency: "3-12 months", adcaptain: "Cancel anytime" },
+            { feature: "Control", agency: "They decide", adcaptain: "You decide" },
+            { feature: "Transparency", agency: "Monthly reports", adcaptain: "Real-time data" },
+            { feature: "Response Time", agency: "Days", adcaptain: "Instant AI" },
+            { feature: "Your Data", agency: "They own insights", adcaptain: "You own everything" }
         ]
     },
     pricingTiers: [

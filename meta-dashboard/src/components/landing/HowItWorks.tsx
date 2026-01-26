@@ -32,7 +32,7 @@ const HowItWorks = () => {
 
                 <div className="grid md:grid-cols-3 gap-8 lg:gap-16 relative">
                     {/* Connecting line */}
-                    <div className="hidden md:block absolute top-20 left-[20%] right-[20%] h-1 bg-gradient-to-r from-[#135bec]/20 via-[#135bec]/40 to-[#135bec]/20 rounded-full"></div>
+                    <div className="hidden md:block absolute top-20 left-[20%] right-[20%] h-1 bg-gradient-to-r from-[#0d9488]/20 via-[#0d9488]/40 to-[#0d9488]/20 rounded-full"></div>
 
                     {howItWorks.steps.map((step, index) => (
                         <motion.div
@@ -44,13 +44,13 @@ const HowItWorks = () => {
                             className="relative flex flex-col items-center text-center group"
                         >
                             {/* Step number badge */}
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 bg-[#135bec] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 bg-[#0d9488] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
                                 {index + 1}
                             </div>
 
                             {/* Icon container - bigger */}
-                            <div className="relative z-10 flex size-36 lg:size-40 items-center justify-center rounded-3xl bg-white dark:bg-[#1e2736] border-2 border-slate-200 dark:border-[#324467] shadow-xl mb-8 group-hover:scale-105 transition-all duration-300 group-hover:border-[#135bec] group-hover:shadow-[#135bec]/20">
-                                <span className="material-symbols-outlined text-6xl lg:text-7xl text-[#135bec] group-hover:scale-110 transition-transform">
+                            <div className="relative z-10 flex size-36 lg:size-40 items-center justify-center rounded-3xl bg-white dark:bg-[#1e2736] border-2 border-slate-200 dark:border-[#324467] shadow-xl mb-8 group-hover:scale-105 transition-all duration-300 group-hover:border-[#0d9488] group-hover:shadow-[#0d9488]/20">
+                                <span className="material-symbols-outlined text-6xl lg:text-7xl text-[#0d9488] group-hover:scale-110 transition-transform">
                                     {step.icon}
                                 </span>
                             </div>
@@ -77,7 +77,7 @@ const HowItWorks = () => {
                     <p className="text-slate-500 dark:text-slate-400 text-lg mb-2">
                         No switching between apps. No complicated setup.
                     </p>
-                    <p className="text-[#135bec] font-semibold text-xl">
+                    <p className="text-[#0d9488] font-semibold text-xl">
                         Just results.
                     </p>
                 </motion.div>

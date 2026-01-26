@@ -44,8 +44,8 @@ const AgencyComparison = () => {
                         <div className="p-4 text-center font-bold text-slate-700 dark:text-slate-300 border-l border-slate-200 dark:border-[#324467]">
                             Traditional Agency
                         </div>
-                        <div className="p-4 text-center font-bold text-[#135bec] bg-[#135bec]/5 border-l border-slate-200 dark:border-[#324467]">
-                            AdsAI
+                        <div className="p-4 text-center font-bold text-[#0d9488] bg-[#0d9488]/5 border-l border-slate-200 dark:border-[#324467]">
+                            AdCaptain
                         </div>
                     </div>
 
@@ -61,9 +61,9 @@ const AgencyComparison = () => {
                                 <span className="material-symbols-outlined text-red-400 text-lg">close</span>
                                 <span>{item.agency}</span>
                             </div>
-                            <div className="p-4 text-center text-slate-700 dark:text-white text-sm bg-[#135bec]/5 border-l border-slate-200 dark:border-[#324467] flex items-center justify-center gap-2 font-medium">
+                            <div className="p-4 text-center text-slate-700 dark:text-white text-sm bg-[#0d9488]/5 border-l border-slate-200 dark:border-[#324467] flex items-center justify-center gap-2 font-medium">
                                 <span className="material-symbols-outlined text-green-500 text-lg">check_circle</span>
-                                <span>{item.adsai}</span>
+                                <span>{item.adcaptain}</span>
                             </div>
                         </div>
                     ))}
@@ -78,7 +78,7 @@ const AgencyComparison = () => {
                 >
                     <Link
                         href={`/${locale}/login`}
-                        className="inline-flex items-center gap-2 h-12 px-8 rounded-lg bg-[#135bec] text-white font-bold text-base transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-[#135bec]/30 active:scale-95"
+                        className="inline-flex items-center gap-2 h-12 px-8 rounded-lg bg-[#0d9488] text-white font-bold text-base transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-[#0d9488]/30 active:scale-95"
                     >
                         <span>Start Your Free Trial</span>
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>

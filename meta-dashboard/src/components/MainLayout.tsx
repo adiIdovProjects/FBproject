@@ -25,7 +25,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
             <Sidebar />
 
             {/* Main Content Area */}
-            <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-y-auto ${isRTL ? 'mr-64 border-r border-white/5' : 'ml-64 border-l border-white/5'} transition-all duration-300 relative`}>
+            <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-y-auto ${isRTL ? 'mr-64 border-r border-border-color' : 'ml-64 border-l border-border-color'} transition-all duration-300 relative`}>
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent z-10"></div>
 
                 <div className={`p-8 sm:p-12 max-w-7xl w-full relative z-0 ${isRTL ? 'ml-auto' : 'mx-auto'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -35,12 +35,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
                             <div className="w-8 h-1 bg-accent rounded-full"></div>
                             <div className="w-2 h-1 bg-accent/40 rounded-full"></div>
                         </div>
-                        <h1 className="text-5xl font-black tracking-tighter text-white">
-                            <span className="bg-gradient-to-r from-white via-white to-accent/50 bg-clip-text text-transparent">
-                                {title}
-                            </span>
+                        <h1 className="text-5xl font-black tracking-tighter text-foreground">
+                            {title}
                         </h1>
-                        <p className="text-gray-500 text-lg font-medium max-w-3xl leading-relaxed">{description}</p>
+                        <p className="text-text-muted text-lg font-medium max-w-3xl leading-relaxed">{description}</p>
                     </header>
 
                     {/* Page Content */}
@@ -49,7 +47,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
                     {/* Footer */}
                     <footer className="mt-24 pb-12 text-center">
                         <div className="h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent mb-8"></div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-gray-400 transition-colors cursor-default">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled hover:text-text-muted transition-colors cursor-default">
                             {t('footer.system_info')}
                         </p>
                     </footer>

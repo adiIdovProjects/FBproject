@@ -31,10 +31,10 @@ const LandingFooter = () => {
                     {/* Brand */}
                     <div className="col-span-2 md:col-span-1">
                         <Link href={`/${locale}`} className="flex items-center gap-2 mb-4">
-                            <div className="flex size-8 items-center justify-center rounded-lg bg-[#135bec] text-white">
-                                <span className="material-symbols-outlined text-xl">analytics</span>
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-[#1a2b4a] text-white">
+                                <span className="material-symbols-outlined text-xl">steering</span>
                             </div>
-                            <span className="text-lg font-extrabold tracking-tight dark:text-white">AdsAI</span>
+                            <span className="text-lg font-extrabold tracking-tight dark:text-white">AdCaptain</span>
                         </Link>
                         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
                             Take control of your Facebook ads. No agency required.
@@ -47,7 +47,7 @@ const LandingFooter = () => {
                         <ul className="space-y-3">
                             {footerLinks.product.map((link) => (
                                 <li key={link.name}>
-                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#135bec] dark:hover:text-blue-400 transition-colors">
+                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -61,7 +61,7 @@ const LandingFooter = () => {
                         <ul className="space-y-3">
                             {footerLinks.company.map((link) => (
                                 <li key={link.name}>
-                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#135bec] dark:hover:text-blue-400 transition-colors">
+                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -75,7 +75,7 @@ const LandingFooter = () => {
                         <ul className="space-y-3">
                             {footerLinks.legal.map((link) => (
                                 <li key={link.name}>
-                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#135bec] dark:hover:text-blue-400 transition-colors">
+                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -86,7 +86,7 @@ const LandingFooter = () => {
 
                 <div className="mt-12 pt-8 border-t border-slate-200 dark:border-[#232f48]">
                     <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
-                        &copy; {currentYear} AdsAI. All rights reserved.
+                        &copy; {currentYear} AdCaptain. All rights reserved.
                     </p>
                 </div>
             </div>

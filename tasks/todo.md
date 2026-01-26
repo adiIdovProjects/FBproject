@@ -5,6 +5,14 @@
 ### Goal
 Allow users to use existing Facebook Page posts or Instagram posts as ad creatives instead of only uploading new media. This preserves social proof (likes, comments, shares) across ads.
 
+### Additional Fixes Applied
+- **Fixed image staying when switching back to "Create New"** - Added `previewUrl: null` to `handleSwitchToNewAd()` function
+- **Added URL support for existing posts** - User can now add a custom destination URL when using existing posts
+  - Backend: Updated `_build_creative_params()` in `ad_mutation_service.py` to pass `call_to_action` with link when `object_story_id` is used
+  - Frontend: Added optional URL field in `AdCard.tsx` that shows when using existing post (for SALES, TRAFFIC, ENGAGEMENT objectives)
+  - Frontend: CTA selector appears when URL is provided
+  - Added translation keys for the new UI elements
+
 ### Implementation Summary
 
 #### Backend Changes

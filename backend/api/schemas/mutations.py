@@ -56,7 +56,7 @@ class SmartCampaignRequest(BaseModel):
     age_max: int = Field(65, ge=18, le=65)
     genders: Optional[List[int]] = Field(None, description="Gender targeting: [1] = male, [2] = female, None/empty = all")
     publisher_platforms: Optional[List[str]] = Field(None, description="Platform targeting: ['facebook'], ['instagram'], None = all")
-    daily_budget_cents: int = Field(..., gt=100, description="Daily budget in cents (e.g., 2000 = $20)")
+    daily_budget_cents: int = Field(..., ge=100, description="Daily budget in local currency cents (frontend validates ~$5 USD equivalent)")
 
     # Custom audiences (lookalikes, saved audiences) - optional
     custom_audiences: Optional[List[str]] = Field(None, description="List of custom audience IDs to target")
@@ -94,7 +94,7 @@ class StatusUpdateRequest(BaseModel):
 
 class BudgetUpdateRequest(BaseModel):
     """Request body for updating ad set budget"""
-    daily_budget_cents: int = Field(..., gt=100, description="Daily budget in cents (minimum 100 = $1)")
+    daily_budget_cents: int = Field(..., ge=100, description="Daily budget in local currency cents (frontend validates ~$5 USD equivalent)")
 
 
 # --- Edit Schemas ---
@@ -104,7 +104,7 @@ class UpdateAdSetTargetingRequest(BaseModel):
     geo_locations: Optional[List[GeoLocationTarget]] = Field(None, description="New target locations")
     age_min: Optional[int] = Field(None, ge=18, le=65)
     age_max: Optional[int] = Field(None, ge=18, le=65)
-    daily_budget_cents: Optional[int] = Field(None, gt=100, description="Daily budget in cents")
+    daily_budget_cents: Optional[int] = Field(None, ge=100, description="Daily budget in local currency cents (frontend validates ~$5 USD equivalent)")
 
 
 class UpdateAdCreativeRequest(BaseModel):

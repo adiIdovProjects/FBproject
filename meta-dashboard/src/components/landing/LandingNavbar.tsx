@@ -35,10 +35,10 @@ const LandingNavbar = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href={`/${locale}`} className="flex items-center gap-2 group">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-[#135bec] text-white transition-transform group-hover:scale-110">
-              <span className="material-symbols-outlined text-xl">analytics</span>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[#1a2b4a] text-white transition-transform group-hover:scale-110">
+              <span className="material-symbols-outlined text-xl">steering</span>
             </div>
-            <span className="text-lg font-extrabold tracking-tight dark:text-white">AdsAI</span>
+            <span className="text-lg font-extrabold tracking-tight dark:text-white">AdCaptain</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -46,7 +46,7 @@ const LandingNavbar = () => {
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#135bec] dark:hover:text-blue-400 transition-colors"
+                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors"
               >
                 {link.name}
               </Link>
@@ -54,7 +54,7 @@ const LandingNavbar = () => {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href={`/${locale}/login`} className="hidden sm:flex h-10 items-center justify-center rounded-lg bg-[#135bec] px-5 text-sm font-bold text-white transition-all hover:bg-opacity-90 hover:shadow-lg hover:shadow-[#135bec]/25 active:scale-95">
+            <Link href={`/${locale}/login`} className="hidden sm:flex h-10 items-center justify-center rounded-lg bg-[#0d9488] px-5 text-sm font-bold text-white transition-all hover:bg-[#0f766e] hover:shadow-lg hover:shadow-[#0d9488]/25 active:scale-95">
               Start Free Trial
             </Link>
             <button
@@ -88,7 +88,7 @@ const LandingNavbar = () => {
                   {link.name}
                 </Link>
               ))}
-              <Link href={`/${locale}/login`} className="w-full h-12 flex items-center justify-center rounded-lg bg-[#135bec] text-white font-bold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href={`/${locale}/login`} className="w-full h-12 flex items-center justify-center rounded-lg bg-[#0d9488] text-white font-bold" onClick={() => setIsMobileMenuOpen(false)}>
                 Start Free Trial
               </Link>
             </div>
