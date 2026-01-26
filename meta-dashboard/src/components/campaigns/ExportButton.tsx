@@ -74,7 +74,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
-        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-accent-text font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -86,12 +86,12 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && !isLoading && (
-        <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10">
+        <div className="absolute right-0 mt-2 w-56 bg-card border border-border-subtle rounded-lg shadow-xl z-10">
           <div className="py-1">
             {/* Google Sheets Option */}
             <button
               onClick={handleExportToSheets}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors duration-150"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors duration-150"
             >
               <FileSpreadsheet className="w-4 h-4 text-green-400" />
               <span>{t('reports.export_to_google_sheets')}</span>
@@ -100,7 +100,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
             {/* Excel Option */}
             <button
               onClick={handleExportToExcel}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-200 hover:bg-gray-700 transition-colors duration-150"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors duration-150"
             >
               <Download className="w-4 h-4 text-blue-400" />
               <span>{t('reports.export_to_excel')}</span>

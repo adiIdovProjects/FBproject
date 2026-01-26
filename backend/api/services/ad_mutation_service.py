@@ -108,9 +108,47 @@ class AdMutationService:
         - Existing post (object_story_id)
         - Image/video creatives (object_story_spec)
         - Lead form creatives (template_data)
+        - Carousel creatives (child_attachments)
         """
         if creative_name is None:
             creative_name = f"Creative - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
+        # If using carousel, build child_attachments structure
+        if hasattr(creative, 'carousel_cards') and creative.carousel_cards and len(creative.carousel_cards) >= 2:
+            # Determine the link to use for all cards
+            # For lead forms, Facebook handles the form link automatically
+            main_link = str(creative.link_url) if creative.link_url else f"https://facebook.com/{page_id}"
+
+            child_attachments = []
+            for card in creative.carousel_cards:
+                attachment = {
+                    "name": card.title or "",
+                    "link": main_link,  # All cards use the same URL
+                }
+                if card.image_hash:
+                    attachment["image_hash"] = card.image_hash
+                elif card.video_id:
+                    attachment["video_id"] = card.video_id
+                child_attachments.append(attachment)
+
+            params = {
+                AdCreative.Field.name: creative_name,
+                AdCreative.Field.object_story_spec: {
+                    "page_id": page_id,
+                    "link_data": {
+                        "message": creative.body,
+                        "link": main_link,
+                        "child_attachments": child_attachments,
+                        "call_to_action": {"type": creative.call_to_action}
+                    }
+                }
+            }
+            # Add lead form if present - Facebook will use the form for all cards
+            if hasattr(creative, 'lead_form_id') and creative.lead_form_id:
+                params[AdCreative.Field.object_story_spec]["link_data"]["lead_gen_form_id"] = creative.lead_form_id
+
+            logger.info(f"Building carousel creative with {len(child_attachments)} cards")
+            return params
 
         # If using an existing post, use object_story_id instead of object_story_spec
         if hasattr(creative, 'object_story_id') and creative.object_story_id:

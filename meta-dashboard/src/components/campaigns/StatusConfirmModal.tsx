@@ -63,14 +63,14 @@ export default function StatusConfirmModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-card border border-border-subtle rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
-        <div className={`px-6 py-4 border-b border-gray-700 ${isPausing ? 'bg-yellow-900/20' : 'bg-green-900/20'}`}>
+        <div className={`px-6 py-4 border-b border-border-subtle ${isPausing ? 'bg-yellow-900/20' : 'bg-green-900/20'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isPausing ? (
@@ -82,7 +82,7 @@ export default function StatusConfirmModal({
                   <Play className="w-5 h-5 text-green-400" />
                 </div>
               )}
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-lg font-bold text-foreground">
                 {isPausing ? t('status_modal.title_pause') : t('status_modal.title_resume')} {getTypeLabel()}?
               </h2>
             </div>
@@ -90,7 +90,7 @@ export default function StatusConfirmModal({
               onClick={onClose}
               className="p-1 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-text-muted" />
             </button>
           </div>
         </div>
@@ -99,14 +99,14 @@ export default function StatusConfirmModal({
         <div className="px-6 py-5 space-y-4">
           {/* Name */}
           <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{getTypeLabel()}</p>
-            <p className="text-white font-semibold truncate">{name}</p>
+            <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{getTypeLabel()}</p>
+            <p className="text-foreground font-semibold truncate">{name}</p>
           </div>
 
           {/* Explanation */}
           <div className="flex items-start gap-3 p-3 bg-blue-900/20 rounded-xl border border-blue-500/20">
             <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-            <div className="text-sm text-gray-300 leading-relaxed">
+            <div className="text-sm text-foreground leading-relaxed">
               {isPausing ? (
                 type === 'campaign' ? t('status_modal.pause_campaign_explanation') :
                 type === 'adset' ? t('status_modal.pause_adset_explanation') :
@@ -122,23 +122,23 @@ export default function StatusConfirmModal({
           {/* Daily spend impact (if available and pausing) */}
           {isPausing && dailySpend !== undefined && dailySpend > 0 && (
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-sm text-gray-400">{t('status_modal.daily_spend')}</span>
-              <span className="text-white font-semibold">~{formatCurrency(dailySpend)}/day</span>
+              <span className="text-sm text-text-muted">{t('status_modal.daily_spend')}</span>
+              <span className="text-foreground font-semibold">~{formatCurrency(dailySpend)}/day</span>
             </div>
           )}
 
           {/* Reassurance */}
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-text-muted text-center">
             {t('status_modal.reassurance')}
           </p>
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-gray-700 flex gap-3">
+        <div className="px-6 py-4 border-t border-border-subtle flex gap-3">
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-300 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground bg-secondary hover:bg-secondary-hover rounded-xl border border-border-subtle transition-colors disabled:opacity-50"
           >
             {t('common.cancel')}
           </button>

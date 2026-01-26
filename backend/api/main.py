@@ -122,6 +122,11 @@ def ping():
     logger.debug("Ping endpoint reached")
     return {"status": "ok", "timestamp": time.time()}
 
+@app.get("/debug-jwt", tags=["health"])
+def debug_jwt():
+    """Temporary debug endpoint to check JWT secret."""
+    return {"jwt_prefix": settings.JWT_SECRET_KEY[:20] + "..."}
+
 @app.get("/health", tags=["health"])
 def health(db: Session = Depends(get_db)):
     """

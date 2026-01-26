@@ -51,22 +51,49 @@ def _sync_facebook_pages(db: Session, user, access_token: str):
     """
     Helper to sync Facebook pages for linked accounts.
     Returns the number of updated accounts.
+    Only fetches pages for accounts the user has already linked (not all accounts).
     """
     try:
         from backend.utils.logging_utils import get_logger
         logger = get_logger(__name__)
-        # Automatically update page_id for all existing linked accounts
-        fb_accounts = fb_service.get_managed_accounts(access_token)
-        fb_account_map = {
-            int(acc["account_id"].replace("act_", "") if acc["account_id"].startswith("act_") else acc["account_id"]): acc["page_id"]
-            for acc in fb_accounts
-        }
+
+        # Skip if user has no linked accounts
+        if not user.ad_accounts or len(user.ad_accounts) == 0:
+            return 0
+
+        # Only fetch pages for accounts the user already has linked
+        import requests
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def fetch_page_for_account(account_id: int) -> dict:
+            try:
+                url = f"https://graph.facebook.com/v24.0/act_{account_id}/promote_pages"
+                params = {"access_token": access_token, "fields": "id,name"}
+                response = requests.get(url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json().get("data", [])
+                    if data:
+                        return {"account_id": account_id, "page_id": data[0]["id"]}
+            except Exception as e:
+                logger.warning(f"Could not fetch page for account {account_id}: {e}")
+            return {"account_id": account_id, "page_id": None}
+
+        # Fetch pages in parallel only for linked accounts
+        linked_account_ids = [acc.account_id for acc in user.ad_accounts]
+        page_map = {}
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(fetch_page_for_account, acc_id): acc_id for acc_id in linked_account_ids}
+            for future in as_completed(futures):
+                result = future.result()
+                if result["page_id"]:
+                    page_map[result["account_id"]] = result["page_id"]
 
         updated_count = 0
         for user_acc in user.ad_accounts:
             account_id = user_acc.account_id
-            if account_id in fb_account_map:
-                new_page_id = fb_account_map[account_id]
+            if account_id in page_map:
+                new_page_id = page_map[account_id]
                 if new_page_id and user_acc.page_id != new_page_id:
                     user_acc.page_id = new_page_id
                     updated_count += 1
@@ -74,7 +101,7 @@ def _sync_facebook_pages(db: Session, user, access_token: str):
         if updated_count > 0:
             db.commit()
             logger.info(f"Auto-updated {updated_count} accounts with page_id during sync")
-        
+
         return updated_count
     except Exception as e:
         logger.error(f"Failed to sync Facebook pages: {e}")

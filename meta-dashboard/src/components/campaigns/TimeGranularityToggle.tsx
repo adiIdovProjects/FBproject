@@ -28,7 +28,7 @@ export const TimeGranularityToggle: React.FC<TimeGranularityToggleProps> = ({
   ];
 
   return (
-    <div className="inline-flex rounded-lg border border-gray-600 bg-gray-700 p-1">
+    <div className="inline-flex rounded-lg border border-border-subtle bg-secondary p-1">
       {options.map((option) => (
         <button
           key={option.value}
@@ -36,8 +36,8 @@ export const TimeGranularityToggle: React.FC<TimeGranularityToggleProps> = ({
           className={`
             px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
             ${selected === option.value
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'text-gray-300 hover:text-white hover:bg-gray-600'
+              ? 'bg-accent text-accent-text shadow-md'
+              : 'text-text-muted hover:text-foreground hover:bg-secondary-hover'
             }
           `}
         >

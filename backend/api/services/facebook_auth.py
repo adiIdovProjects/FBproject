@@ -3,6 +3,7 @@ import httpx
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from facebook_business.api import FacebookAdsApi
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.adobjects.user import User as FBUser
@@ -84,6 +85,21 @@ class FacebookAuthService:
         user = me.api_get(fields=fields)
         return user.export_all_data()
 
+    def _fetch_pages_for_account_http(self, account_id: str, access_token: str) -> Dict[str, Any]:
+        """Fetch promote pages using direct HTTP call for true parallel execution."""
+        try:
+            import requests
+            url = f"https://graph.facebook.com/v24.0/act_{account_id}/promote_pages"
+            params = {"access_token": access_token, "fields": "id,name"}
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json().get("data", [])
+                if data:
+                    return {"page_id": data[0]["id"], "page_name": data[0].get("name")}
+        except Exception as e:
+            logger.warning(f"Could not fetch pages for account {account_id}: {e}")
+        return {"page_id": None, "page_name": None}
+
     def get_managed_accounts(self, access_token: str) -> List[Dict[str, Any]]:
         """List ad accounts reachable by the given user token with page info"""
         FacebookAdsApi.init(access_token=access_token)
@@ -94,31 +110,30 @@ class FacebookAuthService:
             AdAccount.Field.currency,
         ])
 
-        results = []
+        # Build base account data - consume the iterator fully first
+        accounts_list = []
         for account in accounts:
-            account_data = {
+            accounts_list.append({
                 "account_id": account[AdAccount.Field.account_id],
                 "name": account[AdAccount.Field.name],
                 "currency": account[AdAccount.Field.currency],
                 "page_id": None,
                 "page_name": None
+            })
+
+        # Fetch pages for all accounts in parallel using direct HTTP
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            future_to_idx = {
+                executor.submit(self._fetch_pages_for_account_http, acc["account_id"], access_token): idx
+                for idx, acc in enumerate(accounts_list)
             }
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                try:
+                    page_data = future.result()
+                    accounts_list[idx]["page_id"] = page_data["page_id"]
+                    accounts_list[idx]["page_name"] = page_data["page_name"]
+                except Exception as e:
+                    logger.warning(f"Failed to get pages for account index {idx}: {e}")
 
-            # Try to fetch the first page associated with this ad account
-            try:
-                # Get pages that this ad account promotes
-                account_obj = AdAccount(f"act_{account[AdAccount.Field.account_id]}")
-                pages = account_obj.get_promote_pages(fields=['id', 'name'])
-
-                if pages and len(pages) > 0:
-                    # Use the first page as default
-                    account_data["page_id"] = pages[0]['id']
-                    account_data["page_name"] = pages[0].get('name', None)
-            except Exception as e:
-                # If we can't fetch pages, just log and continue
-                import logging
-                logging.warning(f"Could not fetch pages for account {account[AdAccount.Field.account_id]}: {e}")
-
-            results.append(account_data)
-
-        return results
+        return accounts_list

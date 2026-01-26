@@ -29,7 +29,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false, onInv
 
   return (
     <div className="mb-8">
-      <h2 className={`text-xl font-bold text-gray-100 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+      <h2 className={`text-xl font-bold text-foreground mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
         {t('insights.strategic_recommendations')}
       </h2>
 
@@ -45,7 +45,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false, onInv
               {highPriority.map((item, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'flex-row'}`}>
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
-                  <p className="text-gray-200 leading-relaxed max-w-full flex-1">{item.text}</p>
+                  <p className="text-foreground leading-relaxed max-w-full flex-1">{item.text}</p>
                   {onInvestigate && (
                     <button
                       onClick={() => onInvestigate(`How do I implement this recommendation: ${item.text}`)}
@@ -72,7 +72,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false, onInv
               {mediumPriority.map((item, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'flex-row'}`}>
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
-                  <p className="text-gray-200 leading-relaxed max-w-full flex-1">{item.text}</p>
+                  <p className="text-foreground leading-relaxed max-w-full flex-1">{item.text}</p>
                   {onInvestigate && (
                     <button
                       onClick={() => onInvestigate(`Tell me more about this recommendation: ${item.text}`)}
@@ -99,7 +99,7 @@ export default function PrioritizedRecommendations({ items, isRTL = false, onInv
               {lowPriority.map((item, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'flex-row'}`}>
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
-                  <p className="text-gray-200 leading-relaxed max-w-full flex-1">{item.text}</p>
+                  <p className="text-foreground leading-relaxed max-w-full flex-1">{item.text}</p>
                   {onInvestigate && (
                     <button
                       onClick={() => onInvestigate(`How can I test this idea: ${item.text}`)}

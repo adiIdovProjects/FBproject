@@ -30,12 +30,15 @@ import {
     Home
 } from 'lucide-react';
 import { useAccount } from '@/context/AccountContext';
+import { useUser } from '@/context/UserContext';
 import { useLocale, useTranslations } from 'next-intl';
 import { accountsService } from '@/services/accounts.service';
-import { apiClient } from '@/services/apiClient';
 import ThemeSelector from '@/components/ThemeSelector';
+import { useTheme } from '@/context/ThemeContext';
 
 export const Sidebar: React.FC = () => {
+    const { theme } = useTheme();
+    const isColorful = theme === 'colorful';
     const t = useTranslations();
     const pathname = usePathname();
     const locale = useLocale();
@@ -43,9 +46,9 @@ export const Sidebar: React.FC = () => {
 
     // Account Context
     const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
+    const { isAdmin } = useUser();
     const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
     const [quizCompleted, setQuizCompleted] = React.useState<boolean | null>(null);
-    const [isAdmin, setIsAdmin] = React.useState(false);
 
     // Section expand/collapse state - default to expanded, load from localStorage in useEffect
     const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
@@ -92,22 +95,21 @@ export const Sidebar: React.FC = () => {
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
-    // Check admin status
-    React.useEffect(() => {
-        const checkAdminStatus = async () => {
-            try {
-                const response = await apiClient.get('/api/v1/users/me');
-                setIsAdmin(response.data.is_admin === true);
-            } catch {
-                setIsAdmin(false);
-            }
-        };
-        checkAdminStatus();
-    }, []);
-
     // Check if account setup quiz is completed
     React.useEffect(() => {
         const checkQuizStatus = async () => {
+            // Skip on public pages to avoid auth race conditions
+            if (typeof window !== 'undefined') {
+                const path = window.location.pathname;
+                const isPublicPage = path.includes('/login') ||
+                                     path.includes('/callback') ||
+                                     path.includes('/auth/verify') ||
+                                     path.includes('/onboard') ||
+                                     path.includes('/select-accounts') ||
+                                     path.includes('/connect');
+                if (isPublicPage) return;
+            }
+
             if (!selectedAccountId) {
                 setQuizCompleted(null);
                 return;
@@ -180,12 +182,12 @@ export const Sidebar: React.FC = () => {
             {/* Brand Logo & Account Selector */}
             <div className="p-6 pb-2">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
-                        <BarChart3 className="text-accent-text w-6 h-6" />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${isColorful ? 'bg-gradient-to-br from-cyan-400 to-purple-500 shadow-cyan-500/30' : 'bg-accent shadow-accent/20'}`}>
+                        <BarChart3 className={`w-6 h-6 ${isColorful ? 'text-white' : 'text-accent-text'}`} />
                     </div>
                     <div>
-                        <h2 className="font-bold text-lg tracking-tight text-foreground">AdManager</h2>
-                        <p className="text-[10px] text-text-muted font-medium uppercase tracking-widest">Analytics Platform</p>
+                        <h2 className={`font-bold text-lg tracking-tight ${isColorful ? 'text-white' : 'text-foreground'}`}>AdManager</h2>
+                        <p className={`text-[10px] font-medium uppercase tracking-widest ${isColorful ? 'text-cyan-300' : 'text-text-muted'}`}>Analytics Platform</p>
                     </div>
                 </div>
 
@@ -193,7 +195,11 @@ export const Sidebar: React.FC = () => {
                 <div className="relative mb-2">
                     <button
                         onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                        className="w-full flex items-center justify-between p-3 bg-secondary/50 hover:bg-secondary border border-border-subtle rounded-xl transition-all group"
+                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all group ${
+                            isColorful
+                                ? 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 hover:from-purple-800/50 hover:to-indigo-800/50 border border-cyan-500/30 hover:border-cyan-400/50 shadow-[0_0_10px_rgba(0,212,255,0.1)]'
+                                : 'bg-secondary/50 hover:bg-secondary border border-border-subtle'
+                        }`}
                     >
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center text-accent-text font-bold text-xs shrink-0">
@@ -263,8 +269,12 @@ export const Sidebar: React.FC = () => {
                     href={`/${locale}/homepage`}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 mb-4 ${
                         pathname === `/${locale}/homepage`
-                            ? 'bg-accent/15 text-accent font-bold'
-                            : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
+                            ? isColorful
+                                ? 'bg-cyan-500/20 text-cyan-300 font-bold shadow-[0_0_15px_rgba(0,212,255,0.3)]'
+                                : 'bg-accent/15 text-accent font-bold'
+                            : isColorful
+                                ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
+                                : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
                     } ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                     <Home className={`w-5 h-5 ${pathname === `/${locale}/homepage` ? 'text-accent' : ''}`} />
@@ -275,7 +285,7 @@ export const Sidebar: React.FC = () => {
                 </Link>
 
                 <div className="mb-4">
-                    <p className="px-2 text-[10px] font-semibold text-text-muted uppercase tracking-widest mb-2">Main Menu</p>
+                    <p className={`px-2 text-[10px] font-semibold uppercase tracking-widest mb-2 ${isColorful ? 'text-cyan-400/70' : 'text-text-muted'}`}>Main Menu</p>
                     {navStructure.map((item) => {
                         // Section rendering
                         if (item.type === 'section') {
@@ -287,7 +297,11 @@ export const Sidebar: React.FC = () => {
                                 <div key={item.id}>
                                     <button
                                         onClick={() => toggleSection(item.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted hover:text-foreground hover:bg-secondary/50 transition-all duration-200 group ${isRTL ? 'flex-row-reverse' : ''}`}
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isRTL ? 'flex-row-reverse' : ''} ${
+                                            isColorful
+                                                ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
+                                                : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
+                                        }`}
                                     >
                                         <Icon className="w-5 h-5 group-hover:text-foreground" />
                                         <span className={`text-sm flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{item.name}</span>
@@ -309,8 +323,12 @@ export const Sidebar: React.FC = () => {
                                                             isHighlight
                                                                 ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 text-foreground font-semibold'
                                                                 : isActive
-                                                                    ? 'bg-accent/15 text-accent font-black shadow-sm'
-                                                                    : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
+                                                                    ? isColorful
+                                                                        ? 'bg-cyan-500/20 text-cyan-300 font-black shadow-[0_0_15px_rgba(0,212,255,0.3)] border-l-2 border-cyan-400'
+                                                                        : 'bg-accent/15 text-accent font-black shadow-sm'
+                                                                    : isColorful
+                                                                        ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
+                                                                        : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
                                                         }`}
                                                     >
                                                         {isRTL ? (

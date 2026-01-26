@@ -26,7 +26,7 @@ export const Navigation: React.FC = () => {
     ];
 
     return (
-        <nav className={`flex items-center gap-6 mb-8 border-b border-gray-800 pb-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <nav className={`flex items-center gap-2 mb-8 p-2 rounded-xl bg-navbar border border-navbar-border shadow-sm ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
             {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
@@ -35,9 +35,9 @@ export const Navigation: React.FC = () => {
                     <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${isActive
-                            ? 'bg-indigo-600/20 text-indigo-400 font-bold'
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium ${isActive
+                            ? 'bg-accent text-accent-text shadow-md'
+                            : 'text-navbar-text hover:text-foreground hover:bg-navbar-hover'
                             }`}
                     >
                         <Icon className="w-5 h-5" />

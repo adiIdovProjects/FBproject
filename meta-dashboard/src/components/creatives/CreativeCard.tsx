@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { Card, Text, Badge } from '@tremor/react';
 import { Play, DollarSign, TrendingUp, MousePointer, Target, Zap } from 'lucide-react';
 import { CreativeMetrics } from '../../types/creatives.types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface CreativeCardProps {
     creative: CreativeMetrics;
@@ -14,6 +15,8 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
     currency = 'USD',
 }) => {
     const t = useTranslations();
+    const { theme } = useTheme();
+    const isColorful = theme === 'colorful';
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('en-US', {
@@ -56,7 +59,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
     };
 
     return (
-        <Card className="bg-[#111827]/80 backdrop-blur-md border-gray-800/50 overflow-hidden group hover:border-indigo-500/50 transition-all duration-300 p-0 rounded-2xl">
+        <Card className={`bg-card/80 backdrop-blur-md border-border-subtle overflow-hidden group hover:border-accent/50 transition-all duration-300 p-0 rounded-2xl ${isColorful ? 'border-glow' : ''}`}>
             {/* Media Area */}
             <div
                 className={`relative aspect-[4/5] bg-card overflow-hidden cursor-pointer`}
@@ -108,14 +111,14 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                 {/* Score / Warning Icons (as seen in image) */}
                 <div className="absolute bottom-3 right-3 flex gap-2">
-                    <div className="bg-indigo-500/80 rounded-full p-1 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center">
+                    <div className="bg-accent/80 rounded-full p-1 text-accent-text text-[10px] font-bold w-5 h-5 flex items-center justify-center">
                         9.8
                     </div>
                 </div>
             </div>
 
             {/* Info Area */}
-            <div className="p-4 bg-gradient-to-b from-[#111827] to-[#0f172a]">
+            <div className="p-4 bg-gradient-to-b from-card to-background">
                 <div className="flex justify-between items-start mb-3">
                     <h4 className="text-sm font-semibold text-foreground truncate pr-2 w-full" title={creative.title}>
                         {creative.title || t('common.search').replace('...', '')}
@@ -144,7 +147,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                                     <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('metrics.roas')}
                                 </div>
-                                <div className="text-sm font-bold text-indigo-400">{(creative.roas || 0).toFixed(1)}x</div>
+                                <div className="text-sm font-bold text-accent">{(creative.roas || 0).toFixed(1)}x</div>
                             </div>
                         ) : (
                             <div className="space-y-0.5">
@@ -195,7 +198,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                                     <Zap className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('creatives.hook_rate')}
                                 </div>
-                                <div className="text-sm font-bold text-blue-400">{(creative.hook_rate || 0).toFixed(1)}%</div>
+                                <div className="text-sm font-bold text-info">{(creative.hook_rate || 0).toFixed(1)}%</div>
                             </div>
 
                             {/* Hold Rate */}
@@ -204,11 +207,11 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                                     <Play className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('creatives.hold_rate')}
                                 </div>
-                                <div className="text-sm font-bold text-emerald-400">{(creative.hold_rate || 0).toFixed(1)}%</div>
+                                <div className="text-sm font-bold text-success">{(creative.hold_rate || 0).toFixed(1)}%</div>
                             </div>
 
                             {/* Completion & Watch Time row */}
-                            <div className="col-span-2 grid grid-cols-2 gap-4 pt-2 border-t border-gray-800/50 mt-1">
+                            <div className="col-span-2 grid grid-cols-2 gap-4 pt-2 border-t border-border-subtle mt-1">
                                 <div className="space-y-0.5">
                                     <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
                                         <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />

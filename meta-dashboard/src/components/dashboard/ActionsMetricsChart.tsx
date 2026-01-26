@@ -9,6 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Loader2 } from 'lucide-react';
 import { DailyMetric, MetricType, MetricOption } from '../../types/dashboard.types';
 import { TimeGranularity } from '../../types/campaigns.types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ActionsMetricsChartProps {
   dailyData: DailyMetric[];
@@ -39,6 +40,13 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
   granularity = 'day',
 }) => {
   const t = useTranslations();
+  const { theme } = useTheme();
+  const isColorful = theme === 'colorful';
+
+  // Theme-aware chart colors
+  const primaryColor = isColorful ? '#00D4FF' : '#6366f1';
+  const secondaryColor = isColorful ? '#00F5D4' : '#10b981';
+
   // Second metric for dual Y-axis
   const [secondMetric, setSecondMetric] = useState<MetricType | null>(null);
 
@@ -184,12 +192,12 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
           <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorPrimary" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                <stop offset="5%" stopColor={primaryColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
               </linearGradient>
               <linearGradient id="colorSecondary" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                <stop offset="5%" stopColor={secondaryColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={secondaryColor} stopOpacity={0} />
               </linearGradient>
             </defs>
 
@@ -218,8 +226,8 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                stroke="#10b981"
-                tick={{ fill: '#10b981', fontSize: 11, fontWeight: 600 }}
+                stroke={secondaryColor}
+                tick={{ fill: secondaryColor, fontSize: 11, fontWeight: 600 }}
                 tickFormatter={(val) => formatValue(val, secondMetricOption)}
                 axisLine={false}
                 tickLine={false}
@@ -256,7 +264,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
               wrapperStyle={{ paddingBottom: '30px', paddingRight: '10px' }}
               formatter={(value) => {
                 const label = value === 'primaryValue' ? currentMetricOption?.label : secondMetricOption?.label;
-                return <span className="text-xs font-bold text-gray-400 capitalize">{t(label || '')}</span>;
+                return <span className="text-xs font-bold text-text-muted capitalize">{t(label || '')}</span>;
               }}
             />
 
@@ -264,10 +272,10 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
               yAxisId="left"
               type="monotone"
               dataKey="primaryValue"
-              stroke="#6366f1"
+              stroke={primaryColor}
               strokeWidth={4}
               dot={false}
-              activeDot={{ r: 6, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: primaryColor, stroke: '#fff', strokeWidth: 2 }}
               animationDuration={1500}
             />
 
@@ -276,10 +284,10 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
                 yAxisId="right"
                 type="monotone"
                 dataKey="secondaryValue"
-                stroke="#10b981"
+                stroke={secondaryColor}
                 strokeWidth={4}
                 dot={false}
-                activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: secondaryColor, stroke: '#fff', strokeWidth: 2 }}
                 animationDuration={1500}
               />
             )}

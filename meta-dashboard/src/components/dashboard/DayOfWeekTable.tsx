@@ -54,7 +54,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
   return (
     <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="bg-black/20 border-b border-border-subtle px-6 py-4">
+      <div className="bg-secondary/50 border-b border-border-subtle px-6 py-4">
         <h3 className="text-foreground font-bold text-lg">
           {t('dashboard.day_of_week_performance')}
         </h3>
@@ -64,7 +64,7 @@ export const DayOfWeekTable: React.FC<DayOfWeekTableProps> = ({
       <div className="p-6">
         {isLoading && (
           <div className="flex items-center justify-center h-48">
-            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-accent animate-spin" />
           </div>
         )}
 

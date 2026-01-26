@@ -28,9 +28,9 @@ function InsightCard({
   convLabel: string;
 }) {
   return (
-    <div className="rounded-xl border p-4 bg-card-bg/40 border-border-subtle text-gray-200">
+    <div className="rounded-xl border p-4 bg-card-bg/40 border-border-subtle text-foreground">
       <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-        <Calendar className="w-4 h-4 text-gray-400" />
+        <Calendar className="w-4 h-4 text-text-muted" />
         <h3 className="font-semibold text-sm">{title}</h3>
       </div>
 
@@ -39,7 +39,7 @@ function InsightCard({
       </p>
 
       {insight.metrics && insight.status === 'ok' && (
-        <div className={`mt-3 pt-3 border-t border-border-subtle flex gap-4 text-xs text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`mt-3 pt-3 border-t border-border-subtle flex gap-4 text-xs text-text-muted ${isRTL ? 'flex-row-reverse' : ''}`}>
           <span>${insight.metrics.spend?.toFixed(0) || 0}</span>
           <span>{insight.metrics.conversions || 0} {convLabel}</span>
           {insight.metrics.cpa && <span>CPA ${insight.metrics.cpa.toFixed(2)}</span>}

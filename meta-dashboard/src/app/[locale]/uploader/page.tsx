@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { PlusCircle, Layers, ArrowRight, Pencil, Copy, X, Loader2, Sparkles, Target, Settings } from 'lucide-react';
+import { PlusCircle, Layers, ArrowRight, Pencil, Copy, X, Loader2, Sparkles, Target, Settings, Ship } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '../../../components/MainLayout';
 import { useAccount } from '@/context/AccountContext';
@@ -124,6 +124,24 @@ export default function CampaignChoicePage() {
             description=""
         >
             <div className="max-w-4xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+                {/* AI Captain Button */}
+                <div className="flex justify-center mb-6">
+                    <button
+                        onClick={() => router.push(`/${locale}/uploader/ai-captain`)}
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl font-bold text-white flex items-center gap-3 hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-amber-500/25 hover:scale-105 active:scale-95"
+                    >
+                        <span className="text-2xl">🏴‍☠️</span>
+                        {t('captain.try_ai_captain') || 'Try AI Captain'}
+                        <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{t('common.new') || 'New'}</span>
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="flex-1 h-px bg-gray-700" />
+                    <span className="text-gray-500 text-sm">{t('common.or') || 'or'}</span>
+                    <div className="flex-1 h-px bg-gray-700" />
+                </div>
+
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">

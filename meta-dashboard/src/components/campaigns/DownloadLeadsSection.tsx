@@ -153,13 +153,13 @@ export const DownloadLeadsSection: React.FC<DownloadLeadsSectionProps> = ({
         <div className="bg-card-bg border border-border-subtle rounded-xl p-4 mb-6">
             <div className="flex items-center gap-3 mb-4">
                 <FileSpreadsheet className="w-5 h-5 text-accent" />
-                <h3 className="text-lg font-semibold text-gray-100">
+                <h3 className="text-lg font-semibold text-foreground">
                     {t('campaigns.download_leads') || 'Download Leads'}
                 </h3>
             </div>
 
             {isLoading ? (
-                <div className="flex items-center gap-2 text-gray-400">
+                <div className="flex items-center gap-2 text-text-muted">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>{t('common.loading') || 'Loading...'}</span>
                 </div>
@@ -170,7 +170,7 @@ export const DownloadLeadsSection: React.FC<DownloadLeadsSectionProps> = ({
                         <select
                             value={selectedFormId}
                             onChange={(e) => setSelectedFormId(e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-accent"
+                            className="w-full bg-input border border-border-subtle rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                         >
                             {leadForms.map((form) => (
                                 <option key={form.id} value={form.id}>
@@ -182,9 +182,9 @@ export const DownloadLeadsSection: React.FC<DownloadLeadsSectionProps> = ({
 
                     {/* Lead Count & Date Info */}
                     {leadCount !== null && (
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-text-muted">
                             {leadCount} {t('campaigns.leads') || 'leads'}
-                            <span className="text-gray-500 ml-2">
+                            <span className="text-text-disabled ml-2">
                                 ({startDate} → {t('common.today') || 'today'})
                             </span>
                         </div>
@@ -194,7 +194,7 @@ export const DownloadLeadsSection: React.FC<DownloadLeadsSectionProps> = ({
                     <button
                         onClick={handleDownload}
                         disabled={isDownloading || !selectedFormId || leadCount === 0}
-                        className="flex items-center gap-2 bg-accent hover:bg-accent-hover disabled:bg-gray-700 disabled:text-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                        className="flex items-center gap-2 bg-accent hover:bg-accent-hover disabled:bg-secondary disabled:text-text-disabled text-accent-text px-4 py-2 rounded-lg font-medium transition-colors"
                     >
                         {isDownloading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

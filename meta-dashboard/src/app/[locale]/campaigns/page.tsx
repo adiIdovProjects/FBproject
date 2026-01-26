@@ -56,7 +56,7 @@ export default function CampaignsPage() {
 
   // Chart state
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('spend');
-  const [granularity, setGranularity] = useState<TimeGranularity>('day');
+  const [granularity, setGranularity] = useState<TimeGranularity>('week');
 
   // Data state
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);

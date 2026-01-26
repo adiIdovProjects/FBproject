@@ -53,12 +53,12 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
         onMouseLeave={handleMouseLeave}
       >
         <Info
-          className={`${iconSize} text-gray-500 hover:text-gray-400 cursor-help transition-colors`}
+          className={`${iconSize} text-text-muted hover:text-foreground cursor-help transition-colors`}
         />
       </div>
       {isVisible && (
         <div
-          className="fixed z-[9999] px-3 py-2 bg-gray-900 text-gray-200 text-xs rounded-lg shadow-2xl border border-gray-600 max-w-xs pointer-events-none"
+          className="fixed z-[9999] px-3 py-2 bg-card text-foreground text-xs rounded-lg shadow-2xl border border-border-subtle max-w-xs pointer-events-none"
           style={{
             top: position.top,
             left: position.left,
@@ -70,7 +70,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
             className="absolute left-1/2 -translate-x-1/2"
             style={{ top: '100%' }}
           >
-            <div className="border-[6px] border-transparent border-t-gray-900 -mt-px"></div>
+            <div className="border-[6px] border-transparent border-t-card -mt-px"></div>
           </div>
         </div>
       )}

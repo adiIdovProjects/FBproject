@@ -3,7 +3,9 @@
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Sidebar } from './Sidebar';
+import { GlossaryPanel } from './ui/GlossaryPanel';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { useTheme } from '@/context/ThemeContext';
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -15,6 +17,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
     const t = useTranslations();
     const locale = useLocale();
     const isRTL = locale === 'ar' || locale === 'he';
+    const { theme } = useTheme();
+    const isColorful = theme === 'colorful';
 
     // Track page views automatically
     usePageTracking();
@@ -24,16 +28,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
             {/* Sidebar Component */}
             <Sidebar />
 
+            {/* Glossary Help Panel */}
+            <GlossaryPanel />
+
             {/* Main Content Area */}
             <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-y-auto ${isRTL ? 'mr-64 border-r border-border-color' : 'ml-64 border-l border-border-color'} transition-all duration-300 relative`}>
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent z-10"></div>
+                {/* Accent bar - rainbow gradient in colorful mode */}
+                <div className={`absolute top-0 left-0 right-0 h-px z-10 ${isColorful ? 'accent-bar-colorful' : 'bg-gradient-to-r from-transparent via-accent/20 to-transparent'}`}></div>
 
                 <div className={`p-8 sm:p-12 max-w-7xl w-full relative z-0 ${isRTL ? 'ml-auto' : 'mx-auto'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     {/* Page Header */}
                     <header className="mb-12 flex flex-col gap-3">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="w-8 h-1 bg-accent rounded-full"></div>
-                            <div className="w-2 h-1 bg-accent/40 rounded-full"></div>
+                            <div className={`w-8 h-1 rounded-full ${isColorful ? 'accent-bar-colorful' : 'bg-accent'}`}></div>
+                            <div className={`w-2 h-1 rounded-full ${isColorful ? 'bg-[#00F5D4]' : 'bg-accent/40'}`}></div>
                         </div>
                         <h1 className="text-5xl font-black tracking-tighter text-foreground">
                             {title}

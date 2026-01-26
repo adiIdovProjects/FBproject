@@ -113,13 +113,33 @@ function WizardContent() {
             return null;  // Valid - no other fields needed
         }
 
-        // Allow either a file upload OR an existing image URL (for cloned campaigns)
-        if (!ad.file && !ad.existingImageUrl) return "Please upload an image or video";
+        // Carousel validation
+        if (ad.isCarousel) {
+            const cards = ad.carouselCards || [];
+            if (cards.length < 2) return "Carousel needs at least 2 cards";
+            if (cards.length > 10) return "Carousel can have maximum 10 cards";
+            const cardsWithMedia = cards.filter(c => c.file || c.previewUrl);
+            if (cardsWithMedia.length < 2) return "Please upload images for at least 2 carousel cards";
+            // Validate each card's file
+            for (const card of cards) {
+                if (card.file) {
+                    const isVideo = card.file.type.startsWith('video/');
+                    const maxSize = isVideo ? 4 * 1024 * 1024 * 1024 : 30 * 1024 * 1024;
+                    if (card.file.size > maxSize) {
+                        return isVideo ? "Carousel video must be under 4GB" : "Carousel image must be under 30MB";
+                    }
+                }
+            }
+        } else {
+            // Single media validation - allow either a file upload OR an existing image URL (for cloned campaigns)
+            if (!ad.file && !ad.existingImageUrl) return "Please upload an image or video";
+        }
+
         if (!ad.title || ad.title.trim().length === 0) return "Please enter a headline";
         if (ad.body.length < 20) return "Primary text should be at least 20 characters";
 
-        // File validation (only if a new file is uploaded)
-        if (ad.file) {
+        // File validation (only if a new file is uploaded, for single mode)
+        if (!ad.isCarousel && ad.file) {
             const isVideo = ad.file.type.startsWith('video/');
             const maxSize = isVideo ? 4 * 1024 * 1024 * 1024 : 30 * 1024 * 1024;
 
@@ -185,8 +205,31 @@ function WizardContent() {
             const mediaUploads = await Promise.all(
                 validAds.map(async (ad) => {
                     // Existing posts don't need media upload
-                    if (ad.useExistingPost) return { adId: ad.id, imageHash: undefined, videoId: undefined };
-                    if (!ad.file) return { adId: ad.id, imageHash: undefined, videoId: undefined };
+                    if (ad.useExistingPost) return { adId: ad.id, imageHash: undefined, videoId: undefined, carouselCards: undefined };
+
+                    // Carousel mode - upload all card media
+                    if (ad.isCarousel && ad.carouselCards && ad.carouselCards.length >= 2) {
+                        const carouselUploads = await Promise.all(
+                            ad.carouselCards.map(async (card) => {
+                                if (!card.file) return { imageHash: undefined, videoId: undefined, title: card.title };
+                                const isVideo = card.file.type.startsWith('video/');
+                                const result = await mutationsService.uploadMedia(
+                                    selectedAccount.account_id,
+                                    card.file,
+                                    isVideo
+                                );
+                                return {
+                                    imageHash: isVideo ? undefined : result.image_hash,
+                                    videoId: isVideo ? result.video_id : undefined,
+                                    title: card.title
+                                };
+                            })
+                        );
+                        return { adId: ad.id, imageHash: undefined, videoId: undefined, carouselCards: carouselUploads };
+                    }
+
+                    // Single media mode
+                    if (!ad.file) return { adId: ad.id, imageHash: undefined, videoId: undefined, carouselCards: undefined };
 
                     const isVideo = ad.file.type.startsWith('video/');
                     const result = await mutationsService.uploadMedia(
@@ -198,7 +241,8 @@ function WizardContent() {
                     return {
                         adId: ad.id,
                         imageHash: isVideo ? undefined : result.image_hash,
-                        videoId: isVideo ? result.video_id : undefined
+                        videoId: isVideo ? result.video_id : undefined,
+                        carouselCards: undefined
                     };
                 })
             );
@@ -226,6 +270,13 @@ function WizardContent() {
             const firstMedia = mediaUploads.find(m => m.adId === firstAd.id);
             const defaultCampaignName = `Campaign - ${state.objective} - ${new Date().toISOString().split('T')[0]}`;
 
+            // Build carousel_cards for the creative if in carousel mode
+            const carouselCards = firstMedia?.carouselCards?.map(card => ({
+                image_hash: card.imageHash,
+                video_id: card.videoId,
+                title: card.title || ''
+            }));
+
             const payload: SmartCampaignRequest = {
                 account_id: selectedAccount.account_id,
                 page_id: selectedAccount.page_id!,
@@ -249,7 +300,8 @@ function WizardContent() {
                     lead_form_id: (state.objective === 'LEADS' && state.leadType === 'FORM')
                         ? firstAd.leadFormId
                         : undefined,
-                    object_story_id: firstAd.useExistingPost ? firstAd.objectStoryId : undefined
+                    object_story_id: firstAd.useExistingPost ? firstAd.objectStoryId : undefined,
+                    carousel_cards: carouselCards && carouselCards.length >= 2 ? carouselCards : undefined
                 },
                 custom_audiences: state.selectedAudiences.length > 0 ? state.selectedAudiences : undefined,
                 excluded_audiences: state.excludedAudiences.length > 0 ? state.excludedAudiences : undefined,
@@ -267,6 +319,13 @@ function WizardContent() {
                     const ad = validAds[i];
                     const media = mediaUploads.find(m => m.adId === ad.id);
 
+                    // Build carousel_cards for additional ads if in carousel mode
+                    const additionalCarouselCards = media?.carouselCards?.map(card => ({
+                        image_hash: card.imageHash,
+                        video_id: card.videoId,
+                        title: card.title || ''
+                    }));
+
                     await mutationsService.addCreativeToAdSet({
                         account_id: selectedAccount.account_id,
                         page_id: selectedAccount.page_id!,
@@ -282,7 +341,8 @@ function WizardContent() {
                             lead_form_id: (state.objective === 'LEADS' && state.leadType === 'FORM')
                                 ? ad.leadFormId
                                 : undefined,
-                            object_story_id: ad.useExistingPost ? ad.objectStoryId : undefined
+                            object_story_id: ad.useExistingPost ? ad.objectStoryId : undefined,
+                            carousel_cards: additionalCarouselCards && additionalCarouselCards.length >= 2 ? additionalCarouselCards : undefined
                         },
                         ad_name: `Ad ${i + 1}`
                     });

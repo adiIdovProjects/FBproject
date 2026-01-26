@@ -1,5 +1,11 @@
 import { apiClient } from './apiClient';
 
+export interface CarouselCard {
+    image_hash?: string;
+    video_id?: string;
+    title: string;
+}
+
 export interface SmartCreative {
     title: string;
     body: string;
@@ -9,6 +15,7 @@ export interface SmartCreative {
     link_url?: string;
     lead_form_id?: string;
     object_story_id?: string;  // Existing post ID (format: {page_id}_{post_id})
+    carousel_cards?: CarouselCard[];  // Carousel cards (2-10 cards)
 }
 
 export interface PagePost {

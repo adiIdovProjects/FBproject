@@ -69,13 +69,13 @@ export default function LanguageSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
-        className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-border-subtle bg-card-bg/50 backdrop-blur-xl text-white hover:border-accent/50 transition-all duration-300 disabled:opacity-50 shadow-2xl group"
+        className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-border-subtle bg-card-bg/50 backdrop-blur-xl text-foreground hover:border-accent/50 transition-all duration-300 disabled:opacity-50 shadow-2xl group"
         aria-label={t('common.switch_language')}
       >
         <span className="text-xl group-hover:scale-110 transition-transform">{currentLanguage?.flag}</span>
         <span className="text-xs font-black uppercase tracking-widest">{currentLanguage?.name}</span>
         <svg
-          className={`w-4 h-4 transition-transform text-gray-500 group-hover:text-white ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 transition-transform text-text-muted group-hover:text-foreground ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -91,7 +91,7 @@ export default function LanguageSwitcher() {
               key={language.code}
               onClick={() => switchLanguage(language.code)}
               disabled={isPending}
-              className={`w-full flex items-center gap-4 px-5 py-4 text-xs font-black uppercase tracking-widest transition-all duration-200 ${currentLocale === language.code ? 'bg-accent/20 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+              className={`w-full flex items-center gap-4 px-5 py-4 text-xs font-black uppercase tracking-widest transition-all duration-200 ${currentLocale === language.code ? 'bg-accent/20 text-foreground' : 'text-text-muted hover:bg-secondary/50 hover:text-foreground'
                 }`}
             >
               <span className="text-xl">{language.flag}</span>

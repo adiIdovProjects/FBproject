@@ -1,6 +1,75 @@
 # Project Tasks & Progress
 
-## Current Task: Add "Use Existing Post" to Campaign Uploader (COMPLETED)
+## Current Task: Add Carousel Ads Support (COMPLETED)
+
+### Goal
+Add carousel ad support to the campaign creation wizard, allowing users to create ads with 2-10 swipeable cards.
+
+### Implementation Summary
+
+#### Backend Changes
+1. **Updated mutations.py schema**
+   - Added `CarouselCard` Pydantic model with fields: `image_hash`, `video_id`, `title`, `description`, `link_url`
+   - Added `carousel_cards` field to `SmartCreative` model (optional list of 2-10 cards)
+
+2. **Updated ad_mutation_service.py**
+   - Modified `_build_creative_params()` to detect carousel mode (when `carousel_cards` has 2+ items)
+   - Builds Facebook's `child_attachments` structure for carousel creatives
+   - Each card gets its own `name`, `description`, `link`, and `image_hash`/`video_id`
+
+#### Frontend Changes
+3. **Updated mutations.service.ts**
+   - Added `CarouselCard` TypeScript interface
+   - Added `carousel_cards` field to `SmartCreative` interface
+
+4. **Updated WizardContext.tsx**
+   - Added `CarouselCardState` interface for local card state (with `id`, `file`, `previewUrl`, `title`, `description`, `link`)
+   - Added `isCarousel` and `carouselCards` fields to `AdCreative` interface
+   - Updated initial state and prefill logic to include carousel defaults
+
+5. **Updated AdCard.tsx** (major changes)
+   - Added "Single" vs "Carousel" toggle button (appears when creating new ad)
+   - Added carousel card management:
+     - Upload image/video per card
+     - Title, description, and optional link per card
+     - Add/remove cards (min 2, max 10)
+   - Added carousel preview with navigation arrows and dot indicators
+   - Updated validation checklist to show carousel media status
+
+6. **Updated wizard page.tsx**
+   - Updated `validateAd()` to handle carousel validation (min 2 cards with media)
+   - Updated media upload to upload all carousel card files in parallel
+   - Updated payload creation to include `carousel_cards` array
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `backend/api/schemas/mutations.py` | Added CarouselCard model, updated SmartCreative |
+| `backend/api/services/ad_mutation_service.py` | Added carousel child_attachments logic |
+| `meta-dashboard/src/services/mutations.service.ts` | Added CarouselCard interface |
+| `meta-dashboard/.../WizardContext.tsx` | Added carousel state fields |
+| `meta-dashboard/.../AdCard.tsx` | Added carousel UI (toggle, cards, preview) |
+| `meta-dashboard/.../page.tsx` (wizard) | Updated validation and submission |
+
+### How to Use
+1. Go to campaign uploader wizard, Step 6 (Ads)
+2. Click "Carousel" button (next to "Single")
+3. Upload images for at least 2 cards (up to 10)
+4. Fill in optional title, description, and link per card
+5. Use arrows or dots in preview to navigate cards
+6. Complete the wizard - carousel ad will be created
+
+### Notes
+- Minimum 2 cards required for carousel
+- Maximum 10 cards allowed
+- Each card can have its own destination URL (overrides main URL)
+- Cards are uploaded in parallel for fast submission
+- Works with all objectives (Sales, Leads, Traffic, etc.)
+
+---
+
+## Previous Task: Add "Use Existing Post" to Campaign Uploader (COMPLETED)
 
 ### Goal
 Allow users to use existing Facebook Page posts or Instagram posts as ad creatives instead of only uploading new media. This preserves social proof (likes, comments, shares) across ads.

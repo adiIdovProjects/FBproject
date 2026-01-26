@@ -83,7 +83,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   // Empty state
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="flex items-center justify-center h-64 text-text-muted">
         {t('reports.no_data')}
       </div>
     );
@@ -99,33 +99,33 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-black/20 border-b border-border-subtle">
-              <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase">{t('common.name')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.spend')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.impressions')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.clicks')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.ctr')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpc')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.conversions')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpa')}</th>
+            <tr className="bg-secondary/50 border-b border-border-subtle">
+              <th className="px-4 py-4 text-left text-[10px] font-black text-text-muted uppercase">{t('common.name')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.spend')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.impressions')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.clicks')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.ctr')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpc')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.conversions')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpa')}</th>
               {hasConversionValue && (
-                <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.roas')}</th>
+                <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.roas')}</th>
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.03]">
+          <tbody className="divide-y divide-border-subtle">
             {breakdownData.map((row, idx) => (
-              <tr key={idx} className="hover:bg-white/[0.02]">
-                <td className="px-4 py-4 text-white font-medium">{row.name}</td>
-                <td className="px-4 py-4 text-right text-white font-bold">{formatCurrency(row.spend)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatNumber(row.impressions)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatNumber(row.clicks)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatPercent(row.ctr)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(row.cpc)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatNumber(row.conversions)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(row.cpa)}</td>
+              <tr key={idx} className="hover:bg-row-hover">
+                <td className="px-4 py-4 text-foreground font-medium">{row.name}</td>
+                <td className="px-4 py-4 text-right text-foreground font-bold">{formatCurrency(row.spend)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatNumber(row.impressions)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatNumber(row.clicks)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatPercent(row.ctr)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatCurrencyDecimal(row.cpc)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatNumber(row.conversions)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatCurrencyDecimal(row.cpa)}</td>
                 {hasConversionValue && (
-                  <td className="px-4 py-4 text-right text-gray-300">{formatRoas(row.roas)}</td>
+                  <td className="px-4 py-4 text-right text-foreground">{formatRoas(row.roas)}</td>
                 )}
               </tr>
             ))}
@@ -143,35 +143,35 @@ export const ReportTable: React.FC<ReportTableProps> = ({
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-black/20 border-b border-border-subtle">
-            <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase">{t('common.name')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.spend')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.impressions')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.clicks')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.ctr')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpc')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.conversions')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.cpa')}</th>
+          <tr className="bg-secondary/50 border-b border-border-subtle">
+            <th className="px-4 py-4 text-left text-[10px] font-black text-text-muted uppercase">{t('common.name')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.spend')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.impressions')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.clicks')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.ctr')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpc')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.conversions')}</th>
+            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpa')}</th>
             {hasPurchaseValue && (
-              <th className="px-4 py-4 text-right text-[10px] font-black text-gray-500 uppercase">{t('metrics.roas')}</th>
+              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.roas')}</th>
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/[0.03]">
+        <tbody className="divide-y divide-border-subtle">
           {comparisonData.map((item, idx) => {
             const metrics = item.period1;
             return (
-              <tr key={item.id || idx} className="hover:bg-white/[0.02]">
-                <td className="px-4 py-4 text-white font-medium">{item.name}</td>
-                <td className="px-4 py-4 text-right text-white font-bold">{formatCurrency(metrics.spend)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatNumber(metrics.impressions)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatNumber(metrics.clicks)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatPercent(metrics.ctr)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(metrics.cpc)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatNumber(metrics.conversions)}</td>
-                <td className="px-4 py-4 text-right text-gray-300">{formatCurrencyDecimal(metrics.cpa)}</td>
+              <tr key={item.id || idx} className="hover:bg-row-hover">
+                <td className="px-4 py-4 text-foreground font-medium">{item.name}</td>
+                <td className="px-4 py-4 text-right text-foreground font-bold">{formatCurrency(metrics.spend)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatNumber(metrics.impressions)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatNumber(metrics.clicks)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatPercent(metrics.ctr)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatCurrencyDecimal(metrics.cpc)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatNumber(metrics.conversions)}</td>
+                <td className="px-4 py-4 text-right text-foreground">{formatCurrencyDecimal(metrics.cpa)}</td>
                 {hasPurchaseValue && (
-                  <td className="px-4 py-4 text-right text-gray-300">{formatRoas(metrics.roas)}</td>
+                  <td className="px-4 py-4 text-right text-foreground">{formatRoas(metrics.roas)}</td>
                 )}
               </tr>
             );

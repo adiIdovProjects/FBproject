@@ -26,7 +26,10 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
             const path = window.location.pathname;
             const isPublicPage = path.includes('/login') ||
                                  path.includes('/callback') ||
-                                 path.includes('/auth/verify');
+                                 path.includes('/auth/verify') ||
+                                 path.includes('/onboard') ||
+                                 path.includes('/select-accounts') ||
+                                 path.includes('/connect');
             if (!isPublicPage) {
                 loadAccounts();
             } else {
@@ -50,6 +53,20 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Fetch hasROAS when selectedAccountId changes
     useEffect(() => {
         const fetchHasROAS = async () => {
+            // Skip on public/onboarding pages
+            if (typeof window !== 'undefined') {
+                const path = window.location.pathname;
+                const isPublicPage = path.includes('/login') ||
+                                     path.includes('/callback') ||
+                                     path.includes('/auth/verify') ||
+                                     path.includes('/onboard') ||
+                                     path.includes('/select-accounts') ||
+                                     path.includes('/connect');
+                if (isPublicPage) {
+                    return;
+                }
+            }
+
             if (!selectedAccountId) {
                 setHasROAS(null);
                 return;

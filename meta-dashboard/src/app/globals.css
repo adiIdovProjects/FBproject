@@ -46,6 +46,12 @@
   --row-hover: #1E293B;
   --row-selected: #312E81;
 
+  /* Navbar */
+  --navbar-bg: #1E293B;
+  --navbar-border: #334155;
+  --navbar-text: #94A3B8;
+  --navbar-hover: #334155;
+
   /* Charts */
   --chart-1: #6366F1;
   --chart-2: #8B5CF6;
@@ -115,6 +121,12 @@ html.light {
   --row-hover: #F8FAFC;
   --row-selected: #EFF6FF;
 
+  /* Navbar - Bold dark navbar for light mode */
+  --navbar-bg: #0F172A;
+  --navbar-border: #1E293B;
+  --navbar-text: #E2E8F0;
+  --navbar-hover: #1E293B;
+
   /* Charts - Adjusted for Light Mode Contrast */
   --chart-1: #2563EB;
   /* Blue 600 */
@@ -134,58 +146,64 @@ html.light {
   color-scheme: light;
 }
 
-/* === COLORFUL MODE (Vibrant) === */
-/* Palette: #2364AA, #3DA5D9, #73BFB8, #FEC601, #EA7317 */
+/* === COLORFUL MODE (Electric Neon Dashboard) === */
+/* Enhanced Palette: Electric Cyan, Coral, Mint, Gold, Purple */
 html.colorful {
-  /* Backgrounds */
-  --background: #0D1B2A;
-  --card-bg: #1B3A4B;
-  --sidebar-bg: #2364AA;
-  --input-bg: #1B3A4B;
+  /* Backgrounds - Purple-tinted navy for distinct look */
+  --background: #0c0f1a;
+  --card-bg: #1a1f3c;
+  --sidebar-bg: #1e1b4b;
+  --input-bg: #1a1f3c;
 
-  /* Text */
-  --foreground: #F0F4F8;
-  --text-muted: #A0C4E8;
-  --text-disabled: #6B9AC4;
+  /* Text - Maximum contrast with sky blue muted */
+  --foreground: #FFFFFF;
+  --text-muted: #7dd3fc;
+  --text-disabled: #60a5fa;
 
-  /* Accent - Deep Blue */
-  --accent: #3DA5D9;
-  --accent-hover: #2364AA;
-  --accent-text: #FFFFFF;
+  /* Accent - Electric Cyan */
+  --accent: #00D4FF;
+  --accent-hover: #00A3CC;
+  --accent-text: #0F1729;
 
   /* Secondary */
-  --secondary: #2364AA;
-  --secondary-hover: #3DA5D9;
-  --secondary-text: #F0F4F8;
+  --secondary: #2A3F5F;
+  --secondary-hover: #3D5A80;
+  --secondary-text: #FFFFFF;
 
-  /* Borders */
-  --border-color: #3DA5D9;
-  --border-focus: #FEC601;
+  /* Borders - Glowing Cyan */
+  --border-color: rgba(0, 212, 255, 0.3);
+  --border-focus: #FFD700;
 
-  /* Status Colors */
-  --success: #73BFB8;
-  --success-bg: #1B4B43;
-  --warning: #FEC601;
-  --warning-bg: #5C4A00;
-  --error: #EA7317;
-  --error-bg: #5C2E0A;
-  --info: #3DA5D9;
-  --info-bg: #0D3A5C;
+  /* Status Colors - Vibrant */
+  --success: #00F5D4;
+  --success-bg: rgba(0, 245, 212, 0.15);
+  --warning: #FFD700;
+  --warning-bg: rgba(255, 215, 0, 0.15);
+  --error: #FF6B6B;
+  --error-bg: rgba(255, 107, 107, 0.15);
+  --info: #00D4FF;
+  --info-bg: rgba(0, 212, 255, 0.15);
 
   /* Table/List */
-  --row-hover: #1B3A4B;
-  --row-selected: #2364AA;
+  --row-hover: rgba(0, 212, 255, 0.08);
+  --row-selected: rgba(0, 212, 255, 0.15);
 
-  /* Charts - Vibrant palette */
-  --chart-1: #2364AA;
-  --chart-2: #3DA5D9;
-  --chart-3: #73BFB8;
-  --chart-4: #FEC601;
-  --chart-5: #EA7317;
-  --chart-positive: #73BFB8;
-  --chart-negative: #EA7317;
-  --chart-grid: #2364AA;
-  --chart-axis: #A0C4E8;
+  /* Navbar */
+  --navbar-bg: rgba(22, 36, 71, 0.9);
+  --navbar-border: rgba(0, 212, 255, 0.3);
+  --navbar-text: #7dd3fc;
+  --navbar-hover: rgba(0, 212, 255, 0.15);
+
+  /* Charts - Rainbow Vibrant */
+  --chart-1: #00D4FF;
+  --chart-2: #FF6B6B;
+  --chart-3: #00F5D4;
+  --chart-4: #FFD700;
+  --chart-5: #A855F7;
+  --chart-positive: #00F5D4;
+  --chart-negative: #FF6B6B;
+  --chart-grid: rgba(0, 212, 255, 0.15);
+  --chart-axis: #8EC5FC;
 
   color-scheme: dark;
 }
@@ -231,6 +249,12 @@ html.colorful {
   --color-row-hover: var(--row-hover);
   --color-row-selected: var(--row-selected);
 
+  /* Navbar */
+  --color-navbar: var(--navbar-bg);
+  --color-navbar-border: var(--navbar-border);
+  --color-navbar-text: var(--navbar-text);
+  --color-navbar-hover: var(--navbar-hover);
+
   /* Charts */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -275,8 +299,13 @@ html.light .glass-effect {
 }
 
 html.colorful .glass-effect {
-  background: rgba(27, 58, 75, 0.7);
-  border: 1px solid rgba(61, 165, 217, 0.2);
+  background: rgba(22, 36, 71, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* === GRADIENTS === */
@@ -289,8 +318,12 @@ html.colorful .glass-effect {
   text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
 
+html.light .text-glow {
+  text-shadow: none;
+}
+
 html.colorful .text-glow {
-  text-shadow: 0 0 15px rgba(61, 165, 217, 0.4);
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
 }
 
 /* === BORDER EFFECTS === */
@@ -298,8 +331,430 @@ html.colorful .text-glow {
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
 }
 
+html.light .border-glow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
 html.colorful .border-glow {
-  box-shadow: 0 0 20px rgba(61, 165, 217, 0.15);
+  box-shadow:
+    0 0 20px rgba(0, 212, 255, 0.2),
+    0 0 40px rgba(0, 212, 255, 0.1);
+}
+
+/* === COLORFUL MODE ENHANCED CARD GRADIENT === */
+html.colorful .card-gradient {
+  background: linear-gradient(
+    145deg,
+    rgba(22, 36, 71, 0.95) 0%,
+    rgba(15, 23, 41, 0.98) 100%
+  );
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 212, 255, 0.05);
+}
+
+/* === COLORFUL MODE SIDEBAR GRADIENT === */
+html.colorful .bg-sidebar {
+  background: linear-gradient(
+    180deg,
+    #1e1b4b 0%,
+    #312e81 20%,
+    #4338ca 40%,
+    #6366f1 50%,
+    #4338ca 60%,
+    #312e81 80%,
+    #1e1b4b 100%
+  ) !important;
+}
+
+/* === COLORFUL MODE ACCENT GLOW === */
+html.colorful .accent-glow:hover,
+html.colorful .bg-accent:hover {
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+}
+
+/* === COLORFUL MODE GRADIENT ACCENT BAR === */
+html.colorful .accent-bar-colorful {
+  background: linear-gradient(
+    90deg,
+    #00D4FF 0%,
+    #00F5D4 25%,
+    #FFD700 50%,
+    #FF6B6B 75%,
+    #A855F7 100%
+  );
+}
+
+/* === COLORFUL MODE TREMOR CARD DECORATION === */
+html.colorful [data-tremor-decoration="true"] {
+  background: linear-gradient(90deg, #00D4FF, #00F5D4) !important;
+}
+
+/* === COLORFUL MODE ACTIVE NAV INDICATOR === */
+html.colorful .colorful-nav-active {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 245, 212, 0.1) 100%);
+  border-left: 3px solid #00D4FF;
+}
+
+/* === COLORFUL MODE GRAY OVERRIDES === */
+/* Override common Tailwind gray classes to use theme colors in colorful mode */
+html.colorful .text-gray-100 { color: var(--foreground); }
+html.colorful .text-gray-200 { color: var(--foreground); }
+html.colorful .text-gray-300 { color: #B8D4E8; }
+html.colorful .text-gray-400 { color: var(--text-muted); }
+html.colorful .text-gray-500 { color: var(--text-muted); }
+html.colorful .text-gray-600 { color: var(--text-disabled); }
+html.colorful .text-gray-700 { color: var(--secondary); }
+
+html.colorful .bg-gray-700 { background-color: var(--secondary); }
+html.colorful .bg-gray-800 { background-color: var(--card-bg); }
+html.colorful .bg-gray-900 { background-color: var(--background); }
+
+html.colorful .border-gray-700 { border-color: var(--border-color); }
+html.colorful .border-gray-800 { border-color: var(--border-color); }
+
+/* Colorful mode indigo overrides */
+html.colorful .text-indigo-200 { color: #8EC5FC; }
+html.colorful .text-indigo-300 { color: #00D4FF; }
+html.colorful .text-indigo-400 { color: #00D4FF; }
+html.colorful .bg-indigo-500 { background-color: #00D4FF; }
+html.colorful .border-indigo-500 { border-color: #00D4FF; }
+
+/* Colorful mode emerald/green overrides */
+html.colorful .text-emerald-400 { color: #00F5D4; }
+html.colorful .text-green-400 { color: #00F5D4; }
+html.colorful .bg-emerald-500 { background-color: #00F5D4; }
+html.colorful .bg-green-500 { background-color: #00F5D4; }
+
+/* Colorful mode blue overrides */
+html.colorful .text-blue-400 { color: #00D4FF; }
+html.colorful .text-blue-500 { color: #00D4FF; }
+html.colorful .bg-blue-500 { background-color: #00D4FF; }
+
+/* Colorful mode orange/amber overrides */
+html.colorful .text-orange-400 { color: #FFD700; }
+html.colorful .text-amber-400 { color: #FFD700; }
+html.colorful .bg-orange-500 { background-color: #FFD700; }
+
+/* Colorful mode purple overrides */
+html.colorful .text-purple-400 { color: #A855F7; }
+html.colorful .bg-purple-500 { background-color: #A855F7; }
+
+/* Colorful mode red overrides */
+html.colorful .text-red-400 { color: #FF6B6B; }
+html.colorful .text-red-500 { color: #FF6B6B; }
+html.colorful .bg-red-500 { background-color: #FF6B6B; }
+
+/* ================================================
+   AGGRESSIVE COLORFUL MODE OVERRIDES
+   Force ALL elements to use vibrant colors
+   ================================================ */
+
+/* Override ALL gray/slate backgrounds with gradient */
+html.colorful .bg-gray-50,
+html.colorful .bg-gray-100,
+html.colorful .bg-gray-200,
+html.colorful .bg-slate-50,
+html.colorful .bg-slate-100,
+html.colorful .bg-slate-200 {
+  background: rgba(0, 212, 255, 0.08) !important;
+}
+
+html.colorful .bg-gray-700,
+html.colorful .bg-gray-800,
+html.colorful .bg-gray-900,
+html.colorful .bg-slate-700,
+html.colorful .bg-slate-800,
+html.colorful .bg-slate-900 {
+  background: linear-gradient(135deg, #1a1f3c 0%, #0c0f1a 100%) !important;
+}
+
+/* Override hardcoded hex backgrounds */
+html.colorful [class*="bg-\[#0"],
+html.colorful [class*="bg-\[#1"] {
+  background: linear-gradient(135deg, #1a1f3c 0%, #0c0f1a 100%) !important;
+}
+
+/* ALL borders get cyan glow */
+html.colorful [class*="border-gray"],
+html.colorful [class*="border-slate"],
+html.colorful [class*="border-\["] {
+  border-color: rgba(0, 212, 255, 0.25) !important;
+}
+
+/* ALL rounded cards get cyan glow effect */
+html.colorful .rounded-lg,
+html.colorful .rounded-xl,
+html.colorful .rounded-2xl,
+html.colorful .rounded-3xl {
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.12),
+              0 4px 20px rgba(0, 0, 0, 0.4),
+              inset 0 1px 0 rgba(0, 212, 255, 0.1) !important;
+}
+
+/* Buttons and links glow on hover */
+html.colorful button:hover,
+html.colorful a:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.35);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Input/Select focus gets gold glow */
+html.colorful input:focus,
+html.colorful select:focus,
+html.colorful textarea:focus {
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.4) !important;
+  border-color: #FFD700 !important;
+  outline: none !important;
+}
+
+/* Status badge backgrounds - vibrant */
+html.colorful [class*="bg-green-"][class*="\/10"],
+html.colorful [class*="bg-emerald-"][class*="\/10"] {
+  background: rgba(0, 245, 212, 0.25) !important;
+}
+
+html.colorful [class*="bg-red-"][class*="\/10"] {
+  background: rgba(255, 107, 107, 0.25) !important;
+}
+
+html.colorful [class*="bg-yellow-"][class*="\/10"],
+html.colorful [class*="bg-amber-"][class*="\/10"],
+html.colorful [class*="bg-orange-"][class*="\/10"] {
+  background: rgba(255, 215, 0, 0.25) !important;
+}
+
+html.colorful [class*="bg-blue-"][class*="\/10"],
+html.colorful [class*="bg-indigo-"][class*="\/10"] {
+  background: rgba(0, 212, 255, 0.25) !important;
+}
+
+html.colorful [class*="bg-purple-"][class*="\/10"],
+html.colorful [class*="bg-violet-"][class*="\/10"] {
+  background: rgba(168, 85, 247, 0.25) !important;
+}
+
+/* Sidebar - Dramatic purple gradient */
+html.colorful aside,
+html.colorful nav[class*="sidebar"],
+html.colorful [class*="sidebar"] {
+  background: linear-gradient(180deg,
+    #1e1b4b 0%,
+    #312e81 25%,
+    #4338ca 50%,
+    #312e81 75%,
+    #1e1b4b 100%
+  ) !important;
+}
+
+/* Table headers get gradient */
+html.colorful th,
+html.colorful thead tr {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%) !important;
+}
+
+/* Table row hover - cyan tint */
+html.colorful tbody tr:hover {
+  background: rgba(0, 212, 255, 0.1) !important;
+}
+
+/* Selected rows - stronger glow */
+html.colorful tr[class*="selected"],
+html.colorful [class*="row-selected"] {
+  background: rgba(0, 212, 255, 0.2) !important;
+  box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+/* Dropdown menus */
+html.colorful [role="menu"],
+html.colorful [role="listbox"],
+html.colorful .dropdown-menu {
+  background: linear-gradient(135deg, #1a1f3c 0%, #0c0f1a 100%) !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 255, 0.1) !important;
+}
+
+/* Progress bars - rainbow gradient */
+html.colorful [role="progressbar"],
+html.colorful .progress-bar,
+html.colorful [class*="progress"] {
+  background: linear-gradient(90deg, #00D4FF, #00F5D4, #FFD700) !important;
+}
+
+/* Tooltips */
+html.colorful [role="tooltip"],
+html.colorful .tooltip {
+  background: rgba(26, 31, 60, 0.95) !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2) !important;
+}
+
+/* Scrollbar styling */
+html.colorful ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.colorful ::-webkit-scrollbar-track {
+  background: #0c0f1a;
+}
+
+html.colorful ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00D4FF, #A855F7);
+  border-radius: 4px;
+}
+
+html.colorful ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #00F5D4, #00D4FF);
+}
+
+/* Tremor components override */
+html.colorful [class*="tremor"] {
+  --tremor-background-default: #1a1f3c !important;
+  --tremor-border-default: rgba(0, 212, 255, 0.25) !important;
+}
+
+/* Recharts override */
+html.colorful .recharts-cartesian-grid line {
+  stroke: rgba(0, 212, 255, 0.15) !important;
+}
+
+html.colorful .recharts-tooltip-wrapper {
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
+}
+
+/* Badges and pills */
+html.colorful .badge,
+html.colorful [class*="badge"],
+html.colorful [class*="pill"] {
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+/* Active/Selected states glow */
+html.colorful [class*="active"],
+html.colorful [aria-selected="true"],
+html.colorful [data-state="active"] {
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+/* Skeleton loading - cyan pulse */
+html.colorful .animate-pulse {
+  background: linear-gradient(90deg,
+    rgba(0, 212, 255, 0.1) 0%,
+    rgba(0, 212, 255, 0.2) 50%,
+    rgba(0, 212, 255, 0.1) 100%
+  ) !important;
+  background-size: 200% 100%;
+  animation: colorful-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes colorful-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Text selection */
+html.colorful ::selection {
+  background: rgba(0, 212, 255, 0.4);
+  color: white;
+}
+
+/* === MORE COLORFUL MODE ENHANCEMENTS === */
+
+/* Card hover lift effect */
+html.colorful .card-gradient:hover,
+html.colorful [class*="Card"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px rgba(0, 212, 255, 0.2),
+              0 10px 40px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease;
+}
+
+/* All primary buttons get electric glow */
+html.colorful button[class*="bg-accent"],
+html.colorful button[class*="primary"],
+html.colorful [class*="btn-primary"] {
+  background: linear-gradient(135deg, #00D4FF 0%, #00A3CC 100%) !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+html.colorful button[class*="bg-accent"]:hover,
+html.colorful button[class*="primary"]:hover {
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Checkboxes and radio buttons */
+html.colorful input[type="checkbox"]:checked,
+html.colorful input[type="radio"]:checked {
+  background: linear-gradient(135deg, #00D4FF 0%, #00F5D4 100%) !important;
+  border-color: #00D4FF !important;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+}
+
+/* All text links get cyan color */
+html.colorful a:not([class*="bg-"]) {
+  color: #00D4FF;
+}
+
+html.colorful a:not([class*="bg-"]):hover {
+  color: #00F5D4;
+  text-shadow: 0 0 10px rgba(0, 245, 212, 0.4);
+}
+
+/* Sort indicator highlight */
+html.colorful th:hover {
+  color: #00D4FF !important;
+  cursor: pointer;
+}
+
+/* Modal/Dialog backgrounds */
+html.colorful [role="dialog"],
+html.colorful .modal,
+html.colorful [class*="modal"] {
+  background: linear-gradient(145deg, #1a1f3c 0%, #0c0f1a 100%) !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+  box-shadow: 0 0 60px rgba(0, 212, 255, 0.2),
+              0 25px 50px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Tab active state */
+html.colorful [role="tab"][aria-selected="true"],
+html.colorful .tab-active {
+  background: rgba(0, 212, 255, 0.2) !important;
+  border-bottom: 2px solid #00D4FF !important;
+  color: #00D4FF !important;
+  box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+}
+
+/* Charts area fill with gradient */
+html.colorful .recharts-area-area {
+  fill: url(#colorfulGradient) !important;
+}
+
+/* Highlight important numbers */
+html.colorful .font-black,
+html.colorful .font-bold {
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+}
+
+/* Dividers get subtle glow */
+html.colorful hr,
+html.colorful [class*="divide-"] > * + * {
+  border-color: rgba(0, 212, 255, 0.2) !important;
+}
+
+/* Empty state styling */
+html.colorful .text-text-muted {
+  color: #7dd3fc;
+}
+
+/* Focus ring for accessibility */
+html.colorful *:focus-visible {
+  outline: 2px solid #00D4FF !important;
+  outline-offset: 2px;
 }
 
 /* === RTL SUPPORT === */

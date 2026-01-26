@@ -67,9 +67,18 @@ export default function PerformanceDashboard() {
         const response = await apiClient.get('/api/v1/auth/onboarding/status');
         const status = response.data;
 
-        if (!status.onboarding_completed) {
-          // Redirect to appropriate step using current locale
-          router.push(`/${locale}/${status.next_step}`);
+        if (!status.onboarding_completed && status.next_step) {
+          // Map backend step names to actual frontend routes
+          const stepRoutes: Record<string, string> = {
+            'connect_facebook': 'onboard/connect-facebook',
+            'select_accounts': 'select-accounts',
+            'complete_profile': 'account-quiz',
+          };
+          const route = stepRoutes[status.next_step];
+          if (route) {
+            router.push(`/${locale}/${route}`);
+          }
+          // If next_step is 'completed' or unknown, don't redirect
         }
       } catch (error) {
         console.error('Error checking onboarding:', error);
@@ -77,7 +86,7 @@ export default function PerformanceDashboard() {
     };
 
     checkOnboarding();
-  }, [router]);
+  }, [router, locale]);
 
   // Sync status state
   const [syncStatus, setSyncStatus] = useState<{
@@ -128,7 +137,7 @@ export default function PerformanceDashboard() {
 
   // Chart metric selection
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('actions');
-  const [granularity, setGranularity] = useState<TimeGranularity>('day');
+  const [granularity, setGranularity] = useState<TimeGranularity>('week');
 
   // React Query: Fetch Metrics
   const {
@@ -171,41 +180,41 @@ export default function PerformanceDashboard() {
     >
       {/* Sync Status Overlay */}
       {syncStatus && syncStatus.status === 'in_progress' && (
-        <div className="mb-6 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm">
+        <div className="mb-6 bg-gradient-to-r from-info-bg to-accent/10 border border-info/30 rounded-2xl p-6 backdrop-blur-sm">
           <div className="flex items-center gap-4 mb-4">
             <div className="relative">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-              <div className="absolute inset-0 w-8 h-8 bg-blue-400/20 rounded-full animate-ping" />
+              <Loader2 className="w-8 h-8 text-info animate-spin" />
+              <div className="absolute inset-0 w-8 h-8 bg-info/20 rounded-full animate-ping" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-bold text-lg">Setting Up Your Dashboard</h3>
-              <p className="text-gray-300 text-sm">We're importing your Facebook ad data. This usually takes 1-2 minutes...</p>
+              <h3 className="text-foreground font-bold text-lg">Setting Up Your Dashboard</h3>
+              <p className="text-text-muted text-sm">We're importing your Facebook ad data. This usually takes 1-2 minutes...</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-blue-400">{syncStatus.progress_percent}%</div>
-              <div className="text-xs text-gray-400">Complete</div>
+              <div className="text-3xl font-bold text-info">{syncStatus.progress_percent}%</div>
+              <div className="text-xs text-text-muted">Complete</div>
             </div>
           </div>
-          <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-secondary/50 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300 animate-pulse"
+              className="bg-gradient-to-r from-info to-accent h-2 rounded-full transition-all duration-300 animate-pulse"
               style={{ width: `${syncStatus.progress_percent}%` }}
             />
           </div>
-          <div className="mt-4 text-xs text-gray-400">
-            💡 Your dashboard will update automatically when ready. Feel free to explore the interface!
+          <div className="mt-4 text-xs text-text-muted">
+            Your dashboard will update automatically when ready. Feel free to explore the interface!
           </div>
         </div>
       )}
 
       {/* Sync Completed Banner - only show if user waited for sync */}
       {syncStatus && syncStatus.status === 'completed' && sawSyncInProgress && (
-        <div className="mb-6 bg-green-900/20 border border-green-500/30 rounded-xl p-4">
+        <div className="mb-6 bg-success-bg border border-success/30 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-400" />
+            <CheckCircle className="w-5 h-5 text-success" />
             <div>
-              <p className="text-white font-semibold">Your data is ready!</p>
-              <p className="text-gray-400 text-sm">Showing real-time insights from your Facebook ad accounts</p>
+              <p className="text-foreground font-semibold">Your data is ready!</p>
+              <p className="text-text-muted text-sm">Showing real-time insights from your Facebook ad accounts</p>
             </div>
           </div>
         </div>
@@ -224,7 +233,7 @@ export default function PerformanceDashboard() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-900/50 border border-red-400 text-red-300 rounded-xl">
+        <div className="mb-6 p-4 bg-error-bg border border-error text-error rounded-xl">
           <p className="font-bold">{t('common.error_loading')}</p>
           <p className="text-sm mt-1">{error}</p>
         </div>

@@ -1,13 +1,21 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { AccountProvider } from '@/context/AccountContext';
+import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+
+    // DEBUG: Log every route change
+    useEffect(() => {
+        console.log('[Providers] Route changed to:', pathname);
+    }, [pathname]);
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
             queries: {
@@ -23,10 +31,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <AccountProvider>
-                    {children}
-                    <ChatWidget />
-                </AccountProvider>
+                <UserProvider>
+                    <AccountProvider>
+                        {children}
+                        <ChatWidget />
+                    </AccountProvider>
+                </UserProvider>
             </ThemeProvider>
         </QueryClientProvider>
     );

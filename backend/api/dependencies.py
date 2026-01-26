@@ -58,7 +58,11 @@ async def get_current_user(
     if auth_token is None:
         auth_token = request.cookies.get("auth_token")
 
+    print(f"[DEBUG] Token from header: {token is not None}, Token from cookie: {request.cookies.get('auth_token') is not None}")
+    print(f"[DEBUG] JWT_SECRET_KEY prefix: {settings.JWT_SECRET_KEY[:20]}...")
+
     if auth_token is None:
+        print("[DEBUG] No auth token found!")
         raise credentials_exception
 
     try:
@@ -69,9 +73,11 @@ async def get_current_user(
             algorithms=[settings.ALGORITHM]
         )
         user_id: str = payload.get("sub")
+        print(f"[DEBUG] Token decoded successfully, user_id: {user_id}")
         if user_id is None:
             raise credentials_exception
-    except JWTError:
+    except JWTError as e:
+        print(f"[DEBUG] JWT decode error: {e}")
         raise credentials_exception
 
     # Fetch user from database

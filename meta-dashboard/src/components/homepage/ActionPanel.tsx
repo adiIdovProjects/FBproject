@@ -45,7 +45,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onOpenChat }) => {
 
   return (
     <Card className="card-gradient border-border-subtle">
-      <Text className="text-white font-bold text-lg mb-4">
+      <Text className="text-foreground font-bold text-lg mb-4">
         {t('homepage.actions.title')}
       </Text>
 

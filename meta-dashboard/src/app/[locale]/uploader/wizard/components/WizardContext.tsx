@@ -4,6 +4,14 @@ import { createContext, useContext, useReducer, ReactNode } from 'react';
 import { GeoLocation, InterestTarget, CampaignCloneData } from '@/services/mutations.service';
 import { CustomPinLocation } from '@/components/uploader/InteractiveLocationMap';
 
+// Types for carousel card
+export interface CarouselCardState {
+    id: string;
+    file: File | null;
+    previewUrl: string | null;
+    title: string;
+}
+
 // Types for ad creative
 export interface AdCreative {
     id: string;
@@ -24,6 +32,9 @@ export interface AdCreative {
         message: string;
         source: 'facebook' | 'instagram';
     };
+    // For carousel ads
+    isCarousel?: boolean;
+    carouselCards?: CarouselCardState[];
 }
 
 // Full wizard state
@@ -131,7 +142,9 @@ const initialState: WizardState = {
         link: '',
         file: null,
         previewUrl: null,
-        leadFormId: ''
+        leadFormId: '',
+        isCarousel: false,
+        carouselCards: []
     }]
 };
 
@@ -251,7 +264,9 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
                 file: null,  // Will need to be re-uploaded or use existing image
                 previewUrl: ad.image_url || ad.video_url || null,
                 leadFormId: ad.lead_form_id || '',
-                existingImageUrl: ad.image_url || undefined
+                existingImageUrl: ad.image_url || undefined,
+                isCarousel: false,
+                carouselCards: []
             }));
 
             // If no ads, create a blank one
@@ -264,7 +279,9 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
                     link: '',
                     file: null,
                     previewUrl: null,
-                    leadFormId: ''
+                    leadFormId: '',
+                    isCarousel: false,
+                    carouselCards: []
                 });
             }
 

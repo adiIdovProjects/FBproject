@@ -54,7 +54,7 @@ export default function TargetingPage() {
 
     // Chart state
     const [selectedMetric, setSelectedMetric] = useState<MetricType>('spend');
-    const [granularity, setGranularity] = useState<TimeGranularity>('day');
+    const [granularity, setGranularity] = useState<TimeGranularity>('week');
     const [trendData, setTrendData] = useState<any[]>([]);
     const [isTrendLoading, setIsTrendLoading] = useState(false);
     const [currency, setCurrency] = useState<string>('USD');

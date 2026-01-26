@@ -104,18 +104,18 @@ const QuickStats: React.FC<QuickStatsProps> = ({ accountId, startDate: propStart
         >
           <div className="flex items-start justify-between">
             <div>
-              <Text className="text-gray-400 text-xs font-semibold uppercase tracking-wider">
+              <Text className="text-text-muted text-xs font-semibold uppercase tracking-wider">
                 {stat.label}
               </Text>
               {stat.sublabel && (
-                <Text className="text-gray-500 text-[10px]">{stat.sublabel}</Text>
+                <Text className="text-text-disabled text-[10px]">{stat.sublabel}</Text>
               )}
               {isLoading ? (
                 <div className="mt-2 flex items-center">
                   <Loader2 className="w-5 h-5 animate-spin text-accent" />
                 </div>
               ) : (
-                <Metric className="text-white text-3xl font-black mt-1">
+                <Metric className="text-foreground text-3xl font-black mt-1">
                   {stat.value}
                 </Metric>
               )}

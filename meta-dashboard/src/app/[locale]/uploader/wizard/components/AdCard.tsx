@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Upload, CheckCircle, X, Loader2, ExternalLink, RefreshCw, Plus, Copy, Lightbulb, ChevronDown, Image as ImageIcon } from 'lucide-react';
-import { AdCreative, useWizard } from './WizardContext';
+import { Upload, CheckCircle, X, Loader2, ExternalLink, RefreshCw, Plus, Copy, Lightbulb, ChevronDown, Image as ImageIcon, LayoutGrid, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { AdCreative, CarouselCardState, useWizard } from './WizardContext';
 import { mutationsService, PagePost } from '@/services/mutations.service';
 import PostPicker from './PostPicker';
 
@@ -77,6 +77,7 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
     const [isDuplicatingForm, setIsDuplicatingForm] = useState(false);
     const [showFormTips, setShowFormTips] = useState(false);
     const [showPostPicker, setShowPostPicker] = useState(false);
+    const [carouselPreviewIndex, setCarouselPreviewIndex] = useState(0);
 
     const isLeadForm = state.objective === 'LEADS' && state.leadType === 'FORM';
     const isWhatsApp = state.objective === 'WHATSAPP';
@@ -85,7 +86,10 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
 
     // Validation checks for checklist
     const usingExistingPost = !!ad.useExistingPost && !!ad.objectStoryId;
-    const hasMedia = usingExistingPost || !!ad.file || !!ad.existingImageUrl;
+    const isCarouselMode = !!ad.isCarousel;
+    const carouselCards = ad.carouselCards || [];
+    const hasCarouselMedia = isCarouselMode && carouselCards.length >= 2 && carouselCards.every(c => c.file || c.previewUrl);
+    const hasMedia = usingExistingPost || (isCarouselMode ? hasCarouselMedia : (!!ad.file || !!ad.existingImageUrl));
     const hasTitle = usingExistingPost || (ad.title.length > 0 && ad.title.length <= 40);
     const hasBody = usingExistingPost || ad.body.length > 0;
     const hasDestination = isLeadForm ? !!ad.leadFormId : (needsUrl ? !!ad.link : true);
@@ -174,6 +178,73 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
             objectStoryPreview: undefined,
             previewUrl: null  // Clear the preview image from existing post
         });
+    };
+
+    // Toggle carousel mode
+    const toggleCarouselMode = (enabled: boolean) => {
+        if (enabled) {
+            // Initialize with 2 empty cards (minimum for carousel)
+            updateAd({
+                isCarousel: true,
+                carouselCards: [
+                    { id: crypto.randomUUID(), file: null, previewUrl: null, title: '' },
+                    { id: crypto.randomUUID(), file: null, previewUrl: null, title: '' }
+                ],
+                file: null,
+                previewUrl: null
+            });
+        } else {
+            updateAd({
+                isCarousel: false,
+                carouselCards: []
+            });
+        }
+        setCarouselPreviewIndex(0);
+    };
+
+    // Add carousel card
+    const addCarouselCard = () => {
+        if (carouselCards.length >= 10) return;
+        const newCard: CarouselCardState = {
+            id: crypto.randomUUID(),
+            file: null,
+            previewUrl: null,
+            title: ''
+        };
+        updateAd({ carouselCards: [...carouselCards, newCard] });
+    };
+
+    // Remove carousel card
+    const removeCarouselCard = (cardId: string) => {
+        if (carouselCards.length <= 2) return; // Minimum 2 cards
+        const newCards = carouselCards.filter(c => c.id !== cardId);
+        updateAd({ carouselCards: newCards });
+        if (carouselPreviewIndex >= newCards.length) {
+            setCarouselPreviewIndex(Math.max(0, newCards.length - 1));
+        }
+    };
+
+    // Update carousel card
+    const updateCarouselCard = (cardId: string, updates: Partial<CarouselCardState>) => {
+        const newCards = carouselCards.map(c => c.id === cardId ? { ...c, ...updates } : c);
+        updateAd({ carouselCards: newCards });
+    };
+
+    // Handle carousel card file upload
+    const handleCarouselFileChange = (cardId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const isVideo = file.type.startsWith('video/');
+        const maxSize = isVideo ? 4 * 1024 * 1024 * 1024 : 30 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            alert(isVideo ? 'Video must be under 4GB' : 'Image must be under 30MB');
+            return;
+        }
+
+        const previewUrl = URL.createObjectURL(file);
+        updateCarouselCard(cardId, { file, previewUrl });
     };
 
     // Create lead form via API
@@ -391,6 +462,35 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                             {t('wizard_simple.use_existing') || 'Use Existing Post'}
                         </button>
                     </div>
+                    {/* Toggle: Single vs Carousel (only when creating new) */}
+                    {!ad.useExistingPost && (
+                        <div className="flex bg-gray-800 rounded-lg p-0.5">
+                            <button
+                                type="button"
+                                onClick={() => toggleCarouselMode(false)}
+                                className={`px-3 py-1 text-xs rounded-md transition-colors flex items-center gap-1 ${
+                                    !isCarouselMode
+                                        ? 'bg-purple-500 text-white'
+                                        : 'text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                <ImageIcon className="w-3 h-3" />
+                                {t('wizard_simple.single') || 'Single'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => toggleCarouselMode(true)}
+                                className={`px-3 py-1 text-xs rounded-md transition-colors flex items-center gap-1 ${
+                                    isCarouselMode
+                                        ? 'bg-purple-500 text-white'
+                                        : 'text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                <LayoutGrid className="w-3 h-3" />
+                                {t('wizard_simple.carousel') || 'Carousel'}
+                            </button>
+                        </div>
+                    )}
                     {canRemove && (
                         <button
                             type="button"
@@ -452,8 +552,86 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 </button>
                             )}
                         </div>
+                    ) : isCarouselMode ? (
+                        /* Carousel Mode - Multiple Cards */
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-purple-400 font-medium flex items-center gap-1">
+                                    <LayoutGrid className="w-3 h-3" />
+                                    {t('wizard_simple.carousel_cards') || 'Carousel Cards'} ({carouselCards.length}/10)
+                                </span>
+                                {carouselCards.length < 10 && (
+                                    <button
+                                        type="button"
+                                        onClick={addCarouselCard}
+                                        className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                        {t('wizard_simple.add_card') || 'Add Card'}
+                                    </button>
+                                )}
+                            </div>
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                {carouselCards.map((card, idx) => (
+                                    <div key={card.id} className="bg-gray-800/50 rounded-lg p-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-400 font-medium">
+                                                {t('wizard_simple.card') || 'Card'} {idx + 1}
+                                            </span>
+                                            {carouselCards.length > 2 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeCarouselCard(card.id)}
+                                                    className="text-gray-500 hover:text-red-400 p-1"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {/* Card Image Upload */}
+                                        <div className="border border-dashed border-gray-600 rounded-lg p-2 text-center hover:border-purple-500 transition-colors relative">
+                                            <input
+                                                type="file"
+                                                accept="image/*,video/*"
+                                                onChange={(e) => handleCarouselFileChange(card.id, e)}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                            <div className="flex items-center gap-2 pointer-events-none">
+                                                {card.previewUrl ? (
+                                                    <>
+                                                        <img src={card.previewUrl} alt="" className="w-10 h-10 object-cover rounded" />
+                                                        <span className="text-xs text-green-400 truncate flex-1">
+                                                            {card.file?.name || (t('wizard_simple.image_selected') || 'Image selected')}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-4 h-4 text-gray-500" />
+                                                        <span className="text-xs text-gray-500">
+                                                            {t('wizard_simple.upload_card_image') || 'Upload image'}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* Card Title */}
+                                        <input
+                                            type="text"
+                                            value={card.title}
+                                            onChange={(e) => updateCarouselCard(card.id, { title: e.target.value })}
+                                            placeholder={t('wizard_simple.card_title') || 'Card headline'}
+                                            className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs focus:border-purple-500 outline-none"
+                                            maxLength={40}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-gray-500">
+                                {t('wizard_simple.carousel_hint') || 'Minimum 2 cards, maximum 10 cards'}
+                            </p>
+                        </div>
                     ) : (
-                        /* File Upload - Normal Mode */
+                        /* File Upload - Normal Single Mode */
                         <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 text-center hover:border-blue-500 transition-colors relative">
                             <input
                                 type="file"
@@ -825,35 +1003,95 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                     {ad.body || "Your ad text here..."}
                                 </p>
                             </div>
-                            <div className="bg-gray-200 aspect-video w-full flex items-center justify-center overflow-hidden">
-                                {ad.previewUrl ? (
-                                    ad.file?.type.startsWith('video') ? (
-                                        <video
-                                            src={ad.previewUrl}
-                                            className="w-full h-full object-cover"
-                                            muted
-                                            playsInline
-                                        />
-                                    ) : (
-                                        <img src={ad.previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                    )
-                                ) : (
-                                    <p className="text-gray-400 text-xs">Preview</p>
-                                )}
-                            </div>
-                            <div className="bg-gray-100 p-2 flex justify-between items-center">
-                                <div className="flex-1 min-w-0 pr-2">
-                                    <p className="text-[8px] text-gray-500 uppercase truncate">
-                                        {isLeadForm ? 'FACEBOOK' : 'WEBSITE'}
-                                    </p>
-                                    <h4 className="font-bold text-gray-900 truncate text-xs">
-                                        {ad.title || "Headline"}
-                                    </h4>
+                            {isCarouselMode && carouselCards.length > 0 ? (
+                                /* Carousel Preview */
+                                <div className="relative">
+                                    <div className="bg-gray-200 aspect-square w-full flex items-center justify-center overflow-hidden">
+                                        {carouselCards[carouselPreviewIndex]?.previewUrl ? (
+                                            <img
+                                                src={carouselCards[carouselPreviewIndex].previewUrl!}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <p className="text-gray-400 text-xs">{t('wizard_simple.card') || 'Card'} {carouselPreviewIndex + 1}</p>
+                                        )}
+                                    </div>
+                                    {/* Carousel Navigation */}
+                                    <div className="absolute inset-y-0 left-0 flex items-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCarouselPreviewIndex(Math.max(0, carouselPreviewIndex - 1))}
+                                            disabled={carouselPreviewIndex === 0}
+                                            className="bg-white/80 p-1 rounded-full ml-1 disabled:opacity-30"
+                                        >
+                                            <ChevronLeft className="w-4 h-4 text-gray-800" />
+                                        </button>
+                                    </div>
+                                    <div className="absolute inset-y-0 right-0 flex items-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCarouselPreviewIndex(Math.min(carouselCards.length - 1, carouselPreviewIndex + 1))}
+                                            disabled={carouselPreviewIndex === carouselCards.length - 1}
+                                            className="bg-white/80 p-1 rounded-full mr-1 disabled:opacity-30"
+                                        >
+                                            <ChevronRight className="w-4 h-4 text-gray-800" />
+                                        </button>
+                                    </div>
+                                    {/* Dots indicator */}
+                                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                                        {carouselCards.map((_, idx) => (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => setCarouselPreviewIndex(idx)}
+                                                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                                                    idx === carouselPreviewIndex ? 'bg-blue-500' : 'bg-gray-400'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    {/* Card title below image */}
+                                    <div className="bg-gray-100 p-2">
+                                        <h4 className="font-bold text-gray-900 truncate text-xs">
+                                            {carouselCards[carouselPreviewIndex]?.title || `Card ${carouselPreviewIndex + 1}`}
+                                        </h4>
+                                    </div>
                                 </div>
-                                <span className="bg-gray-300 px-2 py-0.5 rounded text-[10px] font-semibold text-gray-700">
-                                    {ad.cta.replace('_', ' ')}
-                                </span>
-                            </div>
+                            ) : (
+                                /* Single Image/Video Preview */
+                                <>
+                                    <div className="bg-gray-200 aspect-video w-full flex items-center justify-center overflow-hidden">
+                                        {ad.previewUrl ? (
+                                            ad.file?.type.startsWith('video') ? (
+                                                <video
+                                                    src={ad.previewUrl}
+                                                    className="w-full h-full object-cover"
+                                                    muted
+                                                    playsInline
+                                                />
+                                            ) : (
+                                                <img src={ad.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                            )
+                                        ) : (
+                                            <p className="text-gray-400 text-xs">Preview</p>
+                                        )}
+                                    </div>
+                                    <div className="bg-gray-100 p-2 flex justify-between items-center">
+                                        <div className="flex-1 min-w-0 pr-2">
+                                            <p className="text-[8px] text-gray-500 uppercase truncate">
+                                                {isLeadForm ? 'FACEBOOK' : 'WEBSITE'}
+                                            </p>
+                                            <h4 className="font-bold text-gray-900 truncate text-xs">
+                                                {ad.title || "Headline"}
+                                            </h4>
+                                        </div>
+                                        <span className="bg-gray-300 px-2 py-0.5 rounded text-[10px] font-semibold text-gray-700">
+                                            {ad.cta.replace('_', ' ')}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -896,7 +1134,10 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
             <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-800">
                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasMedia ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
                     {hasMedia ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
-                    {t('wizard.media') || 'Media'}
+                    {isCarouselMode
+                        ? (t('wizard_simple.carousel_media') || `Carousel (${carouselCards.filter(c => c.previewUrl).length}/${carouselCards.length})`)
+                        : (t('wizard.media') || 'Media')
+                    }
                 </span>
                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${hasBody ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
                     {hasBody ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}

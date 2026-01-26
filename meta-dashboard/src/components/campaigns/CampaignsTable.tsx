@@ -218,7 +218,7 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-black/20 border-b border-border-subtle">
+            <tr className="bg-secondary/50 border-b border-border-subtle">
               {/* Checkbox Column */}
               {onSelectionChange && (
                 <th className="px-4 py-5 text-left">
