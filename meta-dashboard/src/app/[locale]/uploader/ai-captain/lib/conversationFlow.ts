@@ -4,7 +4,7 @@ import { CaptainFlow, QuickReplyOption } from '../components/CaptainContext';
 export interface ConversationNode {
     id: string;
     questionKey: string; // i18n key
-    inputType: 'quick_reply' | 'text' | 'location_search' | 'file_upload' | 'campaign_select' | 'adset_select' | 'budget';
+    inputType: 'quick_reply' | 'text' | 'location_search' | 'file_upload' | 'campaign_select' | 'adset_select' | 'budget' | 'age_range' | 'lead_type_select' | 'add_another_ad' | 'targeting_type_select' | 'ad_format_select' | 'interest_search' | 'audience_select';
     options?: QuickReplyOption[];
     placeholder?: string;
     nextNode: (answer: string, state: any) => string | 'summary';
@@ -13,23 +13,24 @@ export interface ConversationNode {
 
 // Quick reply options for objectives
 const OBJECTIVE_OPTIONS: QuickReplyOption[] = [
-    { label: 'Sales', value: 'SALES', icon: '💰' },
-    { label: 'Leads', value: 'LEADS', icon: '📋' },
-    { label: 'Traffic', value: 'TRAFFIC', icon: '🌐' },
-    { label: 'Engagement', value: 'ENGAGEMENT', icon: '❤️' },
+    { label: 'Sales', value: 'SALES', icon: '💰', description: 'captain.objective_desc_sales' },
+    { label: 'Leads', value: 'LEADS', icon: '📋', description: 'captain.objective_desc_leads' },
+    { label: 'Traffic', value: 'TRAFFIC', icon: '🌐', description: 'captain.objective_desc_traffic' },
+    { label: 'Engagement', value: 'ENGAGEMENT', icon: '❤️', description: 'captain.objective_desc_engagement' },
+    { label: 'WhatsApp', value: 'WHATSAPP', icon: '💬', description: 'captain.objective_desc_whatsapp' },
+    { label: 'Calls', value: 'CALLS', icon: '📞', description: 'captain.objective_desc_calls' },
 ];
 
 const LEAD_TYPE_OPTIONS: QuickReplyOption[] = [
-    { label: 'Website', value: 'WEBSITE', icon: '🔗' },
-    { label: 'Instant Form', value: 'FORM', icon: '📝' },
+    { label: 'Website', value: 'WEBSITE', icon: '🔗', description: 'captain.lead_type_website_desc' },
+    { label: 'Instant Form', value: 'FORM', icon: '📝', description: 'captain.lead_type_form_desc' },
 ];
 
-const AGE_OPTIONS: QuickReplyOption[] = [
-    { label: '18-24', value: '18-24', icon: '👶' },
-    { label: '25-34', value: '25-34', icon: '🧑' },
-    { label: '35-44', value: '35-44', icon: '👨' },
-    { label: '45-65', value: '45-65', icon: '👴' },
-    { label: 'All Ages', value: 'all', icon: '👥' },
+const ADD_ANOTHER_OPTIONS: QuickReplyOption[] = [
+    { label: 'Same creative, different copy', value: 'same_creative', icon: '📝' },
+    { label: 'Same copy, different creative', value: 'same_copy', icon: '🖼️' },
+    { label: 'Start from scratch', value: 'scratch', icon: '✨' },
+    { label: 'Done adding ads', value: 'done', icon: '✅' },
 ];
 
 const GENDER_OPTIONS: QuickReplyOption[] = [
@@ -56,6 +57,15 @@ const EDIT_TYPE_OPTIONS: QuickReplyOption[] = [
     { label: 'Edit Ad Creative', value: 'creative', icon: '🖼️' },
 ];
 
+const TARGETING_TYPE_OPTIONS: QuickReplyOption[] = [
+    { label: 'Advantage+', value: 'advantage', icon: '🚀', description: 'captain.targeting_advantage_desc' },
+    { label: 'Custom', value: 'custom', icon: '🎯', description: 'captain.targeting_custom_desc' },
+];
+
+const AD_FORMAT_OPTIONS: QuickReplyOption[] = [
+    { label: 'Single Image/Video', value: 'single', icon: '🖼️', description: 'captain.ad_format_single_desc' },
+];
+
 // Create campaign flow nodes
 export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
     welcome: {
@@ -68,7 +78,7 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
     lead_type: {
         id: 'lead_type',
         questionKey: 'captain.ask_lead_type',
-        inputType: 'quick_reply',
+        inputType: 'lead_type_select',
         options: LEAD_TYPE_OPTIONS,
         nextNode: () => 'campaign_name',
     },
@@ -84,13 +94,31 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         id: 'location',
         questionKey: 'captain.ask_location',
         inputType: 'location_search',
+        nextNode: () => 'targeting_type',
+    },
+    targeting_type: {
+        id: 'targeting_type',
+        questionKey: 'captain.ask_targeting_type',
+        inputType: 'targeting_type_select',
+        options: TARGETING_TYPE_OPTIONS,
+        nextNode: (answer) => answer === 'advantage' ? 'age' : 'audiences',
+    },
+    audiences: {
+        id: 'audiences',
+        questionKey: 'captain.ask_audiences',
+        inputType: 'audience_select',
+        nextNode: () => 'interests',
+    },
+    interests: {
+        id: 'interests',
+        questionKey: 'captain.ask_interests',
+        inputType: 'interest_search',
         nextNode: () => 'age',
     },
     age: {
         id: 'age',
         questionKey: 'captain.ask_age',
-        inputType: 'quick_reply',
-        options: AGE_OPTIONS,
+        inputType: 'age_range',
         nextNode: () => 'gender',
     },
     gender: {
@@ -118,6 +146,13 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
             return !isNaN(num) && num >= 5;
         },
     },
+    ad_format: {
+        id: 'ad_format',
+        questionKey: 'captain.ask_ad_format',
+        inputType: 'ad_format_select',
+        options: AD_FORMAT_OPTIONS,
+        nextNode: () => 'creative',
+    },
     creative: {
         id: 'creative',
         questionKey: 'captain.ask_creative',
@@ -137,7 +172,17 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_body',
         inputType: 'text',
         placeholder: 'captain.placeholder_body',
-        nextNode: () => 'link',
+        nextNode: (_, state) => {
+            // Skip link for WhatsApp and Calls objectives
+            if (state.objective === 'WHATSAPP' || state.objective === 'CALLS') {
+                return 'cta';
+            }
+            // Skip link for instant forms
+            if (state.leadType === 'FORM') {
+                return 'cta';
+            }
+            return 'link';
+        },
         validate: (answer) => answer.trim().length > 0,
     },
     link: {
@@ -145,13 +190,14 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_link',
         inputType: 'text',
         placeholder: 'captain.placeholder_link',
-        nextNode: (_, state) => state.leadType === 'FORM' ? 'cta' : 'cta',
+        nextNode: () => 'cta',
         validate: (answer) => {
+            if (!answer.trim()) return false;
             try {
-                new URL(answer);
-                return true;
+                const url = new URL(answer);
+                return url.protocol === 'http:' || url.protocol === 'https:';
             } catch {
-                return answer === '' || answer.startsWith('http');
+                return false;
             }
         },
     },
@@ -160,7 +206,19 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_cta',
         inputType: 'quick_reply',
         options: CTA_OPTIONS,
-        nextNode: () => 'summary',
+        nextNode: () => 'add_another_ad',
+    },
+    add_another_ad: {
+        id: 'add_another_ad',
+        questionKey: 'captain.ask_add_another',
+        inputType: 'add_another_ad',
+        options: ADD_ANOTHER_OPTIONS,
+        nextNode: (answer) => {
+            if (answer === 'done') return 'summary';
+            if (answer === 'same_creative') return 'headline';
+            if (answer === 'same_copy') return 'creative';
+            return 'creative'; // scratch
+        },
     },
 };
 
@@ -252,8 +310,7 @@ export const EDIT_FLOW_NODES: Record<string, ConversationNode> = {
     edit_age: {
         id: 'edit_age',
         questionKey: 'captain.ask_new_age',
-        inputType: 'quick_reply',
-        options: AGE_OPTIONS,
+        inputType: 'age_range',
         nextNode: () => 'summary',
     },
     edit_creative: {

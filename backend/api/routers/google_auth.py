@@ -33,8 +33,8 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
                 import json
                 state_data = json.loads(state)
                 logger.info(f"[Google OAuth] Parsed state: {state_data}")
-            except:
-                logger.warning(f"[Google OAuth] Failed to parse state: {state}")
+            except (json.JSONDecodeError, ValueError):
+                logger.warning(f"[Google OAuth] Failed to parse state as JSON, using default flow")
                 pass  # If state is not JSON, ignore and use default flow
 
         # 1. Exchange code for tokens

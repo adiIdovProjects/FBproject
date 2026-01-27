@@ -16,11 +16,11 @@ export default function PrivacyPolicyPage() {
 
       <h2>1. Data Controller</h2>
       <p>
-        AdsAI Inc. is the data controller responsible for your personal data. If you have questions about this policy or our data practices, contact us at:
+        AdsAI Ltd. is the data controller responsible for your personal data. If you have questions about this policy or our data practices, contact us at:
       </p>
       <ul>
         <li>Email: privacy@adsai.com</li>
-        <li>Address: [Your Business Address]</li>
+        <li>Address: Tel Aviv, Israel</li>
       </ul>
 
       <h2>2. Information We Collect</h2>
@@ -151,7 +151,6 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li><strong>Email:</strong> privacy@adsai.com</li>
         <li><strong>Data Protection Officer:</strong> dpo@adsai.com</li>
-        <li><strong>EU Representative:</strong> [EU Representative Name and Contact]</li>
       </ul>
       <p>
         You also have the right to lodge a complaint with your local data protection authority.

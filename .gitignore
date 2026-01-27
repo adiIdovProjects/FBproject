@@ -1,5 +1,9 @@
 # Secrets
 .env
+.env.local
+.env.production
+meta-dashboard/.env.local
+website-front/.env.local
 
 # Python
 venv/

@@ -78,24 +78,25 @@ export const AICaptainSummary: React.FC = () => {
     const handleCreateCampaign = async () => {
         if (!selectedAccount?.page_id) return;
 
-        const ad = state.ads[0];
+        // Create campaign with first ad
+        const firstAd = state.ads[0];
 
-        // Upload media if there's a file
+        // Upload media for first ad
         let imageHash: string | undefined;
         let videoId: string | undefined;
 
-        if (ad.file) {
-            const isVideo = ad.file.type.startsWith('video/');
+        if (firstAd.file) {
+            const isVideo = firstAd.file.type.startsWith('video/');
             const result = await mutationsService.uploadMedia(
                 selectedAccount.account_id,
-                ad.file,
+                firstAd.file,
                 isVideo
             );
             imageHash = isVideo ? undefined : result.image_hash;
             videoId = isVideo ? result.video_id : undefined;
         }
 
-        // Build payload
+        // Build payload for first ad
         const payload: SmartCampaignRequest = {
             account_id: selectedAccount.account_id,
             page_id: selectedAccount.page_id,
@@ -109,22 +110,65 @@ export const AICaptainSummary: React.FC = () => {
             })),
             age_min: state.ageMin,
             age_max: state.ageMax,
-            genders: state.gender === 'all' ? undefined : state.gender === 'male' ? [1] : [2],
-            publisher_platforms: state.platform === 'all' ? undefined : [state.platform],
+            genders: state.targetingType === 'advantage' ? undefined : (state.gender === 'all' ? undefined : state.gender === 'male' ? [1] : [2]),
+            publisher_platforms: state.targetingType === 'advantage' ? undefined : (state.platform === 'all' ? undefined : [state.platform]),
+            custom_audiences: state.selectedAudiences.length > 0 ? state.selectedAudiences : undefined,
+            interests: state.selectedInterests.length > 0 ? state.selectedInterests : undefined,
             daily_budget_cents: state.dailyBudget * 100,
             pixel_id: state.selectedPixel || undefined,
+            use_advantage_targeting: state.targetingType === 'advantage' ? true : undefined,
             creative: {
-                title: ad.title,
-                body: ad.body,
-                call_to_action: ad.cta,
-                link_url: ad.link || undefined,
+                title: firstAd.title,
+                body: firstAd.body,
+                call_to_action: firstAd.cta,
+                link_url: firstAd.link || undefined,
                 image_hash: imageHash,
                 video_id: videoId,
-                lead_form_id: state.leadType === 'FORM' ? ad.leadFormId : undefined,
+                lead_form_id: state.leadType === 'FORM' ? firstAd.leadFormId : undefined,
             },
+            ad_name: firstAd.adName || undefined,
         };
 
         const result = await mutationsService.createSmartCampaign(payload);
+
+        // If there are additional ads, add them to the same adset
+        if (state.ads.length > 1 && result.adset_id) {
+            for (let i = 1; i < state.ads.length; i++) {
+                const ad = state.ads[i];
+
+                let adImageHash: string | undefined;
+                let adVideoId: string | undefined;
+
+                if (ad.file) {
+                    const isVideo = ad.file.type.startsWith('video/');
+                    const uploadResult = await mutationsService.uploadMedia(
+                        selectedAccount.account_id,
+                        ad.file,
+                        isVideo
+                    );
+                    adImageHash = isVideo ? undefined : uploadResult.image_hash;
+                    adVideoId = isVideo ? uploadResult.video_id : undefined;
+                }
+
+                await mutationsService.addCreativeToAdSet({
+                    account_id: selectedAccount.account_id,
+                    page_id: selectedAccount.page_id,
+                    campaign_id: result.campaign_id,
+                    adset_id: result.adset_id,
+                    creative: {
+                        title: ad.title,
+                        body: ad.body,
+                        call_to_action: ad.cta,
+                        link_url: ad.link || undefined,
+                        image_hash: adImageHash,
+                        video_id: adVideoId,
+                        lead_form_id: state.leadType === 'FORM' ? ad.leadFormId : undefined,
+                    },
+                    ad_name: ad.adName || `Ad ${i + 1}`,
+                });
+            }
+        }
+
         dispatch({ type: 'SET_CREATED_CAMPAIGN', campaignId: result.campaign_id });
     };
 
@@ -246,7 +290,7 @@ export const AICaptainSummary: React.FC = () => {
         return (
             <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] to-[#1a1a2e] flex flex-col items-center justify-center p-6" dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="text-7xl mb-6" style={{ animation: 'float 2s ease-in-out infinite' }}>
-                    🏴‍☠️
+                    🤖
                 </div>
                 <SpeechBubble className="mb-8">
                     <div className="flex items-center gap-3">
@@ -285,9 +329,9 @@ export const AICaptainSummary: React.FC = () => {
 
             <div className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-2xl mx-auto">
-                    {/* Captain with summary message */}
+                    {/* Assistant with summary message */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="text-6xl mb-4">🏴‍☠️</div>
+                        <div className="text-6xl mb-4">🤖</div>
                         <SpeechBubble>
                             <p className="text-center font-medium">
                                 {t('captain.summary_ready')}
@@ -363,11 +407,27 @@ export const AICaptainSummary: React.FC = () => {
                                             </span>
                                         ))}
                                     </div>
-                                    <p className="text-gray-400 text-sm">
-                                        {t('captain.age')}: {state.ageMin}-{state.ageMax} |{' '}
-                                        {t('captain.gender')}: {state.gender === 'all' ? t('captain.opt_all_genders') : state.gender} |{' '}
-                                        {t('captain.platform')}: {state.platform === 'all' ? t('captain.opt_both_platforms') : state.platform}
-                                    </p>
+                                    {state.targetingType === 'advantage' ? (
+                                        <p className="text-gray-400 text-sm">
+                                            {t('captain.targeting_advantage_title')} - Meta AI will optimize targeting
+                                        </p>
+                                    ) : (
+                                        <p className="text-gray-400 text-sm">
+                                            {t('captain.age')}: {state.ageMin}-{state.ageMax} |{' '}
+                                            {t('captain.gender')}: {state.gender === 'all' ? t('captain.opt_all_genders') : state.gender} |{' '}
+                                            {t('captain.platform')}: {state.platform === 'all' ? t('captain.opt_both_platforms') : state.platform}
+                                        </p>
+                                    )}
+                                    {state.selectedInterests.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            <span className="text-gray-500 text-xs">Interests:</span>
+                                            {state.selectedInterests.map(interest => (
+                                                <span key={interest.id} className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">
+                                                    {interest.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </SummaryCard>
                         )}
@@ -385,33 +445,42 @@ export const AICaptainSummary: React.FC = () => {
                             </SummaryCard>
                         )}
 
-                        {/* Ad Preview */}
-                        {state.ads[0] && (state.ads[0].file || state.ads[0].title) && (
+                        {/* Ad Previews - Show all ads */}
+                        {state.ads.length > 0 && state.ads.some(ad => ad.file || ad.title) && (
                             <SummaryCard
                                 icon={<Image className="w-5 h-5" />}
-                                title={t('captain.summary_ad')}
+                                title={state.ads.length > 1 ? t('captain.summary_ads', { count: state.ads.length }) : t('captain.summary_ad')}
                                 color="pink"
                             >
-                                <div className="flex gap-4">
-                                    {state.ads[0].previewUrl && (
-                                        <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-800 shrink-0">
-                                            {state.ads[0].file?.type.startsWith('video/') ? (
-                                                <video src={state.ads[0].previewUrl} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <img src={state.ads[0].previewUrl} alt="Ad preview" className="w-full h-full object-cover" />
+                                <div className="space-y-4">
+                                    {state.ads.map((ad, index) => (
+                                        <div key={ad.id} className={`flex gap-4 ${index > 0 ? 'pt-4 border-t border-gray-700' : ''}`}>
+                                            {ad.previewUrl && (
+                                                <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-800 shrink-0">
+                                                    {ad.file?.type.startsWith('video/') ? (
+                                                        <video src={ad.previewUrl} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <img src={ad.previewUrl} alt="Ad preview" className="w-full h-full object-cover" />
+                                                    )}
+                                                </div>
                                             )}
+                                            <div className="flex-1 min-w-0">
+                                                {(state.ads.length > 1 || ad.adName) && (
+                                                    <p className="text-pink-400 text-xs font-medium mb-1">
+                                                        {ad.adName || `Ad ${index + 1}`}
+                                                    </p>
+                                                )}
+                                                <p className="text-white font-medium truncate">{ad.title || 'No headline'}</p>
+                                                <p className="text-gray-400 text-sm line-clamp-2">{ad.body || 'No description'}</p>
+                                                {ad.link && (
+                                                    <p className="text-blue-400 text-xs mt-1 truncate">{ad.link}</p>
+                                                )}
+                                                <p className="text-gray-500 text-xs mt-1">
+                                                    CTA: {ad.cta}
+                                                </p>
+                                            </div>
                                         </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-medium truncate">{state.ads[0].title || 'No headline'}</p>
-                                        <p className="text-gray-400 text-sm line-clamp-2">{state.ads[0].body || 'No description'}</p>
-                                        {state.ads[0].link && (
-                                            <p className="text-blue-400 text-xs mt-1 truncate">{state.ads[0].link}</p>
-                                        )}
-                                        <p className="text-gray-500 text-xs mt-1">
-                                            CTA: {state.ads[0].cta}
-                                        </p>
-                                    </div>
+                                    ))}
                                 </div>
                             </SummaryCard>
                         )}

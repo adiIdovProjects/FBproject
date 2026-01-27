@@ -41,8 +41,8 @@ const ChatWidget: React.FC = () => {
             const res = await fetch('/api/v1/public/chat/suggestions');
             const data = await res.json();
             setSuggestions(data.suggestions || []);
-        } catch (error) {
-            console.error('Failed to load suggestions', error);
+        } catch {
+            // Use default suggestions if API fails
             setSuggestions([
                 "What is AdsAI?",
                 "How much does it cost?",
@@ -96,8 +96,7 @@ const ChatWidget: React.FC = () => {
             if (data.suggested_actions) {
                 setSuggestions(data.suggested_actions);
             }
-        } catch (error) {
-            console.error('Chat error', error);
+        } catch {
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',

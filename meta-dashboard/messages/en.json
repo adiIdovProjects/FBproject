@@ -76,6 +76,10 @@
     "invalid_budget": "Please enter a valid budget amount",
     "hierarchy_guide": "Campaign → Ad Set → Ad. Click the arrow to expand. If a campaign or ad set is paused, all items inside it won't run even if they show as active."
   },
+  "campaign_control": {
+    "tab_view": "View & Control",
+    "tab_create": "Create / Edit"
+  },
   "metrics": {
     "spend": "Spend",
     "total_spend": "Spend",
@@ -1114,6 +1118,7 @@
     "new_campaign": "New Campaign",
     "what_would_you_like": "What would you like to do?",
     "choose_path_desc": "Choose the option that best fits your goal",
+    "build_manually": "or build manually",
     "create_campaign_title": "Create New Campaign",
     "create_campaign_desc": "Start from scratch with a brand new campaign. Run with optimal Facebook recommended targeting, set your budget, and choose your objectives. Perfect for launching new products or testing new objectives.",
     "create_when": "Choose this when you want a new objective or new targeting",
@@ -1381,27 +1386,28 @@
     "colorful": "Colorful"
   },
   "captain": {
-    "title": "AI Captain",
-    "try_ai_captain": "Try AI Captain",
+    "title": "AI Assistant",
+    "try_ai_captain": "Build with AI Assistant",
+    "ai_description": "Step by step with recommendations",
     "back_to_manual": "Back to Manual Uploader",
     "switch_to_manual": "Switch to Manual",
 
-    "welcome_choose_flow": "Ahoy, Captain! What adventure shall we embark on today?",
-    "welcome_create": "Ahoy! Ready to set sail on a new campaign? What treasure are ye seeking?",
-    "welcome_add": "Looking to add more firepower to an existing ship? Let's do it!",
-    "welcome_edit": "Time to adjust our course? What shall we modify?",
+    "welcome_choose_flow": "Welcome! What would you like to do today?",
+    "welcome_create": "Let's create a new campaign. What's your goal?",
+    "welcome_add": "Add a new ad to an existing campaign. Select the campaign below.",
+    "welcome_edit": "Edit an existing campaign. What would you like to modify?",
 
-    "ask_campaign_name": "What shall we call this campaign, Captain?",
+    "ask_campaign_name": "What should we name this campaign?",
     "ask_objective": "What's the goal of this campaign?",
-    "ask_lead_type": "Should they visit your website or fill a form right here?",
-    "ask_location": "Where shall we target? Name the countries or cities.",
+    "ask_lead_type": "How would you like to collect leads?",
+    "ask_location": "Where should we target? Search for countries or cities.",
     "ask_age": "What age range should we target?",
-    "ask_gender": "Any gender preference for our audience?",
-    "ask_platform": "Facebook, Instagram, or both?",
-    "ask_budget": "How much gold per day? (in dollars)",
+    "ask_gender": "Any gender preference for the audience?",
+    "ask_platform": "Which platforms: Facebook, Instagram, or both?",
+    "ask_budget": "What's your daily budget? (in dollars)",
     "ask_creative": "Upload your image or video for the ad.",
     "ask_headline": "What's the headline for your ad?",
-    "ask_body": "And the main text?",
+    "ask_body": "What's the main text for the ad?",
     "ask_link": "Where should clicks go? Enter the URL.",
     "ask_cta": "What should the button say?",
     "ask_campaign": "Which campaign are we working with?",
@@ -1412,17 +1418,22 @@
     "ask_new_creative": "Upload the new creative.",
     "ask_new_headline": "What's the new headline?",
     "ask_new_body": "What's the new primary text?",
+    "ask_ad_name": "Give this ad a name (optional)",
+    "ask_add_another": "Would you like to add another ad?",
 
     "placeholder_campaign_name": "e.g., Summer Sale Campaign",
     "placeholder_budget": "e.g., 20",
     "placeholder_headline": "e.g., Shop Now - 50% Off!",
     "placeholder_body": "e.g., Don't miss our biggest sale of the year...",
     "placeholder_link": "e.g., https://yoursite.com/sale",
+    "placeholder_ad_name": "e.g., Ad Variation 1",
 
     "opt_sales": "Sales",
     "opt_leads": "Leads",
     "opt_traffic": "Traffic",
     "opt_engagement": "Engagement",
+    "opt_whatsapp": "WhatsApp",
+    "opt_calls": "Calls",
     "opt_website": "Website",
     "opt_form": "Instant Form",
     "opt_all_ages": "All Ages (18-65)",
@@ -1431,23 +1442,111 @@
     "opt_female": "Female",
     "opt_both_platforms": "Both",
 
+    "objective_desc_sales": "Drive purchases on your website",
+    "objective_desc_leads": "Collect contact information from potential customers",
+    "objective_desc_traffic": "Send people to your website",
+    "objective_desc_engagement": "Get more likes, comments, and shares",
+    "objective_desc_whatsapp": "Start conversations on WhatsApp",
+    "objective_desc_calls": "Get people to call your business",
+
+    "lead_type_website_title": "Website Leads",
+    "lead_type_website_desc": "Visitors click to your website and fill out your form there. Requires Facebook Pixel installed on your site to track conversions.",
+    "lead_type_form_title": "Instant Form",
+    "lead_type_form_desc": "Form appears directly in Facebook/Instagram. No website needed. Leads are collected in Facebook.",
+
+    "ask_targeting_type": "How should we handle audience targeting?",
+    "targeting_advantage_title": "Advantage+ (Recommended)",
+    "targeting_advantage_desc": "Let Meta's AI find the best audience for you. Great for most campaigns - typically better results with less effort.",
+    "targeting_custom_title": "Custom Targeting",
+    "targeting_custom_desc": "Define specific age, gender, and platform preferences yourself. Use this if you know your exact audience.",
+
+    "ask_audiences": "Do you have any custom audiences to target? (optional)",
+    "ask_interests": "What interests does your audience have? Search and add interests. (optional)",
+    "search_interests": "Search for interests...",
+    "no_audiences": "No custom audiences found. You can create them in Meta Ads Manager.",
+    "continue": "Continue",
+
+    "ask_ad_format": "What type of ad would you like to create?",
+    "ad_format_single_title": "Single Image or Video",
+    "ad_format_single_desc": "One image or video with your headline and text. Great for focused messaging.",
+    "ad_format_carousel_title": "Carousel",
+    "ad_format_carousel_desc": "Multiple images or videos that people can swipe through. Great for showcasing products or telling a story.",
+
     "search_location": "Search for a country or city...",
     "confirm_locations": "Confirm Locations",
     "click_to_upload": "Click to upload image or video",
     "supported_formats": "JPG, PNG, MP4 (max 30MB image, 4GB video)",
     "use_this_creative": "Use This Creative",
     "budget_recommendation": "We recommend at least $10/day for best results",
+    "budget_minimum_warning": "Minimum daily budget is $5",
+    "url_invalid": "Please enter a valid URL (e.g., https://yoursite.com)",
 
-    "show_history": "Show conversation history",
+    "age_min": "Minimum Age",
+    "age_max": "Maximum Age",
+    "confirm_age": "Confirm Age Range",
 
-    "thinking": "Let me think...",
-    "summary_ready": "Here's our battle plan! Ready to launch?",
+    "step_objective": "Objective",
+    "step_lead_type": "Lead Type",
+    "step_campaign_name": "Campaign Name",
+    "step_location": "Location",
+    "step_targeting_type": "Targeting",
+    "step_audiences": "Audiences",
+    "step_interests": "Interests",
+    "step_age": "Age",
+    "step_gender": "Gender",
+    "step_platform": "Platform",
+    "step_budget": "Budget",
+    "step_ad_format": "Ad Format",
+    "step_creative": "Creative",
+    "step_headline": "Headline",
+    "step_body": "Body Text",
+    "step_link": "Link",
+    "step_cta": "CTA Button",
+    "step_x_of_y": "Step {current} of {total}",
+
+    "warning_no_pixel": "No Facebook Pixel found. For best conversion tracking, set up a pixel in Events Manager.",
+    "warning_no_pixel_link": "Learn how to set up Facebook Pixel",
+    "warning_no_whatsapp": "WhatsApp Business is not connected to this page. Connect it in Meta Business Suite.",
+    "warning_no_whatsapp_link": "Learn how to connect WhatsApp",
+    "warning_no_forms": "No lead forms found. Create one to collect leads directly on Facebook.",
+    "warning_continue_anyway": "Continue anyway",
+
+    "create_form": "Create Form",
+    "form_name": "Form Name",
+    "form_name_placeholder": "e.g., Contact Form",
+    "form_headline": "Headline (optional)",
+    "form_description": "Description (optional)",
+    "form_questions": "Questions to ask",
+    "form_privacy_url": "Privacy Policy URL",
+    "form_privacy_placeholder": "https://yoursite.com/privacy",
+    "form_creating": "Creating form...",
+    "form_created": "Form created successfully!",
+    "form_email": "Email",
+    "form_full_name": "Full Name",
+    "form_phone": "Phone Number",
+    "form_city": "City",
+    "form_country": "Country",
+
+    "add_another_same_creative": "Same creative, different copy",
+    "add_another_same_copy": "Same copy, different creative",
+    "add_another_scratch": "Start from scratch",
+    "add_another_done": "Done adding ads",
+
+    "preview_title": "Ad Preview",
+    "preview_ad_name": "Ad Name",
+    "preview_no_image": "No image uploaded",
+    "duplicate_ad": "Duplicate Ad",
+    "delete_ad": "Delete Ad",
+
+    "thinking": "Processing...",
+    "summary_ready": "Here's your campaign summary. Ready to launch?",
     "summary_campaign": "Campaign",
     "summary_target": "Target",
     "summary_editing": "Editing",
     "summary_targeting": "Targeting",
     "summary_budget": "Budget",
     "summary_ad": "Ad Creative",
+    "summary_ads": "Ads ({count})",
 
     "objective": "Objective",
     "lead_type": "Lead Type",
@@ -1459,7 +1558,7 @@
 
     "launch": "Launch Campaign",
     "edit_something": "Edit Something",
-    "launching": "Launching...",
+    "launching": "Creating your campaign...",
     "success": "Campaign launched successfully! Anchors aweigh!",
     "view_campaign": "View Campaign",
     "create_another": "Create Another"
@@ -1571,5 +1670,43 @@
         "definition": "When your audience has seen your ad too many times and performance starts declining. Signs include rising CPC and falling CTR. Time for fresh creative!"
       }
     }
+  },
+  "homepage3": {
+    "title": "What would you like to do?",
+    "greeting": "Hi {name},",
+    "question": "What would you like to do today?",
+    "subtitle": "Choose an action to get started",
+    "default_name": "there",
+    "manage": {
+      "title": "Manage Campaigns",
+      "description": "Create, edit, or control your campaigns",
+      "hint": "{count} active campaigns"
+    },
+    "performance": {
+      "title": "View Performance",
+      "description": "See how your ads are performing",
+      "hint": "${amount}/day avg"
+    },
+    "trends": {
+      "title": "Analyze Trends",
+      "description": "Deep dive into historical performance",
+      "hint": "Last 30 days"
+    },
+    "ai_strategy": {
+      "title": "AI Strategy",
+      "description": "Get AI-powered recommendations"
+    },
+    "ask": {
+      "title": "Ask Anything",
+      "description": "Chat with your data"
+    },
+    "reports": {
+      "title": "Custom Reports",
+      "description": "Build and export custom reports"
+    },
+    "quick_questions": "Or ask a quick question:",
+    "q_how_doing": "How are my ads doing?",
+    "q_improve": "How can I improve?",
+    "q_scale": "What should I scale?"
   }
 }

@@ -206,7 +206,7 @@ export default function TermsOfServicePage() {
 
       <h2>16. Governing Law and Disputes</h2>
       <p>
-        These Terms are governed by the laws of [Jurisdiction]. Any disputes shall be resolved through binding arbitration, except that either party may seek injunctive relief in court.
+        These Terms are governed by the laws of the State of Israel. Any disputes shall be resolved exclusively by the competent courts in Tel Aviv-Jaffa, Israel, except that either party may seek injunctive relief in court.
       </p>
 
       <h2>17. General Provisions</h2>
@@ -221,7 +221,7 @@ export default function TermsOfServicePage() {
       <p>For questions about these Terms:</p>
       <ul>
         <li><strong>Email:</strong> legal@adsai.com</li>
-        <li><strong>Address:</strong> [Your Business Address]</li>
+        <li><strong>Address:</strong> Tel Aviv, Israel</li>
       </ul>
     </LegalPageLayout>
   );

@@ -18,11 +18,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        // DEBUG: Log all errors to track down redirect issue
-        console.log('[apiClient] Error:', error.response?.status, error.config?.url);
-
         if (error.response && error.response.status === 401) {
-            console.log('[apiClient] 401 detected for:', error.config?.url);
             // Check if this is a "Google not connected" error (not an auth failure)
             const isGoogleNotConnected = error.response.data?.detail?.includes('Google account not connected');
 
@@ -31,7 +27,6 @@ apiClient.interceptors.response.use(
                 // Skip redirect on public/onboarding pages
                 if (typeof window !== 'undefined') {
                     const path = window.location.pathname;
-                    console.log('[apiClient] Checking path for redirect:', path);
                     const isPublicPage = path.includes('/login') ||
                                          path.includes('/callback') ||
                                          path.includes('/auth/verify') ||
@@ -42,7 +37,6 @@ apiClient.interceptors.response.use(
                         // Extract locale from current URL path (e.g., /he/dashboard -> he)
                         const pathParts = path.split('/');
                         const locale = pathParts[1] || 'en';
-                        console.log('[apiClient] REDIRECTING TO LOGIN from path:', path);
                         // Redirect to login preserving locale
                         window.location.href = `/${locale}/login`;
                     }

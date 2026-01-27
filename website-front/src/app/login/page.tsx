@@ -4,6 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+
 const AuthPage = () => {
     const [isLogin, setIsLogin] = React.useState(true);
     const [email, setEmail] = React.useState('');
@@ -13,7 +16,7 @@ const AuthPage = () => {
     const [error, setError] = React.useState('');
 
     const handleGoogleAuth = () => {
-        window.location.href = 'http://127.0.0.1:8000/api/v1/auth/google/login';
+        window.location.href = `${API_BASE_URL}/api/v1/auth/google/login`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -22,8 +25,8 @@ const AuthPage = () => {
         setError('');
 
         const endpoint = isLogin
-            ? 'http://127.0.0.1:8000/api/v1/auth/login'
-            : 'http://127.0.0.1:8000/api/v1/auth/register';
+            ? `${API_BASE_URL}/api/v1/auth/login`
+            : `${API_BASE_URL}/api/v1/auth/register`;
 
         const payload = isLogin
             ? { email, password }
@@ -44,9 +47,10 @@ const AuthPage = () => {
 
             // Save token and redirect
             localStorage.setItem('token', data.access_token);
-            window.location.href = 'http://localhost:3001/connect';
-        } catch (err: any) {
-            setError(err.message);
+            window.location.href = `${APP_URL}/connect`;
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

@@ -4,6 +4,9 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || 'http://localhost:3000';
+
 interface AdAccount {
     account_id: string;
     name: string;
@@ -47,7 +50,7 @@ const ConnectContent = () => {
     const fetchAccounts = async (authToken: string) => {
         try {
             setIsLoading(true);
-            const response = await fetch('http://127.0.0.1:8000/api/v1/auth/facebook/accounts', {
+            const response = await fetch(`${API_BASE_URL}/api/v1/auth/facebook/accounts`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`
                 }
@@ -61,8 +64,7 @@ const ConnectContent = () => {
                 // FB not connected or token expired
                 setOnboardingStep(2);
             }
-        } catch (error) {
-            console.error('Failed to fetch accounts', error);
+        } catch {
             setOnboardingStep(2);
         } finally {
             setIsLoading(false);
@@ -70,7 +72,7 @@ const ConnectContent = () => {
     };
 
     const handleFacebookConnect = () => {
-        window.location.href = 'http://localhost:8000/api/v1/auth/facebook/login';
+        window.location.href = `${API_BASE_URL}/api/v1/auth/facebook/login`;
     };
 
     const toggleAccount = (id: string) => {
@@ -84,7 +86,7 @@ const ConnectContent = () => {
         try {
             const accountsToLink = accounts.filter(acc => selectedAccounts.includes(acc.account_id));
 
-            const response = await fetch('http://127.0.0.1:8000/api/v1/auth/facebook/accounts/link', {
+            const response = await fetch(`${API_BASE_URL}/api/v1/auth/facebook/accounts/link`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -94,14 +96,11 @@ const ConnectContent = () => {
             });
 
             if (response.ok) {
-                // await new Promise(r => setTimeout(r, 2000)); // Optional visual delay
-                window.location.href = 'http://localhost:3000/en';
+                window.location.href = `${DASHBOARD_URL}/en`;
             } else {
-                console.error('Failed to link accounts');
                 alert('Failed to link accounts. Please try again.');
             }
-        } catch (error) {
-            console.error('Error linking accounts:', error);
+        } catch {
             alert('An error occurred. Please try again.');
         } finally {
             setIsSyncing(false);

@@ -1,0 +1,116 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Security scanning for dependencies
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Python security audit
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Python Security Audit
+        run: pip-audit -r backend/requirements.txt || echo "Security issues found - review above"
+        continue-on-error: true
+
+      # Node.js security audits
+      - name: Node Security Audit (meta-dashboard)
+        working-directory: meta-dashboard
+        run: npm audit --audit-level=high || echo "Security issues found - review above"
+        continue-on-error: true
+
+      - name: Node Security Audit (website-front)
+        working-directory: website-front
+        run: npm audit --audit-level=high || echo "Security issues found - review above"
+        continue-on-error: true
+
+  # Build and type check frontends
+  build-frontends:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            meta-dashboard/package-lock.json
+            website-front/package-lock.json
+
+      # Build meta-dashboard
+      - name: Install dependencies (meta-dashboard)
+        working-directory: meta-dashboard
+        run: npm ci
+
+      - name: Build meta-dashboard
+        working-directory: meta-dashboard
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://api.example.com
+
+      # Build website-front
+      - name: Install dependencies (website-front)
+        working-directory: website-front
+        run: npm ci
+
+      - name: Build website-front
+        working-directory: website-front
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.example.com
+
+  # Python backend checks
+  backend-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      # Syntax check - ensures Python files are valid
+      - name: Python syntax check
+        run: python -m py_compile backend/api/main.py
+
+  # Summary job that depends on all checks
+  ci-complete:
+    needs: [security-scan, build-frontends, backend-checks]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [ "${{ needs.security-scan.result }}" == "failure" ] || \
+             [ "${{ needs.build-frontends.result }}" == "failure" ] || \
+             [ "${{ needs.backend-checks.result }}" == "failure" ]; then
+            echo "One or more checks failed"
+            exit 1
+          fi
+          echo "All checks passed!"

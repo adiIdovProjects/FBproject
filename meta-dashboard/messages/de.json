@@ -65,6 +65,10 @@
     "invalid_budget": "Bitte geben Sie einen gültigen Budgetbetrag ein",
     "hierarchy_guide": "Kampagne → Anzeigengruppe → Anzeige. Klicken Sie auf den Pfeil zum Erweitern. Wenn eine Kampagne oder Anzeigengruppe pausiert ist, werden alle darin enthaltenen Elemente nicht ausgeführt, auch wenn sie als aktiv angezeigt werden."
   },
+  "campaign_control": {
+    "tab_view": "Ansehen & Steuern",
+    "tab_create": "Erstellen / Bearbeiten"
+  },
   "metrics": {
     "spend": "Ausgaben",
     "total_spend": "Gesamtausgaben",
@@ -968,6 +972,7 @@
     "link_accounts": "{count} Konto(en) verknüpfen"
   },
   "uploader": {
+    "build_manually": "oder manuell erstellen",
     "create_campaign_title": "Neue Kampagne erstellen",
     "create_campaign_desc": "Beginnen Sie von Grund auf mit einer brandneuen Kampagne. Nutzen Sie optimales Facebook-empfohlenes Targeting, legen Sie Ihr Budget fest und wählen Sie Ihre Ziele. Perfekt für die Einführung neuer Produkte oder das Testen neuer Ziele.",
     "add_creative_title": "Creative zu bestehender Kampagne hinzufügen",
@@ -1104,27 +1109,28 @@
     "duplicate_form": "Formular duplizieren"
   },
   "captain": {
-    "title": "AI Kapitän",
-    "try_ai_captain": "AI Kapitän ausprobieren",
+    "title": "KI-Assistent",
+    "try_ai_captain": "Mit KI-Assistent erstellen",
+    "ai_description": "Schritt für Schritt mit Empfehlungen",
     "back_to_manual": "Zurück zum manuellen Upload",
     "switch_to_manual": "Zum manuellen wechseln",
 
-    "welcome_choose_flow": "Ahoi, Kapitän! Welches Abenteuer erwartet uns heute?",
-    "welcome_create": "Ahoi! Bereit für eine neue Kampagne? Welchen Schatz sucht ihr?",
-    "welcome_add": "Mehr Feuerkraft für ein bestehendes Schiff? Los geht's!",
-    "welcome_edit": "Zeit den Kurs zu korrigieren? Was sollen wir ändern?",
+    "welcome_choose_flow": "Willkommen! Was möchten Sie heute tun?",
+    "welcome_create": "Lassen Sie uns eine neue Kampagne erstellen. Was ist Ihr Ziel?",
+    "welcome_add": "Fügen Sie eine neue Anzeige zu einer bestehenden Kampagne hinzu. Wählen Sie unten die Kampagne aus.",
+    "welcome_edit": "Bearbeiten Sie eine bestehende Kampagne. Was möchten Sie ändern?",
 
-    "ask_campaign_name": "Wie soll diese Kampagne heißen, Kapitän?",
+    "ask_campaign_name": "Wie soll diese Kampagne heißen?",
     "ask_objective": "Was ist das Ziel dieser Kampagne?",
-    "ask_lead_type": "Sollen sie Ihre Website besuchen oder hier ein Formular ausfüllen?",
-    "ask_location": "Wo sollen wir zielen? Nennen Sie Länder oder Städte.",
+    "ask_lead_type": "Wie möchten Sie Leads sammeln?",
+    "ask_location": "Wo sollen wir zielen? Suchen Sie nach Ländern oder Städten.",
     "ask_age": "Welche Altersgruppe sollen wir ansprechen?",
     "ask_gender": "Geschlechtspräferenz für das Publikum?",
-    "ask_platform": "Facebook, Instagram oder beide?",
-    "ask_budget": "Wie viel Gold pro Tag? (in Dollar)",
-    "ask_creative": "Laden Sie ein Bild oder Video für die Anzeige hoch.",
+    "ask_platform": "Welche Plattformen: Facebook, Instagram oder beide?",
+    "ask_budget": "Was ist Ihr Tagesbudget? (in Dollar)",
+    "ask_creative": "Laden Sie Ihr Bild oder Video für die Anzeige hoch.",
     "ask_headline": "Was ist die Überschrift für Ihre Anzeige?",
-    "ask_body": "Und der Haupttext?",
+    "ask_body": "Was ist der Haupttext für die Anzeige?",
     "ask_link": "Wohin sollen Klicks führen? Geben Sie die URL ein.",
     "ask_cta": "Was soll auf dem Button stehen?",
     "ask_campaign": "Mit welcher Kampagne arbeiten wir?",
@@ -1135,17 +1141,22 @@
     "ask_new_creative": "Laden Sie das neue Creative hoch.",
     "ask_new_headline": "Was ist die neue Überschrift?",
     "ask_new_body": "Was ist der neue Haupttext?",
+    "ask_ad_name": "Geben Sie dieser Anzeige einen Namen (optional)",
+    "ask_add_another": "Möchten Sie eine weitere Anzeige hinzufügen?",
 
     "placeholder_campaign_name": "z.B. Sommerverkauf-Kampagne",
     "placeholder_budget": "z.B. 20",
     "placeholder_headline": "z.B. Jetzt kaufen - 50% Rabatt!",
     "placeholder_body": "z.B. Verpassen Sie nicht unseren größten Sale...",
     "placeholder_link": "z.B. https://ihreseite.de/sale",
+    "placeholder_ad_name": "z.B. Anzeigenvariante 1",
 
     "opt_sales": "Verkäufe",
     "opt_leads": "Leads",
     "opt_traffic": "Traffic",
     "opt_engagement": "Engagement",
+    "opt_whatsapp": "WhatsApp",
+    "opt_calls": "Anrufe",
     "opt_website": "Website",
     "opt_form": "Instant-Formular",
     "opt_all_ages": "Alle Altersgruppen (18-65)",
@@ -1154,23 +1165,111 @@
     "opt_female": "Weiblich",
     "opt_both_platforms": "Beide",
 
+    "objective_desc_sales": "Steigern Sie Käufe auf Ihrer Website",
+    "objective_desc_leads": "Sammeln Sie Kontaktdaten von potenziellen Kunden",
+    "objective_desc_traffic": "Senden Sie Besucher auf Ihre Website",
+    "objective_desc_engagement": "Erhalten Sie mehr Likes, Kommentare und Shares",
+    "objective_desc_whatsapp": "Starten Sie Unterhaltungen auf WhatsApp",
+    "objective_desc_calls": "Bringen Sie Menschen dazu, Ihr Unternehmen anzurufen",
+
+    "lead_type_website_title": "Website-Leads",
+    "lead_type_website_desc": "Besucher klicken auf Ihre Website und füllen dort Ihr Formular aus. Erfordert Facebook Pixel auf Ihrer Website.",
+    "lead_type_form_title": "Instant-Formular",
+    "lead_type_form_desc": "Das Formular erscheint direkt in Facebook/Instagram. Keine Website erforderlich. Leads werden in Facebook gesammelt.",
+
+    "ask_targeting_type": "Wie sollen wir die Zielgruppenansprache handhaben?",
+    "targeting_advantage_title": "Advantage+ (Empfohlen)",
+    "targeting_advantage_desc": "Lassen Sie Metas KI die beste Zielgruppe für Sie finden. Ideal für die meisten Kampagnen - typischerweise bessere Ergebnisse mit weniger Aufwand.",
+    "targeting_custom_title": "Benutzerdefiniertes Targeting",
+    "targeting_custom_desc": "Definieren Sie selbst spezifische Alter-, Geschlecht- und Plattform-Präferenzen. Nutzen Sie dies, wenn Sie Ihre Zielgruppe genau kennen.",
+
+    "ask_audiences": "Haben Sie benutzerdefinierte Zielgruppen? (optional)",
+    "ask_interests": "Welche Interessen hat Ihre Zielgruppe? Suchen und hinzufügen. (optional)",
+    "search_interests": "Nach Interessen suchen...",
+    "no_audiences": "Keine benutzerdefinierten Zielgruppen gefunden. Sie können diese im Meta Ads Manager erstellen.",
+    "continue": "Weiter",
+
+    "ask_ad_format": "Welche Art von Anzeige möchten Sie erstellen?",
+    "ad_format_single_title": "Einzelnes Bild oder Video",
+    "ad_format_single_desc": "Ein Bild oder Video mit Ihrer Überschrift und Text. Ideal für fokussierte Botschaften.",
+    "ad_format_carousel_title": "Karussell",
+    "ad_format_carousel_desc": "Mehrere Bilder oder Videos, durch die Nutzer wischen können. Ideal für Produktpräsentationen oder Geschichten.",
+
     "search_location": "Land oder Stadt suchen...",
     "confirm_locations": "Standorte bestätigen",
     "click_to_upload": "Klicken zum Hochladen von Bild oder Video",
     "supported_formats": "JPG, PNG, MP4 (max. 30MB Bild, 4GB Video)",
     "use_this_creative": "Dieses Creative verwenden",
     "budget_recommendation": "Wir empfehlen mindestens $10/Tag für beste Ergebnisse",
+    "budget_minimum_warning": "Mindesttagesbudget beträgt $5",
+    "url_invalid": "Bitte geben Sie eine gültige URL ein (z.B. https://ihreseite.de)",
 
-    "show_history": "Gesprächsverlauf anzeigen",
+    "age_min": "Mindestalter",
+    "age_max": "Höchstalter",
+    "confirm_age": "Altersbereich bestätigen",
 
-    "thinking": "Lass mich nachdenken...",
-    "summary_ready": "Hier ist unser Schlachtplan! Bereit zum Start?",
+    "step_objective": "Ziel",
+    "step_lead_type": "Lead-Typ",
+    "step_campaign_name": "Kampagnenname",
+    "step_location": "Standort",
+    "step_targeting_type": "Targeting",
+    "step_audiences": "Zielgruppen",
+    "step_interests": "Interessen",
+    "step_age": "Alter",
+    "step_gender": "Geschlecht",
+    "step_platform": "Plattform",
+    "step_budget": "Budget",
+    "step_ad_format": "Anzeigenformat",
+    "step_creative": "Creative",
+    "step_headline": "Überschrift",
+    "step_body": "Haupttext",
+    "step_link": "Link",
+    "step_cta": "CTA-Button",
+    "step_x_of_y": "Schritt {current} von {total}",
+
+    "warning_no_pixel": "Kein Facebook Pixel gefunden. Für beste Conversion-Verfolgung richten Sie ein Pixel im Events Manager ein.",
+    "warning_no_pixel_link": "Erfahren Sie, wie Sie Facebook Pixel einrichten",
+    "warning_no_whatsapp": "WhatsApp Business ist nicht mit dieser Seite verbunden. Verbinden Sie es in der Meta Business Suite.",
+    "warning_no_whatsapp_link": "Erfahren Sie, wie Sie WhatsApp verbinden",
+    "warning_no_forms": "Keine Lead-Formulare gefunden. Erstellen Sie eines, um Leads direkt auf Facebook zu sammeln.",
+    "warning_continue_anyway": "Trotzdem fortfahren",
+
+    "create_form": "Formular erstellen",
+    "form_name": "Formularname",
+    "form_name_placeholder": "z.B. Kontaktformular",
+    "form_headline": "Überschrift (optional)",
+    "form_description": "Beschreibung (optional)",
+    "form_questions": "Zu stellende Fragen",
+    "form_privacy_url": "Datenschutzrichtlinien-URL",
+    "form_privacy_placeholder": "https://ihreseite.de/datenschutz",
+    "form_creating": "Formular wird erstellt...",
+    "form_created": "Formular erfolgreich erstellt!",
+    "form_email": "E-Mail",
+    "form_full_name": "Vollständiger Name",
+    "form_phone": "Telefonnummer",
+    "form_city": "Stadt",
+    "form_country": "Land",
+
+    "add_another_same_creative": "Gleiches Creative, anderer Text",
+    "add_another_same_copy": "Gleicher Text, anderes Creative",
+    "add_another_scratch": "Von vorne beginnen",
+    "add_another_done": "Fertig mit Anzeigen hinzufügen",
+
+    "preview_title": "Anzeigenvorschau",
+    "preview_ad_name": "Anzeigenname",
+    "preview_no_image": "Kein Bild hochgeladen",
+    "duplicate_ad": "Anzeige duplizieren",
+    "delete_ad": "Anzeige löschen",
+
+    "thinking": "Verarbeite...",
+    "summary_ready": "Hier ist Ihre Kampagnenübersicht. Bereit zum Start?",
     "summary_campaign": "Kampagne",
     "summary_target": "Ziel",
     "summary_editing": "Bearbeitung",
     "summary_targeting": "Targeting",
     "summary_budget": "Budget",
     "summary_ad": "Anzeigen-Creative",
+    "summary_ads": "Anzeigen ({count})",
 
     "objective": "Ziel",
     "lead_type": "Lead-Typ",
@@ -1182,9 +1281,47 @@
 
     "launch": "Kampagne starten",
     "edit_something": "Etwas bearbeiten",
-    "launching": "Wird gestartet...",
-    "success": "Kampagne erfolgreich gestartet! Gute Reise!",
+    "launching": "Kampagne wird erstellt...",
+    "success": "Kampagne erfolgreich gestartet! Anker lichten!",
     "view_campaign": "Kampagne anzeigen",
     "create_another": "Weitere erstellen"
+  },
+  "homepage3": {
+    "title": "Was möchten Sie tun?",
+    "greeting": "Hallo {name},",
+    "question": "Was möchten Sie heute tun?",
+    "subtitle": "Wählen Sie eine Aktion, um zu beginnen",
+    "default_name": "dort",
+    "manage": {
+      "title": "Kampagnen verwalten",
+      "description": "Kampagnen erstellen, bearbeiten oder steuern",
+      "hint": "{count} aktive Kampagnen"
+    },
+    "performance": {
+      "title": "Leistung anzeigen",
+      "description": "Sehen Sie, wie Ihre Anzeigen performen",
+      "hint": "${amount}/Tag Durchschnitt"
+    },
+    "trends": {
+      "title": "Trends analysieren",
+      "description": "Tauchen Sie tief in historische Leistung ein",
+      "hint": "Letzte 30 Tage"
+    },
+    "ai_strategy": {
+      "title": "KI-Strategie",
+      "description": "Erhalten Sie KI-gestützte Empfehlungen"
+    },
+    "ask": {
+      "title": "Fragen Sie alles",
+      "description": "Chatten Sie mit Ihren Daten"
+    },
+    "reports": {
+      "title": "Benutzerdefinierte Berichte",
+      "description": "Erstellen und exportieren Sie benutzerdefinierte Berichte"
+    },
+    "quick_questions": "Oder stellen Sie eine schnelle Frage:",
+    "q_how_doing": "Wie laufen meine Anzeigen?",
+    "q_improve": "Wie kann ich verbessern?",
+    "q_scale": "Was sollte ich skalieren?"
   }
 }

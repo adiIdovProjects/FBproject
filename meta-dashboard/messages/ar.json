@@ -65,6 +65,10 @@
     "invalid_budget": "يرجى إدخال مبلغ ميزانية صالح",
     "hierarchy_guide": "حملة ← مجموعة إعلانية ← إعلان. انقر على السهم للتوسيع. إذا كانت الحملة أو المجموعة الإعلانية متوقفة، فلن تعمل جميع العناصر بداخلها حتى لو ظهرت كنشطة."
   },
+  "campaign_control": {
+    "tab_view": "عرض والتحكم",
+    "tab_create": "إنشاء / تعديل"
+  },
   "metrics": {
     "spend": "الإنفاق",
     "total_spend": "إجمالي الإنفاق",
@@ -969,6 +973,7 @@
     "link_accounts": "ربط {count} حساب (حسابات)"
   },
   "uploader": {
+    "build_manually": "أو قم بالبناء يدويًا",
     "create_campaign_title": "إنشاء حملة جديدة",
     "create_campaign_desc": "ابدأ من الصفر بحملة جديدة تمامًا. قم بالتشغيل مع الاستهداف الأمثل الموصى به من فيسبوك، وحدد ميزانيتك، واختر أهدافك. مثالي لإطلاق منتجات جديدة أو اختبار أهداف جديدة.",
     "add_creative_title": "إضافة تصميم إبداعي لحملة موجودة",
@@ -1105,27 +1110,28 @@
     "duplicate_form": "تكرار النموذج"
   },
   "captain": {
-    "title": "قبطان AI",
-    "try_ai_captain": "جرب قبطان AI",
+    "title": "مساعد الذكاء الاصطناعي",
+    "try_ai_captain": "البناء مع مساعد AI",
+    "ai_description": "خطوة بخطوة مع التوصيات",
     "back_to_manual": "العودة للرفع اليدوي",
     "switch_to_manual": "التبديل إلى اليدوي",
 
-    "welcome_choose_flow": "أهلاً أيها القبطان! أي مغامرة سنخوضها اليوم؟",
-    "welcome_create": "أهلاً! مستعد للإبحار بحملة جديدة؟ أي كنز تبحث عنه؟",
-    "welcome_add": "تريد إضافة قوة نارية لسفينة موجودة؟ هيا بنا!",
-    "welcome_edit": "حان وقت تعديل المسار؟ ماذا سنغير؟",
+    "welcome_choose_flow": "مرحباً! ماذا تريد أن تفعل اليوم؟",
+    "welcome_create": "لننشئ حملة جديدة. ما هو هدفك؟",
+    "welcome_add": "إضافة إعلان جديد لحملة موجودة. اختر الحملة أدناه.",
+    "welcome_edit": "تعديل حملة موجودة. ماذا تريد تعديله؟",
 
-    "ask_campaign_name": "ماذا سنسمي هذه الحملة أيها القبطان؟",
+    "ask_campaign_name": "ماذا يجب أن نسمي هذه الحملة؟",
     "ask_objective": "ما هو هدف هذه الحملة؟",
-    "ask_lead_type": "هل يزورون موقعك أم يملؤون نموذجاً هنا؟",
-    "ask_location": "أين نستهدف؟ اذكر الدول أو المدن.",
+    "ask_lead_type": "كيف تريد جمع العملاء المحتملين؟",
+    "ask_location": "أين نستهدف؟ ابحث عن الدول أو المدن.",
     "ask_age": "أي فئة عمرية نستهدف؟",
     "ask_gender": "هل هناك تفضيل للجنس في الجمهور؟",
-    "ask_platform": "فيسبوك، انستغرام، أو كليهما؟",
-    "ask_budget": "كم ذهباً في اليوم؟ (بالدولار)",
-    "ask_creative": "ارفع صورة أو فيديو للإعلان.",
+    "ask_platform": "أي منصات: فيسبوك، انستغرام، أو كليهما؟",
+    "ask_budget": "ما هي ميزانيتك اليومية؟ (بالدولار)",
+    "ask_creative": "ارفع صورتك أو فيديو للإعلان.",
     "ask_headline": "ما هو العنوان للإعلان؟",
-    "ask_body": "وما هو النص الرئيسي؟",
+    "ask_body": "ما هو النص الرئيسي للإعلان؟",
     "ask_link": "أين يذهب النقر؟ أدخل الرابط.",
     "ask_cta": "ماذا يجب أن يكتب على الزر؟",
     "ask_campaign": "أي حملة نعمل عليها؟",
@@ -1136,17 +1142,22 @@
     "ask_new_creative": "ارفع التصميم الجديد.",
     "ask_new_headline": "ما هو العنوان الجديد؟",
     "ask_new_body": "ما هو النص الرئيسي الجديد؟",
+    "ask_ad_name": "أعطِ هذا الإعلان اسماً (اختياري)",
+    "ask_add_another": "هل تريد إضافة إعلان آخر؟",
 
     "placeholder_campaign_name": "مثال: حملة تخفيضات الصيف",
     "placeholder_budget": "مثال: 20",
     "placeholder_headline": "مثال: اشترِ الآن - خصم 50%!",
     "placeholder_body": "مثال: لا تفوت أكبر تخفيضاتنا...",
     "placeholder_link": "مثال: https://yoursite.com/sale",
+    "placeholder_ad_name": "مثال: نسخة إعلان 1",
 
     "opt_sales": "مبيعات",
     "opt_leads": "عملاء محتملون",
     "opt_traffic": "زيارات",
     "opt_engagement": "تفاعل",
+    "opt_whatsapp": "واتساب",
+    "opt_calls": "مكالمات",
     "opt_website": "موقع ويب",
     "opt_form": "نموذج فوري",
     "opt_all_ages": "جميع الأعمار (18-65)",
@@ -1155,23 +1166,113 @@
     "opt_female": "إناث",
     "opt_both_platforms": "كلاهما",
 
+    "objective_desc_sales": "زيادة المشتريات على موقعك",
+    "objective_desc_leads": "جمع معلومات الاتصال من العملاء المحتملين",
+    "objective_desc_traffic": "إرسال الأشخاص إلى موقعك",
+    "objective_desc_engagement": "الحصول على المزيد من الإعجابات والتعليقات والمشاركات",
+    "objective_desc_whatsapp": "بدء محادثات على واتساب",
+    "objective_desc_calls": "حث الأشخاص على الاتصال بنشاطك التجاري",
+
+    "lead_type_website_title": "عملاء محتملون من الموقع",
+    "lead_type_website_desc": "ينقر الزوار للوصول إلى موقعك ويملؤون النموذج هناك. يتطلب تثبيت بكسل فيسبوك على موقعك لتتبع التحويلات.",
+    "lead_type_form_title": "نموذج فوري",
+    "lead_type_form_desc": "يظهر النموذج مباشرة في فيسبوك/انستغرام. لا حاجة لموقع ويب. يتم جمع العملاء المحتملين في فيسبوك.",
+
+    "ask_targeting_type": "كيف يجب أن نتعامل مع استهداف الجمهور؟",
+    "targeting_advantage_title": "Advantage+ (موصى به)",
+    "targeting_advantage_desc": "دع الذكاء الاصطناعي من Meta يجد أفضل جمهور لك. رائع لمعظم الحملات - عادة نتائج أفضل بجهد أقل.",
+    "targeting_custom_title": "استهداف مخصص",
+    "targeting_custom_desc": "حدد تفضيلات العمر والجنس والمنصة بنفسك. استخدم هذا إذا كنت تعرف جمهورك بالضبط.",
+
+    "ask_audiences": "هل لديك جماهير مخصصة لاستهدافها؟ (اختياري)",
+    "ask_interests": "ما هي اهتمامات جمهورك؟ ابحث وأضف اهتمامات. (اختياري)",
+    "search_interests": "ابحث عن اهتمامات...",
+    "no_audiences": "لم يتم العثور على جماهير مخصصة. يمكنك إنشاؤها في مدير الإعلانات.",
+    "continue": "متابعة",
+
+    "ask_ad_format": "ما نوع الإعلان الذي تريد إنشاءه؟",
+    "ad_format_single_title": "صورة أو فيديو واحد",
+    "ad_format_single_desc": "صورة أو فيديو واحد مع العنوان والنص. رائع للرسائل المركزة.",
+    "ad_format_carousel_title": "كاروسيل",
+    "ad_format_carousel_desc": "صور أو مقاطع فيديو متعددة يمكن للأشخاص التمرير خلالها. رائع لعرض المنتجات أو سرد قصة.",
+
     "search_location": "ابحث عن دولة أو مدينة...",
     "confirm_locations": "تأكيد المواقع",
     "click_to_upload": "انقر لرفع صورة أو فيديو",
     "supported_formats": "JPG, PNG, MP4 (حد أقصى 30MB صورة، 4GB فيديو)",
     "use_this_creative": "استخدم هذا التصميم",
     "budget_recommendation": "نوصي بـ $10 على الأقل يومياً لأفضل النتائج",
+    "budget_minimum_warning": "الحد الأدنى للميزانية اليومية هو $5",
+    "url_invalid": "الرجاء إدخال رابط صالح (مثال: https://yoursite.com)",
+
+    "age_min": "الحد الأدنى للعمر",
+    "age_max": "الحد الأقصى للعمر",
+    "confirm_age": "تأكيد الفئة العمرية",
+
+    "step_objective": "الهدف",
+    "step_lead_type": "نوع العميل المحتمل",
+    "step_campaign_name": "اسم الحملة",
+    "step_location": "الموقع",
+    "step_targeting_type": "الاستهداف",
+    "step_audiences": "الجماهير",
+    "step_interests": "الاهتمامات",
+    "step_age": "العمر",
+    "step_gender": "الجنس",
+    "step_platform": "المنصة",
+    "step_budget": "الميزانية",
+    "step_ad_format": "تنسيق الإعلان",
+    "step_creative": "التصميم",
+    "step_headline": "العنوان",
+    "step_body": "النص الرئيسي",
+    "step_link": "الرابط",
+    "step_cta": "زر الإجراء",
+    "step_x_of_y": "الخطوة {current} من {total}",
+
+    "warning_no_pixel": "لم يتم العثور على بكسل فيسبوك. للحصول على أفضل تتبع للتحويلات، قم بإعداد بكسل في مدير الأحداث.",
+    "warning_no_pixel_link": "تعرف على كيفية إعداد بكسل فيسبوك",
+    "warning_no_whatsapp": "واتساب للأعمال غير متصل بهذه الصفحة. قم بتوصيله في Meta Business Suite.",
+    "warning_no_whatsapp_link": "تعرف على كيفية توصيل واتساب",
+    "warning_no_forms": "لم يتم العثور على نماذج عملاء محتملين. أنشئ واحداً لجمع العملاء المحتملين مباشرة على فيسبوك.",
+    "warning_continue_anyway": "المتابعة على أي حال",
+
+    "create_form": "إنشاء نموذج",
+    "form_name": "اسم النموذج",
+    "form_name_placeholder": "مثال: نموذج الاتصال",
+    "form_headline": "العنوان (اختياري)",
+    "form_description": "الوصف (اختياري)",
+    "form_questions": "الأسئلة المطلوبة",
+    "form_privacy_url": "رابط سياسة الخصوصية",
+    "form_privacy_placeholder": "https://yoursite.com/privacy",
+    "form_creating": "جاري إنشاء النموذج...",
+    "form_created": "تم إنشاء النموذج بنجاح!",
+    "form_email": "البريد الإلكتروني",
+    "form_full_name": "الاسم الكامل",
+    "form_phone": "رقم الهاتف",
+    "form_city": "المدينة",
+    "form_country": "الدولة",
+
+    "add_another_same_creative": "نفس التصميم، نص مختلف",
+    "add_another_same_copy": "نفس النص، تصميم مختلف",
+    "add_another_scratch": "البدء من الصفر",
+    "add_another_done": "انتهيت من إضافة الإعلانات",
+
+    "preview_title": "معاينة الإعلان",
+    "preview_ad_name": "اسم الإعلان",
+    "preview_no_image": "لم يتم رفع صورة",
+    "duplicate_ad": "نسخ الإعلان",
+    "delete_ad": "حذف الإعلان",
 
     "show_history": "عرض سجل المحادثة",
 
-    "thinking": "دعني أفكر...",
-    "summary_ready": "ها هي خطة المعركة! مستعد للإطلاق؟",
+    "thinking": "جاري المعالجة...",
+    "summary_ready": "إليك ملخص حملتك. مستعد للإطلاق؟",
     "summary_campaign": "الحملة",
     "summary_target": "الهدف",
     "summary_editing": "التعديل",
     "summary_targeting": "الاستهداف",
     "summary_budget": "الميزانية",
     "summary_ad": "تصميم الإعلان",
+    "summary_ads": "الإعلانات ({count})",
 
     "objective": "الهدف",
     "lead_type": "نوع العميل المحتمل",
@@ -1183,9 +1284,47 @@
 
     "launch": "إطلاق الحملة",
     "edit_something": "تعديل شيء",
-    "launching": "جاري الإطلاق...",
-    "success": "تم إطلاق الحملة بنجاح! إبحار موفق!",
+    "launching": "جاري إنشاء حملتك...",
+    "success": "تم إطلاق الحملة بنجاح!",
     "view_campaign": "عرض الحملة",
     "create_another": "إنشاء أخرى"
+  },
+  "homepage3": {
+    "title": "ماذا تريد أن تفعل؟",
+    "greeting": "مرحباً {name}،",
+    "question": "ماذا تريد أن تفعل اليوم؟",
+    "subtitle": "اختر إجراءً للبدء",
+    "default_name": "هناك",
+    "manage": {
+      "title": "إدارة الحملات",
+      "description": "إنشاء أو تعديل أو التحكم في حملاتك",
+      "hint": "{count} حملات نشطة"
+    },
+    "performance": {
+      "title": "عرض الأداء",
+      "description": "شاهد كيف تؤدي إعلاناتك",
+      "hint": "${amount}/يوم متوسط"
+    },
+    "trends": {
+      "title": "تحليل الاتجاهات",
+      "description": "تعمق في الأداء التاريخي",
+      "hint": "آخر 30 يوم"
+    },
+    "ai_strategy": {
+      "title": "استراتيجية الذكاء الاصطناعي",
+      "description": "احصل على توصيات مدعومة بالذكاء الاصطناعي"
+    },
+    "ask": {
+      "title": "اسأل أي شيء",
+      "description": "تحدث مع بياناتك"
+    },
+    "reports": {
+      "title": "تقارير مخصصة",
+      "description": "إنشاء وتصدير تقارير مخصصة"
+    },
+    "quick_questions": "أو اسأل سؤالاً سريعاً:",
+    "q_how_doing": "كيف تؤدي إعلاناتي؟",
+    "q_improve": "كيف يمكنني التحسين؟",
+    "q_scale": "ماذا يجب أن أوسع؟"
   }
 }

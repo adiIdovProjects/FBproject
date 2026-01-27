@@ -71,6 +71,10 @@
     "invalid_budget": "Veuillez entrer un montant de budget valide",
     "hierarchy_guide": "Campagne → Ensemble de publicités → Publicité. Cliquez sur la flèche pour développer. Si une campagne ou un ensemble de publicités est en pause, tous les éléments qu'il contient ne seront pas diffusés même s'ils apparaissent comme actifs."
   },
+  "campaign_control": {
+    "tab_view": "Voir et Contrôler",
+    "tab_create": "Créer / Modifier"
+  },
   "metrics": {
     "spend": "Dépenses",
     "total_spend": "Total Dépenses",
@@ -968,6 +972,7 @@
     "link_accounts": "Associer {count} compte(s)"
   },
   "uploader": {
+    "build_manually": "ou créer manuellement",
     "create_campaign_title": "Créer une nouvelle campagne",
     "create_campaign_desc": "Partez de zéro avec une toute nouvelle campagne. Utilisez le ciblage optimal recommandé par Facebook, définissez votre budget et choisissez vos objectifs. Parfait pour lancer de nouveaux produits ou tester de nouveaux objectifs.",
     "add_creative_title": "Ajouter un créatif à une campagne existante",
@@ -1104,27 +1109,28 @@
     "duplicate_form": "Dupliquer le formulaire"
   },
   "captain": {
-    "title": "Capitaine IA",
-    "try_ai_captain": "Essayer le Capitaine IA",
+    "title": "Assistant IA",
+    "try_ai_captain": "Créer avec l'assistant IA",
+    "ai_description": "Étape par étape avec des recommandations",
     "back_to_manual": "Retour au téléchargement manuel",
     "switch_to_manual": "Passer au manuel",
 
-    "welcome_choose_flow": "Ohé, Capitaine ! Quelle aventure allons-nous vivre aujourd'hui ?",
-    "welcome_create": "Ohé ! Prêt à embarquer pour une nouvelle campagne ? Quel trésor cherchez-vous ?",
-    "welcome_add": "Vous voulez ajouter plus de puissance de feu à un navire existant ? Allons-y !",
-    "welcome_edit": "C'est l'heure de corriger le cap ? Que devons-nous modifier ?",
+    "welcome_choose_flow": "Bienvenue ! Que souhaitez-vous faire aujourd'hui ?",
+    "welcome_create": "Créons une nouvelle campagne. Quel est votre objectif ?",
+    "welcome_add": "Ajouter une nouvelle annonce à une campagne existante. Sélectionnez la campagne ci-dessous.",
+    "welcome_edit": "Modifier une campagne existante. Que souhaitez-vous modifier ?",
 
-    "ask_campaign_name": "Comment allons-nous appeler cette campagne, Capitaine ?",
+    "ask_campaign_name": "Comment devrions-nous nommer cette campagne ?",
     "ask_objective": "Quel est l'objectif de cette campagne ?",
-    "ask_lead_type": "Doivent-ils visiter votre site web ou remplir un formulaire ici ?",
-    "ask_location": "Où devons-nous cibler ? Nommez les pays ou villes.",
+    "ask_lead_type": "Comment souhaitez-vous collecter les prospects ?",
+    "ask_location": "Où devons-nous cibler ? Recherchez des pays ou des villes.",
     "ask_age": "Quelle tranche d'âge devons-nous cibler ?",
     "ask_gender": "Une préférence de genre pour l'audience ?",
-    "ask_platform": "Facebook, Instagram, ou les deux ?",
-    "ask_budget": "Combien d'or par jour ? (en dollars)",
-    "ask_creative": "Téléchargez une image ou vidéo pour l'annonce.",
+    "ask_platform": "Quelles plateformes : Facebook, Instagram, ou les deux ?",
+    "ask_budget": "Quel est votre budget quotidien ? (en dollars)",
+    "ask_creative": "Téléchargez votre image ou vidéo pour l'annonce.",
     "ask_headline": "Quel est le titre de votre annonce ?",
-    "ask_body": "Et le texte principal ?",
+    "ask_body": "Quel est le texte principal de l'annonce ?",
     "ask_link": "Où doivent mener les clics ? Entrez l'URL.",
     "ask_cta": "Que doit afficher le bouton ?",
     "ask_campaign": "Sur quelle campagne travaillons-nous ?",
@@ -1135,17 +1141,22 @@
     "ask_new_creative": "Téléchargez le nouveau créatif.",
     "ask_new_headline": "Quel est le nouveau titre ?",
     "ask_new_body": "Quel est le nouveau texte principal ?",
+    "ask_ad_name": "Donnez un nom à cette annonce (optionnel)",
+    "ask_add_another": "Souhaitez-vous ajouter une autre annonce ?",
 
     "placeholder_campaign_name": "ex : Campagne Soldes d'été",
     "placeholder_budget": "ex : 20",
     "placeholder_headline": "ex : Achetez maintenant - 50% de réduction !",
     "placeholder_body": "ex : Ne manquez pas nos plus grandes soldes...",
     "placeholder_link": "ex : https://votresite.fr/soldes",
+    "placeholder_ad_name": "ex : Variation d'annonce 1",
 
     "opt_sales": "Ventes",
     "opt_leads": "Prospects",
     "opt_traffic": "Trafic",
     "opt_engagement": "Engagement",
+    "opt_whatsapp": "WhatsApp",
+    "opt_calls": "Appels",
     "opt_website": "Site web",
     "opt_form": "Formulaire instantané",
     "opt_all_ages": "Tous les âges (18-65)",
@@ -1154,23 +1165,113 @@
     "opt_female": "Femme",
     "opt_both_platforms": "Les deux",
 
+    "objective_desc_sales": "Stimuler les achats sur votre site web",
+    "objective_desc_leads": "Collecter les coordonnées de clients potentiels",
+    "objective_desc_traffic": "Envoyer des personnes vers votre site web",
+    "objective_desc_engagement": "Obtenir plus de mentions J'aime, commentaires et partages",
+    "objective_desc_whatsapp": "Démarrer des conversations sur WhatsApp",
+    "objective_desc_calls": "Inciter les gens à appeler votre entreprise",
+
+    "lead_type_website_title": "Prospects site web",
+    "lead_type_website_desc": "Les visiteurs cliquent vers votre site web et remplissent votre formulaire là-bas. Nécessite l'installation du Pixel Facebook sur votre site pour suivre les conversions.",
+    "lead_type_form_title": "Formulaire instantané",
+    "lead_type_form_desc": "Le formulaire apparaît directement dans Facebook/Instagram. Aucun site web requis. Les prospects sont collectés dans Facebook.",
+
+    "ask_targeting_type": "Comment devons-nous gérer le ciblage d'audience ?",
+    "targeting_advantage_title": "Advantage+ (Recommandé)",
+    "targeting_advantage_desc": "Laissez l'IA de Meta trouver la meilleure audience pour vous. Idéal pour la plupart des campagnes - généralement de meilleurs résultats avec moins d'efforts.",
+    "targeting_custom_title": "Ciblage personnalisé",
+    "targeting_custom_desc": "Définissez vous-même les préférences d'âge, de genre et de plateforme. Utilisez ceci si vous connaissez exactement votre audience.",
+
+    "ask_audiences": "Avez-vous des audiences personnalisées à cibler ? (optionnel)",
+    "ask_interests": "Quels sont les intérêts de votre audience ? Recherchez et ajoutez. (optionnel)",
+    "search_interests": "Rechercher des intérêts...",
+    "no_audiences": "Aucune audience personnalisée trouvée. Vous pouvez les créer dans Meta Ads Manager.",
+    "continue": "Continuer",
+
+    "ask_ad_format": "Quel type de publicité souhaitez-vous créer ?",
+    "ad_format_single_title": "Image ou Vidéo unique",
+    "ad_format_single_desc": "Une image ou vidéo avec votre titre et texte. Idéal pour les messages ciblés.",
+    "ad_format_carousel_title": "Carrousel",
+    "ad_format_carousel_desc": "Plusieurs images ou vidéos que les gens peuvent faire défiler. Idéal pour présenter des produits ou raconter une histoire.",
+
     "search_location": "Rechercher un pays ou une ville...",
     "confirm_locations": "Confirmer les emplacements",
     "click_to_upload": "Cliquez pour télécharger image ou vidéo",
     "supported_formats": "JPG, PNG, MP4 (max 30Mo image, 4Go vidéo)",
     "use_this_creative": "Utiliser ce créatif",
     "budget_recommendation": "Nous recommandons au moins 10$/jour pour de meilleurs résultats",
+    "budget_minimum_warning": "Le budget quotidien minimum est de 5$",
+    "url_invalid": "Veuillez entrer une URL valide (ex : https://votresite.fr)",
+
+    "age_min": "Âge minimum",
+    "age_max": "Âge maximum",
+    "confirm_age": "Confirmer la tranche d'âge",
+
+    "step_objective": "Objectif",
+    "step_lead_type": "Type de prospect",
+    "step_campaign_name": "Nom de la campagne",
+    "step_location": "Emplacement",
+    "step_targeting_type": "Ciblage",
+    "step_audiences": "Audiences",
+    "step_interests": "Intérêts",
+    "step_age": "Âge",
+    "step_gender": "Genre",
+    "step_platform": "Plateforme",
+    "step_budget": "Budget",
+    "step_ad_format": "Format",
+    "step_creative": "Créatif",
+    "step_headline": "Titre",
+    "step_body": "Texte principal",
+    "step_link": "Lien",
+    "step_cta": "Bouton CTA",
+    "step_x_of_y": "Étape {current} sur {total}",
+
+    "warning_no_pixel": "Aucun Pixel Facebook trouvé. Pour un meilleur suivi des conversions, configurez un pixel dans le Gestionnaire d'événements.",
+    "warning_no_pixel_link": "Découvrir comment configurer le Pixel Facebook",
+    "warning_no_whatsapp": "WhatsApp Business n'est pas connecté à cette page. Connectez-le dans Meta Business Suite.",
+    "warning_no_whatsapp_link": "Découvrir comment connecter WhatsApp",
+    "warning_no_forms": "Aucun formulaire de prospect trouvé. Créez-en un pour collecter des prospects directement sur Facebook.",
+    "warning_continue_anyway": "Continuer quand même",
+
+    "create_form": "Créer un formulaire",
+    "form_name": "Nom du formulaire",
+    "form_name_placeholder": "ex : Formulaire de contact",
+    "form_headline": "Titre (optionnel)",
+    "form_description": "Description (optionnel)",
+    "form_questions": "Questions à poser",
+    "form_privacy_url": "URL de politique de confidentialité",
+    "form_privacy_placeholder": "https://votresite.fr/confidentialite",
+    "form_creating": "Création du formulaire...",
+    "form_created": "Formulaire créé avec succès !",
+    "form_email": "Email",
+    "form_full_name": "Nom complet",
+    "form_phone": "Numéro de téléphone",
+    "form_city": "Ville",
+    "form_country": "Pays",
+
+    "add_another_same_creative": "Même créatif, texte différent",
+    "add_another_same_copy": "Même texte, créatif différent",
+    "add_another_scratch": "Commencer de zéro",
+    "add_another_done": "Terminé l'ajout d'annonces",
+
+    "preview_title": "Aperçu de l'annonce",
+    "preview_ad_name": "Nom de l'annonce",
+    "preview_no_image": "Aucune image téléchargée",
+    "duplicate_ad": "Dupliquer l'annonce",
+    "delete_ad": "Supprimer l'annonce",
 
     "show_history": "Afficher l'historique de conversation",
 
-    "thinking": "Laissez-moi réfléchir...",
-    "summary_ready": "Voici notre plan de bataille ! Prêt à lancer ?",
+    "thinking": "Traitement en cours...",
+    "summary_ready": "Voici le résumé de votre campagne. Prêt à lancer ?",
     "summary_campaign": "Campagne",
     "summary_target": "Cible",
     "summary_editing": "Modification",
     "summary_targeting": "Ciblage",
     "summary_budget": "Budget",
     "summary_ad": "Créatif publicitaire",
+    "summary_ads": "Annonces ({count})",
 
     "objective": "Objectif",
     "lead_type": "Type de prospect",
@@ -1182,9 +1283,47 @@
 
     "launch": "Lancer la campagne",
     "edit_something": "Modifier quelque chose",
-    "launching": "Lancement en cours...",
-    "success": "Campagne lancée avec succès ! Bon voyage !",
+    "launching": "Création de votre campagne...",
+    "success": "Campagne lancée avec succès !",
     "view_campaign": "Voir la campagne",
     "create_another": "En créer une autre"
+  },
+  "homepage3": {
+    "title": "Que souhaitez-vous faire ?",
+    "greeting": "Bonjour {name},",
+    "question": "Que souhaitez-vous faire aujourd'hui ?",
+    "subtitle": "Choisissez une action pour commencer",
+    "default_name": "là",
+    "manage": {
+      "title": "Gérer les campagnes",
+      "description": "Créer, modifier ou contrôler vos campagnes",
+      "hint": "{count} campagnes actives"
+    },
+    "performance": {
+      "title": "Voir les performances",
+      "description": "Découvrez comment vos publicités performent",
+      "hint": "${amount}/jour en moyenne"
+    },
+    "trends": {
+      "title": "Analyser les tendances",
+      "description": "Plongez dans les performances historiques",
+      "hint": "30 derniers jours"
+    },
+    "ai_strategy": {
+      "title": "Stratégie IA",
+      "description": "Obtenez des recommandations basées sur l'IA"
+    },
+    "ask": {
+      "title": "Posez vos questions",
+      "description": "Discutez avec vos données"
+    },
+    "reports": {
+      "title": "Rapports personnalisés",
+      "description": "Créez et exportez des rapports personnalisés"
+    },
+    "quick_questions": "Ou posez une question rapide :",
+    "q_how_doing": "Comment vont mes publicités ?",
+    "q_improve": "Comment puis-je améliorer ?",
+    "q_scale": "Que devrais-je développer ?"
   }
 }

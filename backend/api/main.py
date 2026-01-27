@@ -21,6 +21,23 @@ from pathlib import Path
 env_path = Path(__file__).parent.parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
+# Initialize Sentry for error tracking (production only)
+sentry_dsn = os.getenv('SENTRY_DSN')
+if sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        environment=os.getenv('ENVIRONMENT', 'development'),
+        traces_sample_rate=0.1,  # 10% of requests for performance monitoring
+        integrations=[
+            FastApiIntegration(transaction_style="endpoint"),
+            SqlalchemyIntegration(),
+        ],
+    )
+
 
 
 from backend.api.dependencies import get_db
@@ -121,11 +138,6 @@ def ping():
     """Simple ping endpoint without DB dependency."""
     logger.debug("Ping endpoint reached")
     return {"status": "ok", "timestamp": time.time()}
-
-@app.get("/debug-jwt", tags=["health"])
-def debug_jwt():
-    """Temporary debug endpoint to check JWT secret."""
-    return {"jwt_prefix": settings.JWT_SECRET_KEY[:20] + "..."}
 
 @app.get("/health", tags=["health"])
 def health(db: Session = Depends(get_db)):
