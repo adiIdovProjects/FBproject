@@ -258,6 +258,13 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         # Redirect back to frontend with token in URL
         # Frontend will call /api/v1/auth/session to set cookie via proxy
         from backend.config.base_config import settings
+        from urllib.parse import urlparse
+
+        # Security: Validate redirect URLs are to trusted domains only
+        trusted_domains = [
+            urlparse(settings.FRONTEND_URL).netloc,
+            urlparse(settings.FACEBOOK_OAUTH_REDIRECT_URL).netloc
+        ]
 
         if is_connect_flow:
             # Connect flow always goes to select-accounts to add/manage accounts
@@ -265,6 +272,12 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         else:
             # Normal login redirect - go through callback
             redirect_url = f"{settings.FACEBOOK_OAUTH_REDIRECT_URL}?state={state}&token={app_token}"
+
+        # Final validation: Ensure redirect URL is to a trusted domain
+        parsed_redirect = urlparse(redirect_url)
+        if parsed_redirect.netloc not in trusted_domains:
+            logger.error(f"Attempted redirect to untrusted domain: {parsed_redirect.netloc}")
+            raise HTTPException(status_code=400, detail="Invalid redirect URL")
 
         return RedirectResponse(redirect_url)
         

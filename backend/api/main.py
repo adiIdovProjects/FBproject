@@ -113,6 +113,48 @@ app = FastAPI(
 )
 
 @app.middleware("http")
+async def csrf_protection_middleware(request: Request, call_next):
+    """CSRF protection middleware - validates CSRF tokens for state-changing requests."""
+    from backend.utils.csrf_utils import CSRFProtection
+
+    # Skip CSRF for safe methods and public endpoints
+    safe_methods = ["GET", "HEAD", "OPTIONS"]
+    public_paths = ["/api/v1/auth/", "/api/v1/public/", "/ping", "/health", "/docs", "/redoc", "/openapi.json"]
+
+    if request.method in safe_methods or any(request.url.path.startswith(p) for p in public_paths):
+        response = await call_next(request)
+
+        # Set CSRF token cookie for authenticated users on GET requests
+        if request.method == "GET" and not any(request.url.path.startswith(p) for p in ["/ping", "/health", "/docs", "/redoc"]):
+            csrf_token = CSRFProtection.generate_token()
+            signed_token = CSRFProtection.create_signed_token(csrf_token)
+            response.set_cookie(
+                key="csrf_token",
+                value=signed_token,
+                httponly=False,  # JavaScript needs to read this to send in header
+                secure=settings.ENVIRONMENT == "production",
+                samesite="lax",
+                max_age=86400  # 24 hours
+            )
+            # Also send plain token in header for client to use
+            response.headers["X-CSRF-Token"] = csrf_token
+
+        return response
+
+    # For state-changing methods, validate CSRF token
+    cookie_token = request.cookies.get("csrf_token")
+    header_token = request.headers.get("X-CSRF-Token")
+
+    if not CSRFProtection.validate_request(cookie_token, header_token):
+        logger.warning(f"CSRF validation failed for {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}")
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "CSRF validation failed"}
+        )
+
+    return await call_next(request)
+
+@app.middleware("http")
 async def request_size_limit_middleware(request: Request, call_next):
     """Request size limit middleware - prevents DoS via large payloads."""
     # Only check size for state-changing methods
