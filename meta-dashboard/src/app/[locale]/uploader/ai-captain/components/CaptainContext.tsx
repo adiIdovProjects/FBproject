@@ -128,6 +128,7 @@ type CaptainAction =
     | { type: 'GO_TO_SUMMARY' }
     | { type: 'BACK_TO_CHAT' }
     | { type: 'GO_TO_STEP'; questionId: string } // Navigate to specific step
+    | { type: 'GO_BACK' } // Go back to previous question
     | { type: 'ADD_NEW_AD'; mode: 'same_creative' | 'same_copy' | 'scratch' } // Add another ad
     | { type: 'DUPLICATE_AD'; index: number } // Duplicate an ad entirely
     | { type: 'DELETE_AD'; index: number } // Delete an ad
@@ -287,6 +288,17 @@ function captainReducer(state: CaptainState, action: CaptainAction): CaptainStat
                 ...state,
                 questionHistory: state.questionHistory.slice(0, stepIndex),
                 currentQuestionId: action.questionId
+            };
+        }
+        case 'GO_BACK': {
+            // Go back to previous question in history
+            if (state.questionHistory.length === 0) return state;
+            const newHistory = [...state.questionHistory];
+            const previousQuestion = newHistory.pop()!;
+            return {
+                ...state,
+                questionHistory: newHistory,
+                currentQuestionId: previousQuestion
             };
         }
         case 'ADD_NEW_AD': {
