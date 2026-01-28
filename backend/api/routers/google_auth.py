@@ -127,4 +127,6 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         return RedirectResponse(redirect_url)
         
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Google Auth failed: {str(e)}")
+        from backend.utils.error_utils import sanitize_error_message
+        safe_message = sanitize_error_message(e, "Authentication failed", "Google OAuth callback")
+        raise HTTPException(status_code=400, detail=safe_message)

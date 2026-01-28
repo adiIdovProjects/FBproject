@@ -283,12 +283,15 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         
     except Exception as e:
         logger.error(f"Facebook Auth failed: {str(e)}", exc_info=True)
-        error_msg = str(e)
         from backend.config.base_config import settings
-        logger.error(f"DEBUG: Exception caught. Redirecting to settings. Msg: {error_msg}")
+        from backend.utils.error_utils import sanitize_error_message
+
+        # Sanitize error message for client (generic in production)
+        safe_message = sanitize_error_message(e, "Authentication failed", "Facebook OAuth callback")
+
         if "connect" in state:
-             return RedirectResponse(f"{settings.FRONTEND_URL}/settings?tab=accounts&error={error_msg}")
-        raise HTTPException(status_code=400, detail=f"Facebook Auth failed: {str(e)}")
+             return RedirectResponse(f"{settings.FRONTEND_URL}/settings?tab=accounts&error=connection_failed")
+        raise HTTPException(status_code=400, detail=safe_message)
 
 @router.get("/facebook/accounts", response_model=List[AdAccountSchema])
 async def get_facebook_accounts(current_user=Depends(get_current_user), db: Session = Depends(get_db)):

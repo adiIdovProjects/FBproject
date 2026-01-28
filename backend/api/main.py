@@ -100,8 +100,10 @@ class SimpleRateLimiter:
             for ip in empty_ips:
                 del self.requests[ip]
 
-# Initialize rate limiter: 100 requests/min, 15 requests/sec burst
+# Initialize rate limiters
 rate_limiter = SimpleRateLimiter(requests_per_minute=100, burst_limit=15)
+# Stricter rate limiter for authentication endpoints (prevents brute force)
+auth_rate_limiter = SimpleRateLimiter(requests_per_minute=10, burst_limit=3)
 
 # Create FastAPI application
 app = FastAPI(
@@ -181,14 +183,28 @@ async def rate_limit_middleware(request: Request, call_next):
 
     client_ip = request.client.host if request.client else "unknown"
 
-    # Check rate limit
-    if await rate_limiter.is_rate_limited(client_ip):
-        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
-        return JSONResponse(
-            status_code=429,
-            content={"detail": "Too many requests. Please slow down."},
-            headers={"Retry-After": "60"}
-        )
+    # Apply stricter rate limiting for authentication endpoints
+    auth_paths = ["/api/v1/auth/", "/api/v1/magic-link/"]
+    is_auth_endpoint = any(request.url.path.startswith(p) for p in auth_paths)
+
+    if is_auth_endpoint:
+        # Use stricter auth rate limiter (10 req/min, 3 req/sec)
+        if await auth_rate_limiter.is_rate_limited(client_ip):
+            logger.warning(f"Auth rate limit exceeded for IP: {client_ip} on {request.url.path}")
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many authentication attempts. Please try again in a few minutes."},
+                headers={"Retry-After": "300"}  # 5 minutes
+            )
+    else:
+        # Use normal rate limiter (100 req/min, 15 req/sec)
+        if await rate_limiter.is_rate_limited(client_ip):
+            logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please slow down."},
+                headers={"Retry-After": "60"}
+            )
 
     return await call_next(request)
 
@@ -261,24 +277,58 @@ def ping():
 @app.get("/health", tags=["health"])
 def health(db: Session = Depends(get_db)):
     """
-    Enhanced health check endpoint.
-    Verifies API status and database connectivity.
+    Comprehensive health check endpoint.
+    Verifies API status, database connectivity, and external API health.
     """
+    import requests
+    from sqlalchemy import text
+
     health_status = {
         "status": "healthy",
         "service": settings.APP_NAME,
         "version": "1.0.0",
-        "database": "disconnected"
+        "checks": {
+            "database": "unknown",
+            "facebook_api": "unknown",
+            "gemini_api": "unknown"
+        }
     }
-    
+
+    # Check database
     try:
-        from sqlalchemy import text
         db.execute(text("SELECT 1"))
-        health_status["database"] = "connected"
+        health_status["checks"]["database"] = "healthy"
     except Exception as e:
         logger.error(f"Health check database error: {e}")
+        health_status["checks"]["database"] = "unhealthy"
         health_status["status"] = "degraded"
-        
+
+    # Check Facebook API (test Graph API availability)
+    try:
+        response = requests.get("https://graph.facebook.com/v18.0/", timeout=3)
+        if response.status_code == 200:
+            health_status["checks"]["facebook_api"] = "healthy"
+        else:
+            health_status["checks"]["facebook_api"] = "degraded"
+    except Exception as e:
+        logger.warning(f"Facebook API health check failed: {e}")
+        health_status["checks"]["facebook_api"] = "unhealthy"
+        # Don't mark overall status as degraded for external API issues
+
+    # Check Gemini API (test if API key is configured)
+    if settings.GEMINI_API_KEY:
+        try:
+            # Just verify API key is set and not obviously invalid
+            # Don't make actual API call to avoid usage costs
+            if len(settings.GEMINI_API_KEY) > 20:
+                health_status["checks"]["gemini_api"] = "configured"
+            else:
+                health_status["checks"]["gemini_api"] = "misconfigured"
+        except Exception:
+            health_status["checks"]["gemini_api"] = "misconfigured"
+    else:
+        health_status["checks"]["gemini_api"] = "not_configured"
+
     return health_status
 
 # Background task for rate limiter cleanup

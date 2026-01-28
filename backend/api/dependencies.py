@@ -83,9 +83,9 @@ async def get_current_user(
     return user
 
 
-async def get_current_admin(current_user=Depends(get_current_user)):
+async def get_current_admin(request: Request, current_user=Depends(get_current_user)):
     """
-    Validates that the current user is an admin.
+    Validates that the current user is an admin and optionally checks IP whitelist.
     Use this dependency for admin-only endpoints.
     """
     if not getattr(current_user, 'is_admin', False):
@@ -93,6 +93,20 @@ async def get_current_admin(current_user=Depends(get_current_user)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
+
+    # IP whitelist check (if configured)
+    allowed_ips = settings.ADMIN_ALLOWED_IPS
+    if allowed_ips:  # If whitelist is configured
+        client_ip = request.client.host if request.client else "unknown"
+        if client_ip not in allowed_ips:
+            from backend.utils.logging_utils import get_logger
+            logger = get_logger(__name__)
+            logger.warning(f"Admin access denied for IP: {client_ip} (not in whitelist)")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin access restricted to specific IP addresses"
+            )
+
     return current_user
 
 

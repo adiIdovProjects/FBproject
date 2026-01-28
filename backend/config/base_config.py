@@ -46,6 +46,17 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 1 week
 
+    # Admin IP Whitelist (comma-separated list of IPs allowed to access admin endpoints)
+    # Empty = allow all IPs (not recommended for production)
+    ADMIN_ALLOWED_IPS: str = ""
+
+    @field_validator("ADMIN_ALLOWED_IPS", mode="after")
+    @classmethod
+    def parse_admin_ips(cls, v: str) -> List[str]:
+        if not v or v.strip() == "":
+            return []  # Empty list = no IP restriction (allow all)
+        return [ip.strip() for ip in v.split(",") if ip.strip()]
+
     @field_validator("JWT_SECRET_KEY", mode="after")
     @classmethod
     def validate_jwt_secret(cls, v: str, info) -> str:
