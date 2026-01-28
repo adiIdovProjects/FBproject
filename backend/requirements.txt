@@ -27,6 +27,9 @@ passlib[bcrypt]==1.7.4
 # Email
 resend==0.8.0
 
+# Payments
+stripe==11.5.0
+
 # AI & Gemini
 google-genai==1.0.0
 
