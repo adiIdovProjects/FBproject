@@ -32,7 +32,9 @@ apiClient.interceptors.response.use(
                                          path.includes('/auth/verify') ||
                                          path.includes('/onboard') ||
                                          path.includes('/select-accounts') ||
-                                         path.includes('/connect');
+                                         path.includes('/connect') ||
+                                         path.includes('/privacy-policy') ||
+                                         path.includes('/terms');
                     if (!isPublicPage) {
                         // Extract locale from current URL path (e.g., /he/dashboard -> he)
                         const pathParts = path.split('/');

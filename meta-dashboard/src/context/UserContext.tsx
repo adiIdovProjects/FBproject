@@ -32,7 +32,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                                  path.includes('/auth/verify') ||
                                  path.includes('/onboard') ||
                                  path.includes('/select-accounts') ||
-                                 path.includes('/connect');
+                                 path.includes('/connect') ||
+                                 path.includes('/privacy-policy') ||
+                                 path.includes('/terms');
             if (isPublicPage) {
                 setIsLoading(false);
                 return;
