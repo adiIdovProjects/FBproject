@@ -19,35 +19,47 @@ const LandingFooter = () => {
             { name: 'Contact', href: '#' },
         ],
         legal: [
-            { name: 'Privacy Policy', href: '#' },
-            { name: 'Terms of Service', href: '#' },
+            { name: 'Privacy Policy', href: `/${locale}/privacy-policy` },
+            { name: 'Terms of Service', href: `/${locale}/terms` },
         ],
     };
 
     return (
-        <footer className="bg-slate-50 dark:bg-[#0d1117] border-t border-slate-200 dark:border-[#232f48]">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    {/* Brand */}
-                    <div className="col-span-2 md:col-span-1">
-                        <Link href={`/${locale}`} className="flex items-center gap-2 mb-4">
-                            <div className="flex size-8 items-center justify-center rounded-lg bg-[#1a2b4a] text-white">
+        <footer className="relative bg-[#0B0F1A] border-t border-white/10">
+            {/* Gradient top border */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+                    {/* Brand column */}
+                    <div className="col-span-2">
+                        <Link href={`/${locale}`} className="flex items-center gap-3 mb-6">
+                            <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30">
                                 <span className="material-symbols-outlined text-xl">steering</span>
                             </div>
-                            <span className="text-lg font-extrabold tracking-tight dark:text-white">AdCaptain</span>
+                            <span className="text-xl font-extrabold tracking-tight text-white">AdCaptain</span>
                         </Link>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
-                            Take control of your Facebook ads. No agency required.
+                        <p className="text-slate-400 mb-6 max-w-xs leading-relaxed">
+                            Take control of your Facebook ads with AI-powered insights. No agency required.
                         </p>
+                        {/* Social links */}
+                        <div className="flex gap-3">
+                            <a href="#" className="size-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+                                <span className="text-lg font-bold">𝕏</span>
+                            </a>
+                            <a href="#" className="size-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+                                <span className="material-symbols-outlined text-lg">mail</span>
+                            </a>
+                        </div>
                     </div>
 
                     {/* Product Links */}
                     <div>
-                        <h4 className="font-semibold text-slate-900 dark:text-white mb-4 text-sm">Product</h4>
+                        <h4 className="font-semibold text-white mb-4 text-sm">Product</h4>
                         <ul className="space-y-3">
                             {footerLinks.product.map((link) => (
                                 <li key={link.name}>
-                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors">
+                                    <Link href={link.href} className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -57,11 +69,11 @@ const LandingFooter = () => {
 
                     {/* Company Links */}
                     <div>
-                        <h4 className="font-semibold text-slate-900 dark:text-white mb-4 text-sm">Company</h4>
+                        <h4 className="font-semibold text-white mb-4 text-sm">Company</h4>
                         <ul className="space-y-3">
                             {footerLinks.company.map((link) => (
                                 <li key={link.name}>
-                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors">
+                                    <Link href={link.href} className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -71,11 +83,11 @@ const LandingFooter = () => {
 
                     {/* Legal Links */}
                     <div>
-                        <h4 className="font-semibold text-slate-900 dark:text-white mb-4 text-sm">Legal</h4>
+                        <h4 className="font-semibold text-white mb-4 text-sm">Legal</h4>
                         <ul className="space-y-3">
                             {footerLinks.legal.map((link) => (
                                 <li key={link.name}>
-                                    <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0d9488] dark:hover:text-blue-400 transition-colors">
+                                    <Link href={link.href} className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -84,10 +96,15 @@ const LandingFooter = () => {
                     </div>
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-slate-200 dark:border-[#232f48]">
-                    <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                {/* Bottom bar */}
+                <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p className="text-sm text-slate-500">
                         &copy; {currentYear} AdCaptain. All rights reserved.
                     </p>
+                    <div className="flex gap-6 text-sm text-slate-500">
+                        <Link href={`/${locale}/privacy-policy`} className="hover:text-indigo-400 transition-colors">Privacy</Link>
+                        <Link href={`/${locale}/terms`} className="hover:text-indigo-400 transition-colors">Terms</Link>
+                    </div>
                 </div>
             </div>
         </footer>

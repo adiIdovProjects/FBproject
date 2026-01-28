@@ -9,22 +9,49 @@ const FAQ = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     return (
-        <section className="py-24 bg-white dark:bg-[#101622]" id="about">
-            <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <section className="py-24 relative overflow-hidden" id="about">
+            {/* Background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F1A] via-[#0F1629] to-[#0B0F1A]"></div>
+            {/* Gradient accent */}
+            <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-violet-500/10 rounded-full blur-[128px]"></div>
+
+            <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold tracking-tight mb-4 dark:text-white">Frequently Asked Questions</h2>
-                    <p className="text-slate-600 dark:text-slate-400 text-lg">Everything you need to know about getting started.</p>
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white"
+                    >
+                        Frequently Asked Questions
+                    </motion.h2>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 }}
+                        className="text-slate-400 text-xl"
+                    >
+                        Everything you need to know about getting started.
+                    </motion.p>
                 </div>
 
                 <div className="space-y-4">
                     {faq.map((item, i) => (
-                        <div key={i} className="border border-slate-200 dark:border-[#324467] rounded-xl overflow-hidden">
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.05 }}
+                            className="border border-white/10 rounded-xl overflow-hidden bg-white/[0.02] backdrop-blur"
+                        >
                             <button
                                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                                className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 dark:hover:bg-[#151c2a] transition-colors"
+                                className="w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-colors group"
                             >
-                                <span className="font-bold dark:text-white">{item.question}</span>
-                                <span className={`material-symbols-outlined transition-transform duration-300 ${openIndex === i ? 'rotate-180' : ''}`}>
+                                <span className="font-semibold text-white text-lg group-hover:text-indigo-400 transition-colors">{item.question}</span>
+                                <span className={`material-symbols-outlined text-indigo-400 transition-transform duration-300 ${openIndex === i ? 'rotate-180' : ''}`}>
                                     expand_more
                                 </span>
                             </button>
@@ -36,23 +63,32 @@ const FAQ = () => {
                                         exit={{ height: 0, opacity: 0 }}
                                         transition={{ duration: 0.3 }}
                                     >
-                                        <div className="p-6 pt-0 text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-[#324467]/50 mt-4">
+                                        <div className="px-6 pb-6 text-slate-400 leading-relaxed border-t border-white/10 pt-4">
                                             {item.answer}
                                         </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
 
-                <div className="mt-16 p-8 rounded-2xl bg-[#135bec]/5 border border-[#135bec]/20 text-center">
-                    <h4 className="font-bold dark:text-white mb-2">Still have questions?</h4>
-                    <p className="text-sm text-slate-500 mb-6">Can&apos;t find the answer you&apos;re looking for? Please chat with our friendly team.</p>
-                    <button className="px-6 py-2 rounded-lg bg-[#135bec] text-white font-bold text-sm">
-                        Contact Support
-                    </button>
-                </div>
+                {/* Support card with gradient */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mt-16 relative"
+                >
+                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 rounded-2xl blur opacity-20"></div>
+                    <div className="relative p-8 rounded-2xl bg-slate-900/80 backdrop-blur border border-white/10 text-center">
+                        <h4 className="font-bold text-white text-xl mb-2">Still have questions?</h4>
+                        <p className="text-slate-400 mb-6">Our team is here to help you succeed.</p>
+                        <button className="px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-bold hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all">
+                            Contact Support
+                        </button>
+                    </div>
+                </motion.div>
             </div>
         </section>
     );

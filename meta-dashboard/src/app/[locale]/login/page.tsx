@@ -1,20 +1,38 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { generateState } from '@/utils/csrf';
 import { getGoogleLoginUrl, getFacebookLoginUrl, requestMagicLink } from '@/services/auth.service';
+import { apiClient } from '@/services/apiClient';
 import { BarChart3, Mail, Loader2, AlertCircle, Facebook, CheckCircle, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
     const t = useTranslations();
     const router = useRouter();
+    const locale = useLocale();
     const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [emailSent, setEmailSent] = useState(false);
+    const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+    // Check if user is already logged in
+    useEffect(() => {
+        const checkSession = async () => {
+            try {
+                await apiClient.get('/api/v1/users/me');
+                // User is logged in, redirect to dashboard
+                router.replace(`/${locale}/account-dashboard`);
+            } catch {
+                // Not logged in, show login page
+                setIsCheckingSession(false);
+            }
+        };
+        checkSession();
+    }, [router, locale]);
 
     // Check for error query param (e.g., fb_already_linked)
     useEffect(() => {
@@ -53,12 +71,22 @@ export default function LoginPage() {
         }
     };
 
+    // Show loading while checking session
+    if (isCheckingSession) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#0B0F1A]">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0F1115] relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[120px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px]"></div>
+        <div className="min-h-screen flex items-center justify-center bg-[#0B0F1A] relative overflow-hidden">
+            {/* Gradient blobs */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/15 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-violet-500/15 rounded-full blur-[120px]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-pink-500/10 rounded-full blur-[100px]"></div>
             </div>
 
             <div className="relative z-10 w-full max-w-md p-8">
@@ -66,12 +94,12 @@ export default function LoginPage() {
 
                     <div className="text-center mb-8">
                         {/* Logo */}
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 mb-6 shadow-lg shadow-blue-500/20">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 mb-6 shadow-lg shadow-indigo-500/30">
                             <BarChart3 className="w-8 h-8 text-white" />
                         </div>
 
                         <h1 className="text-3xl font-black text-white mb-2 tracking-tight">
-                            AdManager Pro
+                            AdCaptain
                         </h1>
                         <p className="text-gray-400 font-medium">
                             {t('auth.login_title')}
@@ -82,7 +110,7 @@ export default function LoginPage() {
                     {!emailSent ? (
                         <form onSubmit={handleMagicLinkRequest} className="space-y-4 mb-6">
                             <div className="text-center mb-4">
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-2">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-sm font-medium mb-2">
                                     <Sparkles className="w-3.5 h-3.5" />
                                     <span>{t('auth.passwordless_login')}</span>
                                 </div>
@@ -110,7 +138,7 @@ export default function LoginPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="name@company.com"
                                         required
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all font-medium"
                                     />
                                 </div>
                             </div>
@@ -118,7 +146,7 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />

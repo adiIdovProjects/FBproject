@@ -761,3 +761,234 @@ html.colorful *:focus-visible {
 [dir="rtl"] .rtl-reverse {
   flex-direction: row-reverse;
 }
+
+/* ============================================
+   LANDING PAGE STYLES
+   Premium SaaS visual design system
+   ============================================ */
+
+/* === LANDING PAGE COLOR VARIABLES === */
+:root {
+  /* Primary gradient colors */
+  --landing-primary: #6366F1;
+  --landing-primary-dark: #4F46E5;
+  --landing-primary-light: #818CF8;
+  --landing-accent: #8B5CF6;
+  --landing-accent-light: #A78BFA;
+  --landing-pink: #EC4899;
+
+  /* Dark backgrounds for landing */
+  --landing-bg-dark: #0B0F1A;
+  --landing-bg-card: #111827;
+  --landing-bg-elevated: #1F2937;
+
+  /* Glow effects */
+  --glow-indigo: rgba(99, 102, 241, 0.4);
+  --glow-violet: rgba(139, 92, 246, 0.3);
+  --glow-pink: rgba(236, 72, 153, 0.3);
+}
+
+/* === LANDING PAGE GLASSMORPHISM === */
+.landing-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.landing-glass-hover:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.1);
+}
+
+/* === LANDING PAGE GRADIENTS === */
+.gradient-primary {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+}
+
+.gradient-cta {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #6366F1 0%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-indigo-violet {
+  background: linear-gradient(90deg, #818CF8 0%, #A78BFA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === LANDING PAGE GLOW EFFECTS === */
+.glow-indigo {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+}
+
+.glow-violet {
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
+.glow-cta {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.4),
+              0 0 80px rgba(139, 92, 246, 0.2);
+}
+
+.hover-glow-indigo:hover {
+  box-shadow: 0 0 50px rgba(99, 102, 241, 0.4);
+  transition: box-shadow 0.3s ease;
+}
+
+/* === ANIMATED GRADIENT BACKGROUND BLOBS === */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* === LANDING PAGE CARD STYLES === */
+.landing-card {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.landing-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.1);
+  transform: translateY(-2px);
+}
+
+/* === LANDING PAGE BUTTON STYLES === */
+.btn-landing-primary {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  color: white;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-landing-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-landing-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-landing-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+}
+
+.btn-landing-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.btn-landing-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* === GRADIENT BORDER EFFECT === */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #EC4899);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+/* === WINDOW CHROME (Mac-style dots) === */
+.window-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.window-dot-red {
+  background-color: #FF5F57;
+}
+
+.window-dot-yellow {
+  background-color: #FFBD2E;
+}
+
+.window-dot-green {
+  background-color: #28CA42;
+}
+
+/* === ANIMATED LINE FOR "HOW IT WORKS" === */
+@keyframes line-flow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-line-flow {
+  animation: line-flow 3s linear infinite;
+}
+
+/* === STAR GLOW FOR TESTIMONIALS === */
+.star-glow {
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+/* === QUOTE MARK STYLING === */
+.quote-mark {
+  font-family: Georgia, serif;
+  font-size: 6rem;
+  line-height: 1;
+  color: rgba(99, 102, 241, 0.15);
+}
