@@ -42,6 +42,10 @@ export interface GeoLocationTarget {
 export interface InterestTarget {
     id: string;
     name: string;
+    audience_size_lower_bound?: number;
+    audience_size_upper_bound?: number;
+    path?: string[];
+    topic?: string;
 }
 
 export interface SmartCampaignRequest {
