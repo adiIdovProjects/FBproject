@@ -1,0 +1,33 @@
+# Security Vulnerability Disclosure Policy
+# If you discover a security vulnerability, please report it to us.
+
+Contact: mailto:security@adsai.com
+Expires: 2027-01-28T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://www.yourapp.com/.well-known/security.txt
+
+# Security Policy
+Policy: https://www.yourapp.com/security-policy
+
+# Acknowledgments
+# We appreciate responsible disclosure and will acknowledge reporters who help improve our security.
+
+# Encryption
+# For sensitive reports, you may use our PGP key (coming soon)
+
+# Please include:
+# - Description of the vulnerability
+# - Steps to reproduce
+# - Potential impact
+# - Any suggested fixes
+
+# Response Timeline:
+# - Initial response: Within 48 hours
+# - Status update: Within 7 days
+# - Resolution timeline: Varies by severity
+
+# Out of Scope:
+# - Social engineering attacks
+# - Physical security issues
+# - Denial of Service attacks
+# - Reports from automated scanners without validation

@@ -29,6 +29,9 @@ class User(Base):
 
     # User Profile Fields (from quiz)
     job_title = Column(String(100), nullable=True)
+    platform_reason = Column(String(100), nullable=True)  # Why they came to platform
+    company_type = Column(String(100), nullable=True)  # Business context
+    role_with_ads = Column(String(100), nullable=True)  # Relationship with ad campaigns
     years_experience = Column(String(50), nullable=True)
     referral_source = Column(String(100), nullable=True)
 
@@ -49,6 +52,30 @@ class User(Base):
     
     # Relationships
     ad_accounts = relationship("UserAdAccount", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def decrypted_fb_token(self) -> str:
+        """Get decrypted Facebook access token (for use in code)."""
+        from backend.utils.encryption_utils import TokenEncryption
+        if not self.fb_access_token:
+            return ""
+        return TokenEncryption.decrypt_token(self.fb_access_token)
+
+    @property
+    def decrypted_google_token(self) -> str:
+        """Get decrypted Google access token (for use in code)."""
+        from backend.utils.encryption_utils import TokenEncryption
+        if not self.google_access_token:
+            return ""
+        return TokenEncryption.decrypt_token(self.google_access_token)
+
+    @property
+    def decrypted_google_refresh_token(self) -> str:
+        """Get decrypted Google refresh token (for use in code)."""
+        from backend.utils.encryption_utils import TokenEncryption
+        if not self.google_refresh_token:
+            return ""
+        return TokenEncryption.decrypt_token(self.google_refresh_token)
 
 
 class UserAdAccount(Base):

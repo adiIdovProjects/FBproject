@@ -34,6 +34,26 @@ def get_db_engine():
                 "options": "-c statement_timeout=30000"  # 30 second query timeout
             }
         )
+
+        # Enable slow query logging in production
+        if settings.ENVIRONMENT == "production":
+            from sqlalchemy import event
+            from sqlalchemy.engine import Engine
+            import time as time_module
+
+            @event.listens_for(Engine, "before_cursor_execute")
+            def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+                conn.info.setdefault('query_start_time', []).append(time_module.time())
+
+            @event.listens_for(Engine, "after_cursor_execute")
+            def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+                if 'query_start_time' in conn.info and conn.info['query_start_time']:
+                    total = time_module.time() - conn.info['query_start_time'].pop(-1)
+                    if total > 1.0:  # Log queries taking more than 1 second
+                        # Truncate long statements for logging
+                        stmt_preview = statement[:200] + "..." if len(statement) > 200 else statement
+                        logger.warning(f"Slow query ({total:.2f}s): {stmt_preview}")
+
         logger.info("✅ Database engine created successfully")
         return engine
     except Exception as e:

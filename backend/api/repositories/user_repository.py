@@ -3,6 +3,7 @@ from typing import Optional, List
 from backend.models.user_schema import User, UserAdAccount
 from backend.models.schema import DimAccount
 from datetime import datetime
+from backend.utils.encryption_utils import TokenEncryption
 
 class UserRepository:
     def __init__(self, db: Session):
@@ -28,11 +29,14 @@ class UserRepository:
         ).first()
 
     def create_user(self, email: str, fb_user_id: str, full_name: str, access_token: str, expires_at: datetime) -> User:
+        # Encrypt access token before storing
+        encrypted_token = TokenEncryption.encrypt_token(access_token)
+
         user = User(
             email=email,
             fb_user_id=fb_user_id,
             full_name=full_name,
-            fb_access_token=access_token,
+            fb_access_token=encrypted_token,
             fb_token_expires_at=expires_at
         )
         self.db.add(user)
@@ -54,7 +58,9 @@ class UserRepository:
     def update_fb_token(self, user_id: int, access_token: str, expires_at: datetime):
         user = self.db.query(User).filter(User.id == user_id).first()
         if user:
-            user.fb_access_token = access_token
+            # Encrypt access token before storing
+            encrypted_token = TokenEncryption.encrypt_token(access_token)
+            user.fb_access_token = encrypted_token
             user.fb_token_expires_at = expires_at
             self.db.commit()
         return user
@@ -102,6 +108,9 @@ class UserRepository:
         self,
         user_id: int,
         full_name: Optional[str] = None,
+        platform_reason: Optional[str] = None,
+        company_type: Optional[str] = None,
+        role_with_ads: Optional[str] = None,
         job_title: Optional[str] = None,
         years_experience: Optional[str] = None,
         referral_source: Optional[str] = None
@@ -113,6 +122,12 @@ class UserRepository:
 
         if full_name is not None:
             user.full_name = full_name
+        if platform_reason is not None:
+            user.platform_reason = platform_reason
+        if company_type is not None:
+            user.company_type = company_type
+        if role_with_ads is not None:
+            user.role_with_ads = role_with_ads
         if job_title is not None:
             user.job_title = job_title
         if years_experience is not None:

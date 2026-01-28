@@ -25,7 +25,8 @@ def get_mutation_service(user: User = Depends(get_current_user)) -> AdMutationSe
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User not connected to Facebook"
         )
-    return AdMutationService(access_token=user.fb_access_token)
+    # Use decrypted token for API calls
+    return AdMutationService(access_token=user.decrypted_fb_token)
 
 # --- Dropdown Data Endpoints ---
 
