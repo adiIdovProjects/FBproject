@@ -61,7 +61,8 @@ export default function VerifyMagicLinkPage() {
             .catch((err) => {
                 console.error('Magic link verification failed:', err);
                 setStatus('error');
-                setError(err.response?.data?.detail || 'Invalid or expired magic link');
+                // Security: Don't expose backend error details to users
+                setError('Invalid or expired magic link. Please request a new one.');
             });
     }, [searchParams, router]);
 

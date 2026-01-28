@@ -6,14 +6,14 @@ This module initializes the FastAPI application with all routers and middleware.
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-# from slowapi import Limiter, _rate_limit_exceeded_handler
-# from slowapi.util import get_remote_address
-# from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
+from collections import defaultdict
 import sys
 import os
 import logging
 import uuid
 import time
+import asyncio
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -52,12 +52,56 @@ from backend.config.base_config import settings
 setup_logging(level="DEBUG" if settings.DEBUG else "INFO")
 logger = get_logger(__name__)
 
-# Initialize rate limiter with in-memory storage (no Redis required)
-# DISABLED - causing backend to hang
-# limiter = Limiter(
-#     key_func=get_remote_address,
-#     storage_uri="memory://"  # Use in-memory storage instead of Redis
-# )
+# Simple in-memory rate limiter (no external dependencies)
+class SimpleRateLimiter:
+    """
+    Simple in-memory rate limiter using sliding window.
+    Thread-safe for async operations.
+    """
+    def __init__(self, requests_per_minute: int = 60, burst_limit: int = 10):
+        self.requests_per_minute = requests_per_minute
+        self.burst_limit = burst_limit  # Max requests per second
+        self.requests = defaultdict(list)  # IP -> list of timestamps
+        self._lock = asyncio.Lock()
+
+    async def is_rate_limited(self, client_ip: str) -> bool:
+        """Check if client is rate limited. Returns True if should be blocked."""
+        async with self._lock:
+            now = time.time()
+            minute_ago = now - 60
+            second_ago = now - 1
+
+            # Clean old entries
+            self.requests[client_ip] = [t for t in self.requests[client_ip] if t > minute_ago]
+
+            # Check per-minute limit
+            if len(self.requests[client_ip]) >= self.requests_per_minute:
+                return True
+
+            # Check burst limit (per-second)
+            recent = [t for t in self.requests[client_ip] if t > second_ago]
+            if len(recent) >= self.burst_limit:
+                return True
+
+            # Record this request
+            self.requests[client_ip].append(now)
+            return False
+
+    async def cleanup(self):
+        """Periodic cleanup of old entries to prevent memory leak."""
+        async with self._lock:
+            now = time.time()
+            minute_ago = now - 60
+            empty_ips = []
+            for ip, timestamps in self.requests.items():
+                self.requests[ip] = [t for t in timestamps if t > minute_ago]
+                if not self.requests[ip]:
+                    empty_ips.append(ip)
+            for ip in empty_ips:
+                del self.requests[ip]
+
+# Initialize rate limiter: 100 requests/min, 15 requests/sec burst
+rate_limiter = SimpleRateLimiter(requests_per_minute=100, burst_limit=15)
 
 # Create FastAPI application
 app = FastAPI(
@@ -69,15 +113,36 @@ app = FastAPI(
 )
 
 @app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Rate limiting middleware - blocks excessive requests."""
+    # Skip rate limiting for health checks and static assets
+    skip_paths = ["/ping", "/health", "/docs", "/redoc", "/openapi.json"]
+    if any(request.url.path.startswith(p) for p in skip_paths):
+        return await call_next(request)
+
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Check rate limit
+    if await rate_limiter.is_rate_limited(client_ip):
+        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many requests. Please slow down."},
+            headers={"Retry-After": "60"}
+        )
+
+    return await call_next(request)
+
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     request_id = str(uuid.uuid4())
     start_time = time.time()
-    
+
     # Log request start
     logger.info(
         f"Request started: {request.method} {request.url.path}",
         extra={
-            "request_id": request_id, 
+            "request_id": request_id,
             "method": request.method,
             "path": request.url.path,
             "ip": request.client.host if request.client else "unknown"
@@ -85,24 +150,19 @@ async def log_requests(request: Request, call_next):
     )
 
     response = await call_next(request)
-    
+
     process_time = time.time() - start_time
     logger.info(
         f"Request finished: {request.method} {request.url.path} - {response.status_code}",
         extra={
-            "request_id": request_id, 
+            "request_id": request_id,
             "status_code": response.status_code,
             "duration_ms": round(process_time * 1000, 2)
         }
     )
-    
+
     response.headers["X-Request-ID"] = request_id
     return response
-
-# Add rate limiter to app state
-# DISABLED - causing backend to hang
-# app.state.limiter = limiter
-# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS - explicit methods and headers for security
 app.add_middleware(
@@ -162,6 +222,14 @@ def health(db: Session = Depends(get_db)):
         
     return health_status
 
+# Background task for rate limiter cleanup
+async def rate_limiter_cleanup_task():
+    """Periodically clean up rate limiter memory."""
+    while True:
+        await asyncio.sleep(300)  # Every 5 minutes
+        await rate_limiter.cleanup()
+        logger.debug("Rate limiter cleanup completed")
+
 # Startup event
 @app.on_event("startup")
 async def startup_event():
@@ -200,6 +268,10 @@ async def startup_event():
         logger.info("✅ Database schema verified/created")
     except Exception as e:
         logger.error(f"❌ Failed to verify/create schema: {e}")
+
+    # Start rate limiter cleanup task
+    asyncio.create_task(rate_limiter_cleanup_task())
+    logger.info("✅ Rate limiter enabled (100 req/min, 15 req/sec burst)")
 
     logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
     logger.info("=" * 60)

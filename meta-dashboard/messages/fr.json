@@ -661,9 +661,40 @@
     "referral": {
       "google_search": "Recherche Google",
       "facebook_ad": "Publicité Facebook",
-      "friend_referral": "Recommandation d’ami ou de collègue",
+      "friend_referral": "Recommandation d'ami ou de collègue",
       "linkedin": "LinkedIn",
-      "ai_tool": "Recommandation de l’IA",
+      "ai_tool": "Recommandation de l'IA",
+      "other": "Autre"
+    },
+    "why_are_you_here": "Qu'est-ce qui vous a amené à AdManager Pro ?",
+    "company_type_question": "Avec quel type d'entreprise travaillez-vous ?",
+    "your_role_with_ads": "Quelle est votre relation avec les campagnes publicitaires ?",
+    "watch_while_preparing": "Pendant que nous préparons votre tableau de bord, regardez cette visite rapide :",
+    "get_most_out": "Tirez le meilleur parti de la plateforme :",
+    "platform_tutorial": "Tutoriel de la plateforme",
+    "coming_soon": "Bientôt disponible",
+    "preparing_dashboard": "Préparation de votre tableau de bord...",
+    "platform_reasons": {
+      "manage_easily": "Gérer les campagnes facilement",
+      "detailed_analysis": "Obtenir des analyses et des rapports détaillés",
+      "ai_insights": "Insights et recommandations alimentés par l'IA",
+      "custom_reports": "Générer des rapports personnalisés",
+      "save_time": "Gagner du temps sur le travail manuel",
+      "other": "Autre"
+    },
+    "company_types": {
+      "smb": "Petite/Moyenne Entreprise",
+      "freelancer": "Freelance / Consultant",
+      "own_business": "Propriétaire d'entreprise / Entrepreneur",
+      "enterprise": "Grande Entreprise",
+      "agency": "Agence de marketing",
+      "other": "Autre"
+    },
+    "role_with_ads": {
+      "run_myself": "Je gère les publicités moi-même",
+      "manage_team": "Je gère une équipe qui gère les publicités",
+      "review_results": "Je révise les résultats / prends des décisions",
+      "learning": "J'apprends sur les publicités",
       "other": "Autre"
     }
   },

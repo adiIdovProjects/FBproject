@@ -708,6 +708,37 @@
       "linkedin": "LinkedIn",
       "ai_tool": "AI Recommendation",
       "other": "Other"
+    },
+    "why_are_you_here": "What brought you to AdManager Pro?",
+    "company_type_question": "What type of company do you work with?",
+    "your_role_with_ads": "What's your relationship with ad campaigns?",
+    "watch_while_preparing": "While we prepare your dashboard, check out this quick tour:",
+    "get_most_out": "Get the most out of the platform:",
+    "platform_tutorial": "Platform Tutorial",
+    "coming_soon": "Coming Soon",
+    "preparing_dashboard": "Preparing your dashboard...",
+    "platform_reasons": {
+      "manage_easily": "Manage campaigns with ease",
+      "detailed_analysis": "Get detailed analysis & reports",
+      "ai_insights": "AI-powered insights & recommendations",
+      "custom_reports": "Generate custom reports",
+      "save_time": "Save time on manual work",
+      "other": "Other"
+    },
+    "company_types": {
+      "smb": "Small/Medium Business",
+      "freelancer": "Freelancer / Consultant",
+      "own_business": "Business Owner / Entrepreneur",
+      "enterprise": "Enterprise / Large Company",
+      "agency": "Marketing Agency",
+      "other": "Other"
+    },
+    "role_with_ads": {
+      "run_myself": "I run the ads myself",
+      "manage_team": "I manage a team that runs ads",
+      "review_results": "I review results / make decisions",
+      "learning": "I'm learning about ads",
+      "other": "Other"
     }
   },
   "learning": {
@@ -1670,6 +1701,23 @@
         "definition": "When your audience has seen your ad too many times and performance starts declining. Signs include rising CPC and falling CTR. Time for fresh creative!"
       }
     }
+  },
+  "cookies": {
+    "title": "We use cookies",
+    "description": "We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. By clicking \"Accept All\", you consent to our use of cookies.",
+    "accept_all": "Accept All",
+    "necessary_only": "Necessary Only",
+    "customize": "Customize",
+    "learn_more": "Learn more in our",
+    "privacy_policy": "Privacy Policy",
+    "preferences_title": "Cookie Preferences",
+    "necessary": "Necessary Cookies",
+    "necessary_desc": "Required for the website to function. Cannot be disabled.",
+    "analytics": "Analytics Cookies",
+    "analytics_desc": "Help us understand how visitors interact with our website.",
+    "marketing": "Marketing Cookies",
+    "marketing_desc": "Used to track visitors across websites for advertising purposes.",
+    "save_preferences": "Save Preferences"
   },
   "homepage3": {
     "title": "What would you like to do?",

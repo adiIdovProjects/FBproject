@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend.api.dependencies import get_db, get_current_user
 from backend.api.repositories.user_repository import UserRepository
@@ -6,6 +6,9 @@ from backend.api.schemas.requests import UserProfileUpdateRequest
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -126,13 +129,16 @@ async def update_user_profile(
 ):
     """
     Update user profile from quiz.
-    Updates full_name, job_title, years_experience, and referral_source.
+    Updates profile fields including platform_reason, company_type, and role_with_ads.
     """
     user_repo = UserRepository(db)
 
     updated_user = user_repo.update_user_profile(
         user_id=current_user.id,
         full_name=profile_data.full_name,
+        platform_reason=profile_data.platform_reason,
+        company_type=profile_data.company_type,
+        role_with_ads=profile_data.role_with_ads,
         job_title=profile_data.job_title,
         years_experience=profile_data.years_experience,
         referral_source=profile_data.referral_source
@@ -147,8 +153,12 @@ async def update_user_profile(
         "full_name": updated_user.full_name,
         "facebook_id": updated_user.fb_user_id,
         "google_id": updated_user.google_id,
+        "platform_reason": updated_user.platform_reason,
+        "company_type": updated_user.company_type,
+        "role_with_ads": updated_user.role_with_ads,
         "job_title": updated_user.job_title,
         "years_experience": updated_user.years_experience,
+        "referral_source": updated_user.referral_source,
         "timezone": getattr(updated_user, 'timezone', 'UTC'),
         "is_active": True,
         "created_at": updated_user.created_at
@@ -176,3 +186,89 @@ async def update_timezone(
     db.commit()
 
     return {"success": True, "timezone": request.timezone}
+
+
+@router.delete("/me")
+async def delete_my_account(
+    response: Response,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    GDPR Article 17: Right to Erasure
+    Permanently delete user account and all associated data.
+    This action is irreversible.
+
+    Deletes:
+    - User profile
+    - All linked ad accounts data
+    - Subscription records
+    - Page view history
+    - Activity logs
+    """
+    from backend.models.user_schema import User, UserAdAccount, UserSubscription, SubscriptionHistory, PageView
+    from backend.api.services.cleanup_service import CleanupService
+
+    user_id = current_user.id
+    user_email = current_user.email
+
+    logger.info(f"User deletion requested for user_id={user_id}, email={user_email}")
+
+    try:
+        # 1. Delete all ad account data for each linked account
+        cleanup = CleanupService(db)
+        account_ids = [acc.account_id for acc in current_user.ad_accounts]
+        for account_id in account_ids:
+            try:
+                cleanup.delete_account_data(account_id)
+                logger.info(f"Deleted ad data for account_id={account_id}")
+            except Exception as e:
+                logger.error(f"Error deleting ad data for account_id={account_id}: {e}")
+
+        # 2. Delete page views
+        db.query(PageView).filter(PageView.user_id == user_id).delete()
+        logger.info(f"Deleted page views for user_id={user_id}")
+
+        # 3. Delete subscription history
+        db.query(SubscriptionHistory).filter(SubscriptionHistory.user_id == user_id).delete()
+        logger.info(f"Deleted subscription history for user_id={user_id}")
+
+        # 4. Delete subscription
+        db.query(UserSubscription).filter(UserSubscription.user_id == user_id).delete()
+        logger.info(f"Deleted subscription for user_id={user_id}")
+
+        # 5. Delete user ad account links (cascade should handle this, but be explicit)
+        db.query(UserAdAccount).filter(UserAdAccount.user_id == user_id).delete()
+        logger.info(f"Deleted ad account links for user_id={user_id}")
+
+        # 6. Delete the user record
+        db.query(User).filter(User.id == user_id).delete()
+        logger.info(f"Deleted user record for user_id={user_id}")
+
+        # Commit all deletions
+        db.commit()
+
+        # Clear the auth cookie
+        response.delete_cookie(
+            key="auth_token",
+            path="/",
+            secure=True,
+            httponly=True,
+            samesite="lax"
+        )
+
+        logger.info(f"User deletion completed successfully for user_id={user_id}")
+
+        return {
+            "success": True,
+            "message": "Your account and all associated data have been permanently deleted.",
+            "deleted_accounts": len(account_ids)
+        }
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to delete user account user_id={user_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete account. Please contact support."
+        )

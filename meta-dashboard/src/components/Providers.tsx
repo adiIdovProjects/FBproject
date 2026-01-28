@@ -7,6 +7,7 @@ import { AccountProvider } from '@/context/AccountContext';
 import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import ChatWidget from '@/components/chat/ChatWidget';
+import CookieConsent from '@/components/CookieConsent';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -28,6 +29,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     <AccountProvider>
                         {children}
                         <ChatWidget />
+                        <CookieConsent />
                     </AccountProvider>
                 </UserProvider>
             </ThemeProvider>

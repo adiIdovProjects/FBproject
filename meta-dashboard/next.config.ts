@@ -13,6 +13,21 @@ const nextConfig: NextConfig = {
 
   // Security headers for production
   async headers() {
+    // Content Security Policy - adjust as needed for your third-party services
+    const cspHeader = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.sentry.io https://*.google.com https://*.gstatic.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "img-src 'self' data: blob: https://*.facebook.com https://*.fbcdn.net https://*.google.com https://*.googleusercontent.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "connect-src 'self' https://*.sentry.io https://*.facebook.com https://*.google.com wss://*.facebook.com " + apiUrl,
+      "frame-src 'self' https://*.facebook.com https://*.google.com",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+    ].join('; ');
+
     return [
       {
         source: '/:path*',
@@ -22,6 +37,9 @@ const nextConfig: NextConfig = {
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Content-Security-Policy', value: cspHeader },
+          // HSTS - Force HTTPS for 1 year, include subdomains, allow preload list
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
         ],
       },
     ];

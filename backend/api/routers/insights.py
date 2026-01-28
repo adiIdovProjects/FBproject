@@ -53,7 +53,7 @@ def get_overview_summary(
     except Exception as e:
         import traceback
         logger.error(f"Failed to generate overview summary: {str(e)}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate overview summary: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate overview summary. Please try again later.")
 
 
 @router.get("/summary")
@@ -91,10 +91,8 @@ def get_insights_summary(
         )
     except Exception as e:
         import traceback
-        print(f"DEBUG ERROR IN INSIGHTS: {e}")
-        print(traceback.format_exc())
         logger.error(f"Failed to generate insights: {str(e)}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate insights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate insights. Please try again later.")
 
 
 @router.get("/deep-analysis")
@@ -115,7 +113,8 @@ def get_deep_insights(
         service = InsightsService(db, current_user.id)
         return service.get_deep_analysis(start_date, end_date, user_id=current_user.id, account_id=account_id, locale=locale)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate deep analysis: {str(e)}")
+        logger.error(f"Failed to generate deep analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate deep analysis. Please try again later.")
 
 
 @router.get("/historical-analysis")
@@ -154,7 +153,8 @@ async def get_historical_analysis(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate historical analysis: {str(e)}")
+        logger.error(f"Failed to generate historical analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate historical analysis. Please try again later.")
 
 
 @router.get("/campaign-deep-dive/{campaign_id}")
@@ -186,7 +186,8 @@ async def get_campaign_deep_dive(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate campaign analysis: {str(e)}")
+        logger.error(f"Failed to generate campaign analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate campaign analysis. Please try again later.")
 
 
 @router.get("/campaign-analysis")
@@ -225,7 +226,7 @@ async def get_campaign_analysis(
         return result
     except Exception as e:
         logger.error(f"[Campaign Analysis] Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate campaign analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate campaign analysis. Please try again later.")
 
 
 @router.get("/creative-analysis")
@@ -264,7 +265,8 @@ async def get_creative_analysis(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate creative analysis: {str(e)}")
+        logger.error(f"Failed to generate creative analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate creative analysis. Please try again later.")
 
 
 @router.get("/creative-fatigue")
@@ -300,7 +302,8 @@ async def get_creative_fatigue_report(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate fatigue report: {str(e)}")
+        logger.error(f"Failed to generate fatigue report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate fatigue report. Please try again later.")
 
 
 @router.get("/latest")
@@ -342,7 +345,8 @@ def get_latest_insights(
             'count': len(insights)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve insights: {str(e)}")
+        logger.error(f"Failed to retrieve insights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve insights. Please try again later.")
 
 
 @router.patch("/insights/{insight_id}/read")
@@ -367,7 +371,8 @@ def mark_insight_as_read(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to mark insight as read: {str(e)}")
+        logger.error(f"Failed to mark insight as read: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to mark insight as read. Please try again later.")
 
 
 @router.post("/generate-now")
@@ -405,4 +410,5 @@ def generate_insights_now(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate insights: {str(e)}")
+        logger.error(f"Failed to generate insights on demand: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate insights. Please try again later.")

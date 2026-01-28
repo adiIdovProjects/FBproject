@@ -6,6 +6,31 @@ import { useTranslations } from 'next-intl';
 import { apiClient } from '@/services/apiClient';
 import { syncTimezone } from '@/services/auth.service';
 
+// Whitelist of allowed redirect paths (security: prevents open redirect attacks)
+const ALLOWED_REDIRECTS = [
+  'select-accounts',
+  'account-dashboard',
+  'homepage',
+  'settings',
+  'reports',
+  'campaigns',
+  'creatives',
+  'insights',
+  'learning',
+  'quiz',
+  'onboard/connect-facebook',
+];
+
+// Validate redirect path against whitelist
+function isValidRedirect(redirect: string | null): boolean {
+  if (!redirect) return false;
+  // Remove leading slash if present and check against whitelist
+  const cleanPath = redirect.replace(/^\//, '');
+  return ALLOWED_REDIRECTS.some(allowed =>
+    cleanPath === allowed || cleanPath.startsWith(allowed + '?') || cleanPath.startsWith(allowed + '/')
+  );
+}
+
 export default function CallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -15,7 +40,9 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const redirect = searchParams.get('redirect');
+      const redirectParam = searchParams.get('redirect');
+      // Security: Only allow whitelisted redirect paths
+      const redirect = isValidRedirect(redirectParam) ? redirectParam : null;
       const error = searchParams.get('error');
       const token = searchParams.get('token');
 

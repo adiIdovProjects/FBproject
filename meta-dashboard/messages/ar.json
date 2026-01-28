@@ -708,6 +708,37 @@
       "linkedin": "لينكد إن",
       "ai_tool": "توصية بالذكاء الاصطناعي",
       "other": "أخرى"
+    },
+    "why_are_you_here": "ما الذي أتى بك إلى AdManager Pro؟",
+    "company_type_question": "ما نوع الشركة التي تعمل معها؟",
+    "your_role_with_ads": "ما هي علاقتك بالحملات الإعلانية؟",
+    "watch_while_preparing": "أثناء إعداد لوحة التحكم، شاهد هذه الجولة السريعة:",
+    "get_most_out": "احصل على أقصى استفادة من المنصة:",
+    "platform_tutorial": "درس المنصة",
+    "coming_soon": "قريباً",
+    "preparing_dashboard": "جارٍ إعداد لوحة التحكم الخاصة بك...",
+    "platform_reasons": {
+      "manage_easily": "إدارة الحملات بسهولة",
+      "detailed_analysis": "الحصول على تحليلات وتقارير مفصلة",
+      "ai_insights": "رؤى وتوصيات مدعومة بالذكاء الاصطناعي",
+      "custom_reports": "إنشاء تقارير مخصصة",
+      "save_time": "توفير الوقت في العمل اليدوي",
+      "other": "أخرى"
+    },
+    "company_types": {
+      "smb": "أعمال صغيرة/متوسطة",
+      "freelancer": "مستقل / استشاري",
+      "own_business": "صاحب عمل / رائد أعمال",
+      "enterprise": "مؤسسة / شركة كبيرة",
+      "agency": "وكالة تسويق",
+      "other": "أخرى"
+    },
+    "role_with_ads": {
+      "run_myself": "أدير الإعلانات بنفسي",
+      "manage_team": "أدير فريقًا يدير الإعلانات",
+      "review_results": "أراجع النتائج / أتخذ القرارات",
+      "learning": "أتعلم عن الإعلانات",
+      "other": "أخرى"
     }
   },
   "status": {

@@ -666,6 +666,37 @@
       "linkedin": "לינקדאין",
       "ai_tool": "המלצת כלי AI",
       "other": "אחר"
+    },
+    "why_are_you_here": "מה הביא אותך ל-AdManager Pro?",
+    "company_type_question": "עם איזה סוג של חברה אתה עובד?",
+    "your_role_with_ads": "מה הקשר שלך לקמפיינים פרסומיים?",
+    "watch_while_preparing": "בזמן שאנחנו מכינים את לוח הבקרה שלך, צפה בסיור המהיר הזה:",
+    "get_most_out": "הוצא את המרב מהפלטפורמה:",
+    "platform_tutorial": "מדריך הפלטפורמה",
+    "coming_soon": "בקרוב",
+    "preparing_dashboard": "מכין את לוח הבקרה שלך...",
+    "platform_reasons": {
+      "manage_easily": "לנהל קמפיינים בקלות",
+      "detailed_analysis": "לקבל ניתוח ודוחות מפורטים",
+      "ai_insights": "תובנות והמלצות מבוססות בינה מלאכותית",
+      "custom_reports": "ליצור דוחות מותאמים אישית",
+      "save_time": "לחסוך זמן בעבודה ידנית",
+      "other": "אחר"
+    },
+    "company_types": {
+      "smb": "עסק קטן/בינוני",
+      "freelancer": "פרילנסר / יועץ",
+      "own_business": "בעל עסק / יזם",
+      "enterprise": "ארגון גדול / חברה",
+      "agency": "סוכנות שיווק",
+      "other": "אחר"
+    },
+    "role_with_ads": {
+      "run_myself": "אני מפעיל את המודעות בעצמי",
+      "manage_team": "אני מנהל צוות שמפעיל מודעות",
+      "review_results": "אני בוחן תוצאות / מקבל החלטות",
+      "learning": "אני לומד על מודעות",
+      "other": "אחר"
     }
   },
   "breakdown": {

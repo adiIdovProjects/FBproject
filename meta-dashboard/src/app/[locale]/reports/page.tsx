@@ -141,7 +141,7 @@ export default function ReportsPage() {
               .then(url => {
                 console.log('[Reports] Auto-retry successful:', url);
                 alert(`Successfully exported to Google Sheets: ${url}`);
-                window.open(url, '_blank');
+                window.open(url, '_blank', 'noopener,noreferrer');
               })
               .catch((err) => {
                 console.error('[Reports] Auto-retry failed:', err);
@@ -399,7 +399,7 @@ export default function ReportsPage() {
       });
       console.log('[Reports] Export successful:', url);
       alert(`Exported to Google Sheets: ${url}`);
-      window.open(url, '_blank');
+      window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error: any) {
       console.error('[Reports] Export to Google Sheets failed:', error);
       console.log('[Reports] Error name:', error.name);

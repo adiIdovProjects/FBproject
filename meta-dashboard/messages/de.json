@@ -708,6 +708,37 @@
       "linkedin": "LinkedIn",
       "ai_tool": "KI-Empfehlung",
       "other": "Andere"
+    },
+    "why_are_you_here": "Was hat Sie zu AdManager Pro gebracht?",
+    "company_type_question": "Mit welcher Art von Unternehmen arbeiten Sie?",
+    "your_role_with_ads": "Welche Beziehung haben Sie zu Werbekampagnen?",
+    "watch_while_preparing": "Während wir Ihr Dashboard vorbereiten, schauen Sie sich diese kurze Tour an:",
+    "get_most_out": "Holen Sie das Beste aus der Plattform heraus:",
+    "platform_tutorial": "Plattform-Tutorial",
+    "coming_soon": "Demnächst verfügbar",
+    "preparing_dashboard": "Ihr Dashboard wird vorbereitet...",
+    "platform_reasons": {
+      "manage_easily": "Kampagnen einfach verwalten",
+      "detailed_analysis": "Detaillierte Analysen & Berichte erhalten",
+      "ai_insights": "KI-gestützte Einblicke & Empfehlungen",
+      "custom_reports": "Benutzerdefinierte Berichte erstellen",
+      "save_time": "Zeit bei manueller Arbeit sparen",
+      "other": "Andere"
+    },
+    "company_types": {
+      "smb": "Kleines/Mittleres Unternehmen",
+      "freelancer": "Freiberufler / Berater",
+      "own_business": "Geschäftsinhaber / Unternehmer",
+      "enterprise": "Großunternehmen",
+      "agency": "Marketingagentur",
+      "other": "Andere"
+    },
+    "role_with_ads": {
+      "run_myself": "Ich schalte die Anzeigen selbst",
+      "manage_team": "Ich leite ein Team, das Anzeigen schaltet",
+      "review_results": "Ich überprüfe Ergebnisse / treffe Entscheidungen",
+      "learning": "Ich lerne über Anzeigen",
+      "other": "Andere"
     }
   },
   "status": {

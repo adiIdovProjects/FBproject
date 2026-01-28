@@ -17,7 +17,19 @@ class FacebookAuthService:
         self.redirect_uri = os.getenv("FACEBOOK_REDIRECT_URI", "http://localhost:8000/api/v1/auth/facebook/callback")
 
     def get_login_url(self, state: str) -> str:
-        """Generate the Facebook OAuth login URL"""
+        """Generate the Facebook OAuth login URL
+
+        Scopes are minimized per principle of least privilege (GDPR Art. 5):
+        - ads_read: Read ad account data and metrics
+        - read_insights: Access performance insights
+        - ads_management: Create/edit campaigns (for uploader feature)
+        - public_profile, email: User authentication
+        - pages_show_list: List available Facebook pages
+        - pages_read_engagement: Page engagement metrics
+        - pages_manage_ads: Manage ads through pages
+        - leads_retrieval: Access lead form submissions
+        - instagram_basic: Instagram integration
+        """
         scopes = [
             'ads_read',
             'read_insights',
@@ -26,9 +38,7 @@ class FacebookAuthService:
             'email',
             'pages_show_list',
             'pages_read_engagement',
-            'pages_read_user_content',
             'pages_manage_ads',
-            'pages_manage_metadata',
             'leads_retrieval',
             'instagram_basic',
         ]
