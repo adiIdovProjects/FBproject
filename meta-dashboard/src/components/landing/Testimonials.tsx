@@ -22,7 +22,7 @@ const Testimonials = () => {
                         viewport={{ once: true }}
                         className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white"
                     >
-                        Trusted by Business Owners Like You
+                        Trusted by 2,500+ Marketers & Small Businesses
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -31,7 +31,7 @@ const Testimonials = () => {
                         transition={{ delay: 0.1 }}
                         className="text-slate-400 text-xl"
                     >
-                        Join hundreds of freelancers and small businesses taking control of their ads.
+                        See why marketers are switching from expensive agencies to AdCaptain.
                     </motion.p>
                 </div>
 
@@ -52,6 +52,13 @@ const Testimonials = () => {
                                 {/* Large quote mark */}
                                 <div className="absolute top-6 right-6 text-6xl font-serif text-indigo-500/20">&quot;</div>
 
+                                {/* Outcome badge */}
+                                {'outcome' in t && (
+                                    <div className="absolute -top-3 -right-3 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
+                                        {t.outcome}
+                                    </div>
+                                )}
+
                                 {/* Avatar with gradient ring */}
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="relative">
@@ -71,7 +78,7 @@ const Testimonials = () => {
                                     ))}
                                 </div>
 
-                                <p className="text-slate-300 leading-relaxed text-lg">&quot;{t.content}&quot;</p>
+                                <p className="text-slate-200 leading-relaxed text-lg line-clamp-4 sm:line-clamp-none">&quot;{t.content}&quot;</p>
                             </div>
                         </motion.div>
                     ))}

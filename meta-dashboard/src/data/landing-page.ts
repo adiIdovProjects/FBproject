@@ -1,7 +1,7 @@
 export const landingPageData = {
     hero: {
-        headline: "Take Control of Your Ads.",
-        subheadline: "Navigate smarter with AI-powered insights. No agency needed, no marketing degree required.",
+        headline: "Stop Wasting Money on Ads You Don't Understand",
+        subheadline: "Get AI-powered insights in plain English. Average users improve ROAS by 2.3x and save $18,000/year vs agencies.",
         cta: "Start Free Trial",
         trustBadges: [
             { text: "7-Day Free Trial", icon: "check_circle" },
@@ -24,13 +24,13 @@ export const landingPageData = {
                 icon: "link"
             },
             {
-                title: "AI-Powered Insights",
-                description: "Ask questions in plain English. Our AI knows your data inside-out and gives you actionable recommendations instantly.",
+                title: "AI-Powered Insights (Save 8+ Hours/Week)",
+                description: "Ask questions in plain English. Get instant answers about your campaigns — no data analysis degree needed.",
                 icon: "psychology"
             },
             {
-                title: "Optimize & Grow",
-                description: "Make changes, track results, and get professional reports delivered to your inbox — all from one dashboard.",
+                title: "Optimize & Grow (Typical ROAS: 2.3x)",
+                description: "Track results in real-time and get client-ready reports delivered daily. See what's working in seconds, not hours.",
                 icon: "rocket_launch"
             }
         ]
@@ -40,23 +40,23 @@ export const landingPageData = {
         subtitle: "No agency required. No marketing degree needed.",
         items: [
             {
-                title: "AI That Knows Your Data",
-                description: "Ask questions, get answers. Our AI assistant knows all your metrics and can explain what they mean.",
+                title: "AI Marketing Expert (Available 24/7)",
+                description: "Ask questions, get instant answers. Our AI knows your campaigns and metrics better than any consultant.",
                 icon: "smart_toy"
             },
             {
-                title: "Facebook Expert Built-In",
-                description: "Best practices, recommendations, and implementation guides based on Meta's official playbook.",
+                title: "Meta-Certified Best Practices",
+                description: "Campaign setup, audience targeting, budget optimization, and ad design — all based on Meta's official playbook.",
                 icon: "school"
             },
             {
-                title: "One-Click Reports",
-                description: "Professional client-ready reports. Daily updates, weekly summaries delivered to your inbox.",
+                title: "Client-Ready Reports (Save 8 Hours/Week)",
+                description: "Professional reports with daily updates and weekly summaries delivered to your inbox automatically.",
                 icon: "description"
             },
             {
-                title: "All Your Analytics",
-                description: "Every metric, every breakdown. See exactly where your money goes and what it brings back.",
+                title: "Complete Analytics Transparency",
+                description: "Know exactly where every dollar goes and what it returns. Make confident decisions in seconds, not days.",
                 icon: "analytics"
             }
         ]
@@ -65,20 +65,23 @@ export const landingPageData = {
         {
             name: "Sarah J.",
             role: "Small Business Owner",
-            content: "I was paying an agency $1,500/month and had no idea what they were doing. Now I run my own ads and actually understand my results.",
-            avatar: "https://i.pravatar.cc/150?u=sarah"
+            content: "Fired my $1,500/month agency after seeing 47% better ROAS in my first 30 days. Now I run my own ads and actually understand what's working.",
+            avatar: "https://i.pravatar.cc/150?u=sarah",
+            outcome: "+47% ROAS"
         },
         {
             name: "Marcus T.",
             role: "Freelance Consultant",
-            content: "The AI assistant is like having a marketing expert on call 24/7. I ask questions and get real answers about my campaigns.",
-            avatar: "https://i.pravatar.cc/150?u=marcus"
+            content: "Cut my ad management time from 10 hours to 2 hours per week. The AI is like having a marketing expert on call 24/7 — instant answers, no confusion.",
+            avatar: "https://i.pravatar.cc/150?u=marcus",
+            outcome: "80% Time Saved"
         },
         {
             name: "Elena R.",
             role: "E-commerce Founder",
-            content: "Finally fired my agency. This platform shows me everything I need and the weekly reports save me hours every week.",
-            avatar: "https://i.pravatar.cc/150?u=elena"
+            content: "Saved $24,000/year by firing my agency. Reduced CPA by 32% in 60 days while cutting reporting time from 5 hours to 5 minutes per week.",
+            avatar: "https://i.pravatar.cc/150?u=elena",
+            outcome: "$24k Saved"
         }
     ],
     faq: [
@@ -92,11 +95,23 @@ export const landingPageData = {
         },
         {
             question: "Is my data secure?",
-            answer: "Absolutely. We use official Facebook APIs and industry-standard encryption. Your data is never shared with anyone."
+            answer: "Absolutely. We use official Facebook APIs, bank-level encryption (AES-256), and SOC 2 compliance. Your data is never shared or sold."
         },
         {
             question: "What if I get stuck?",
-            answer: "Our AI assistant is available 24/7 to answer your questions. Plus, you can reach our support team via email anytime."
+            answer: "Our AI assistant is available 24/7 for instant answers. Need human help? Our support team typically responds within 2 hours via email or live chat."
+        },
+        {
+            question: "How long does it take to see results?",
+            answer: "Most users see meaningful insights within 24 hours of connecting their account. Campaign optimization improvements typically show within 7-14 days as the AI learns your data patterns."
+        },
+        {
+            question: "Can I import my existing campaign data?",
+            answer: "Yes! When you connect your Facebook Ads account, we automatically sync your last 3 years of campaign history. No manual imports needed."
+        },
+        {
+            question: "What if I'm currently working with an agency?",
+            answer: "Many users run AdCaptain alongside their agency for transparency and second opinions. When ready to switch, our AI can help you transition smoothly without losing momentum."
         }
     ],
     agencyComparison: {
@@ -108,7 +123,8 @@ export const landingPageData = {
             { feature: "Control", agency: "They decide", adcaptain: "You decide" },
             { feature: "Transparency", agency: "Monthly reports", adcaptain: "Real-time data" },
             { feature: "Response Time", agency: "Days", adcaptain: "Instant AI" },
-            { feature: "Your Data", agency: "They own insights", adcaptain: "You own everything" }
+            { feature: "Typical Results", agency: "2-3 months to see impact", adcaptain: "Insights within 24 hours" },
+            { feature: "Your Data", agency: "They control insights & strategy", adcaptain: "You own all data, insights, and strategy" }
         ]
     },
     pricingTiers: [

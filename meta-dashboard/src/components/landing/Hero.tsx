@@ -38,26 +38,22 @@ const Hero = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-400 w-fit mx-auto lg:mx-0 backdrop-blur-sm"
+                            className="inline-flex items-center gap-2 rounded-full border border-indigo-500/50 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300 w-fit mx-auto lg:mx-0 backdrop-blur-sm"
                         >
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-400"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-300 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-300"></span>
                             </span>
                             {hero.trustBadges[0].text}
                         </motion.div>
 
                         {/* Main headline with gradient text */}
-                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight">
-                            <span className="text-white">Take Control</span>
-                            <br />
-                            <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
-                                of Your Ads
-                            </span>
+                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight">
+                            <span className="text-white">{hero.headline}</span>
                         </h1>
 
                         {/* Subheadline */}
-                        <p className="text-xl text-slate-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                        <p className="text-xl text-slate-300 md:text-2xl max-w-xl mx-auto lg:mx-0 leading-relaxed">
                             {hero.subheadline}
                         </p>
 
@@ -89,21 +85,45 @@ const Hero = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.5 + i * 0.1 }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur border border-white/10 hover:border-indigo-500/30 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur border border-indigo-500/50 hover:border-indigo-500/70 transition-colors"
                                 >
-                                    <span className="material-symbols-outlined text-indigo-400 text-base">{badge.icon}</span>
-                                    <span className="text-sm text-slate-300 font-medium">{badge.text}</span>
+                                    <span className="material-symbols-outlined text-indigo-300 text-base">{badge.icon}</span>
+                                    <span className="text-sm text-indigo-200 font-medium">{badge.text}</span>
                                 </motion.div>
                             ))}
                         </div>
+
+                        {/* Mobile dashboard preview */}
+                        <div className="lg:hidden mt-8">
+                            <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 rounded-xl p-4">
+                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">ROAS</div>
+                                        <div className="text-2xl font-black text-white">3.8x</div>
+                                        <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-xs">trending_up</span>
+                                            +12%
+                                        </div>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/20 rounded-xl p-4">
+                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">CTR</div>
+                                        <div className="text-2xl font-black text-white">4.2%</div>
+                                        <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-xs">trending_up</span>
+                                            +0.8%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
 
-                    {/* Right side - Dashboard preview */}
+                    {/* Right side - Dashboard preview (Desktop) */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8, delay: 0.2 }}
-                        className="relative lg:h-auto"
+                        className="relative lg:h-auto hidden lg:block"
                     >
                         {/* Outer glow effect */}
                         <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-pink-500/20 rounded-3xl blur-2xl opacity-60"></div>

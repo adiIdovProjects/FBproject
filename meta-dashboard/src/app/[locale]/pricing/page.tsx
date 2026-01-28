@@ -194,7 +194,7 @@ const PricingPage = () => {
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 dark:text-slate-300">AI Credits</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-[#324467]">
+                                <tbody className="divide-y divide-slate-200 dark:divide-white/10">
                                     <tr className="bg-white dark:bg-[#0B0F1A]">
                                         <td className="px-4 py-3 text-slate-600 dark:text-slate-300">$0 - $2,000</td>
                                         <td className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">$25/mo</td>

@@ -47,11 +47,11 @@ const Features = () => {
                                     className="group p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-indigo-500/30 hover:bg-white/[0.05] transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]"
                                 >
                                     {/* Icon with gradient background */}
-                                    <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 mb-4 group-hover:scale-110 transition-transform">
-                                        <span className="material-symbols-outlined text-2xl text-indigo-400">{feature.icon}</span>
+                                    <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/10 mb-4 group-hover:scale-110 transition-transform">
+                                        <span className="material-symbols-outlined text-4xl text-indigo-400">{feature.icon}</span>
                                     </div>
                                     <h4 className="font-bold text-white text-lg mb-2">{feature.title}</h4>
-                                    <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
+                                    <p className="text-slate-300 text-sm leading-relaxed">{feature.description}</p>
                                 </motion.div>
                             ))}
                         </div>
@@ -78,16 +78,19 @@ const Features = () => {
                                 <p className="text-white font-bold text-lg">AI-Powered</p>
                                 <p className="text-slate-400 text-sm">Analytics Platform</p>
 
-                                {/* Stats indicators */}
-                                <div className="flex gap-4 mt-6">
-                                    <div className="text-center">
-                                        <div className="text-2xl font-black text-indigo-400">+47%</div>
-                                        <div className="text-xs text-slate-500">ROAS</div>
-                                    </div>
-                                    <div className="w-px bg-white/10"></div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-black text-violet-400">-32%</div>
-                                        <div className="text-xs text-slate-500">CPA</div>
+                                {/* Stats indicators with context */}
+                                <div className="mt-6 text-center">
+                                    <div className="text-xs font-medium text-slate-400 mb-2">Average Client Results:</div>
+                                    <div className="flex gap-4">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-black text-indigo-400">+47%</div>
+                                            <div className="text-xs text-slate-500">ROAS</div>
+                                        </div>
+                                        <div className="w-px bg-white/10"></div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-black text-violet-400">-32%</div>
+                                            <div className="text-xs text-slate-500">CPA</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
