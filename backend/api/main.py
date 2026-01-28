@@ -113,6 +113,23 @@ app = FastAPI(
 )
 
 @app.middleware("http")
+async def request_size_limit_middleware(request: Request, call_next):
+    """Request size limit middleware - prevents DoS via large payloads."""
+    # Only check size for state-changing methods
+    if request.method in ["POST", "PUT", "PATCH"]:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            size_mb = int(content_length) / (1024 * 1024)
+            if int(content_length) > 10_000_000:  # 10MB limit
+                logger.warning(f"Request too large: {size_mb:.2f}MB from {request.client.host if request.client else 'unknown'}")
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Request entity too large. Maximum size is 10MB."}
+                )
+
+    return await call_next(request)
+
+@app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     """Rate limiting middleware - blocks excessive requests."""
     # Skip rate limiting for health checks and static assets

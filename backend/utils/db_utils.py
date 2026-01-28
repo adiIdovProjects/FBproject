@@ -29,7 +29,10 @@ def get_db_engine():
             max_overflow=40,       # Allow up to 60 total connections under load
             pool_timeout=30,       # Wait up to 30s for a connection
             pool_recycle=3600,     # Recycle connections after 1 hour
-            pool_pre_ping=True     # Test connections before use
+            pool_pre_ping=True,    # Test connections before use
+            connect_args={
+                "options": "-c statement_timeout=30000"  # 30 second query timeout
+            }
         )
         logger.info("✅ Database engine created successfully")
         return engine

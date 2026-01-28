@@ -213,6 +213,10 @@ class FactCoreMetrics(Base):
         Index('idx_fact_core_adset', 'adset_id'),
         Index('idx_fact_core_ad', 'ad_id'),
         Index('idx_fact_core_creative', 'creative_id'),
+        # Composite indexes for common query patterns (performance optimization)
+        Index('idx_fact_core_date_account_campaign', 'date_id', 'account_id', 'campaign_id'),
+        Index('idx_fact_core_date_account_adset', 'date_id', 'account_id', 'adset_id'),
+        Index('idx_fact_core_date_account_ad', 'date_id', 'account_id', 'ad_id'),
     )
 
 
@@ -237,6 +241,8 @@ class FactPlacementMetrics(Base):
         Index('idx_fact_placement_date', 'date_id'),
         Index('idx_fact_placement_account', 'account_id'),
         Index('idx_fact_placement_campaign', 'campaign_id'),
+        # Composite indexes for common query patterns
+        Index('idx_fact_placement_date_account_placement', 'date_id', 'account_id', 'placement_id'),
     )
 
 
@@ -262,6 +268,9 @@ class FactAgeGenderMetrics(Base):
         Index('idx_fact_age_gender_date', 'date_id'),
         Index('idx_fact_age_gender_account', 'account_id'),
         Index('idx_fact_age_gender_campaign', 'campaign_id'),
+        # Composite indexes for common query patterns
+        Index('idx_fact_age_gender_date_account_age', 'date_id', 'account_id', 'age_id'),
+        Index('idx_fact_age_gender_date_account_gender', 'date_id', 'account_id', 'gender_id'),
     )
 
 
@@ -286,6 +295,8 @@ class FactCountryMetrics(Base):
         Index('idx_fact_country_date', 'date_id'),
         Index('idx_fact_country_account', 'account_id'),
         Index('idx_fact_country_campaign', 'campaign_id'),
+        # Composite indexes for common query patterns
+        Index('idx_fact_country_date_account_country', 'date_id', 'account_id', 'country_id'),
     )
 
 
@@ -311,6 +322,8 @@ class FactActionMetrics(Base):
         Index('idx_fact_action_type', 'action_type_id'),
         Index('idx_fact_action_date', 'date_id'),
         Index('idx_fact_action_account', 'account_id'),
+        # Composite indexes for common query patterns
+        Index('idx_fact_action_date_account_action', 'date_id', 'account_id', 'action_type_id'),
     )
 
 class AuditLog(Base):
