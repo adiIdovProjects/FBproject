@@ -27,14 +27,12 @@ apiClient.interceptors.response.use(
                 // Skip redirect on public/onboarding pages
                 if (typeof window !== 'undefined') {
                     const path = window.location.pathname;
-                    const isPublicPage = path.includes('/login') ||
-                                         path.includes('/callback') ||
-                                         path.includes('/auth/verify') ||
-                                         path.includes('/onboard') ||
-                                         path.includes('/select-accounts') ||
-                                         path.includes('/connect') ||
-                                         path.includes('/privacy-policy') ||
-                                         path.includes('/terms');
+                    // Check if it's a public page (no auth redirect)
+                    const publicPaths = ['/login', '/callback', '/auth/verify', '/onboard',
+                                         '/select-accounts', '/connect', '/privacy-policy', '/terms',
+                                         '/pricing', '/homepage', '/homepage2', '/homepage3'];
+                    const isPublicPage = publicPaths.some(p => path.includes(p)) ||
+                                         path.match(/^\/[a-z]{2}\/?$/);
                     if (!isPublicPage) {
                         // Extract locale from current URL path (e.g., /he/dashboard -> he)
                         const pathParts = path.split('/');
