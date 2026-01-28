@@ -65,6 +65,7 @@ export interface SmartCampaignRequest {
     locales?: number[];  // Optional language targeting (Facebook locale codes)
     pixel_id?: string;  // Required for SALES objective
     conversion_event?: string;  // Conversion event for pixel optimization
+    use_advantage_targeting?: boolean;  // Use Meta Advantage+ targeting
     creative: SmartCreative;
     adset_name?: string;  // Optional custom ad set name
     ad_name?: string;     // Optional custom ad name
