@@ -134,28 +134,25 @@ class SmartBudgetOptimizer:
 
         query = text(f"""
             SELECT
-                agm.age_range as age,
-                agm.gender,
+                da.age_group as age,
+                dg.gender,
                 SUM(agm.spend) as spend,
-                SUM(agm.conversions) as conversions,
-                SUM(agm.purchases) as purchases,
-                CASE
-                    WHEN SUM(agm.spend) > 0 AND SUM(agm.conversions) > 0 THEN SUM(agm.conversion_value) / SUM(agm.spend)
-                    ELSE NULL
-                END as roas,
+                0 as conversions,
+                0 as purchases,
+                NULL as roas,
                 CASE
                     WHEN SUM(agm.impressions) > 0 THEN (SUM(agm.clicks)::float / SUM(agm.impressions)) * 100
                     ELSE 0
                 END as ctr
             FROM fact_age_gender_metrics agm
             JOIN dim_date d ON agm.date_id = d.date_id
+            JOIN dim_age da ON agm.age_id = da.age_id
+            JOIN dim_gender dg ON agm.gender_id = dg.gender_id
             WHERE d.date BETWEEN :start_date AND :end_date
-                AND agm.age_range IS NOT NULL
-                AND agm.gender IS NOT NULL
                 {account_filter}
-            GROUP BY agm.age_range, agm.gender
+            GROUP BY da.age_group, dg.gender
             HAVING SUM(agm.spend) > 50
-            ORDER BY roas DESC
+            ORDER BY ctr DESC
             LIMIT 10
         """)
 

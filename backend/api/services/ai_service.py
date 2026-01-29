@@ -477,7 +477,7 @@ class AIService:
             has_demographics = self.db.execute(text(f"""
                 SELECT EXISTS(
                     SELECT 1 FROM fact_age_gender_metrics f
-                    WHERE f.age_range IS NOT NULL
+                    WHERE f.age_id IS NOT NULL
                     {account_filter}
                     LIMIT 1
                 )
