@@ -19,7 +19,7 @@ interface Message {
 }
 
 interface AIChatTabProps {
-  accountId: string;
+  accountId: string | null;
 }
 
 export default function AIChatTab({ accountId }: AIChatTabProps) {

@@ -28,7 +28,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8
 const DEFAULT_DATE_RANGE_KEY = 'last_30_days';
 
 interface AnalysisTabProps {
-  accountId: string;
+  accountId: string | null;
 }
 
 export default function AnalysisTab({ accountId }: AnalysisTabProps) {

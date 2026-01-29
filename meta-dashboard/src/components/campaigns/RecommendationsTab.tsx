@@ -14,7 +14,7 @@ import { fetchInsightsSummary, InsightItem } from '../../services/insights.servi
 import { formatDate, calculateDateRange } from '../../utils/date';
 
 interface RecommendationsTabProps {
-  accountId: string;
+  accountId: string | null;
 }
 
 // Simple collapsible Q&A item for best practices
