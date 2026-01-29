@@ -640,8 +640,23 @@ async def set_session(request: SetSessionRequest, response: Response, db: Sessio
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
-        # Set the cookie
+        # Set the auth cookie
         set_auth_cookie(response, request.token)
+
+        # Set CSRF cookie so subsequent POST/PATCH requests have a valid token
+        from backend.utils.csrf_utils import CSRFProtection
+        csrf_token = CSRFProtection.generate_token()
+        signed_token = CSRFProtection.create_signed_token(csrf_token)
+        response.set_cookie(
+            key="csrf_token",
+            value=signed_token,
+            httponly=False,
+            secure=settings.ENVIRONMENT == "production",
+            samesite="lax",
+            max_age=86400
+        )
+        response.headers["X-CSRF-Token"] = csrf_token
+
         return {"success": True}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
