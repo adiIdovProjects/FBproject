@@ -101,7 +101,7 @@ export default function ConnectPage() {
                         </button>
 
                         <button
-                            onClick={() => router.push(`/${locale}/account-dashboard`)}
+                            onClick={() => router.push(`/${locale}/homepage`)}
                             className="text-gray-500 text-xs hover:text-gray-300 transition-colors"
                         >
                             {t('auth.skip_for_now')}

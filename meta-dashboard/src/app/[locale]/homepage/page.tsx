@@ -1,147 +1,146 @@
 "use client";
 
 /**
- * Homepage - AI-first experience for freelancers and SMBs
- * Simple, guided interface with Eddie the ads captain
+ * Homepage - Task-oriented homepage
+ * Clean, friendly interface that helps users navigate to what they want to do
  */
 
-import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { MainLayout } from '../../../components/MainLayout';
+import { useUser } from '../../../context/UserContext';
 import { useAccount } from '../../../context/AccountContext';
-import { AIChat } from '../../../components/insights/AIChat';
+import ActionCard from '../../../components/homepage/ActionCard';
 
-// New components
-import AccountStatusHero from '../../../components/homepage/AccountStatusHero';
-import HomeAIAssistant from '../../../components/homepage/HomeAIAssistant';
-import WhatsHappening from '../../../components/homepage/WhatsHappening';
-import GuidedActions from '../../../components/homepage/GuidedActions';
-import CapabilitiesShowcase from '../../../components/homepage/CapabilitiesShowcase';
+// Icons
+import {
+  Sliders,
+  BarChart3,
+  TrendingUp,
+  Sparkles,
+  MessageCircle,
+  FileText,
+} from 'lucide-react';
 
-// Services for health calculation
+// Services for hints
 import { fetchCampaignsWithComparison } from '../../../services/campaigns.service';
 import { formatDate, calculateDateRange } from '../../../utils/date';
-import { CampaignRow } from '../../../types/campaigns.types';
-
-// Health calculation
-function getCampaignHealthStatus(campaign: CampaignRow): 'great' | 'attention' | 'problem' {
-  if (campaign.spend === 0) return 'great';
-  if (campaign.spend > 50 && campaign.conversions === 0 && campaign.clicks < 10) return 'problem';
-  if (campaign.conversions > 0) return 'great';
-  if (campaign.ctr > 1) return 'great';
-  if (campaign.ctr < 1 && campaign.impressions > 1000) return 'attention';
-  return 'attention';
-}
-
-type AccountHealth = 'good' | 'attention' | 'issues' | 'new_user' | 'loading';
-
-function calculateAccountHealth(campaigns: CampaignRow[] | undefined, isLoading: boolean): AccountHealth {
-  if (isLoading) return 'loading';
-  if (!campaigns || campaigns.length === 0) return 'new_user';
-
-  const activeCampaigns = campaigns.filter(c => c.campaign_status === 'ACTIVE');
-  if (activeCampaigns.length === 0) return 'good';
-
-  const healthResults = activeCampaigns.map(getCampaignHealthStatus);
-  const problems = healthResults.filter(h => h === 'problem').length;
-  const attention = healthResults.filter(h => h === 'attention').length;
-
-  if (problems > 0) return 'issues';
-  if (attention >= 2) return 'attention';
-  return 'good';
-}
 
 export default function Homepage() {
   const t = useTranslations();
+  const locale = useLocale();
+  const router = useRouter();
+  const { user } = useUser();
   const { selectedAccountId } = useAccount();
 
-  // AI Chat modal state
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [initialChatMessage, setInitialChatMessage] = useState<string | undefined>();
-
-  // Fetch campaigns for health calculation (shared across components)
+  // Fetch campaigns for hints
   const dateRange = useMemo(() => calculateDateRange('last_30_days'), []);
   const startDate = formatDate(dateRange.start) || '';
   const endDate = formatDate(dateRange.end) || '';
 
-  const { data: campaigns, isLoading: isCampaignsLoading } = useQuery({
-    queryKey: ['homepage-health-campaigns', startDate, endDate, selectedAccountId],
-    queryFn: () => fetchCampaignsWithComparison(
-      { startDate, endDate },
-      [],
-      '',
-      'spend',
-      'desc',
-      selectedAccountId
-    ),
-    enabled: !!startDate && !!endDate,
+  const { data: campaigns } = useQuery({
+    queryKey: ['homepage-campaigns', startDate, endDate, selectedAccountId],
+    queryFn: () =>
+      fetchCampaignsWithComparison(
+        { startDate, endDate },
+        [],
+        '',
+        'spend',
+        'desc',
+        selectedAccountId
+      ),
+    enabled: !!startDate && !!endDate && !!selectedAccountId,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Calculate account health
-  const accountHealth = calculateAccountHealth(campaigns, isCampaignsLoading);
+  // Calculate hints
+  const activeCampaigns = campaigns?.filter(c => c.campaign_status === 'ACTIVE').length || 0;
+  const totalSpend = campaigns?.reduce((sum, c) => sum + (c.spend || 0), 0) || 0;
+  const avgDailySpend = totalSpend / 30;
 
-  // Find problem campaign name for GuidedActions
-  const problemCampaign = campaigns?.find(c => getCampaignHealthStatus(c) === 'problem');
-  const problemCampaignName = problemCampaign?.campaign_name;
+  // Get first name for greeting
+  const firstName = user?.full_name?.split(' ')[0] || t('homepage3.default_name');
 
-  // Check if user has issues
-  const hasIssues = accountHealth === 'issues' || accountHealth === 'attention';
-  const hasActiveCampaigns = accountHealth !== 'new_user';
-
-  // Handle opening chat with optional initial message
-  const handleOpenChat = (message?: string) => {
-    setInitialChatMessage(message);
-    setIsChatOpen(true);
+  // Navigation helper
+  const navigateTo = (path: string) => {
+    router.push(`/${locale}${path}`);
   };
 
+  // Action cards configuration
+  const actions = [
+    {
+      key: 'manage',
+      icon: Sliders,
+      gradient: 'from-blue-500 to-cyan-500',
+      route: '/campaign-control',
+      hint: activeCampaigns > 0 ? t('homepage3.manage.hint', { count: activeCampaigns }) : undefined,
+    },
+    {
+      key: 'performance',
+      icon: BarChart3,
+      gradient: 'from-green-500 to-emerald-500',
+      route: '/account-dashboard',
+      hint: avgDailySpend > 0 ? t('homepage3.performance.hint', { amount: avgDailySpend.toFixed(0) }) : undefined,
+    },
+    {
+      key: 'trends',
+      icon: TrendingUp,
+      gradient: 'from-purple-500 to-pink-500',
+      route: '/insights',
+      hint: t('homepage3.trends.hint'),
+    },
+    {
+      key: 'ai_strategy',
+      icon: Sparkles,
+      gradient: 'from-orange-500 to-red-500',
+      route: '/ai-investigator',
+      hint: undefined,
+    },
+    {
+      key: 'ask',
+      icon: MessageCircle,
+      gradient: 'from-indigo-500 to-violet-500',
+      route: '/ai-investigator',
+      hint: undefined,
+    },
+    {
+      key: 'reports',
+      icon: FileText,
+      gradient: 'from-pink-500 to-rose-500',
+      route: '/reports',
+      hint: undefined,
+    },
+  ];
+
   return (
-    <MainLayout
-      title={t('homepage.title')}
-      description={t('homepage.subtitle')}
-    >
-      {/* Section 1: Account Status Hero */}
-      <AccountStatusHero accountId={selectedAccountId} />
-
-      {/* Section 2: AI Assistant (Eddie) */}
-      <div className="mt-6">
-        <HomeAIAssistant
-          onOpenChat={handleOpenChat}
-          hasActiveCampaigns={hasActiveCampaigns}
-          hasIssues={hasIssues}
-        />
+    <MainLayout title={t('homepage3.title')} description="">
+      {/* Greeting */}
+      <div className="text-center mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">
+          {t('homepage3.greeting', { name: firstName })}
+        </h1>
+        <h2 className="text-xl md:text-2xl font-semibold text-white/90 mb-2">
+          {t('homepage3.question')}
+        </h2>
+        <p className="text-gray-400 text-base">{t('homepage3.subtitle')}</p>
       </div>
 
-      {/* Section 3: What's Happening + Guided Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <div className="lg:col-span-2">
-          <WhatsHappening accountId={selectedAccountId} />
-        </div>
-        <div>
-          <GuidedActions
-            accountHealth={accountHealth}
-            onOpenChat={() => handleOpenChat()}
-            problemCampaignName={problemCampaignName}
+      {/* Action Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {actions.map(action => (
+          <ActionCard
+            key={action.key}
+            icon={action.icon}
+            title={t(`homepage3.${action.key}.title`)}
+            description={t(`homepage3.${action.key}.description`)}
+            hint={action.hint}
+            gradient={action.gradient}
+            onClick={() => navigateTo(action.route)}
           />
-        </div>
+        ))}
       </div>
-
-      {/* Section 4: Capabilities Showcase */}
-      <div className="mt-6">
-        <CapabilitiesShowcase />
-      </div>
-
-      {/* AI Chat Modal */}
-      <AIChat
-        isOpen={isChatOpen}
-        onClose={() => {
-          setIsChatOpen(false);
-          setInitialChatMessage(undefined);
-        }}
-        accountId={selectedAccountId || undefined}
-        initialQuery={initialChatMessage}
-      />
     </MainLayout>
   );
 }

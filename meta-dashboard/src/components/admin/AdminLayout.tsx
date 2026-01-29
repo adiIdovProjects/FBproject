@@ -35,7 +35,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
       try {
         const response = await apiClient.get('/api/v1/users/me');
         if (!response.data.is_admin) {
-          router.push(`/${locale}/account-dashboard`);
+          router.push(`/${locale}/homepage`);
           return;
         }
         setIsAdmin(true);
@@ -115,7 +115,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
         {/* Return to Dashboard */}
         <div className="p-4 border-t border-border-subtle">
           <Link
-            href={`/${locale}/account-dashboard`}
+            href={`/${locale}/homepage`}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-muted hover:text-foreground hover:bg-secondary/50 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />

@@ -54,7 +54,7 @@ export default function AccountQuizPage() {
     // Fetch conversion types on mount
     useEffect(() => {
         if (!accountId) {
-            router.push(`/${locale}/account-dashboard`);
+            router.push(`/${locale}/homepage`);
             return;
         }
 
@@ -119,7 +119,7 @@ export default function AccountQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push(`/${locale}/account-dashboard`);
+        router.push(`/${locale}/homepage`);
     };
 
     if (!accountId) {

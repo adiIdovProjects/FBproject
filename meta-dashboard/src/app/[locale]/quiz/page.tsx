@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { CheckCircle, Circle, Loader2, ArrowRight } from 'lucide-react';
+import { CheckCircle, Circle, Loader2, ArrowRight, PlayCircle } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
 interface SyncStatus {
@@ -16,25 +16,36 @@ interface SyncStatus {
 
 interface QuizAnswers {
     full_name: string;
-    job_title: string;
-    years_experience: string;
+    platform_reason: string;
+    company_type: string;
+    role_with_ads: string;
     referral_source: string;
 }
 
-const JOB_TITLE_KEYS = [
-    { value: 'marketing_manager', key: 'quiz.job_titles.marketing_manager' },
-    { value: 'cmo', key: 'quiz.job_titles.cmo' },
-    { value: 'founder', key: 'quiz.job_titles.founder' },
-    { value: 'agency_manager', key: 'quiz.job_titles.agency_manager' },
-    { value: 'freelancer', key: 'quiz.job_titles.freelancer' },
-    { value: 'other', key: 'quiz.job_titles.other' }
+const PLATFORM_REASON_KEYS = [
+    { value: 'manage_easily', key: 'quiz.platform_reasons.manage_easily' },
+    { value: 'detailed_analysis', key: 'quiz.platform_reasons.detailed_analysis' },
+    { value: 'ai_insights', key: 'quiz.platform_reasons.ai_insights' },
+    { value: 'custom_reports', key: 'quiz.platform_reasons.custom_reports' },
+    { value: 'save_time', key: 'quiz.platform_reasons.save_time' },
+    { value: 'other', key: 'quiz.platform_reasons.other' }
 ];
 
-const YEARS_EXPERIENCE_KEYS = [
-    { value: 'less_than_1', key: 'quiz.experience.less_than_1' },
-    { value: '1_3_years', key: 'quiz.experience.1_3_years' },
-    { value: '3_5_years', key: 'quiz.experience.3_5_years' },
-    { value: '5_plus_years', key: 'quiz.experience.5_plus_years' }
+const COMPANY_TYPE_KEYS = [
+    { value: 'smb', key: 'quiz.company_types.smb' },
+    { value: 'freelancer', key: 'quiz.company_types.freelancer' },
+    { value: 'own_business', key: 'quiz.company_types.own_business' },
+    { value: 'enterprise', key: 'quiz.company_types.enterprise' },
+    { value: 'agency', key: 'quiz.company_types.agency' },
+    { value: 'other', key: 'quiz.company_types.other' }
+];
+
+const ROLE_WITH_ADS_KEYS = [
+    { value: 'run_myself', key: 'quiz.role_with_ads.run_myself' },
+    { value: 'manage_team', key: 'quiz.role_with_ads.manage_team' },
+    { value: 'review_results', key: 'quiz.role_with_ads.review_results' },
+    { value: 'learning', key: 'quiz.role_with_ads.learning' },
+    { value: 'other', key: 'quiz.role_with_ads.other' }
 ];
 
 const REFERRAL_SOURCE_KEYS = [
@@ -53,8 +64,9 @@ export default function UserProfileQuizPage() {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState<QuizAnswers>({
         full_name: '',
-        job_title: '',
-        years_experience: '',
+        platform_reason: '',
+        company_type: '',
+        role_with_ads: '',
         referral_source: ''
     });
     const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
@@ -94,10 +106,12 @@ export default function UserProfileQuizPage() {
 
         // Auto-advance to next question after selection
         setTimeout(() => {
-            if (field === 'job_title') {
+            if (field === 'platform_reason') {
                 setCurrentQuestion(2);
-            } else if (field === 'years_experience') {
+            } else if (field === 'company_type') {
                 setCurrentQuestion(3);
+            } else if (field === 'role_with_ads') {
+                setCurrentQuestion(4);
             } else if (field === 'referral_source') {
                 // Last question - save to backend
                 saveProfile({ ...answers, [field]: value });
@@ -123,10 +137,10 @@ export default function UserProfileQuizPage() {
     };
 
     const handleFinish = () => {
-        router.push(`/${locale}/account-dashboard`);
+        router.push(`/${locale}/homepage`);
     };
 
-    const progressPercent = ((currentQuestion + 1) / 4) * 100;
+    const progressPercent = ((currentQuestion + 1) / 5) * 100;
 
     const renderQuestion = () => {
         switch (currentQuestion) {
@@ -160,15 +174,15 @@ export default function UserProfileQuizPage() {
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
-                            {t('quiz.whats_your_role')}
+                            {t('quiz.why_are_you_here')}
                         </h2>
                         <div className="space-y-3">
-                            {JOB_TITLE_KEYS.map((option) => {
-                                const isSelected = answers.job_title === option.value;
+                            {PLATFORM_REASON_KEYS.map((option) => {
+                                const isSelected = answers.platform_reason === option.value;
                                 return (
                                     <button
                                         key={option.value}
-                                        onClick={() => handleSelectAnswer('job_title', option.value)}
+                                        onClick={() => handleSelectAnswer('platform_reason', option.value)}
                                         className={`
                                             w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
                                             flex items-center gap-4 group
@@ -197,15 +211,15 @@ export default function UserProfileQuizPage() {
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
-                            {t('quiz.how_long_running_ads')}
+                            {t('quiz.company_type_question')}
                         </h2>
                         <div className="space-y-3">
-                            {YEARS_EXPERIENCE_KEYS.map((option) => {
-                                const isSelected = answers.years_experience === option.value;
+                            {COMPANY_TYPE_KEYS.map((option) => {
+                                const isSelected = answers.company_type === option.value;
                                 return (
                                     <button
                                         key={option.value}
-                                        onClick={() => handleSelectAnswer('years_experience', option.value)}
+                                        onClick={() => handleSelectAnswer('company_type', option.value)}
                                         className={`
                                             w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
                                             flex items-center gap-4 group
@@ -231,6 +245,43 @@ export default function UserProfileQuizPage() {
                 );
 
             case 3:
+                return (
+                    <div>
+                        <h2 className="text-2xl font-bold text-white mb-6">
+                            {t('quiz.your_role_with_ads')}
+                        </h2>
+                        <div className="space-y-3">
+                            {ROLE_WITH_ADS_KEYS.map((option) => {
+                                const isSelected = answers.role_with_ads === option.value;
+                                return (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => handleSelectAnswer('role_with_ads', option.value)}
+                                        className={`
+                                            w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                                            flex items-center gap-4 group
+                                            ${isSelected
+                                                ? 'bg-blue-600/20 border-blue-500 shadow-lg shadow-blue-500/20'
+                                                : 'bg-gray-800/50 border-gray-700 hover:border-gray-600 hover:bg-gray-800'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex-shrink-0">
+                                            {isSelected ? (
+                                                <CheckCircle className="w-6 h-6 text-blue-400" />
+                                            ) : (
+                                                <Circle className="w-6 h-6 text-gray-500 group-hover:text-gray-400" />
+                                            )}
+                                        </div>
+                                        <span className="text-lg text-white font-medium">{t(option.key)}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+
+            case 4:
                 return (
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-6">
@@ -343,7 +394,7 @@ export default function UserProfileQuizPage() {
                             <div className="mb-8">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-gray-400">
-                                        {t('quiz.question_of', { current: currentQuestion + 1, total: 4 })}
+                                        {t('quiz.question_of', { current: currentQuestion + 1, total: 5 })}
                                     </span>
                                     <span className="text-sm text-gray-400">{Math.round(progressPercent)}%</span>
                                 </div>
@@ -375,17 +426,54 @@ export default function UserProfileQuizPage() {
                                 <CheckCircle className="w-10 h-10" />
                             </div>
                             <h2 className="text-3xl font-bold text-white mb-4">{t('quiz.profile_complete')}</h2>
-                            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                            <p className="text-gray-400 mb-6 max-w-md mx-auto">
                                 {t('quiz.thanks_completing')}
                             </p>
 
-                            <button
-                                onClick={handleFinish}
-                                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-xl flex items-center gap-2 mx-auto"
-                            >
-                                {t('quiz.go_to_dashboard')}
-                                <ArrowRight className="w-5 h-5" />
-                            </button>
+                            {/* Video Tutorial Placeholder */}
+                            <div className="mb-8 max-w-lg mx-auto">
+                                <p className="text-gray-400 text-sm mb-3">
+                                    {syncStatus?.status !== 'completed'
+                                        ? t('quiz.watch_while_preparing')
+                                        : t('quiz.get_most_out')}
+                                </p>
+                                <div className="aspect-video bg-gray-800/50 border border-white/10 rounded-xl flex items-center justify-center">
+                                    <div className="text-center p-4">
+                                        <PlayCircle className="w-12 h-12 text-gray-500 mx-auto mb-2" />
+                                        <p className="text-gray-400 font-medium">{t('quiz.platform_tutorial')}</p>
+                                        <p className="text-gray-500 text-sm">{t('quiz.coming_soon')}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Conditional Dashboard Button */}
+                            {syncStatus?.status === 'completed' || syncStatus?.status === 'not_started' ? (
+                                <button
+                                    onClick={handleFinish}
+                                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-xl flex items-center gap-2 mx-auto"
+                                >
+                                    {t('quiz.go_to_dashboard')}
+                                    <ArrowRight className="w-5 h-5" />
+                                </button>
+                            ) : (
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="flex items-center gap-3 text-blue-400">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>{t('quiz.preparing_dashboard')}</span>
+                                    </div>
+                                    {syncStatus && (
+                                        <div className="w-64">
+                                            <div className="w-full bg-gray-700 rounded-full h-2">
+                                                <div
+                                                    className="bg-blue-500 h-2 rounded-full transition-all"
+                                                    style={{ width: `${syncStatus.progress_percent}%` }}
+                                                />
+                                            </div>
+                                            <p className="text-gray-500 text-xs mt-1">{syncStatus.progress_percent}%</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

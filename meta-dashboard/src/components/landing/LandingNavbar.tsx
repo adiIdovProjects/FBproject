@@ -70,7 +70,7 @@ const LandingNavbar = () => {
 
           <div className="flex items-center gap-4">
             <Link
-              href={isLoggedIn ? `/${locale}/account-dashboard` : `/${locale}/login`}
+              href={isLoggedIn ? `/${locale}/homepage` : `/${locale}/login`}
               className="hidden sm:flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 px-5 text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-indigo-500/30 active:scale-95"
             >
               {isLoggedIn ? 'Go to Dashboard' : 'Start Free Trial'}
@@ -107,7 +107,7 @@ const LandingNavbar = () => {
                 </Link>
               ))}
               <Link
-                href={isLoggedIn ? `/${locale}/account-dashboard` : `/${locale}/login`}
+                href={isLoggedIn ? `/${locale}/homepage` : `/${locale}/login`}
                 className="w-full h-12 flex items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-bold"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

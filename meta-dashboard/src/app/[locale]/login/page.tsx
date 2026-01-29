@@ -25,7 +25,7 @@ export default function LoginPage() {
             try {
                 await apiClient.get('/api/v1/users/me');
                 // User is logged in, redirect to dashboard
-                router.replace(`/${locale}/account-dashboard`);
+                router.replace(`/${locale}/homepage`);
             } catch {
                 // Not logged in, show login page
                 setIsCheckingSession(false);
