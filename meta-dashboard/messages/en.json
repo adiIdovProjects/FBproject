@@ -78,7 +78,19 @@
   },
   "campaign_control": {
     "tab_view": "View & Control",
-    "tab_create": "Create / Edit"
+    "tab_create": "Create / Edit",
+    "tab_analysis": "Analysis",
+    "tab_recommendations": "Recommendations",
+    "tab_ai_chat": "Ask AI",
+    "best_practices_title": "Facebook Best Practices",
+    "best_practices_subtitle": "Quick tips to improve your ad performance",
+    "ai_recommendations_title": "AI Recommendations",
+    "ai_recommendations_subtitle": "Personalized suggestions based on your account data",
+    "ai_recommendations_loading": "Analyzing your account...",
+    "ai_recommendations_error": "Could not load recommendations. Try again later.",
+    "no_recommendations": "No recommendations available yet. Run some campaigns first!",
+    "ai_chat_title": "Ask AI About Your Campaigns",
+    "ai_chat_subtitle": "Get instant answers about your campaign performance"
   },
   "metrics": {
     "spend": "Spend",

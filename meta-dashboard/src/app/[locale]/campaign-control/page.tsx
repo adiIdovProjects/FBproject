@@ -9,13 +9,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Info, Eye, PlusCircle, Layers, ArrowRight, Pencil, Copy, Loader2, Sparkles, Target, Settings } from 'lucide-react';
+import { Info, Eye, PlusCircle, Layers, ArrowRight, Pencil, Copy, Loader2, Sparkles, Target, Settings, BarChart3, Lightbulb, MessageSquare } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
 import DateFilter from '../../../components/DateFilter';
 import { AIHelpPanel } from '../../../components/campaigns/AIHelpPanel';
 import CampaignControlTable from '../../../components/campaigns/CampaignControlTable';
+import AnalysisTab from '../../../components/campaigns/AnalysisTab';
+import RecommendationsTab from '../../../components/campaigns/RecommendationsTab';
+import AIChatTab from '../../../components/campaigns/AIChatTab';
 
 import { useAccount } from '../../../context/AccountContext';
 import { mutationsService } from '@/services/mutations.service';
@@ -47,9 +50,13 @@ export default function ManagePage() {
   const currency = selectedAccount?.currency || 'USD';
 
   // Tab state - check URL param for initial tab
-  const [activeTab, setActiveTab] = useState<'view' | 'create'>(() => {
+  const [activeTab, setActiveTab] = useState<'view' | 'create' | 'analysis' | 'recommendations' | 'ai-chat'>(() => {
     const tabParam = searchParams.get('tab');
-    return tabParam === 'create' ? 'create' : 'view';
+    if (tabParam === 'create') return 'create';
+    if (tabParam === 'analysis') return 'analysis';
+    if (tabParam === 'recommendations') return 'recommendations';
+    if (tabParam === 'ai-chat') return 'ai-chat';
+    return 'view';
   });
 
   // Initialize date range
@@ -170,6 +177,39 @@ export default function ManagePage() {
         >
           <PlusCircle className="w-4 h-4" />
           {t('campaign_control.tab_create') || 'Create / Edit'}
+        </button>
+        <button
+          onClick={() => setActiveTab('analysis')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+            activeTab === 'analysis'
+              ? 'bg-green-500 text-white'
+              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          {t('campaign_control.tab_analysis') || 'Analysis'}
+        </button>
+        <button
+          onClick={() => setActiveTab('recommendations')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+            activeTab === 'recommendations'
+              ? 'bg-purple-500 text-white'
+              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+          }`}
+        >
+          <Lightbulb className="w-4 h-4" />
+          {t('campaign_control.tab_recommendations') || 'Recommendations'}
+        </button>
+        <button
+          onClick={() => setActiveTab('ai-chat')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+            activeTab === 'ai-chat'
+              ? 'bg-cyan-500 text-white'
+              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          {t('campaign_control.tab_ai_chat') || 'Ask AI'}
         </button>
       </div>
 
@@ -619,6 +659,20 @@ export default function ManagePage() {
             </p>
           )}
         </div>
+      )}
+      {/* Analysis Tab */}
+      {activeTab === 'analysis' && (
+        <AnalysisTab accountId={selectedAccountId} />
+      )}
+
+      {/* Recommendations Tab */}
+      {activeTab === 'recommendations' && (
+        <RecommendationsTab accountId={selectedAccountId} />
+      )}
+
+      {/* AI Chat Tab */}
+      {activeTab === 'ai-chat' && (
+        <AIChatTab accountId={selectedAccountId} />
       )}
     </MainLayout>
   );

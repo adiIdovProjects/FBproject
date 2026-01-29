@@ -67,7 +67,19 @@
   },
   "campaign_control": {
     "tab_view": "Ansehen & Steuern",
-    "tab_create": "Erstellen / Bearbeiten"
+    "tab_create": "Erstellen / Bearbeiten",
+    "tab_analysis": "Analyse",
+    "tab_recommendations": "Empfehlungen",
+    "tab_ai_chat": "KI fragen",
+    "best_practices_title": "Facebook Best Practices",
+    "best_practices_subtitle": "Schnelle Tipps zur Verbesserung Ihrer Anzeigenleistung",
+    "ai_recommendations_title": "KI-Empfehlungen",
+    "ai_recommendations_subtitle": "Personalisierte Vorschläge basierend auf Ihren Kontodaten",
+    "ai_recommendations_loading": "Ihr Konto wird analysiert...",
+    "ai_recommendations_error": "Empfehlungen konnten nicht geladen werden. Versuchen Sie es später erneut.",
+    "no_recommendations": "Noch keine Empfehlungen verfügbar. Führen Sie zuerst einige Kampagnen durch!",
+    "ai_chat_title": "Fragen Sie KI zu Ihren Kampagnen",
+    "ai_chat_subtitle": "Erhalten Sie sofortige Antworten zur Kampagnenleistung"
   },
   "metrics": {
     "spend": "Ausgaben",

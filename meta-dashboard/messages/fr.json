@@ -73,7 +73,19 @@
   },
   "campaign_control": {
     "tab_view": "Voir et Contrôler",
-    "tab_create": "Créer / Modifier"
+    "tab_create": "Créer / Modifier",
+    "tab_analysis": "Analyse",
+    "tab_recommendations": "Recommandations",
+    "tab_ai_chat": "Demander à l'IA",
+    "best_practices_title": "Bonnes pratiques Facebook",
+    "best_practices_subtitle": "Conseils rapides pour améliorer les performances de vos publicités",
+    "ai_recommendations_title": "Recommandations IA",
+    "ai_recommendations_subtitle": "Suggestions personnalisées basées sur les données de votre compte",
+    "ai_recommendations_loading": "Analyse de votre compte...",
+    "ai_recommendations_error": "Impossible de charger les recommandations. Réessayez plus tard.",
+    "no_recommendations": "Aucune recommandation disponible pour le moment. Lancez d'abord quelques campagnes !",
+    "ai_chat_title": "Interrogez l'IA sur vos campagnes",
+    "ai_chat_subtitle": "Obtenez des réponses instantanées sur les performances de vos campagnes"
   },
   "metrics": {
     "spend": "Dépenses",

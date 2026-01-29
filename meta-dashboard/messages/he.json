@@ -73,7 +73,19 @@
   },
   "campaign_control": {
     "tab_view": "צפה ושלוט",
-    "tab_create": "צור / ערוך"
+    "tab_create": "צור / ערוך",
+    "tab_analysis": "ניתוח",
+    "tab_recommendations": "המלצות",
+    "tab_ai_chat": "שאל AI",
+    "best_practices_title": "שיטות עבודה מומלצות בפייסבוק",
+    "best_practices_subtitle": "טיפים מהירים לשיפור ביצועי המודעות שלך",
+    "ai_recommendations_title": "המלצות AI",
+    "ai_recommendations_subtitle": "הצעות מותאמות אישית על סמך נתוני החשבון שלך",
+    "ai_recommendations_loading": "מנתח את החשבון שלך...",
+    "ai_recommendations_error": "לא ניתן לטעון המלצות. נסה שוב מאוחר יותר.",
+    "no_recommendations": "אין המלצות זמינות עדיין. הפעל כמה קמפיינים קודם!",
+    "ai_chat_title": "שאל AI על הקמפיינים שלך",
+    "ai_chat_subtitle": "קבל תשובות מיידיות על ביצועי הקמפיינים שלך"
   },
   "metrics": {
     "spend": "הוצאה",

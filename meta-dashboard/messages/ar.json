@@ -67,7 +67,19 @@
   },
   "campaign_control": {
     "tab_view": "عرض والتحكم",
-    "tab_create": "إنشاء / تعديل"
+    "tab_create": "إنشاء / تعديل",
+    "tab_analysis": "تحليل",
+    "tab_recommendations": "توصيات",
+    "tab_ai_chat": "اسأل الذكاء",
+    "best_practices_title": "أفضل ممارسات فيسبوك",
+    "best_practices_subtitle": "نصائح سريعة لتحسين أداء إعلاناتك",
+    "ai_recommendations_title": "توصيات الذكاء الاصطناعي",
+    "ai_recommendations_subtitle": "اقتراحات مخصصة بناءً على بيانات حسابك",
+    "ai_recommendations_loading": "جارٍ تحليل حسابك...",
+    "ai_recommendations_error": "تعذر تحميل التوصيات. حاول مرة أخرى لاحقاً.",
+    "no_recommendations": "لا توجد توصيات متاحة بعد. قم بتشغيل بعض الحملات أولاً!",
+    "ai_chat_title": "اسأل الذكاء الاصطناعي عن حملاتك",
+    "ai_chat_subtitle": "احصل على إجابات فورية حول أداء حملاتك"
   },
   "metrics": {
     "spend": "الإنفاق",
