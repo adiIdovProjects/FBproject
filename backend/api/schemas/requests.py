@@ -139,9 +139,12 @@ class ExcelExportRequest(BaseModel):
 class UserProfileUpdateRequest(BaseModel):
     """Request parameters for updating user profile from quiz"""
     full_name: str = Field(..., min_length=1, max_length=255, description="User's name")
-    job_title: str = Field(..., min_length=1, max_length=100, description="User's job title")
-    years_experience: str = Field(..., min_length=1, max_length=50, description="Years of advertising experience")
-    referral_source: str = Field(..., min_length=1, max_length=100, description="How user heard about us")
+    platform_reason: Optional[str] = Field(None, max_length=100, description="Why they came to platform")
+    company_type: Optional[str] = Field(None, max_length=100, description="Business context")
+    role_with_ads: Optional[str] = Field(None, max_length=100, description="Relationship with ad campaigns")
+    job_title: Optional[str] = Field(None, max_length=100, description="User's job title (legacy)")
+    years_experience: Optional[str] = Field(None, max_length=50, description="Years of advertising experience")
+    referral_source: Optional[str] = Field(None, max_length=100, description="How user heard about us")
 
 
 # ============================================================================
