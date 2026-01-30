@@ -147,20 +147,6 @@ class UserProfileUpdateRequest(BaseModel):
     referral_source: Optional[str] = Field(None, max_length=100, description="How user heard about us")
 
 
-# ============================================================================
-# ACCOUNT OPTIMIZATION QUIZ SCHEMAS
-# ============================================================================
-
-class AccountQuizRequest(BaseModel):
-    """Request parameters for saving account quiz responses"""
-    primary_goal: str = Field(..., min_length=1, max_length=100, description="Primary advertising goal")
-    primary_goal_other: Optional[str] = Field(None, max_length=500, description="Other goal (if selected)")
-    primary_conversions: List[str] = Field(..., min_items=1, description="List of primary conversion types")
-    industry: str = Field(..., min_length=1, max_length=100, description="Business industry")
-    optimization_priority: str = Field(..., min_length=1, max_length=100, description="Optimization priority")
-    business_description: Optional[str] = Field(None, max_length=2000, description="Free text description of business activity for AI context")
-
-
 class ConversionTypesResponse(BaseModel):
     """Response for conversion types endpoint"""
     conversion_types: List[str] = Field(..., description="List of available conversion types")

@@ -14,7 +14,7 @@ from .ad_repository import AdRepository
 from .timeseries_repository import TimeSeriesRepository
 from .breakdown_repository import BreakdownRepository
 from backend.models.schema import DimAccount
-from backend.api.repositories.account_repository import AccountRepository
+from backend.api.repositories.business_profile_repository import BusinessProfileRepository
 
 
 class InsightsRepository:
@@ -28,7 +28,7 @@ class InsightsRepository:
         self.ad_repo = AdRepository(db)
         self.timeseries_repo = TimeSeriesRepository(db)
         self.breakdown_repo = BreakdownRepository(db)
-        self.account_repo = AccountRepository(db)
+        self.profile_repo = BusinessProfileRepository(db)
 
     def get_insights_data(
         self,
@@ -249,23 +249,23 @@ class InsightsRepository:
         
         # Get basic account info
         account = self.db.query(DimAccount).filter(DimAccount.account_id == account_id).first()
-        
-        # Get quiz responses
-        quiz = self.account_repo.get_account_quiz(account_id)
-        
-        if not account and not quiz:
+
+        # Get business profile
+        profile = self.profile_repo.get_by_account_id(account_id)
+
+        if not account and not profile:
             return None
-            
+
         context = {}
         if account:
             context['name'] = account.account_name
             context['currency'] = account.currency
-            
-        if quiz:
-            context['goal'] = quiz.get('primary_goal')
-            context['industry'] = quiz.get('industry')
-            context['priority'] = quiz.get('optimization_priority')
-            context['main_conversions'] = quiz.get('primary_conversions')
-            context['business_description'] = quiz.get('business_description')
-            
+
+        if profile:
+            context['business_type'] = profile.business_type
+            context['industry'] = profile.industry
+            context['target_audience'] = profile.target_audience
+            context['tone_of_voice'] = profile.tone_of_voice
+            context['business_description'] = profile.business_description
+
         return context

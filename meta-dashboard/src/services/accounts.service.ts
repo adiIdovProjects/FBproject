@@ -45,23 +45,10 @@ export const unlinkAccount = async (accountId: string, deleteData: boolean = fal
   return response.data;
 };
 
-export interface AccountQuizData {
-  primary_goal: string;
-  primary_goal_other?: string;
-  primary_conversions: string[];
-  industry: string;
-  optimization_priority: string;
-}
-
 export interface ConversionTypesResponse {
   conversion_types: string[];
   is_syncing: boolean;
   has_purchase_value: boolean;
-}
-
-export interface QuizResponse {
-  quiz_completed: boolean;
-  data: AccountQuizData | null;
 }
 
 export const accountsService = {
@@ -69,17 +56,5 @@ export const accountsService = {
    * Get available conversion types for an account
    */
   getConversionTypes: (accountId: string) =>
-    apiClient.get<ConversionTypesResponse>(`/api/v1/accounts/${accountId}/conversion-types`),
-
-  /**
-   * Save account quiz responses
-   */
-  saveAccountQuiz: (accountId: string, data: AccountQuizData) =>
-    apiClient.post(`/api/v1/accounts/${accountId}/quiz`, data),
-
-  /**
-   * Get account quiz responses
-   */
-  getAccountQuiz: (accountId: string) =>
-    apiClient.get<QuizResponse>(`/api/v1/accounts/${accountId}/quiz`)
+    apiClient.get<ConversionTypesResponse>(`/api/v1/accounts/${accountId}/conversion-types`)
 };

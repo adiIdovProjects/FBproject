@@ -17,7 +17,6 @@ import {
     User,
     Lightbulb,
     ChevronDown,
-    ArrowRight,
     Target,
     ChevronUp,
     Sliders,
@@ -48,7 +47,6 @@ export const Sidebar: React.FC = () => {
     const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
     const { isAdmin } = useUser();
     const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
-    const [quizCompleted, setQuizCompleted] = React.useState<boolean | null>(null);
 
     // Section expand/collapse state - default to expanded, load from localStorage in useEffect
     const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
@@ -95,39 +93,6 @@ export const Sidebar: React.FC = () => {
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
-    // Check if account setup quiz is completed
-    React.useEffect(() => {
-        const checkQuizStatus = async () => {
-            // Skip on public pages to avoid auth race conditions
-            if (typeof window !== 'undefined') {
-                const path = window.location.pathname;
-                const isPublicPage = path.includes('/login') ||
-                                     path.includes('/callback') ||
-                                     path.includes('/auth/verify') ||
-                                     path.includes('/onboard') ||
-                                     path.includes('/select-accounts') ||
-                                     path.includes('/connect');
-                if (isPublicPage) return;
-            }
-
-            if (!selectedAccountId) {
-                setQuizCompleted(null);
-                return;
-            }
-
-            try {
-                const response = await accountsService.getAccountQuiz(selectedAccountId);
-                console.log('[Sidebar] Quiz status response:', response.data);
-                setQuizCompleted(response.data.quiz_completed);
-            } catch (error) {
-                console.error('Error checking quiz status:', error);
-                // If there's an error, assume quiz is not completed (show button)
-                setQuizCompleted(false);
-            }
-        };
-
-        checkQuizStatus();
-    }, [selectedAccountId]);
 
     // Navigation structure with sections
     const navStructure = [
@@ -364,18 +329,6 @@ export const Sidebar: React.FC = () => {
 
             {/* Bottom Actions */}
             <div className="p-4 border-t border-border-subtle space-y-2">
-                {/* Complete Account Setup Button - Show only if quiz explicitly not completed */}
-                {quizCompleted === false && selectedAccountId && (
-                    <Link
-                        href={`/${locale}/account-quiz?account_id=${selectedAccountId}`}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-500/50 transition-all text-sm group`}
-                    >
-                        <Sparkles className={`w-5 h-5 text-purple-400 ${isRTL ? 'order-last' : ''}`} />
-                        <span className="flex-1 text-foreground font-semibold">Complete Setup</span>
-                        <ArrowRight className={`w-4 h-4 text-purple-400 transition-transform ${isRTL ? 'order-first group-hover:-translate-x-0.5 rotate-180' : 'group-hover:translate-x-0.5'}`} />
-                    </Link>
-                )}
-
                 {/* Account Settings (per-account) */}
                 {selectedAccountId && (
                     <Link

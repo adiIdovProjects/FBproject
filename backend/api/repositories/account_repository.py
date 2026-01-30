@@ -1,13 +1,12 @@
 """
 Account repository for account-level operations.
-Handles account quiz responses and conversion type queries.
+Handles conversion type queries.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
-from typing import Optional, List, Dict
-from backend.models.schema import AccountQuizResponses, FactCoreMetrics
-import json
+from sqlalchemy import text
+from typing import Dict
+from backend.models.schema import FactCoreMetrics
 
 
 class AccountRepository:
@@ -35,8 +34,6 @@ class AccountRepository:
         Queries fact_core_metrics (fast, denormalized, no joins).
         Returns dict with conversion_types list, is_syncing flag, and has_purchase_value.
         """
-        # Query fact_core_metrics for conversions with data > 0
-        # This is much faster than querying fact_action_metrics with joins
         query = text("""
             SELECT
                 CASE WHEN SUM(purchases) > 0 THEN 'purchase' ELSE NULL END as purchase,
@@ -50,10 +47,8 @@ class AccountRepository:
         result = self.db.execute(query, {"account_id": account_id}).fetchone()
 
         if not result:
-            # No data yet - account is still syncing
             return {"conversion_types": [], "is_syncing": True, "has_purchase_value": False}
 
-        # Extract non-null conversion types
         conversion_types = [
             conv for conv in [
                 result.purchase,
@@ -62,87 +57,10 @@ class AccountRepository:
             ] if conv is not None
         ]
 
-        # Check if we have any data at all
         is_syncing = len(conversion_types) == 0
 
         return {
             "conversion_types": conversion_types,
             "is_syncing": is_syncing,
             "has_purchase_value": bool(result.has_purchase_value)
-        }
-
-    def save_account_quiz(
-        self,
-        account_id: int,
-        primary_goal: str,
-        primary_goal_other: Optional[str],
-        primary_conversions: List[str],
-        industry: str,
-        optimization_priority: str,
-        business_description: Optional[str] = None
-    ) -> AccountQuizResponses:
-        """
-        Save or update account quiz responses.
-        Uses UPSERT (ON CONFLICT DO UPDATE) logic.
-        """
-        # Convert list to JSON string
-        conversions_json = json.dumps(primary_conversions)
-
-        # Check if quiz response already exists
-        existing = self.db.query(AccountQuizResponses).filter(
-            AccountQuizResponses.account_id == account_id
-        ).first()
-
-        if existing:
-            # Update existing
-            existing.primary_goal = primary_goal
-            existing.primary_goal_other = primary_goal_other
-            existing.primary_conversions = conversions_json
-            existing.industry = industry
-            existing.optimization_priority = optimization_priority
-            existing.business_description = business_description
-            self.db.commit()
-            self.db.refresh(existing)
-            return existing
-        else:
-            # Create new
-            quiz_response = AccountQuizResponses(
-                account_id=account_id,
-                primary_goal=primary_goal,
-                primary_goal_other=primary_goal_other,
-                primary_conversions=conversions_json,
-                industry=industry,
-                optimization_priority=optimization_priority,
-                business_description=business_description
-            )
-            self.db.add(quiz_response)
-            self.db.commit()
-            self.db.refresh(quiz_response)
-            return quiz_response
-
-    def get_account_quiz(self, account_id: int) -> Optional[Dict]:
-        """
-        Retrieve account quiz responses.
-        Returns None if quiz not completed, otherwise returns dict with responses.
-        """
-        quiz = self.db.query(AccountQuizResponses).filter(
-            AccountQuizResponses.account_id == account_id
-        ).first()
-
-        if not quiz:
-            return None
-
-        # Parse JSON conversions back to list
-        conversions = json.loads(quiz.primary_conversions) if quiz.primary_conversions else []
-
-        return {
-            "account_id": quiz.account_id,
-            "primary_goal": quiz.primary_goal,
-            "primary_goal_other": quiz.primary_goal_other,
-            "primary_conversions": conversions,
-            "industry": quiz.industry,
-            "optimization_priority": quiz.optimization_priority,
-            "business_description": quiz.business_description,
-            "created_at": quiz.created_at,
-            "updated_at": quiz.updated_at
         }

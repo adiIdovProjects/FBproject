@@ -299,7 +299,11 @@ async def get_facebook_accounts(current_user=Depends(get_current_user), db: Sess
     if not current_user.fb_access_token:
         raise HTTPException(status_code=401, detail="Facebook not connected")
 
-    accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+    try:
+        accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+    except Exception as e:
+        logger.error(f"Failed to fetch Facebook accounts: {e}")
+        raise HTTPException(status_code=401, detail="Facebook token is invalid or expired. Please reconnect your Facebook account.")
     return accounts
 
 @router.post("/facebook/reconnect")
@@ -311,7 +315,11 @@ async def reconnect_facebook(current_user=Depends(get_current_user), db: Session
     repo = UserRepository(db)
 
     # Fetch fresh account data from Facebook (including page_id)
-    fb_accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+    try:
+        fb_accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+    except Exception as e:
+        logger.error(f"Failed to reconnect Facebook accounts: {e}")
+        raise HTTPException(status_code=401, detail="Facebook token is invalid or expired. Please reconnect your Facebook account.")
 
     # Create a map of account_id -> page_id
     fb_account_map = {
@@ -399,7 +407,7 @@ async def link_accounts(
             account_ids.append(acc_id)
 
     # Update onboarding step
-    repo.update_onboarding_step(current_user.id, 'complete_profile')
+    repo.update_onboarding_step(current_user.id, 'business_profile')
 
     # Initialize sync status
     init_sync_status(current_user.id)
@@ -414,7 +422,7 @@ async def link_accounts(
         "linked_count": len(linked_accounts),
         "sync_status": "in_progress",
         "estimated_time_seconds": 30,
-        "next_step": "complete_profile"
+        "next_step": "business_profile"
     }
 @router.post("/register")
 async def register(request: RegisterRequest, db: Session = Depends(get_db)):

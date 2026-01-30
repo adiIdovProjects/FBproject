@@ -1368,5 +1368,22 @@
     "q_how_doing": "Comment vont mes publicités ?",
     "q_improve": "Comment puis-je améliorer ?",
     "q_scale": "Que devrais-je développer ?"
+  },
+  "business_profile": {
+    "title": "Parlez-nous de votre entreprise",
+    "subtitle": "Aidez-nous à comprendre votre entreprise pour de meilleures recommandations",
+    "account_label": "Compte : {name}",
+    "website_url_label": "URL du site web",
+    "website_url_placeholder": "https://www.votreentreprise.fr",
+    "website_url_help": "Nous analyserons votre site pour comprendre votre entreprise, votre audience et votre marque - pour des recommandations publicitaires plus intelligentes.",
+    "no_website": "Je n'ai pas de site web",
+    "description_label": "Décrivez brièvement votre entreprise",
+    "description_placeholder": "ex. restaurant, e-commerce, coach fitness, SaaS",
+    "description_help": "Quelques mots sur ce que fait votre entreprise",
+    "continue": "Continuer",
+    "analyzing": "Analyse de votre entreprise...",
+    "analysis_complete": "Analyse terminée",
+    "analysis_failed": "L'analyse n'a pas pu être complétée, mais vous pouvez continuer",
+    "step_indicator": "Étape {current} sur {total}"
   }
 }

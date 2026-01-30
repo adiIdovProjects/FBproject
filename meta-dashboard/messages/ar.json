@@ -1369,5 +1369,22 @@
     "q_how_doing": "كيف تؤدي إعلاناتي؟",
     "q_improve": "كيف يمكنني التحسين؟",
     "q_scale": "ماذا يجب أن أوسع؟"
+  },
+  "business_profile": {
+    "title": "أخبرنا عن عملك",
+    "subtitle": "ساعدنا في فهم عملك حتى نتمكن من تقديم توصيات أفضل",
+    "account_label": "الحساب: {name}",
+    "website_url_label": "رابط الموقع",
+    "website_url_placeholder": "https://www.yourbusiness.com",
+    "website_url_help": "سنحلل موقعك لفهم عملك وجمهورك وعلامتك التجارية - لنقدم لك توصيات إعلانية أذكى.",
+    "no_website": "ليس لدي موقع إلكتروني",
+    "description_label": "صِف عملك بإيجاز",
+    "description_placeholder": "مثال: مطعم، تجارة إلكترونية، مدرب لياقة، SaaS",
+    "description_help": "كلمات قليلة عن ما يقوم به عملك",
+    "continue": "متابعة",
+    "analyzing": "جاري تحليل عملك...",
+    "analysis_complete": "اكتمل التحليل",
+    "analysis_failed": "لم يكتمل التحليل، لكن يمكنك المتابعة",
+    "step_indicator": "الخطوة {current} من {total}"
   }
 }

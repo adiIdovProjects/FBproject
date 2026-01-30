@@ -1768,5 +1768,22 @@
     "q_how_doing": "How are my ads doing?",
     "q_improve": "How can I improve?",
     "q_scale": "What should I scale?"
+  },
+  "business_profile": {
+    "title": "Tell us about your business",
+    "subtitle": "Help us understand your business so we can provide better recommendations",
+    "account_label": "Account: {name}",
+    "website_url_label": "Website URL",
+    "website_url_placeholder": "https://www.yourbusiness.com",
+    "website_url_help": "We'll analyze your website to understand your business, audience, and brand - so we can give you smarter ad recommendations.",
+    "no_website": "I don't have a website",
+    "description_label": "Describe your business briefly",
+    "description_placeholder": "e.g. restaurant, ecommerce, fitness coach, SaaS",
+    "description_help": "Just a few words about what your business does",
+    "continue": "Continue",
+    "analyzing": "Analyzing your business...",
+    "analysis_complete": "Analysis complete",
+    "analysis_failed": "Analysis couldn't complete, but you can continue",
+    "step_indicator": "Step {current} of {total}"
   }
 }

@@ -1366,5 +1366,22 @@
     "q_how_doing": "Wie laufen meine Anzeigen?",
     "q_improve": "Wie kann ich verbessern?",
     "q_scale": "Was sollte ich skalieren?"
+  },
+  "business_profile": {
+    "title": "Erzählen Sie uns von Ihrem Unternehmen",
+    "subtitle": "Helfen Sie uns, Ihr Unternehmen zu verstehen, damit wir bessere Empfehlungen geben können",
+    "account_label": "Konto: {name}",
+    "website_url_label": "Website-URL",
+    "website_url_placeholder": "https://www.ihrunternehmen.de",
+    "website_url_help": "Wir analysieren Ihre Website, um Ihr Unternehmen, Ihre Zielgruppe und Ihre Marke zu verstehen - für intelligentere Anzeigenempfehlungen.",
+    "no_website": "Ich habe keine Website",
+    "description_label": "Beschreiben Sie Ihr Unternehmen kurz",
+    "description_placeholder": "z.B. Restaurant, E-Commerce, Fitness-Coach, SaaS",
+    "description_help": "Nur ein paar Worte darüber, was Ihr Unternehmen macht",
+    "continue": "Weiter",
+    "analyzing": "Ihr Unternehmen wird analysiert...",
+    "analysis_complete": "Analyse abgeschlossen",
+    "analysis_failed": "Analyse konnte nicht abgeschlossen werden, aber Sie können fortfahren",
+    "step_indicator": "Schritt {current} von {total}"
   }
 }

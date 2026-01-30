@@ -15,7 +15,7 @@ import google.genai as genai
 from google.genai import types
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from backend.api.repositories.account_repository import AccountRepository
+from backend.api.repositories.business_profile_repository import BusinessProfileRepository
 
 from backend.api.repositories.metrics_repository import MetricsRepository
 from backend.api.repositories.campaign_repository import CampaignRepository
@@ -357,21 +357,25 @@ class AIService:
             account_context_str = ""
             if account_id and int(account_id) in user_account_ids:
                 try:
-                    account_repo = AccountRepository(self.db)
-                    quiz = account_repo.get_account_quiz(int(account_id))
-                    if quiz:
+                    profile_repo = BusinessProfileRepository(self.db)
+                    profile = profile_repo.get_by_account_id(int(account_id))
+                    if profile:
                         parts = []
-                        if quiz.get('business_description'):
-                            parts.append(f"Business Description: {quiz['business_description']}")
-                        if quiz.get('primary_goal'):
-                            parts.append(f"Priority Goal: {quiz['primary_goal']}")
-                        if quiz.get('industry'):
-                            parts.append(f"Industry: {quiz['industry']}")
-                        
+                        if profile.business_description:
+                            parts.append(f"Business: {profile.business_description}")
+                        if profile.business_type:
+                            parts.append(f"Type: {profile.business_type}")
+                        if profile.industry:
+                            parts.append(f"Industry: {profile.industry}")
+                        if profile.target_audience:
+                            parts.append(f"Target Audience: {profile.target_audience}")
+                        if profile.tone_of_voice:
+                            parts.append(f"Brand Tone: {profile.tone_of_voice}")
+
                         if parts:
                             account_context_str = "**BUSINESS CONTEXT**:\n" + "\n".join(parts) + "\n"
                 except Exception as ex:
-                    logger.warning(f"Failed to fetch account context: {ex}")
+                    logger.warning(f"Failed to fetch business profile context: {ex}")
 
 
             # 2. Prepare context for Gemini

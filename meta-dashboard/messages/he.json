@@ -1370,5 +1370,22 @@
     "q_how_doing": "איך המודעות שלי מבצעות?",
     "q_improve": "איך אני יכול לשפר?",
     "q_scale": "מה כדאי להרחיב?"
+  },
+  "business_profile": {
+    "title": "ספר לנו על העסק שלך",
+    "subtitle": "עזור לנו להבין את העסק שלך כדי שנוכל לתת המלצות טובות יותר",
+    "account_label": "חשבון: {name}",
+    "website_url_label": "כתובת אתר",
+    "website_url_placeholder": "https://www.yourbusiness.com",
+    "website_url_help": "ננתח את האתר שלך כדי להבין את העסק, הקהל והמותג שלך - כך שנוכל לתת לך המלצות פרסום חכמות יותר.",
+    "no_website": "אין לי אתר אינטרנט",
+    "description_label": "תאר את העסק שלך בקצרה",
+    "description_placeholder": "למשל: מסעדה, חנות אונליין, מאמן כושר, SaaS",
+    "description_help": "כמה מילים על מה העסק שלך עושה",
+    "continue": "המשך",
+    "analyzing": "מנתח את העסק שלך...",
+    "analysis_complete": "הניתוח הושלם",
+    "analysis_failed": "הניתוח לא הושלם, אבל אתה יכול להמשיך",
+    "step_indicator": "שלב {current} מתוך {total}"
   }
 }

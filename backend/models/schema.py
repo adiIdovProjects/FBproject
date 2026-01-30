@@ -345,36 +345,47 @@ class AuditLog(Base):
 
 
 # ==============================================================================
-# ACCOUNT QUIZ RESPONSES
+# BUSINESS PROFILES
 # ==============================================================================
 
-class AccountQuizResponses(Base):
-    """Per-account quiz responses for personalized insights"""
-    __tablename__ = 'account_quiz_responses'
+class BusinessProfile(Base):
+    """Per-account business profile for AI-powered recommendations"""
+    __tablename__ = 'business_profiles'
 
-    account_id = Column(BigInteger, ForeignKey('dim_account.account_id', ondelete='CASCADE'), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id', ondelete='CASCADE'), nullable=False, unique=True)
 
-    # Q1: Primary advertising goal
-    primary_goal = Column(String(100))
-    primary_goal_other = Column(Text)
+    # User input
+    website_url = Column(Text)
+    business_description = Column(Text)  # fallback if no URL
 
-    # Q2: Primary conversions (JSON array)
-    primary_conversions = Column(Text)
-
-    # Q3: Industry/Business type
+    # AI-extracted structured profile
+    business_type = Column(String(100))       # ecommerce, lead_gen, saas, local_business, etc.
+    business_model = Column(String(50))       # b2b, b2c, b2b2c
+    target_audience = Column(Text)            # ICP description
+    tone_of_voice = Column(String(100))       # professional, casual, playful, etc.
+    products_services = Column(Text)          # JSON array
+    geographic_focus = Column(Text)           # JSON array of countries/regions
     industry = Column(String(100))
+    value_propositions = Column(Text)         # JSON array
+    visual_style_notes = Column(Text)         # colors, imagery style
 
-    # Q4: Optimization priority
-    optimization_priority = Column(String(100))
+    # Social media analysis
+    content_themes = Column(Text)             # JSON - themes from page posts
+    posting_style = Column(Text)              # description of posting patterns
+    engagement_patterns = Column(Text)        # JSON - what gets engagement
 
-    # Free text context for AI
-    business_description = Column(Text)
+    # Meta
+    analysis_status = Column(String(50), default='pending')  # pending, analyzing, completed, failed
+    website_analyzed_at = Column(DateTime)
+    social_analyzed_at = Column(DateTime)
+    profile_json = Column(Text)               # full raw Gemini response as JSON backup
 
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
-        Index('idx_account_quiz_account_id', 'account_id'),
+        Index('idx_business_profile_account_id', 'account_id'),
     )
 
 

@@ -42,7 +42,7 @@ if sentry_dsn:
 
 from backend.api.dependencies import get_db
 from sqlalchemy.orm import Session
-from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts, mutations, admin, stripe, activity, public_chat
+from backend.api.routers import metrics, breakdowns, creatives, export, auth, google_auth, ai, actions, insights, reports, users, sync, accounts, mutations, admin, stripe, activity, public_chat, business_profile, recommendations
 from backend.models import create_schema
 from backend.utils.db_utils import get_db_engine
 from backend.utils.logging_utils import setup_logging, get_logger
@@ -267,6 +267,8 @@ app.include_router(admin.router)
 app.include_router(stripe.router)
 app.include_router(activity.router)
 app.include_router(public_chat.router)
+app.include_router(business_profile.router)
+app.include_router(recommendations.router)
 
 @app.get("/ping", tags=["health"])
 def ping():

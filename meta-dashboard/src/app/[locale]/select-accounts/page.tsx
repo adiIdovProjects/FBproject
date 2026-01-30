@@ -66,11 +66,11 @@ export default function SelectAccountsPage() {
             // Check if user has already completed onboarding
             const onboardingStatus = await apiClient.get('/api/v1/auth/onboarding/status');
             if (onboardingStatus.data.onboarding_completed) {
-                // Already completed quiz - go to dashboard
+                // Already completed onboarding - go to dashboard
                 router.push(`/${locale}/homepage`);
             } else {
-                // First time - go to quiz
-                router.push(`/${locale}/quiz`);
+                // First time - go to business profile step
+                router.push(`/${locale}/onboard/business-profile`);
             }
         } catch (err: any) {
             console.error('Error linking accounts:', err);
