@@ -13,6 +13,7 @@ from backend.api.routers.sync import init_sync_status, update_sync_status, mark_
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from backend.utils.logging_utils import get_logger
+from backend.utils.encryption_utils import TokenEncryption
 
 logger = get_logger(__name__)
 
@@ -178,7 +179,7 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
             if user:
                 # Link this FB account to the existing user
                 user.fb_user_id = fb_user["id"]
-                user.fb_access_token = access_token
+                user.fb_access_token = TokenEncryption.encrypt_token(access_token)
                 user.fb_token_expires_at = expires_at
                 db.commit()
 
@@ -204,7 +205,7 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
                 if user:
                     # Update existing user with FB ID
                     user.fb_user_id = fb_user["id"]
-                    user.fb_access_token = access_token
+                    user.fb_access_token = TokenEncryption.encrypt_token(access_token)
                     user.fb_token_expires_at = expires_at
                     user.email_verified = True
                     user.onboarding_step = 'select_accounts'
@@ -300,7 +301,7 @@ async def get_facebook_accounts(current_user=Depends(get_current_user), db: Sess
         raise HTTPException(status_code=401, detail="Facebook not connected")
 
     try:
-        accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+        accounts = fb_service.get_managed_accounts(current_user.decrypted_fb_token)
     except Exception as e:
         logger.error(f"Failed to fetch Facebook accounts: {e}")
         raise HTTPException(status_code=401, detail="Facebook token is invalid or expired. Please reconnect your Facebook account.")
@@ -316,7 +317,7 @@ async def reconnect_facebook(current_user=Depends(get_current_user), db: Session
 
     # Fetch fresh account data from Facebook (including page_id)
     try:
-        fb_accounts = fb_service.get_managed_accounts(current_user.fb_access_token)
+        fb_accounts = fb_service.get_managed_accounts(current_user.decrypted_fb_token)
     except Exception as e:
         logger.error(f"Failed to reconnect Facebook accounts: {e}")
         raise HTTPException(status_code=401, detail="Facebook token is invalid or expired. Please reconnect your Facebook account.")

@@ -186,7 +186,7 @@ class ETLPipeline:
                     return
 
             # Store token for background task
-            access_token = user.fb_access_token
+            access_token = user.decrypted_fb_token
 
             # Run ETL for each ad account
             for account_id in account_ids:
