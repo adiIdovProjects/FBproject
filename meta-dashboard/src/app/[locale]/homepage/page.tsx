@@ -5,7 +5,7 @@
  * Clean, friendly interface that helps users navigate to what they want to do
  */
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -32,8 +32,15 @@ export default function Homepage() {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const { selectedAccountId } = useAccount();
+
+  // Redirect to connect Facebook if user hasn't connected yet
+  useEffect(() => {
+    if (!isUserLoading && user && !user.facebook_id) {
+      router.replace(`/${locale}/onboard/connect-facebook`);
+    }
+  }, [user, isUserLoading, router, locale]);
 
   // Fetch campaigns for hints
   const dateRange = useMemo(() => calculateDateRange('last_30_days'), []);
@@ -115,20 +122,20 @@ export default function Homepage() {
   ];
 
   return (
-    <MainLayout title={t('homepage3.title')} description="">
+    <MainLayout title={t('homepage3.title')} description="" compact>
       {/* Greeting */}
-      <div className="text-center mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
           {t('homepage3.greeting', { name: firstName })}
         </h1>
-        <h2 className="text-xl md:text-2xl font-semibold text-white/90 mb-2">
+        <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-1">
           {t('homepage3.question')}
         </h2>
-        <p className="text-gray-400 text-base">{t('homepage3.subtitle')}</p>
+        <p className="text-gray-400 text-sm">{t('homepage3.subtitle')}</p>
       </div>
 
       {/* Action Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {actions.map(action => (
           <ActionCard
             key={action.key}

@@ -11,9 +11,10 @@ interface MainLayoutProps {
     children: React.ReactNode;
     title: string;
     description: string;
+    compact?: boolean;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, description }) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, description, compact = false }) => {
     const t = useTranslations();
     const locale = useLocale();
     const isRTL = locale === 'ar' || locale === 'he';
@@ -36,24 +37,26 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
                 {/* Accent bar - rainbow gradient in colorful mode */}
                 <div className={`absolute top-0 left-0 right-0 h-px z-10 ${isColorful ? 'accent-bar-colorful' : 'bg-gradient-to-r from-transparent via-accent/20 to-transparent'}`}></div>
 
-                <div className={`p-8 sm:p-12 max-w-7xl w-full relative z-0 ${isRTL ? 'ml-auto' : 'mx-auto'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                <div className={`${compact ? 'p-4 sm:p-6' : 'p-8 sm:p-12'} max-w-7xl w-full relative z-0 ${isRTL ? 'ml-auto' : 'mx-auto'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     {/* Page Header */}
-                    <header className="mb-12 flex flex-col gap-3">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className={`w-8 h-1 rounded-full ${isColorful ? 'accent-bar-colorful' : 'bg-accent'}`}></div>
-                            <div className={`w-2 h-1 rounded-full ${isColorful ? 'bg-[#00F5D4]' : 'bg-accent/40'}`}></div>
-                        </div>
-                        <h1 className="text-5xl font-black tracking-tighter text-foreground">
+                    <header className={`${compact ? 'mb-4' : 'mb-12'} flex flex-col gap-3`}>
+                        {!compact && (
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className={`w-8 h-1 rounded-full ${isColorful ? 'accent-bar-colorful' : 'bg-accent'}`}></div>
+                                <div className={`w-2 h-1 rounded-full ${isColorful ? 'bg-[#00F5D4]' : 'bg-accent/40'}`}></div>
+                            </div>
+                        )}
+                        <h1 className={`${compact ? 'text-3xl' : 'text-5xl'} font-black tracking-tighter text-foreground`}>
                             {title}
                         </h1>
-                        <p className="text-text-muted text-lg font-medium max-w-3xl leading-relaxed">{description}</p>
+                        {description && <p className="text-text-muted text-lg font-medium max-w-3xl leading-relaxed">{description}</p>}
                     </header>
 
                     {/* Page Content */}
                     <main className="space-y-12">{children}</main>
 
                     {/* Footer */}
-                    <footer className="mt-24 pb-12 text-center">
+                    <footer className={`${compact ? 'mt-12' : 'mt-24'} pb-12 text-center`}>
                         <div className="h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent mb-8"></div>
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled hover:text-text-muted transition-colors cursor-default">
                             {t('footer.system_info')}
