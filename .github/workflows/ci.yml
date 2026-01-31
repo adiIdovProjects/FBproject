@@ -37,10 +37,6 @@ jobs:
         run: npm audit --audit-level=high || echo "Security issues found - review above"
         continue-on-error: true
 
-      - name: Node Security Audit (website-front)
-        working-directory: website-front
-        run: npm audit --audit-level=high || echo "Security issues found - review above"
-        continue-on-error: true
 
   # Build and type check frontends
   build-frontends:
@@ -53,9 +49,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: |
-            meta-dashboard/package-lock.json
-            website-front/package-lock.json
+          cache-dependency-path: meta-dashboard/package-lock.json
 
       # Build meta-dashboard
       - name: Install dependencies (meta-dashboard)
@@ -68,16 +62,6 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE_URL: https://api.example.com
 
-      # Build website-front
-      - name: Install dependencies (website-front)
-        working-directory: website-front
-        run: npm ci
-
-      - name: Build website-front
-        working-directory: website-front
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: https://api.example.com
 
   # Python backend checks
   backend-checks:
