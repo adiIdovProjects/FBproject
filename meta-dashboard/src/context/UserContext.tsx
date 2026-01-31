@@ -7,6 +7,7 @@ interface UserData {
     id: number;
     email: string;
     full_name?: string;
+    facebook_id?: string | null;
     is_admin: boolean;
 }
 
@@ -30,7 +31,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Check if it's a public page (no auth required)
             const publicPaths = ['/login', '/callback', '/auth/verify', '/onboard',
                                  '/select-accounts', '/connect', '/privacy-policy', '/terms',
-                                 '/pricing', '/homepage'];
+                                 '/pricing'];
             const isPublicPage = publicPaths.some(p => path.includes(p)) ||
                                  path.match(/^\/[a-z]{2}\/?$/);
             if (isPublicPage) {
