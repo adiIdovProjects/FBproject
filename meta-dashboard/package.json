@@ -11,6 +11,7 @@
     "i18n:extract": "node scripts/extract-strings.mjs",
     "dev": "npm run i18n:generate-types && next dev",
     "build": "npm run i18n:generate-types && next build",
+    "build:netlify": "npm run i18n:generate-types && next build --no-turbopack",
     "start": "next start",
     "lint": "eslint"
   },
