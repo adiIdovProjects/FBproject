@@ -277,7 +277,7 @@ def ping():
     logger.debug("Ping endpoint reached")
     return {"status": "ok", "timestamp": time.time()}
 
-@app.get("/health", tags=["health"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["health"])
 def health(db: Session = Depends(get_db)):
     """
     Comprehensive health check endpoint.
