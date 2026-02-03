@@ -1227,7 +1227,9 @@
       "title": "Was möchten Sie tun?",
       "create_campaign": "Kampagne erstellen",
       "analyze_results": "Ergebnisse analysieren",
-      "talk_to_ai": "Mit KI sprechen"
+      "talk_to_ai": "Mit KI sprechen",
+      "manage_campaigns": "Kampagnen verwalten",
+      "ask_ai": "KI fragen"
     },
     "recommendations": {
       "title": "Empfehlungen",

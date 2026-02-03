@@ -1227,7 +1227,9 @@
       "title": "ماذا تريد أن تفعل؟",
       "create_campaign": "إنشاء حملة",
       "analyze_results": "تحليل النتائج",
-      "talk_to_ai": "تحدث مع الذكاء الاصطناعي"
+      "talk_to_ai": "تحدث مع الذكاء الاصطناعي",
+      "manage_campaigns": "إدارة الحملات",
+      "ask_ai": "اسأل الذكاء الاصطناعي"
     },
     "recommendations": {
       "title": "التوصيات",

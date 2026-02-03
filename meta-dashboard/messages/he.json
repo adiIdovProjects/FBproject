@@ -1227,7 +1227,9 @@
       "title": "מה תרצה לעשות?",
       "create_campaign": "צור קמפיין",
       "analyze_results": "נתח תוצאות",
-      "talk_to_ai": "שוחח עם AI"
+      "talk_to_ai": "שוחח עם AI",
+      "manage_campaigns": "נהל קמפיינים",
+      "ask_ai": "שאל את ה-AI"
     },
     "recommendations": {
       "title": "המלצות",

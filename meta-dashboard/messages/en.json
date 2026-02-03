@@ -1386,7 +1386,9 @@
       "title": "What do you want to do?",
       "create_campaign": "Create Campaign",
       "analyze_results": "Analyze Results",
-      "talk_to_ai": "Talk to AI"
+      "talk_to_ai": "Talk to AI",
+      "manage_campaigns": "Manage Campaigns",
+      "ask_ai": "Ask AI"
     },
     "recommendations": {
       "title": "Recommendations",

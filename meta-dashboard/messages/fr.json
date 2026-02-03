@@ -1227,7 +1227,9 @@
       "title": "Que voulez-vous faire ?",
       "create_campaign": "Créer une campagne",
       "analyze_results": "Analyser les résultats",
-      "talk_to_ai": "Parler à l'IA"
+      "talk_to_ai": "Parler à l'IA",
+      "manage_campaigns": "Gérer les campagnes",
+      "ask_ai": "Demander à l'IA"
     },
     "recommendations": {
       "title": "Recommandations",

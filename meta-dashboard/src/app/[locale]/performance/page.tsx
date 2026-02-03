@@ -5,12 +5,13 @@
  * Shows AI interpretation, key metrics, trend chart, and actionable recommendations
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout2 } from '../../../components/MainLayout2';
 import AISummaryCard from '../../../components/homepage/AISummaryCard';
-import HomepageMetrics from '../../../components/homepage/HomepageMetrics';
+import HomepageKPICards from '../../../components/homepage/HomepageKPICards';
 import PerformanceChart from '../../../components/performance/PerformanceChart';
+import { formatDate, calculateDateRange } from '../../../utils/date';
 import ActionableRecommendations from '../../../components/performance/ActionableRecommendations';
 import { QuickSelectKey } from '../../../constants/app';
 
@@ -18,6 +19,11 @@ export default function Performance() {
   const t = useTranslations();
   const locale = useLocale();
   const [dateRange, setDateRange] = useState<QuickSelectKey>('last_30_days');
+
+  // Calculate date range for KPI cards
+  const dates = useMemo(() => calculateDateRange(dateRange), [dateRange]);
+  const startDate = formatDate(dates.start);
+  const endDate = formatDate(dates.end);
 
   const dateRangeOptions = [
     { value: 'last_7_days', label: t('campaigns2.last_7_days') },
@@ -49,7 +55,7 @@ export default function Performance() {
 
       {/* Key Metrics */}
       <div className="mb-8">
-        <HomepageMetrics locale={locale} />
+        <HomepageKPICards startDate={startDate} endDate={endDate} locale={locale} />
       </div>
 
       {/* Trend Chart */}
