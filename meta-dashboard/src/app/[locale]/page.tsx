@@ -2,6 +2,7 @@
 
 import {
   Hero,
+  PainPoints,
   HowItWorks,
   Features,
   Testimonials,
@@ -17,6 +18,7 @@ export default function LandingPage() {
       <LandingNavbar />
       <main className="flex-1">
         <Hero />
+        <PainPoints />
         <HowItWorks />
         <AgencyComparison />
         <Features />

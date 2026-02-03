@@ -1,7 +1,33 @@
 export const landingPageData = {
+    painPoints: {
+        title: "You Deserve Better",
+        subtitle: "Running Facebook Ads shouldn't feel like this.",
+        items: [
+            {
+                title: "Lost in Translation",
+                description: "Agencies send reports full of jargon. You pay thousands but never really understand what's happening with your money.",
+                icon: "translate"
+            },
+            {
+                title: "Overwhelmed by Complexity",
+                description: "Facebook's interface changes constantly. Dozens of settings, cryptic metrics — it's designed for experts, not business owners.",
+                icon: "psychology_alt"
+            },
+            {
+                title: "You Know Your Business Best",
+                description: "Generic agency playbooks ignore what makes you special. Your customers, your story, your unique value.",
+                icon: "storefront"
+            },
+            {
+                title: "No Good Options",
+                description: "Pay agency prices or figure it out alone. Until now, there was no middle ground for smart business owners like you.",
+                icon: "balance"
+            }
+        ]
+    },
     hero: {
-        headline: "Stop Wasting Money on Ads You Don't Understand",
-        subheadline: "Get AI-powered insights in plain English. Average users improve ROAS by 2.3x and save $18,000/year vs agencies.",
+        headline: "Your Compass for Facebook Ads",
+        subheadline: "Finally, navigate the complexity with confidence. We guide you through every decision — you stay in control.",
         cta: "Start Free Trial",
         trustBadges: [
             { text: "7-Day Free Trial", icon: "check_circle" },
@@ -15,48 +41,48 @@ export const landingPageData = {
         ]
     },
     howItWorks: {
-        title: "Everything You Need. One Platform.",
-        subtitle: "No more juggling tools. Connect, analyze, optimize, and report — all without leaving the platform.",
+        title: "Your Journey to Better Ads",
+        subtitle: "We simplify the path. You make the decisions.",
         steps: [
             {
-                title: "Connect in Seconds",
-                description: "Link your Facebook Ads Manager with one click. Your data syncs automatically and stays up-to-date in real-time.",
+                title: "Connect Your Ads",
+                description: "One click to link your Facebook Ads. Your data syncs instantly — we handle the technical stuff.",
                 icon: "link"
             },
             {
-                title: "AI-Powered Insights (Save 8+ Hours/Week)",
-                description: "Ask questions in plain English. Get instant answers about your campaigns — no data analysis degree needed.",
+                title: "Get Clear Guidance",
+                description: "Ask anything in plain English. Our AI translates the complexity into simple, actionable advice.",
                 icon: "psychology"
             },
             {
-                title: "Optimize & Grow (Typical ROAS: 2.3x)",
-                description: "Track results in real-time and get client-ready reports delivered daily. See what's working in seconds, not hours.",
+                title: "Grow With Confidence",
+                description: "Make informed decisions with real-time insights. You're in the driver's seat — we're your GPS.",
                 icon: "rocket_launch"
             }
         ]
     },
     features: {
-        title: "Everything You Need to Run Ads Like a Pro",
-        subtitle: "No agency required. No marketing degree needed.",
+        title: "Your Toolkit for Success",
+        subtitle: "Everything you need to run ads like the expert you're becoming.",
         items: [
             {
-                title: "AI Marketing Expert (Available 24/7)",
-                description: "Ask questions, get instant answers. Our AI knows your campaigns and metrics better than any consultant.",
+                title: "Your 24/7 Marketing Guide",
+                description: "Ask anything, anytime. Our AI speaks your language and guides you through every decision.",
                 icon: "smart_toy"
             },
             {
-                title: "Meta-Certified Best Practices",
-                description: "Campaign setup, audience targeting, budget optimization, and ad design — all based on Meta's official playbook.",
+                title: "Best Practices, Simplified",
+                description: "We've studied Meta's playbook so you don't have to. Get expert-level strategies in plain English.",
                 icon: "school"
             },
             {
-                title: "Client-Ready Reports (Save 8 Hours/Week)",
-                description: "Professional reports with daily updates and weekly summaries delivered to your inbox automatically.",
+                title: "Reports That Make Sense",
+                description: "Clear, visual reports delivered to your inbox. Finally understand where your money goes.",
                 icon: "description"
             },
             {
-                title: "Complete Analytics Transparency",
-                description: "Know exactly where every dollar goes and what it returns. Make confident decisions in seconds, not days.",
+                title: "Full Transparency, Full Control",
+                description: "See everything. Understand everything. Every dollar tracked, every decision yours to make.",
                 icon: "analytics"
             }
         ]
@@ -115,8 +141,8 @@ export const landingPageData = {
         }
     ],
     agencyComparison: {
-        title: "Why Pay Agency Prices?",
-        subtitle: "Get better results for a fraction of the cost.",
+        title: "Take Back Control",
+        subtitle: "No more middlemen. Your business, your ads, your decisions.",
         items: [
             { feature: "Monthly Cost", agency: "$1,000 - $5,000+", adcaptain: "Starting at $25/month" },
             { feature: "Contract Lock-in", agency: "3-12 months", adcaptain: "Cancel anytime" },
