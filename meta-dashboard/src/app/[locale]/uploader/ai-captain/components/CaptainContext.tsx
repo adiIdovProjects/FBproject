@@ -281,11 +281,23 @@ function captainReducer(state: CaptainState, action: CaptainAction): CaptainStat
         case 'BACK_TO_CHAT':
             return { ...state, phase: 'conversation' };
         case 'GO_TO_STEP': {
-            // Navigate to a specific step by finding its index in history
+            // Navigate to a specific step
             // Keep all entered data - just navigate to that step
             const stepIndex = state.questionHistory.indexOf(action.questionId);
-            if (stepIndex === -1) return state;
 
+            if (stepIndex === -1) {
+                // Step not in history - just navigate to it directly
+                // Add current question to history before navigating
+                return {
+                    ...state,
+                    questionHistory: state.currentQuestionId
+                        ? [...state.questionHistory, state.currentQuestionId]
+                        : state.questionHistory,
+                    currentQuestionId: action.questionId
+                };
+            }
+
+            // Step is in history - navigate back to it
             // Calculate how many steps we're going back
             const stepsBack = state.questionHistory.length - stepIndex;
             // Remove 2 messages per step (user answer + captain question)

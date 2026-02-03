@@ -5,6 +5,30 @@ import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCaptain, CaptainState } from './CaptainContext';
 
+// Helper to check if a step has data filled
+const hasStepData = (stepId: string, state: CaptainState): boolean => {
+    const currentAd = state.ads[state.currentAdIndex];
+    switch (stepId) {
+        case 'welcome': return !!state.objective;
+        case 'lead_type': return !!state.leadType;
+        case 'campaign_name': return !!state.campaignName;
+        case 'location': return state.selectedLocations.length > 0;
+        case 'targeting_type': return !!state.targetingType;
+        case 'audiences': return state.selectedAudiences.length > 0 || state.targetingType === 'advantage';
+        case 'interests': return state.selectedInterests.length > 0 || state.targetingType === 'advantage';
+        case 'age': return state.ageMin !== 18 || state.ageMax !== 65; // Has been set if changed from defaults
+        case 'gender': return !!state.gender;
+        case 'platform': return !!state.platform;
+        case 'budget': return state.dailyBudget > 0;
+        case 'creative': return !!currentAd?.file || !!currentAd?.previewUrl;
+        case 'headline': return !!currentAd?.title;
+        case 'body': return !!currentAd?.body;
+        case 'link': return !!currentAd?.link;
+        case 'cta': return !!currentAd?.cta;
+        default: return false;
+    }
+};
+
 // Define all possible steps in order
 const ALL_STEPS = [
     { id: 'welcome', labelKey: 'captain.step_objective' },
@@ -43,12 +67,14 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ className = '' }) 
     // Find current step index
     const currentIndex = visibleSteps.findIndex(step => step.id === state.currentQuestionId);
 
-    // Get completed step IDs from history
-    const completedStepIds = new Set(state.questionHistory);
+    // Check which steps have data filled (not just in history)
+    const stepsWithData = new Set(
+        visibleSteps.filter(step => hasStepData(step.id, state)).map(step => step.id)
+    );
 
     const handleStepClick = (stepId: string, stepIndex: number) => {
-        // Can only click completed steps (not current or future)
-        if (stepIndex < currentIndex && completedStepIds.has(stepId)) {
+        // Can click any step that has data or is before current
+        if (stepsWithData.has(stepId) || stepIndex < currentIndex) {
             dispatch({ type: 'GO_TO_STEP', questionId: stepId });
         }
     };
@@ -56,10 +82,11 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ className = '' }) 
     return (
         <div className={`flex flex-col gap-1 ${className}`}>
             {visibleSteps.map((step, index) => {
-                const isCompleted = completedStepIds.has(step.id) && index < currentIndex;
+                const hasData = stepsWithData.has(step.id);
                 const isCurrent = step.id === state.currentQuestionId;
-                const isFuture = index > currentIndex;
-                const isClickable = isCompleted;
+                const isCompleted = hasData && !isCurrent; // Has data and not currently editing
+                const isFuture = index > currentIndex && !hasData;
+                const isClickable = hasData || index < currentIndex;
 
                 return (
                     <button
