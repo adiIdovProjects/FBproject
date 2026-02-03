@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { AccountProvider } from '@/context/AccountContext';
 import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { AIChatProvider } from '@/context/AIChatContext';
 import ChatWidget from '@/components/chat/ChatWidget';
 import CookieConsent from '@/components/CookieConsent';
 
@@ -27,10 +28,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             <ThemeProvider>
                 <UserProvider>
                     <AccountProvider>
-                        {children}
-                        <ChatWidget />
-                        <CookieConsent />
-                    </AccountProvider>
+                            <AIChatProvider>
+                                {children}
+                                <ChatWidget />
+                                <CookieConsent />
+                            </AIChatProvider>
+                        </AccountProvider>
                 </UserProvider>
             </ThemeProvider>
         </QueryClientProvider>

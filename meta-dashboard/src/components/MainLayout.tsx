@@ -2,10 +2,14 @@
 // src/components/MainLayout.tsx
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { Sparkles } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { GlossaryPanel } from './ui/GlossaryPanel';
+import { AIChat } from './insights/AIChat';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { useTheme } from '@/context/ThemeContext';
+import { useAIChat } from '@/context/AIChatContext';
+import { useAccount } from '@/context/AccountContext';
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -20,6 +24,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
     const isRTL = locale === 'ar' || locale === 'he';
     const { theme } = useTheme();
     const isColorful = theme === 'colorful';
+    const { isOpen, initialQuery, openChat, closeChat } = useAIChat();
+    const { selectedAccountId } = useAccount();
 
     // Track page views automatically
     usePageTracking();
@@ -64,6 +70,23 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
                     </footer>
                 </div>
             </div>
+
+            {/* Floating AI Chat Button */}
+            <button
+                onClick={() => openChat()}
+                className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-40 w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group`}
+                aria-label={t('insights.open_ai_chat')}
+            >
+                <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
+            </button>
+
+            {/* AI Chat Drawer */}
+            <AIChat
+                isOpen={isOpen}
+                onClose={closeChat}
+                accountId={selectedAccountId || undefined}
+                initialQuery={initialQuery}
+            />
         </div>
     );
 };

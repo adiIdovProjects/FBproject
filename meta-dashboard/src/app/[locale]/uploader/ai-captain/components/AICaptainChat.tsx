@@ -13,6 +13,10 @@ import { LeadFormBuilder } from './LeadFormBuilder';
 import { getCurrentNode } from '../lib/conversationFlow';
 import { useAccount } from '@/context/AccountContext';
 import { mutationsService, GeoLocation, InterestTarget, CustomAudience } from '@/services/mutations.service';
+import { TooltipIcon } from '@/components/common/TooltipIcon';
+import { getPersonalizedTooltip } from '@/utils/tooltipContent';
+import { businessProfileService, BusinessProfile } from '@/services/business_profile.service';
+import { AICopyModal } from '@/components/common/AICopyModal';
 
 interface Campaign {
     id: string;
@@ -87,6 +91,13 @@ export const AICaptainChat: React.FC = () => {
     const [availableAudiences, setAvailableAudiences] = useState<CustomAudience[]>([]);
     const [isLoadingAudiences, setIsLoadingAudiences] = useState(false);
 
+    // Business profile for personalized tooltips
+    const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+
+    // AI copy modal
+    const [showAICopyModal, setShowAICopyModal] = useState(false);
+    const [aiCopyFieldType, setAICopyFieldType] = useState<'headline' | 'body'>('headline');
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +106,13 @@ export const AICaptainChat: React.FC = () => {
 
     // Show preview panel after creative step
     const showPreview = ['creative', 'headline', 'body', 'link', 'cta', 'add_another_ad'].includes(state.currentQuestionId);
+
+    // Load business profile on mount
+    useEffect(() => {
+        if (selectedAccountId) {
+            businessProfileService.getBusinessProfile(selectedAccountId).then(setBusinessProfile);
+        }
+    }, [selectedAccountId]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
@@ -552,6 +570,19 @@ export const AICaptainChat: React.FC = () => {
         setBudgetWarning(!isNaN(num) && num > 0 && num < 5);
     };
 
+    const handleOpenAICopy = (fieldType: 'headline' | 'body') => {
+        setAICopyFieldType(fieldType);
+        setShowAICopyModal(true);
+    };
+
+    const handleSelectAICopy = (variant: any) => {
+        if (aiCopyFieldType === 'headline') {
+            setTextInput(variant.headline);
+        } else {
+            setTextInput(variant.primary_text);
+        }
+    };
+
     // Render flow selection screen
     if (state.phase === 'flow_select') {
         return (
@@ -602,6 +633,16 @@ export const AICaptainChat: React.FC = () => {
                             color="orange"
                             onClick={() => handleFlowSelect('edit')}
                         />
+
+                        {/* Build manually link */}
+                        <div className="text-center pt-4 mt-4 border-t border-gray-800">
+                            <button
+                                onClick={() => router.push(`/${locale}/uploader/wizard`)}
+                                className="text-sm text-gray-500 hover:text-gray-400 transition-colors"
+                            >
+                                {t('uploader.build_manually')}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -699,9 +740,21 @@ export const AICaptainChat: React.FC = () => {
                     {/* Current question */}
                     {currentNode && !isCheckingPrereqs && (
                         <SpeechBubble className="mb-6">
-                            <p className="text-center">
-                                {t(currentNode.questionKey)}
-                            </p>
+                            <div className="flex items-center justify-center gap-2">
+                                <p className="text-center">
+                                    {t(currentNode.questionKey)}
+                                </p>
+                                {/* Add contextual tooltips */}
+                                {currentNode.inputType === 'budget' && (
+                                    <TooltipIcon content={getPersonalizedTooltip('budget', businessProfile?.business_type)} />
+                                )}
+                                {currentNode.id === 'welcome' && state.flow === 'create' && (
+                                    <TooltipIcon content={getPersonalizedTooltip('objective', businessProfile?.business_type)} />
+                                )}
+                                {currentNode.id === 'targeting_type' && (
+                                    <TooltipIcon content={getPersonalizedTooltip('targeting', businessProfile?.business_type)} />
+                                )}
+                            </div>
                         </SpeechBubble>
                     )}
 
@@ -771,6 +824,7 @@ export const AICaptainChat: React.FC = () => {
                                     <div className="flex items-center gap-3 mb-2">
                                         <span className="text-2xl">🚀</span>
                                         <span className="text-white font-medium">{t('captain.targeting_advantage_title')}</span>
+                                        <TooltipIcon content={getPersonalizedTooltip('advantage_plus', businessProfile?.business_type)} />
                                     </div>
                                     <p className="text-gray-400 text-sm">{t('captain.targeting_advantage_desc')}</p>
                                 </button>
@@ -1038,6 +1092,15 @@ export const AICaptainChat: React.FC = () => {
                         {/* Text input */}
                         {currentNode?.inputType === 'text' && (
                             <div className="space-y-2">
+                                {/* AI copy button for headline and body */}
+                                {(state.currentQuestionId === 'headline' || state.currentQuestionId === 'body') && (
+                                    <button
+                                        onClick={() => handleOpenAICopy(state.currentQuestionId as 'headline' | 'body')}
+                                        className="w-full py-2 text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        {t('write_for_me')}
+                                    </button>
+                                )}
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
@@ -1295,6 +1358,18 @@ export const AICaptainChat: React.FC = () => {
                     onFormCreated={handleFormCreated}
                     pageId={selectedAccount.page_id}
                     accountId={selectedAccount.account_id}
+                />
+            )}
+
+            {/* AI Copy Modal */}
+            {selectedAccount && state.objective && (
+                <AICopyModal
+                    isOpen={showAICopyModal}
+                    onClose={() => setShowAICopyModal(false)}
+                    onSelect={handleSelectAICopy}
+                    accountId={selectedAccount.account_id}
+                    objective={state.objective}
+                    fieldType={aiCopyFieldType}
                 />
             )}
 
