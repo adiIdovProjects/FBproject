@@ -9,6 +9,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_A
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: 'standalone',
   reactCompiler: true,
 
   // Security headers for production
