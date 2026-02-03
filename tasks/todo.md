@@ -1,5 +1,36 @@
 # Project Tasks & Progress
 
+## Current Task: Pixel Event Scanner + Wizard Smart Guidance (COMPLETED)
+
+### Goal
+Help users know what their pixel tracks before building campaigns, show smart guidance in the wizard.
+
+### Changes Made
+
+#### Backend (3 files)
+- **Created** `backend/api/services/pixel_service.py` — Fetches pixel health, event stats, lead forms, active objectives, and generates smart warnings by cross-referencing business profile with pixel events
+- **Created** `backend/api/routers/pixel_router.py` — 3 endpoints: list pixels, optimization summary, single pixel stats
+- **Modified** `backend/api/main.py` — Registered new pixel router
+
+#### Frontend (4 files)
+- **Created** `meta-dashboard/src/services/pixel.service.ts` — API client with TypeScript types for pixel data
+- **Modified** `Step1Objective.tsx` — Added "Active on your account" badges on objectives, pixel Purchase warning for SALES, business profile warnings
+- **Modified** `Step2Setup.tsx` — Added pixel health indicator (green/yellow/red) and event stats display showing available optimization events with counts
+- **Modified** `AdCard.tsx` — Added "Generate with AI" button next to headline and primary text fields, wired to existing AICopyModal component
+
+#### Translations (5 files)
+- Added 9 new translation keys to en, ar, he, de, fr message files
+
+### Key Decisions
+- Objectives query uses existing `dim_campaign` DB data — no extra Facebook API call needed
+- Pixel events fetched via Facebook Graph API (`/{pixel_id}/stats?aggregation=event`)
+- Smart warnings cross-reference `business_profiles.business_type` with actual pixel events
+- AI copy generation reuses existing `AICopyModal` component — no new AI code needed
+- All new data is informational/optional — failures are silently handled, wizard still works without it
+
+---
+
+
 ## Current Task: Add Carousel Ads Support (COMPLETED)
 
 ### Goal

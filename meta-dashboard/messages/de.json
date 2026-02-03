@@ -31,7 +31,12 @@
     "saved_successfully": "Erfolgreich gespeichert",
     "actions": "Aktionen",
     "loading": "Laden...",
-    "today": "heute"
+    "today": "heute",
+    "next": "Weiter",
+    "remove": "Entfernen",
+    "edit": "Bearbeiten",
+    "new": "Neu",
+    "or": "oder"
   },
   "nav": {
     "dashboard": "Armaturenbrett",
@@ -71,7 +76,7 @@
     "tab_analysis": "Analyse",
     "tab_recommendations": "Empfehlungen",
     "tab_ai_chat": "KI fragen",
-    "best_practices_title": "Facebook Best Practices",
+    "best_practices_title": "Facebook – Bewährte Methoden",
     "best_practices_subtitle": "Schnelle Tipps zur Verbesserung Ihrer Anzeigenleistung",
     "ai_recommendations_title": "KI-Empfehlungen",
     "ai_recommendations_subtitle": "Personalisierte Vorschläge basierend auf Ihren Kontodaten",
@@ -147,7 +152,6 @@
     "campaign_name": "Kampagnenname",
     "loading_campaigns": "Kampagnen werden geladen...",
     "campaign_status": "Kampagnenstatus",
-    "adsets": "Anzeigengruppen",
     "ads": "Anzeigen",
     "platform": "Plattform",
     "placement": "Platzierung",
@@ -160,7 +164,8 @@
     "download_csv": "CSV Herunterladen",
     "filter_group_name": "Kampagnenfilter",
     "filter_group_status": "Statusfilter",
-    "filter_group_delivery": "Lieferfilter"
+    "filter_group_delivery": "Lieferfilter",
+    "targetingGroups": "Targeting-Gruppen"
   },
   "reports": {
     "title": "Erweiterte Berichte",
@@ -201,7 +206,6 @@
       "week": "Nach Woche",
       "month": "Nach Monat",
       "campaign": "Nach Kampagne",
-      "adset": "Nach Anzeigengruppe",
       "ad": "Nach Anzeige",
       "placement": "Nach Platzierung",
       "platform": "Nach Plattform",
@@ -209,7 +213,8 @@
       "country": "Nach Land",
       "time": "Zeit",
       "entity": "Entität",
-      "audience": "Zielgruppe"
+      "audience": "Zielgruppe",
+      "targeting": "Nach Targeting"
     },
     "quick_templates": "Schnelle Vorlagen",
     "templates_title": "Berichtsvorlagen",
@@ -227,10 +232,10 @@
       "daily": "Täglich",
       "weekly": "Wöchentlich",
       "campaign": "Kampagne",
-      "adset": "Anzeigengruppe",
       "placement": "Platzierung",
       "demographics": "Demografie",
-      "geographic": "Geografisch"
+      "geographic": "Geografisch",
+      "targeting": "Targeting"
     },
     "builder": {
       "title": "Bericht erstellen",
@@ -238,7 +243,6 @@
       "by_time": "Nach Zeit",
       "audience": "Zielgruppen-Insights",
       "campaign": "Kampagne",
-      "adset": "Anzeigengruppe",
       "ad": "Anzeige",
       "day": "Tag",
       "week": "Woche",
@@ -254,7 +258,9 @@
       "clear": "Löschen",
       "filter_campaign": "Nach Kampagnennamen filtern...",
       "filter_adset": "Nach Anzeigengruppennamen filtern...",
-      "filter_ad": "Nach Anzeigennamen filtern..."
+      "filter_ad": "Nach Anzeigennamen filtern...",
+      "targeting": "Targeting",
+      "add_grouping": "Gruppierung hinzufügen"
     }
   },
   "creatives": {
@@ -323,7 +329,8 @@
       "Lookalike": "Lookalike",
       "Interest Audience": "Interessen",
       "Custom Audience": "Custom Audience"
-    }
+    },
+    "type": "Typ"
   },
   "actions": {
     "export": "Exportieren",
@@ -660,10 +667,10 @@
       "instagram": "Instagram",
       "audience_network": "Audience Network",
       "messenger": "Messenger",
-      "facebook_feed": "Facebook Feed",
-      "instagram_feed": "Instagram Feed",
-      "instagram_stories": "Instagram Stories",
-      "facebook_stories": "Facebook Stories",
+      "facebook_feed": "Facebook-Feed",
+      "instagram_feed": "Instagram-Feed",
+      "instagram_stories": "Instagram-Stories",
+      "facebook_stories": "Facebook-Stories",
       "instagram_reels": "Instagram Reels",
       "facebook_reels": "Facebook Reels"
     }
@@ -965,7 +972,71 @@
     "end_date_hint": "Leer lassen für unbegrenzte Laufzeit",
     "language_targeting": "Sprach-Targeting",
     "language_optional": "Optional",
-    "language_hint": "Zielgruppen mit bestimmten Sprachen ansprechen. Leer lassen für alle Sprachen."
+    "language_hint": "Zielgruppen mit bestimmten Sprachen ansprechen. Leer lassen für alle Sprachen.",
+    "min_budget_error": "Das minimale Tagesbudget beträgt 5 $. Facebook benötigt mindestens 5 $/Tag.",
+    "lead_type_desc": "Wählen Sie aus, wo Sie Leads von Ihrer Zielgruppe sammeln möchten",
+    "media": "Medien",
+    "cta": "CTA",
+    "lead_form": "Lead-Formular",
+    "url": "URL",
+    "select_pixel": "-- Pixel auswählen --",
+    "select_event": "-- Ereignis auswählen --",
+    "no_pixel_warning_title": "Kein Facebook-Pixel gefunden",
+    "no_pixel_warning_desc": "Ohne ein Pixel kann Facebook Conversions auf Ihrer Website nicht verfolgen. Ihre Kampagne wird möglicherweise nicht effektiv optimiert.",
+    "setup_pixel_link": "Richten Sie Ihr Pixel im Event Manager ein",
+    "whatsapp": "WhatsApp",
+    "whatsapp_desc": "Gespräche beginnen",
+    "calls": "Anrufe",
+    "calls_desc": "Telefonanrufe erhalten",
+    "objective_whatsapp": "Bringen Sie Leute dazu, Ihnen auf WhatsApp eine Nachricht zu schreiben. Ideal für den Kundenservice.",
+    "objective_calls": "Gewinnen Sie Kunden, die Ihr Unternehmen direkt anrufen. Ideal für Terminvereinbarungen.",
+    "calls_tracking_note": "Nur Click-to-Call wird erfasst",
+    "whatsapp_not_connected_title": "WhatsApp Business nicht verbunden",
+    "whatsapp_not_connected_desc": "Um WhatsApp-Anzeigen zu schalten, müssen Sie WhatsApp Business mit Ihrer Facebook-Seite verbinden. Dies muss in den Facebook Business-Einstellungen erfolgen.",
+    "whatsapp_setup_link": "In den Facebook Business-Einstellungen einrichten",
+    "cta_whatsapp_message": "WhatsApp-Nachricht senden",
+    "cta_call_now": "Jetzt anrufen",
+    "cta_contact_us": "Kontaktieren Sie uns",
+    "cta_get_quote": "Angebot anfordern",
+    "whatsapp_destination_note": "Nutzer senden Ihnen eine Nachricht auf WhatsApp, wenn sie auf die Anzeige klicken",
+    "calls_destination_note": "Nutzer rufen Ihre geschäftliche Telefonnummer an, wenn sie auf die Anzeige klicken",
+    "setup_check": "Setup-Prüfung",
+    "setup_check_desc": "Stellen wir sicher, dass Sie alles für die besten Ergebnisse eingerichtet haben",
+    "no_setup_needed": "Keine zusätzliche Einrichtung erforderlich",
+    "pixel_found": "Pixel gefunden! Wählen Sie aus, welches Sie verwenden möchten:",
+    "checking_pixel": "Suche nach Facebook-Pixel...",
+    "checking_lead_forms": "Suche nach Lead-Formularen...",
+    "checking_whatsapp": "Überprüfe WhatsApp-Verbindung...",
+    "continue_without_pixel": "Sie können ohne Pixel fortfahren, aber die Verfolgung funktioniert nicht.",
+    "lead_forms": "Lead-Formulare",
+    "lead_forms_found": "{count} Lead-Formulare gefunden. Sie können eines im Anzeigenerstellungsschritt auswählen.",
+    "no_lead_forms_title": "Keine Lead-Formulare gefunden",
+    "no_lead_forms_desc": "Sie müssen ein Lead-Formular erstellen, um Leads zu sammeln. Sie können eines im Anzeigenerstellungsschritt erstellen oder es jetzt in Facebook einrichten.",
+    "create_lead_form_facebook": "Formular in Facebook erstellen",
+    "create_form_later": "Sie können auch ein Formular im Anzeigenerstellungsschritt erstellen.",
+    "whatsapp_business": "WhatsApp Business",
+    "whatsapp_connected": "WhatsApp Business ist mit Ihrer Seite verbunden.",
+    "connect_whatsapp": "WhatsApp Business verbinden",
+    "next_step_location": "Weiter: Wählen Sie aus, wo Ihre Anzeigen geschaltet werden sollen",
+    "review_title": "Überprüfen Sie Ihre Kampagne",
+    "review_desc": "Stellen Sie sicher, dass alles gut aussieht, bevor Sie starten",
+    "objective": "Zielsetzung",
+    "locations": "Standorte",
+    "no_locations": "Keine Standorte ausgewählt",
+    "targeting": "Zielgruppe",
+    "ads": "Anzeigen",
+    "note": "Hinweis",
+    "campaign_starts_paused": "Ihre Kampagne startet im PAUSIERTEN Status. Sie können sie nach der Überprüfung auf der Seite \"Verwalten\" aktivieren.",
+    "edit": "Bearbeiten",
+    "active_on_account": "Aktiv in Ihrem Konto",
+    "no_purchase_event_title": "Kein Kaufereignis auf Ihrem Pixel erkannt",
+    "no_purchase_event_desc": "Ihr Pixel ist aktiv, verfolgt aber keine Kaufereignisse. Facebook kann ohne dieses Ereignis nicht für Verkäufe optimieren.",
+    "pixel_healthy": "Pixel aktiv (letzte 24h)",
+    "pixel_active": "Pixel aktiv (letzte 7 Tage)",
+    "pixel_stale": "Pixel veraltet (>7 Tage)",
+    "pixel_never_fired": "Pixel hat noch nie ausgelöst",
+    "available_events": "Verfügbare Optimierungsereignisse (letzte 30 Tage):",
+    "generate_with_ai": "Mit KI generieren"
   },
   "ai_panel": {
     "title": "Frag den KI-Assistenten",
@@ -1022,7 +1093,37 @@
     "add_creative_desc": "Fügen Sie eine neue Anzeigenvariante zu einer bereits laufenden Kampagne hinzu. Behalten Sie das gleiche Targeting bei, während Sie neue Creatives testen. Ideal für A/B-Tests.",
     "edit_title": "Anzeigengruppe oder Anzeige bearbeiten",
     "edit_desc": "Ändern Sie Targeting (Standort, Alter, Budget) einer Anzeigengruppe oder aktualisieren Sie Anzeigentext, Medien und Lead-Formulare. Optimieren Sie Ihre bestehenden Kampagnen.",
-    "continue": "Weiter"
+    "continue": "Weiter",
+    "new_campaign": "Neue Kampagne",
+    "what_would_you_like": "Was möchten Sie tun?",
+    "choose_path_desc": "Wählen Sie die Option, die am besten zu Ihrem Ziel passt",
+    "create_when": "Wählen Sie diese Option, wenn Sie ein neues Ziel oder ein neues Targeting wünschen",
+    "create_examples": "Beispiele: Einführung eines neuen Produkts, Testen einer anderen Zielgruppe, neues Marketingziel",
+    "how_to_start": "Wie möchten Sie beginnen?",
+    "start_fresh": "Neu beginnen",
+    "start_fresh_desc": "Erstellen Sie eine völlig neue Kampagne von Grund auf",
+    "duplicate_existing": "Vorhandene Kampagne duplizieren",
+    "duplicate_existing_desc": "Beginnen Sie mit den Einstellungen einer Kampagne, die gut funktioniert hat",
+    "add_when": "Wählen Sie diese Option, wenn Sie neue Creatives mit dem gleichen Targeting testen möchten",
+    "add_examples": "Ideal für A/B-Tests: gleiche Zielgruppe, unterschiedliche Bilder oder Texte",
+    "edit_when": "Wählen Sie diese Option, um bereits laufende Kampagnen zu ändern",
+    "edit_examples": "Zielgruppenausrichtung (Standort, Alter) ändern oder Anzeigeninhalte (Text, Bild, CTA) aktualisieren",
+    "what_to_edit": "Was möchten Sie bearbeiten?",
+    "edit_targeting": "Zielgruppenausrichtung bearbeiten (Zielgruppe)",
+    "edit_targeting_desc": "Standorte, Altersbereich und demografische Merkmale ändern",
+    "edit_creative": "Creative bearbeiten (Anzeige)",
+    "edit_creative_desc": "Ändere Überschrift, Text, Bild, Video oder CTA-Button",
+    "select_option_hint": "Wähle oben eine Option aus, um fortzufahren",
+    "duplicate_title": "Kampagne duplizieren",
+    "duplicate_desc": "Klone eine bestehende Kampagne mit all ihren Einstellungen und Anzeigen",
+    "select_campaign_to_clone": "Kampagne zum Klonen auswählen",
+    "no_campaigns_found": "Keine Kampagnen gefunden",
+    "select_campaign": "Wähle eine Kampagne aus...",
+    "select_adset": "Wähle ein Targeting aus...",
+    "select_campaign_adset": "Kampagne & Targeting auswählen",
+    "no_adsets_found": "Keine Targeting-Gruppen in dieser Kampagne gefunden",
+    "clone_campaign": "Kampagne klonen",
+    "loading_campaign_data": "Kampagnendaten werden geladen..."
   },
   "edit": {
     "title": "Anzeigengruppe oder Anzeige bearbeiten",
@@ -1105,7 +1206,8 @@
       "spent": "Ausgaben",
       "this_week": "diese Woche",
       "results": "Ergebnisse",
-      "active_campaigns": "Aktive Kampagnen"
+      "active_campaigns": "Aktive Kampagnen",
+      "active": "Aktiv"
     },
     "campaigns": {
       "title": "Ihre Kampagnen",
@@ -1142,6 +1244,83 @@
       "view_all": "Alle Creatives anzeigen",
       "no_creatives": "Noch keine Creatives",
       "results_label": "Ergebnisse"
+    },
+    "hero": {
+      "good_title": "Deine Anzeigen laufen hervorragend!",
+      "good_subtitle": "Alles läuft reibungslos. Weiter so!",
+      "attention_title": "Einige Dinge erfordern deine Aufmerksamkeit",
+      "attention_subtitle": "{count} Kampagnen könnten etwas Liebe gebrauchen",
+      "issues_title": "Lass uns gemeinsam einige Probleme beheben",
+      "issues_subtitle": "Keine Sorge, wir helfen dir, das zu regeln",
+      "new_user_title": "Willkommen! Bereit, deine erste Anzeige zu schalten?",
+      "new_user_subtitle": "Wir begleiten dich bei jedem Schritt",
+      "loading_title": "Lade deine Daten...",
+      "loading_subtitle": "Nur einen Moment"
+    },
+    "ai_assistant": {
+      "badge": "Dein KI-Captain",
+      "greeting_morning": "Guten Morgen! Lass uns deine Anzeigen überprüfen.",
+      "greeting_afternoon": "Hallo! Benötigst du Hilfe?",
+      "greeting_evening": "Guten Abend! Wie kann ich dir heute Abend helfen?",
+      "tagline": "Ich analysiere deine Daten und gebe dir leicht verständliche Ratschläge.",
+      "placeholder": "Frag mich alles über deine Anzeigen...",
+      "try_these": "Oder probiere eine dieser Fragen:",
+      "q_how_doing": "Wie laufen meine Anzeigen?",
+      "q_what_next": "Was soll ich als Nächstes tun?",
+      "q_scale": "Welche Kampagne soll ich skalieren?",
+      "q_create_campaign": "Wie erstelle ich eine Kampagne?",
+      "q_budget": "Was ist ein gutes Tagesbudget?",
+      "q_how_it_works": "Wie funktioniert diese Plattform?",
+      "q_whats_wrong": "Was stimmt nicht mit meinen Anzeigen?",
+      "q_improve": "Wie kann ich meine Ergebnisse verbessern?"
+    },
+    "whats_happening": {
+      "title": "Was passiert",
+      "all_good_title": "Alles ruhig!",
+      "all_good_subtitle": "Deine Anzeigen laufen reibungslos. Nichts benötigt im Moment Aufmerksamkeit.",
+      "fix_this": "Dies beheben",
+      "see_details": "Details anzeigen",
+      "view_report": "Bericht anzeigen",
+      "learn_more": "Mehr erfahren",
+      "campaign_problem": "„{name}“ benötigt frische Creatives",
+      "campaign_problem_detail": "Diese Kampagne gibt Geld aus, erzielt aber keine Ergebnisse",
+      "campaign_attention": "„{name}“ könnte besser laufen",
+      "low_ctr_detail": "Niedrige Klickrate – die Leute interagieren nicht mit deinen Anzeigen",
+      "no_conversions_detail": "Klicks werden erzielt, aber noch keine Conversions"
+    },
+    "guided_actions": {
+      "title": "Was kommt als Nächstes?",
+      "create_first_campaign": "Erstelle deine erste Kampagne",
+      "learn_facebook_ads": "Erfahre, wie Facebook-Anzeigen funktionieren",
+      "talk_to_eddie": "Frag Eddie um Hilfe",
+      "add_new_creative": "Neue Werbeanzeige hinzufügen",
+      "view_results": "Detaillierte Ergebnisse anzeigen",
+      "get_ai_analysis": "KI-Analyse erhalten",
+      "fix_campaign": "\"{name}\" beheben",
+      "fix_issues": "Kampagnenprobleme beheben",
+      "ask_eddie_help": "Frag Eddie um Hilfe",
+      "see_all_campaigns": "Alle Kampagnen anzeigen",
+      "resume_campaign": "Eine Kampagne fortsetzen",
+      "review_performance": "Vergangene Performance überprüfen",
+      "encouragement_new": "Keine Sorge, es ist einfacher als du denkst!",
+      "encouragement_issues": "Eddie kann dir helfen, diese in wenigen Minuten zu beheben",
+      "encouragement_good": "Mach weiter so!"
+    },
+    "capabilities": {
+      "title": "Wusstest du, dass Eddie...",
+      "see_all": "Alle Funktionen anzeigen",
+      "monitoring": "Überwache deine Anzeigen rund um die Uhr",
+      "monitoring_desc": "Immer aufmerksam, damit du es nicht musst",
+      "budget": "Budgetänderungen vorschlagen",
+      "budget_desc": "KI-gestützte Optimierungstipps",
+      "creatives": "Finde deine besten Werbeanzeigen",
+      "creatives_desc": "Datengesteuerte kreative Erkenntnisse",
+      "alerts": "Dich auf Probleme aufmerksam machen",
+      "alerts_desc": "Lass dich benachrichtigen, bevor Probleme größer werden",
+      "trends": "Performance-Trends erkennen",
+      "trends_desc": "Wöchentliche und tägliche Muster",
+      "insights": "Verständliche Einblicke geben",
+      "insights_desc": "Kein Marketing-Jargon erforderlich"
     }
   },
   "wizard_simple": {
@@ -1149,7 +1328,81 @@
     "duplicate_last_ad": "Letzte Anzeige duplizieren",
     "add_another_ad": "Weitere Anzeige hinzufügen",
     "duplicate_ad": "Anzeige duplizieren",
-    "duplicate_form": "Formular duplizieren"
+    "duplicate_form": "Formular duplizieren",
+    "step_x_of_5": "Schritt {step} von 5",
+    "next": "Weiter",
+    "back": "Go Back",
+    "launch_campaign": "Kampagne starten",
+    "remove_ad": "Entfernen",
+    "ad_number": "Anzeige {number}",
+    "max_ads": "Anzeigen",
+    "budget_recommended": "Empfohlen: {amount}",
+    "budget_based_on_history": "Basierend auf Ihrem Kontoverlauf",
+    "budget_best_practice": "Empfohlen für neue Werbetreibende",
+    "create_lead_form": "Neues Formular erstellen",
+    "refresh_forms": "Aktualisieren",
+    "no_forms_found": "Keine Lead-Formulare gefunden",
+    "create_form_hint": "Erstellen Sie zuerst ein Lead-Formular in Facebook",
+    "form_name": "Formularname",
+    "form_name_placeholder": "Mein Lead-Formular",
+    "form_name_required": "Der Formularname ist erforderlich",
+    "form_questions": "Fragen, die Sie stellen sollten",
+    "select_questions": "Wählen Sie mindestens eine Frage aus",
+    "privacy_policy_url": "URL der Datenschutzerklärung",
+    "privacy_url_required": "Die URL der Datenschutzerklärung ist erforderlich",
+    "privacy_policy_hint": "Von Facebook für Lead-Formulare vorgeschrieben",
+    "required": "Erforderlich",
+    "creating": "Wird erstellt...",
+    "create_form": "Formular erstellen",
+    "form_create_error": "Fehler beim Erstellen des Lead-Formulars",
+    "form_intro": "Formulareinführung",
+    "form_headline": "Überschrift",
+    "form_headline_placeholder": "Weitere Informationen erhalten",
+    "form_description": "Beschreibung",
+    "form_description_placeholder": "Sagen Sie Benutzern, was sie bekommen...",
+    "custom_questions": "Benutzerdefinierte Fragen",
+    "add_question": "Frage hinzufügen",
+    "no_custom_questions": "Keine benutzerdefinierten Fragen hinzugefügt",
+    "question_label": "Fragetext...",
+    "text_input": "Texteingabe",
+    "dropdown_select": "Dropdown-Auswahl",
+    "options_placeholder": "Optionen (durch Komma getrennt)",
+    "options": "Optionen",
+    "option": "Option",
+    "add_option": "Option hinzufügen",
+    "allow_multiple": "Mehrfachauswahl zulassen",
+    "thank_you_page": "Dankeseite",
+    "thank_you_title": "Titel",
+    "thank_you_title_placeholder": "Vielen Dank!",
+    "thank_you_body": "Nachricht",
+    "thank_you_body_placeholder": "Wir werden uns bald melden...",
+    "thank_you_button": "Schaltflächentext",
+    "thank_you_button_placeholder": "Website besuchen",
+    "thank_you_url": "Button-URL",
+    "thank_you_headline": "Überschrift",
+    "thank_you_headline_placeholder": "Vielen Dank!",
+    "thank_you_description": "Beschreibung",
+    "thank_you_description_placeholder": "Wir melden uns bald...",
+    "website_url": "Webseiten-URL",
+    "thank_you_hint": "Benutzer sehen nach dem Absenden eine Schaltfläche „Zur Website“",
+    "using_existing_image": "Vorhandenes Bild verwenden",
+    "click_to_replace": "Zum Ersetzen klicken",
+    "form_tips_title": "Tipps für bessere Lead-Formulare",
+    "form_tip_1": "Stellen Sie 2-3 qualifizierende Fragen, um Leads von geringer Qualität herauszufiltern",
+    "form_tip_2": "Verwenden Sie den Formular-Typ „Höhere Absicht“ für ernsthaftere Leads (diese bestätigen die Informationen)",
+    "form_tip_3": "Der Algorithmus von Facebook lernt anhand Ihrer Antworten, wie gute Leads aussehen",
+    "form_hint_questions": "Mehr Fragen = weniger, aber qualitativ hochwertigere Leads",
+    "form_hint_custom": "Fügen Sie Fragen wie „Wie hoch ist Ihr Budget?“ hinzu, um eine Vorauswahl zu treffen",
+    "optional": "Optional",
+    "existing_post_url_hint": "Fügen Sie eine Ziel-URL für die CTA-Schaltfläche hinzu",
+    "existing_post_form_hint": "Wählen Sie ein Lead-Formular aus – durch Klicken auf die Anzeige wird dieses Formular geöffnet",
+    "create_new": "Neu erstellen",
+    "use_existing": "Vorhandenen Beitrag verwenden",
+    "using_instagram_post": "Instagram-Beitrag verwenden",
+    "using_facebook_post": "Facebook-Beitrag verwenden",
+    "change_post": "Beitrag ändern",
+    "select_existing_post": "Wählen Sie einen vorhandenen Beitrag aus",
+    "existing_post_hint": "Behält Likes, Kommentare und Shares bei"
   },
   "captain": {
     "title": "KI-Assistent",
@@ -1157,12 +1410,10 @@
     "ai_description": "Schritt für Schritt mit Empfehlungen",
     "back_to_manual": "Zurück zum manuellen Upload",
     "switch_to_manual": "Zum manuellen wechseln",
-
     "welcome_choose_flow": "Willkommen! Was möchten Sie heute tun?",
     "welcome_create": "Lassen Sie uns eine neue Kampagne erstellen. Was ist Ihr Ziel?",
     "welcome_add": "Fügen Sie eine neue Anzeige zu einer bestehenden Kampagne hinzu. Wählen Sie unten die Kampagne aus.",
     "welcome_edit": "Bearbeiten Sie eine bestehende Kampagne. Was möchten Sie ändern?",
-
     "ask_campaign_name": "Wie soll diese Kampagne heißen?",
     "ask_objective": "Was ist das Ziel dieser Kampagne?",
     "ask_lead_type": "Wie möchten Sie Leads sammeln?",
@@ -1186,58 +1437,50 @@
     "ask_new_body": "Was ist der neue Haupttext?",
     "ask_ad_name": "Geben Sie dieser Anzeige einen Namen (optional)",
     "ask_add_another": "Möchten Sie eine weitere Anzeige hinzufügen?",
-
     "placeholder_campaign_name": "z.B. Sommerverkauf-Kampagne",
     "placeholder_budget": "z.B. 20",
     "placeholder_headline": "z.B. Jetzt kaufen - 50% Rabatt!",
     "placeholder_body": "z.B. Verpassen Sie nicht unseren größten Sale...",
     "placeholder_link": "z.B. https://ihreseite.de/sale",
     "placeholder_ad_name": "z.B. Anzeigenvariante 1",
-
     "opt_sales": "Verkäufe",
     "opt_leads": "Leads",
     "opt_traffic": "Traffic",
-    "opt_engagement": "Engagement",
+    "opt_engagement": "Interaktion",
     "opt_whatsapp": "WhatsApp",
     "opt_calls": "Anrufe",
-    "opt_website": "Website",
+    "opt_website": "Webseite",
     "opt_form": "Instant-Formular",
     "opt_all_ages": "Alle Altersgruppen (18-65)",
     "opt_all_genders": "Alle Geschlechter",
     "opt_male": "Männlich",
     "opt_female": "Weiblich",
     "opt_both_platforms": "Beide",
-
     "objective_desc_sales": "Steigern Sie Käufe auf Ihrer Website",
     "objective_desc_leads": "Sammeln Sie Kontaktdaten von potenziellen Kunden",
     "objective_desc_traffic": "Senden Sie Besucher auf Ihre Website",
     "objective_desc_engagement": "Erhalten Sie mehr Likes, Kommentare und Shares",
     "objective_desc_whatsapp": "Starten Sie Unterhaltungen auf WhatsApp",
     "objective_desc_calls": "Bringen Sie Menschen dazu, Ihr Unternehmen anzurufen",
-
     "lead_type_website_title": "Website-Leads",
     "lead_type_website_desc": "Besucher klicken auf Ihre Website und füllen dort Ihr Formular aus. Erfordert Facebook Pixel auf Ihrer Website.",
     "lead_type_form_title": "Instant-Formular",
     "lead_type_form_desc": "Das Formular erscheint direkt in Facebook/Instagram. Keine Website erforderlich. Leads werden in Facebook gesammelt.",
-
     "ask_targeting_type": "Wie sollen wir die Zielgruppenansprache handhaben?",
     "targeting_advantage_title": "Advantage+ (Empfohlen)",
     "targeting_advantage_desc": "Lassen Sie Metas KI die beste Zielgruppe für Sie finden. Ideal für die meisten Kampagnen - typischerweise bessere Ergebnisse mit weniger Aufwand.",
     "targeting_custom_title": "Benutzerdefiniertes Targeting",
     "targeting_custom_desc": "Definieren Sie selbst spezifische Alter-, Geschlecht- und Plattform-Präferenzen. Nutzen Sie dies, wenn Sie Ihre Zielgruppe genau kennen.",
-
     "ask_audiences": "Haben Sie benutzerdefinierte Zielgruppen? (optional)",
     "ask_interests": "Welche Interessen hat Ihre Zielgruppe? Suchen und hinzufügen. (optional)",
     "search_interests": "Nach Interessen suchen...",
     "no_audiences": "Keine benutzerdefinierten Zielgruppen gefunden. Sie können diese im Meta Ads Manager erstellen.",
     "continue": "Weiter",
-
     "ask_ad_format": "Welche Art von Anzeige möchten Sie erstellen?",
     "ad_format_single_title": "Einzelnes Bild oder Video",
     "ad_format_single_desc": "Ein Bild oder Video mit Ihrer Überschrift und Text. Ideal für fokussierte Botschaften.",
     "ad_format_carousel_title": "Karussell",
     "ad_format_carousel_desc": "Mehrere Bilder oder Videos, durch die Nutzer wischen können. Ideal für Produktpräsentationen oder Geschichten.",
-
     "search_location": "Land oder Stadt suchen...",
     "confirm_locations": "Standorte bestätigen",
     "click_to_upload": "Klicken zum Hochladen von Bild oder Video",
@@ -1246,11 +1489,9 @@
     "budget_recommendation": "Wir empfehlen mindestens $10/Tag für beste Ergebnisse",
     "budget_minimum_warning": "Mindesttagesbudget beträgt $5",
     "url_invalid": "Bitte geben Sie eine gültige URL ein (z.B. https://ihreseite.de)",
-
     "age_min": "Mindestalter",
     "age_max": "Höchstalter",
     "confirm_age": "Altersbereich bestätigen",
-
     "step_objective": "Ziel",
     "step_lead_type": "Lead-Typ",
     "step_campaign_name": "Kampagnenname",
@@ -1269,14 +1510,12 @@
     "step_link": "Link",
     "step_cta": "CTA-Button",
     "step_x_of_y": "Schritt {current} von {total}",
-
     "warning_no_pixel": "Kein Facebook Pixel gefunden. Für beste Conversion-Verfolgung richten Sie ein Pixel im Events Manager ein.",
     "warning_no_pixel_link": "Erfahren Sie, wie Sie Facebook Pixel einrichten",
     "warning_no_whatsapp": "WhatsApp Business ist nicht mit dieser Seite verbunden. Verbinden Sie es in der Meta Business Suite.",
     "warning_no_whatsapp_link": "Erfahren Sie, wie Sie WhatsApp verbinden",
     "warning_no_forms": "Keine Lead-Formulare gefunden. Erstellen Sie eines, um Leads direkt auf Facebook zu sammeln.",
     "warning_continue_anyway": "Trotzdem fortfahren",
-
     "create_form": "Formular erstellen",
     "form_name": "Formularname",
     "form_name_placeholder": "z.B. Kontaktformular",
@@ -1292,18 +1531,15 @@
     "form_phone": "Telefonnummer",
     "form_city": "Stadt",
     "form_country": "Land",
-
     "add_another_same_creative": "Gleiches Creative, anderer Text",
     "add_another_same_copy": "Gleicher Text, anderes Creative",
     "add_another_scratch": "Von vorne beginnen",
     "add_another_done": "Fertig mit Anzeigen hinzufügen",
-
     "preview_title": "Anzeigenvorschau",
     "preview_ad_name": "Anzeigenname",
     "preview_no_image": "Kein Bild hochgeladen",
     "duplicate_ad": "Anzeige duplizieren",
     "delete_ad": "Anzeige löschen",
-
     "thinking": "Verarbeite...",
     "summary_ready": "Hier ist Ihre Kampagnenübersicht. Bereit zum Start?",
     "summary_campaign": "Kampagne",
@@ -1313,21 +1549,33 @@
     "summary_budget": "Budget",
     "summary_ad": "Anzeigen-Creative",
     "summary_ads": "Anzeigen ({count})",
-
     "objective": "Ziel",
     "lead_type": "Lead-Typ",
     "campaign": "Kampagne",
-    "adset": "Anzeigengruppe",
     "age": "Alter",
     "gender": "Geschlecht",
     "platform": "Plattform",
-
     "launch": "Kampagne starten",
     "edit_something": "Etwas bearbeiten",
     "launching": "Kampagne wird erstellt...",
     "success": "Kampagne erfolgreich gestartet! Anker lichten!",
     "view_campaign": "Kampagne anzeigen",
-    "create_another": "Weitere erstellen"
+    "create_another": "Weitere erstellen",
+    "targeting": "Targeting",
+    "view_campaign_control": "Kampagnensteuerung anzeigen",
+    "what_happens_next": "Was als Nächstes geschieht:",
+    "learning_phase_info": "Ihre Anzeige geht für 2-3 Tage in die 'Lernphase' über",
+    "facebook_optimization_info": "Facebook testet Zielgruppen, um herauszufinden, was am besten funktioniert",
+    "no_changes_48h": "Nehmen Sie 48 Stunden lang keine Änderungen vor – lassen Sie es lernen",
+    "write_for_me": "✨ Write this for me",
+    "ai_copy_modal_title": "AI-Generated Ad Copy",
+    "ai_copy_context_label": "Tell us more (optional)",
+    "ai_copy_context_placeholder": "e.g., 'Black Friday sale' or 'New product launch'",
+    "generate_copy": "Generate Copy",
+    "generating": "Generating...",
+    "use_this_copy": "Use This",
+    "ai_copy_error": "Failed to generate copy. Please try again.",
+    "no_business_profile": "Please complete your business profile first to use AI copy generation."
   },
   "homepage3": {
     "title": "Was möchten Sie tun?",
@@ -1383,5 +1631,163 @@
     "analysis_complete": "Analyse abgeschlossen",
     "analysis_failed": "Analyse konnte nicht abgeschlossen werden, aber Sie können fortfahren",
     "step_indicator": "Schritt {current} von {total}"
+  },
+  "tooltips": {
+    "spend": "Gesamte Geldmittel, die während dieses Zeitraums für Anzeigen ausgegeben wurden",
+    "impressions": "Wie oft deine Anzeige Personen gezeigt wurde",
+    "clicks": "Wie viele Personen auf deine Anzeige geklickt haben",
+    "ctr": "Click-Through-Rate – % derjenigen, die geklickt haben. Über 1 % ist gut!",
+    "cpc": "Kosten pro Klick – wie viel du für jeden Klick bezahlst. Je niedriger, desto besser!",
+    "conversions": "Gewünschte Aktionen: Käufe, Anmeldungen, Leads usw.",
+    "cpa": "Kosten pro Conversion – was du pro Ergebnis bezahlst. Je niedriger, desto besser!",
+    "conversion_rate": "% der Klicks, die zu Conversions wurden. Je höher, desto besser!"
+  },
+  "status_modal": {
+    "title_pause": "Pausieren",
+    "title_resume": "Fortsetzen",
+    "type_campaign": "Kampagne",
+    "type_adset": "Targeting",
+    "type_ad": "Anzeige",
+    "pause_campaign_explanation": "Das Pausieren dieser Kampagne stoppt alle Anzeigen darin. Deine Zielgruppe sieht keine dieser Anzeigen, bis du sie fortsetzt.",
+    "pause_adset_explanation": "Das Pausieren dieser Ausrichtung stoppt alle Anzeigen darin. Andere Targeting-Gruppen in der Kampagne werden weiterhin ausgeführt.",
+    "pause_ad_explanation": "Das Pausieren dieser Anzeige stoppt die Anzeige für Ihre Zielgruppe. Andere Anzeigen im Targeting werden weiterhin ausgeführt.",
+    "resume_campaign_explanation": "Das Fortsetzen dieser Kampagne startet die Wiedergabe Ihrer Anzeigen erneut. Stellen Sie sicher, dass Ihr Budget korrekt eingestellt ist.",
+    "resume_adset_explanation": "Das Fortsetzen dieser Ausrichtung startet die Wiedergabe der zugehörigen Anzeigen erneut. Die übergeordnete Kampagne muss ebenfalls aktiv sein.",
+    "resume_ad_explanation": "Das Fortsetzen dieser Anzeige startet die Wiedergabe erneut. Das übergeordnete Targeting und die Kampagne müssen ebenfalls aktiv sein.",
+    "daily_spend": "Aktuelle tägliche Ausgaben",
+    "reassurance": "Sie können dies jederzeit rückgängig machen – nichts ist von Dauer.",
+    "confirm_pause": "Pausieren",
+    "confirm_resume": "Fortsetzen"
+  },
+  "theme": {
+    "label": "Thema",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "colorful": "Bunt"
+  },
+  "glossary": {
+    "title": "Glossar",
+    "search_placeholder": "Suchbegriffe...",
+    "no_results": "Keine Begriffe gefunden",
+    "categories": {
+      "metrics": "Messwerte",
+      "campaign_structure": "Kampagnenstruktur",
+      "targeting": "Targeting",
+      "creatives": "Creatives"
+    },
+    "terms": {
+      "spend": {
+        "name": "Ausgaben",
+        "category": "Messwerte",
+        "definition": "Gesamtbetrag, der während dieses Zeitraums für Ihre Anzeigen ausgegeben wurde. Dies ist der tatsächliche Betrag, der von Ihrem Budget abgezogen wird."
+      },
+      "impressions": {
+        "name": "Impressionen",
+        "category": "Messwerte",
+        "definition": "Wie oft Ihre Anzeigen Personen angezeigt wurden. Eine Person sieht Ihre Anzeige möglicherweise mehrmals."
+      },
+      "clicks": {
+        "name": "Klicks",
+        "category": "Messwerte",
+        "definition": "Anzahl der Klicks auf Ihre Anzeigen. Dazu gehören Klicks zu Ihrer Website, App oder anderen Zielen."
+      },
+      "ctr": {
+        "name": "CTR (Click-Through-Rate)",
+        "category": "Messwerte",
+        "definition": "Prozentsatz der Personen, die nach dem Anzeigen Ihrer Anzeige geklickt haben. Berechnet als Klicks ÷ Impressionen × 100. Über 1 % ist im Allgemeinen gut."
+      },
+      "cpc": {
+        "name": "CPC (Cost Per Click)",
+        "category": "metrics",
+        "definition": "Average cost for each click on your ad. Calculated as spend ÷ clicks. Lower is more efficient."
+      },
+      "cpm": {
+        "name": "CPM (Cost Per 1000 Impressions)",
+        "category": "metrics",
+        "definition": "How much you pay for every 1,000 times your ad is shown. Useful for comparing reach efficiency across campaigns."
+      },
+      "conversions": {
+        "name": "Conversions",
+        "category": "metrics",
+        "definition": "Actions you care about that people take after clicking your ad - like purchases, signups, form submissions, or downloads."
+      },
+      "cpa": {
+        "name": "CPA (Cost Per Acquisition)",
+        "category": "metrics",
+        "definition": "Average cost for each conversion. Calculated as spend ÷ conversions. Lower means you're getting results more efficiently."
+      },
+      "roas": {
+        "name": "ROAS (Return on Ad Spend)",
+        "category": "metrics",
+        "definition": "Revenue earned per dollar spent on ads. A ROAS of 3x means you earned $3 for every $1 spent. Higher is better."
+      },
+      "conversion_rate": {
+        "name": "Conversion Rate",
+        "category": "metrics",
+        "definition": "Percentage of clicks that became conversions. Calculated as conversions ÷ clicks × 100. Shows how well your landing page converts."
+      },
+      "campaign": {
+        "name": "Campaign",
+        "category": "campaign_structure",
+        "definition": "The top level of Facebook ads. Contains your objective (what you want to achieve) and overall budget strategy. Think of it as a folder for related targeting groups."
+      },
+      "targeting": {
+        "name": "Targeting",
+        "category": "campaign_structure",
+        "definition": "The middle level that controls WHO sees your ads, WHEN they see them, and WHERE they appear. Contains targeting, schedule, and budget settings."
+      },
+      "ad": {
+        "name": "Ad",
+        "category": "campaign_structure",
+        "definition": "The actual creative that people see - your image or video, headline, text, and call-to-action button. Multiple ads can be tested within one targeting."
+      },
+      "lookalike": {
+        "name": "Lookalike Audience",
+        "category": "targeting",
+        "definition": "Facebook finds people who are similar to your existing customers or website visitors. Great for expanding reach to likely buyers."
+      },
+      "custom_audience": {
+        "name": "Custom Audience",
+        "category": "targeting",
+        "definition": "Target people who already interacted with your business - website visitors, app users, email subscribers, or people who engaged with your content."
+      },
+      "broad_targeting": {
+        "name": "Broad Targeting",
+        "category": "targeting",
+        "definition": "Letting Facebook's AI find the best audience for your ads with minimal restrictions. Often performs well because the algorithm optimizes delivery."
+      },
+      "hook_rate": {
+        "name": "Hook Rate",
+        "category": "creatives",
+        "definition": "Percentage of viewers who watched past the first 3 seconds of your video. Shows if your opening grabs attention. Above 30% is good."
+      },
+      "hold_rate": {
+        "name": "Hold Rate",
+        "category": "creatives",
+        "definition": "Percentage of viewers who kept watching after the hook. Shows if your content maintains interest throughout the video."
+      },
+      "fatigue": {
+        "name": "Ad Fatigue",
+        "category": "creatives",
+        "definition": "When your audience has seen your ad too many times and performance starts declining. Signs include rising CPC and falling CTR. Time for fresh creative!"
+      }
+    }
+  },
+  "cookies": {
+    "title": "We use cookies",
+    "description": "We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. By clicking \"Accept All\", you consent to our use of cookies.",
+    "accept_all": "Accept All",
+    "necessary_only": "Necessary Only",
+    "customize": "Customize",
+    "learn_more": "Learn more in our",
+    "privacy_policy": "Privacy Policy",
+    "preferences_title": "Cookie Preferences",
+    "necessary": "Necessary Cookies",
+    "necessary_desc": "Required for the website to function. Cannot be disabled.",
+    "analytics": "Analytics Cookies",
+    "analytics_desc": "Help us understand how visitors interact with our website.",
+    "marketing": "Marketing Cookies",
+    "marketing_desc": "Used to track visitors across websites for advertising purposes.",
+    "save_preferences": "Save Preferences"
   }
 }

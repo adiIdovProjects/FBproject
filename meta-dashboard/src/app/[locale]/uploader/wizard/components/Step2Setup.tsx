@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useWizard } from './WizardContext';
 import WizardNavigation from './WizardNavigation';
 import { mutationsService, Pixel } from '@/services/mutations.service';
+import { fetchOptimizationSummary, PixelEvent } from '@/services/pixel.service';
 import {
     AlertTriangle,
     ExternalLink,
@@ -12,7 +13,8 @@ import {
     MessageSquare,
     FileText,
     Sparkles,
-    Globe
+    Globe,
+    Activity
 } from 'lucide-react';
 
 interface Props {
@@ -36,6 +38,8 @@ export default function Step2Setup({ t, accountId, pageId }: Props) {
     const [pixels, setPixels] = useState<Pixel[]>([]);
     const [leadForms, setLeadForms] = useState<LeadForm[]>([]);
     const [whatsAppConnected, setWhatsAppConnected] = useState<boolean | null>(null);
+    const [pixelEvents, setPixelEvents] = useState<PixelEvent[]>([]);
+    const [pixelHealth, setPixelHealth] = useState<string | null>(null);
 
     // Determine what setup is needed based on objective
     const needsPixel = state.objective === 'SALES' ||
@@ -57,6 +61,17 @@ export default function Step2Setup({ t, accountId, pageId }: Props) {
                     // Auto-select first pixel if available
                     if (pixelData.length > 0 && !state.selectedPixel) {
                         dispatch({ type: 'SET_PIXEL', pixelId: pixelData[0].id });
+                    }
+
+                    // Fetch pixel event stats
+                    try {
+                        const summary = await fetchOptimizationSummary(accountId, pageId || undefined);
+                        setPixelEvents(summary.events || []);
+                        if (summary.pixels?.length > 0) {
+                            setPixelHealth(summary.pixels[0].health);
+                        }
+                    } catch {
+                        // Silent fail — event stats are informational only
                     }
                 }
 
@@ -232,6 +247,44 @@ export default function Step2Setup({ t, accountId, pageId }: Props) {
                                             </option>
                                         ))}
                                     </select>
+
+                                    {/* Pixel Health & Event Stats */}
+                                    {pixelHealth && (
+                                        <div className="mt-3 flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${
+                                                pixelHealth === 'healthy' ? 'bg-green-400' :
+                                                pixelHealth === 'active' ? 'bg-green-300' :
+                                                pixelHealth === 'stale' ? 'bg-yellow-400' :
+                                                'bg-red-400'
+                                            }`} />
+                                            <span className="text-xs text-gray-400">
+                                                {pixelHealth === 'healthy' ? (t('wizard.pixel_healthy') || 'Pixel is firing (last 24h)') :
+                                                 pixelHealth === 'active' ? (t('wizard.pixel_active') || 'Pixel active (last 7 days)') :
+                                                 pixelHealth === 'stale' ? (t('wizard.pixel_stale') || 'Pixel is stale (>7 days)') :
+                                                 (t('wizard.pixel_never_fired') || 'Pixel has never fired')}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {pixelEvents.length > 0 && (
+                                        <div className="mt-3 p-3 bg-gray-900/50 rounded-lg">
+                                            <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                                                <Activity className="w-3 h-3" />
+                                                {t('wizard.available_events') || 'Available optimization events (last 30 days):'}
+                                            </p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {pixelEvents.slice(0, 8).map((event) => (
+                                                    <span
+                                                        key={event.event_name}
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-300"
+                                                    >
+                                                        {event.event_name}
+                                                        <span className="text-gray-500">({event.count.toLocaleString()})</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             ) : (
                                 <>

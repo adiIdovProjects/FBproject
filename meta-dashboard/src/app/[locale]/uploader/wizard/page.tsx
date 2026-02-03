@@ -424,7 +424,7 @@ function WizardContent() {
                 <div className="bg-gray-900/30 rounded-2xl p-6 border border-gray-800">
                     {/* Step 1: Choose Objective */}
                     {state.currentStep === 1 && (
-                        <Step1Objective t={t} pageId={selectedAccount.page_id || ''} />
+                        <Step1Objective t={t} pageId={selectedAccount.page_id || ''} accountId={selectedAccount.account_id} />
                     )}
 
                     {/* Step 2: Setup Check (pixel/forms/WhatsApp) */}

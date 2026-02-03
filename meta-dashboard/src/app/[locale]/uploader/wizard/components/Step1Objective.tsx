@@ -1,21 +1,50 @@
 "use client";
 
-import { useState } from 'react';
-import { DollarSign, Target, Users, MousePointer, X, MessageCircle, Phone, AlertTriangle, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { DollarSign, Target, Users, MousePointer, X, MessageCircle, Phone, AlertTriangle, ExternalLink, Activity } from 'lucide-react';
 import { useWizard } from './WizardContext';
 import WizardNavigation from './WizardNavigation';
 import { mutationsService } from '@/services/mutations.service';
+import { fetchOptimizationSummary, OptimizationSummary } from '@/services/pixel.service';
 
 interface Props {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     t: any;
     pageId: string;
+    accountId: string;
 }
 
-export default function Step1Objective({ t, pageId }: Props) {
+export default function Step1Objective({ t, pageId, accountId }: Props) {
     const { state, dispatch } = useWizard();
     const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
     const [checkingWhatsApp, setCheckingWhatsApp] = useState(false);
+    const [optimizationData, setOptimizationData] = useState<OptimizationSummary | null>(null);
+
+    // Fetch optimization summary to show smart hints
+    useEffect(() => {
+        if (accountId) {
+            fetchOptimizationSummary(accountId, pageId || undefined)
+                .then(setOptimizationData)
+                .catch(() => {}); // Silent fail — hints are optional
+        }
+    }, [accountId, pageId]);
+
+    // Map Facebook objective names to our internal names
+    const objectiveMap: Record<string, string> = {
+        'OUTCOME_SALES': 'SALES',
+        'OUTCOME_LEADS': 'LEADS',
+        'OUTCOME_TRAFFIC': 'TRAFFIC',
+        'OUTCOME_ENGAGEMENT': 'ENGAGEMENT',
+        'OUTCOME_MESSAGES': 'WHATSAPP',
+        'OUTCOME_CALLS': 'CALLS',
+    };
+
+    const activeObjectives = new Set(
+        (optimizationData?.active_objectives || []).map(o => objectiveMap[o] || o)
+    );
+
+    const hasPixelEvent = (eventName: string) =>
+        optimizationData?.events?.some(e => e.event_name === eventName) ?? false;
 
     const handleGoalSelect = async (goal: 'SALES' | 'LEADS' | 'TRAFFIC' | 'ENGAGEMENT' | 'WHATSAPP' | 'CALLS') => {
         // For WhatsApp, check if connected first
@@ -42,6 +71,20 @@ export default function Step1Objective({ t, pageId }: Props) {
         }
     };
 
+
+    // Render "Active" badge if objective is currently running on the account
+    const renderActiveBadge = (objective: string) => {
+        if (!optimizationData || !activeObjectives.has(objective)) return null;
+        return (
+            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-500/20 text-green-400">
+                <Activity className="w-3 h-3" />
+                {t('wizard.active_on_account') || 'Active on your account'}
+            </span>
+        );
+    };
+
+    // Show pixel warning when SALES is selected but no Purchase event
+    const showSalesPixelWarning = state.objective === 'SALES' && optimizationData && !hasPixelEvent('Purchase') && optimizationData.has_pixel;
 
     const canProceed = state.objective !== null && !checkingWhatsApp;
 
@@ -89,6 +132,7 @@ export default function Step1Objective({ t, pageId }: Props) {
                         <div>
                             <h3 className="font-bold">{t('wizard.sales')}</h3>
                             <p className="text-xs text-gray-400">{t('wizard.sales_desc')}</p>
+                            {renderActiveBadge('SALES')}
                         </div>
                     </div>
                 </div>
@@ -111,6 +155,7 @@ export default function Step1Objective({ t, pageId }: Props) {
                         <div>
                             <h3 className="font-bold">{t('wizard.leads')}</h3>
                             <p className="text-xs text-gray-400">{t('wizard.leads_desc')}</p>
+                            {renderActiveBadge('LEADS')}
                             {state.objective === 'LEADS' && state.leadType && (
                                 <p className="text-xs text-blue-400 mt-1">
                                     ({state.leadType === 'FORM' ? t('wizard.instant_form') : t('wizard.website')})
@@ -138,6 +183,7 @@ export default function Step1Objective({ t, pageId }: Props) {
                         <div>
                             <h3 className="font-bold">{t('wizard.traffic')}</h3>
                             <p className="text-xs text-gray-400">{t('wizard.traffic_desc')}</p>
+                            {renderActiveBadge('TRAFFIC')}
                         </div>
                     </div>
                 </div>
@@ -160,6 +206,7 @@ export default function Step1Objective({ t, pageId }: Props) {
                         <div>
                             <h3 className="font-bold">{t('wizard.engagement')}</h3>
                             <p className="text-xs text-gray-400">{t('wizard.engagement_desc')}</p>
+                            {renderActiveBadge('ENGAGEMENT')}
                         </div>
                     </div>
                 </div>
@@ -214,6 +261,29 @@ export default function Step1Objective({ t, pageId }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* Pixel warning for SALES without Purchase event */}
+            {showSalesPixelWarning && (
+                <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                    <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-sm text-yellow-300 font-medium">
+                            {t('wizard.no_purchase_event_title') || 'No Purchase event detected on your pixel'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            {t('wizard.no_purchase_event_desc') || "Your pixel is active but isn't tracking Purchase events. Facebook won't be able to optimize for sales without this event."}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Smart warnings from business profile */}
+            {optimizationData?.warnings?.map((warning, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                    <AlertTriangle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                    <p className="text-xs text-gray-400">{warning.message}</p>
+                </div>
+            ))}
 
             {/* WhatsApp Not Connected Modal */}
             {showWhatsAppModal && (

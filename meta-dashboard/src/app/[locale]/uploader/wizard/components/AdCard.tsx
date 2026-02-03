@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Upload, CheckCircle, X, Loader2, ExternalLink, RefreshCw, Plus, Copy, Lightbulb, ChevronDown, Image as ImageIcon, LayoutGrid, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Upload, CheckCircle, X, Loader2, ExternalLink, RefreshCw, Plus, Copy, Lightbulb, ChevronDown, Image as ImageIcon, LayoutGrid, ChevronLeft, ChevronRight, Trash2, Sparkles } from 'lucide-react';
 import { AdCreative, CarouselCardState, useWizard } from './WizardContext';
 import { mutationsService, PagePost } from '@/services/mutations.service';
 import PostPicker from './PostPicker';
+import { AICopyModal } from '@/components/common/AICopyModal';
 
 interface LeadForm {
     id: string;
@@ -78,6 +79,8 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
     const [showFormTips, setShowFormTips] = useState(false);
     const [showPostPicker, setShowPostPicker] = useState(false);
     const [carouselPreviewIndex, setCarouselPreviewIndex] = useState(0);
+    const [showAICopyModal, setShowAICopyModal] = useState(false);
+    const [aiCopyFieldType, setAiCopyFieldType] = useState<'headline' | 'body'>('body');
 
     const isLeadForm = state.objective === 'LEADS' && state.leadType === 'FORM';
     const isWhatsApp = state.objective === 'WHATSAPP';
@@ -670,9 +673,19 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                     {/* Primary Text - Only show when NOT using existing post */}
                     {!ad.useExistingPost && (
                         <div>
-                            <label className="text-xs uppercase text-gray-500 font-bold">
-                                {t('wizard.primary_text')}
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs uppercase text-gray-500 font-bold">
+                                    {t('wizard.primary_text')}
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => { setAiCopyFieldType('body'); setShowAICopyModal(true); }}
+                                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition-colors"
+                                >
+                                    <Sparkles className="w-3 h-3" />
+                                    {t('wizard.generate_with_ai') || 'Generate with AI'}
+                                </button>
+                            </div>
                             <textarea
                                 value={ad.body}
                                 onChange={(e) => updateAd({ body: e.target.value })}
@@ -685,9 +698,19 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                     {/* Headline - Only show when NOT using existing post */}
                     {!ad.useExistingPost && (
                         <div>
-                            <label className="text-xs uppercase text-gray-500 font-bold">
-                                {t('wizard.headline')}
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs uppercase text-gray-500 font-bold">
+                                    {t('wizard.headline')}
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => { setAiCopyFieldType('headline'); setShowAICopyModal(true); }}
+                                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition-colors"
+                                >
+                                    <Sparkles className="w-3 h-3" />
+                                    {t('wizard.generate_with_ai') || 'Generate with AI'}
+                                </button>
+                            </div>
                             <input
                                 value={ad.title}
                                 onChange={(e) => updateAd({ title: e.target.value })}
@@ -1471,6 +1494,22 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                 accountId={accountId}
                 pageId={pageId}
                 t={t}
+            />
+
+            {/* AI Copy Generation Modal */}
+            <AICopyModal
+                isOpen={showAICopyModal}
+                onClose={() => setShowAICopyModal(false)}
+                onSelect={(variant) => {
+                    if (aiCopyFieldType === 'headline') {
+                        updateAd({ title: variant.headline });
+                    } else {
+                        updateAd({ body: variant.primary_text, title: ad.title || variant.headline });
+                    }
+                }}
+                accountId={accountId}
+                objective={state.objective || 'SALES'}
+                fieldType={aiCopyFieldType}
             />
         </div>
     );

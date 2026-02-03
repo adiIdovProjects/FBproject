@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, MapPin, Users, DollarSign, Image, Loader2, CheckCircle, XCircle, Target, Calendar } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useCaptain } from './CaptainContext';
 import { SpeechBubble } from './SpeechBubble';
 import { useAccount } from '@/context/AccountContext';
 import { mutationsService, SmartCampaignRequest } from '@/services/mutations.service';
+import confetti from 'canvas-confetti';
 
 // Parse Facebook API errors to user-friendly messages
 function parseFbError(err: Error & { response?: { data?: { detail?: string } } }): string {
@@ -255,6 +256,38 @@ export const AICaptainSummary: React.FC = () => {
         dispatch({ type: 'SET_CREATED_CAMPAIGN', campaignId: state.selectedCampaignId || '' });
     };
 
+    // Trigger confetti on success
+    useEffect(() => {
+        if (state.phase === 'success') {
+            // Trigger confetti animation
+            const duration = 2500;
+            const end = Date.now() + duration;
+
+            const frame = () => {
+                confetti({
+                    particleCount: 3,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#fbbf24', '#f59e0b', '#d97706'] // Amber colors
+                });
+                confetti({
+                    particleCount: 3,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#fbbf24', '#f59e0b', '#d97706']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            };
+
+            frame();
+        }
+    }, [state.phase]);
+
     // Success screen
     if (state.phase === 'success') {
         return (
@@ -262,17 +295,32 @@ export const AICaptainSummary: React.FC = () => {
                 <div className="text-8xl mb-6">
                     🎉
                 </div>
-                <SpeechBubble className="mb-8">
-                    <p className="text-center font-medium text-green-600">
+                <SpeechBubble className="mb-8 max-w-2xl">
+                    <p className="text-center font-medium text-green-600 text-xl mb-4">
                         {t('captain.success')}
                     </p>
+                    <div className="text-gray-300 text-sm space-y-2 mt-4">
+                        <p className="font-semibold text-white text-base mb-3">{t('captain.what_happens_next')}</p>
+                        <p className="flex items-start gap-2">
+                            <span className="text-purple-400">•</span>
+                            <span>{t('captain.learning_phase_info')}</span>
+                        </p>
+                        <p className="flex items-start gap-2">
+                            <span className="text-purple-400">•</span>
+                            <span>{t('captain.facebook_optimization_info')}</span>
+                        </p>
+                        <p className="flex items-start gap-2">
+                            <span className="text-purple-400">•</span>
+                            <span>{t('captain.no_changes_48h')}</span>
+                        </p>
+                    </div>
                 </SpeechBubble>
                 <div className="flex gap-4">
                     <button
-                        onClick={() => router.push(`/${locale}/manage`)}
-                        className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors"
+                        onClick={() => router.push(`/${locale}/campaign-control`)}
+                        className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg"
                     >
-                        {t('captain.view_campaign')}
+                        {t('captain.view_campaign_control')}
                     </button>
                     <button
                         onClick={() => dispatch({ type: 'RESET' })}

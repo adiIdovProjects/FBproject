@@ -31,7 +31,12 @@
     "saved_successfully": "נשמר בהצלחה",
     "actions": "פעולות",
     "loading": "טוען...",
-    "today": "היום"
+    "today": "היום",
+    "next": "הבא",
+    "remove": "הסרה",
+    "edit": "עריכה",
+    "new": "חדש",
+    "or": "או"
   },
   "status": {
     "ACTIVE": "פעיל",
@@ -108,13 +113,13 @@
     "conversions_tooltip": "פעולות שחשובות לך: רכישות, הרשמות או לידים",
     "conversion_value": "ערך המרה",
     "conversion_value_tooltip": "סך ההכנסה שנוצרה מההמרות שלך",
-    "roas": "ROAS",
-    "total_roas": "ROAS",
+    "roas": "החזר על הוצאות פרסום",
+    "total_roas": "החזר על הוצאות פרסום",
     "roas_tooltip": "החזר על הוצאות פרסום: הכנסה שנוצרה לכל דולר שהוצא. גבוה יותר = רווחי יותר",
     "cpa": "עלות להמרה",
     "total_cpa": "עלות להמרה",
     "cpa_tooltip": "עלות ממוצעת לכל המרה. נמוך יותר = יעילות טובה יותר",
-    "average_roas": "ROAS",
+    "average_roas": "החזר על הוצאות פרסום",
     "average_cpa": "עלות להמרה",
     "primary_metric": "מדד ראשי",
     "leads": "לידים",
@@ -156,7 +161,6 @@
     "campaign_name": "שם הקמפיין",
     "loading_campaigns": "טוען קמפיינים...",
     "campaign_status": "סטטוס הקמפיין",
-    "adsets": "סטים",
     "ads": "מודעות",
     "platform": "פלטפורמה",
     "placement": "מיקום",
@@ -166,7 +170,8 @@
     "breakdown_lazy_load": "הנתונים ייטענו בעת בחירת סוג פירוט",
     "leads": "לידים",
     "download_leads": "הורדת לידים",
-    "download_csv": "הורדת CSV"
+    "download_csv": "הורדת CSV",
+    "targetingGroups": "קבוצות מיקוד"
   },
   "reports": {
     "title": "דוחות מתקדמים",
@@ -207,7 +212,6 @@
       "week": "לפי שבוע",
       "month": "לפי חודש",
       "campaign": "לפי קמפיין",
-      "adset": "לפי סט מודעות",
       "ad": "לפי מודעה",
       "placement": "לפי מיקום",
       "platform": "לפי פלטפורמה",
@@ -215,7 +219,8 @@
       "country": "לפי מדינה",
       "time": "זמן",
       "entity": "ישות",
-      "audience": "קהל"
+      "audience": "קהל",
+      "targeting": "לפי מיקוד"
     },
     "quick_templates": "תבניות מהירות",
     "templates_title": "תבניות דוחות",
@@ -233,10 +238,10 @@
       "daily": "יומי",
       "weekly": "שבועי",
       "campaign": "קמפיין",
-      "adset": "סט מודעות",
       "placement": "מיקום",
       "demographics": "דמוגרפיה",
-      "geographic": "גיאוגרפי"
+      "geographic": "גיאוגרפי",
+      "targeting": "מיקוד"
     },
     "builder": {
       "title": "בניית דוח",
@@ -244,7 +249,6 @@
       "by_time": "לפי זמן",
       "audience": "תובנות קהל",
       "campaign": "קמפיין",
-      "adset": "סט מודעות",
       "ad": "מודעה",
       "day": "יום",
       "week": "שבוע",
@@ -260,7 +264,9 @@
       "clear": "נקה",
       "filter_campaign": "סנן לפי שם קמפיין...",
       "filter_adset": "סנן לפי שם סט מודעות...",
-      "filter_ad": "סנן לפי שם מודעה..."
+      "filter_ad": "סנן לפי שם מודעה...",
+      "targeting": "מיקוד",
+      "add_grouping": "הוסף קיבוץ"
     }
   },
   "creatives": {
@@ -967,7 +973,70 @@
     "end_date_hint": "השאר ריק להפעלה ללא הגבלה",
     "language_targeting": "טרגוט לפי שפה",
     "language_optional": "אופציונלי",
-    "language_hint": "טרגט משתמשים שדוברים שפות ספציפיות. השאר ריק לכל השפות."
+    "language_hint": "טרגט משתמשים שדוברים שפות ספציפיות. השאר ריק לכל השפות.",
+    "lead_type_desc": "בחר היכן ברצונך לאסוף לידים מהקהל שלך",
+    "media": "מדיה",
+    "cta": "קריאה לפעולה",
+    "lead_form": "טופס לידים",
+    "url": "URL",
+    "select_pixel": "-- בחר פיקסל --",
+    "select_event": "-- בחר אירוע --",
+    "no_pixel_warning_title": "לא נמצא פיקסל פייסבוק",
+    "no_pixel_warning_desc": "ללא פיקסל, פייסבוק לא יכול לעקוב אחר המרות באתר שלך. ייתכן שהקמפיין שלך לא יותאם ביעילות.",
+    "setup_pixel_link": "הגדר את הפיקסל שלך במנהל האירועים",
+    "whatsapp": "WhatsApp",
+    "whatsapp_desc": "התחל שיחות",
+    "calls": "שיחות",
+    "calls_desc": "קבל שיחות טלפון",
+    "objective_whatsapp": "קבל שאנשים ישלחו לך הודעות ב- WhatsApp. נהדר לשירות לקוחות.",
+    "objective_calls": "קבל שאנשים יתקשרו לעסק שלך ישירות. נהדר לפגישות.",
+    "calls_tracking_note": "מעקב רק על לחיצה להתקשרות",
+    "whatsapp_not_connected_title": "WhatsApp Business לא מחובר",
+    "whatsapp_not_connected_desc": "כדי להפעיל מודעות WhatsApp, עליך לחבר את WhatsApp Business לדף הפייסבוק שלך. זה חייב להיעשות בהגדרות העסקיות של פייסבוק.",
+    "whatsapp_setup_link": "הגדר בהגדרות העסקיות של פייסבוק",
+    "cta_whatsapp_message": "שלח הודעת WhatsApp",
+    "cta_call_now": "התקשר עכשיו",
+    "cta_contact_us": "צרו קשר",
+    "cta_get_quote": "קבל הצעת מחיר",
+    "whatsapp_destination_note": "משתמשים ישלחו לך הודעות ב- WhatsApp כשהם ילחצו על המודעה",
+    "calls_destination_note": "משתמשים יתקשרו למספר הטלפון העסקי שלך כשהם ילחצו על המודעה",
+    "setup_check": "בדיקת הגדרה",
+    "setup_check_desc": "בוא נוודא שיש לך את כל מה שצריך להגדרה לתוצאות הטובות ביותר",
+    "no_setup_needed": "אין צורך בהגדרה נוספת",
+    "pixel_found": "נמצא פיקסל! בחר איזה מהם להשתמש:",
+    "checking_pixel": "בודק פיקסל פייסבוק...",
+    "checking_lead_forms": "בודק טפסי לידים...",
+    "checking_whatsapp": "בודק חיבור WhatsApp...",
+    "continue_without_pixel": "אתה יכול להמשיך בלי פיקסל, אבל מעקב לא יעבוד.",
+    "lead_forms": "טופסי לידים",
+    "lead_forms_found": "{count} lead form(s) found. You can select one in the ad creation step.",
+    "no_lead_forms_title": "No Lead Forms Found",
+    "no_lead_forms_desc": "You'll need to create a lead form to collect leads. You can create one in the ad creation step, or set one up in Facebook now.",
+    "create_lead_form_facebook": "Create Form in Facebook",
+    "create_form_later": "You can also create a form in the ad creation step.",
+    "whatsapp_business": "WhatsApp Business",
+    "whatsapp_connected": "WhatsApp Business is connected to your page.",
+    "connect_whatsapp": "Connect WhatsApp Business",
+    "next_step_location": "Next: Choose where to show your ads",
+    "review_title": "Review Your Campaign",
+    "review_desc": "Make sure everything looks good before launching",
+    "objective": "Objective",
+    "locations": "Locations",
+    "no_locations": "No locations selected",
+    "targeting": "Targeting",
+    "ads": "Ads",
+    "note": "Note",
+    "campaign_starts_paused": "Your campaign will start in PAUSED status. You can activate it from the Manage page after reviewing.",
+    "edit": "Edit",
+    "active_on_account": "פעיל בחשבון שלך",
+    "no_purchase_event_title": "לא זוהה אירוע רכישה בפיקסל",
+    "no_purchase_event_desc": "הפיקסל פעיל אך לא עוקב אחר אירועי רכישה. פייסבוק לא יוכל לבצע אופטימיזציה למכירות ללא אירוע זה.",
+    "pixel_healthy": "הפיקסל פעיל (24 שעות אחרונות)",
+    "pixel_active": "הפיקסל פעיל (7 ימים אחרונים)",
+    "pixel_stale": "הפיקסל לא פעיל (מעל 7 ימים)",
+    "pixel_never_fired": "הפיקסל מעולם לא הופעל",
+    "available_events": "אירועי אופטימיזציה זמינים (30 יום אחרונים):",
+    "generate_with_ai": "יצירה עם AI"
   },
   "ai_panel": {
     "title": "שאל את עוזר ה-AI",
@@ -1024,7 +1093,37 @@
     "add_creative_desc": "הוסף וריאציית מודעה חדשה לקמפיין שכבר פועל. שמור על אותו טירגוט תוך בדיקת קריאייטיבים חדשים. מצוין לבדיקות A/B.",
     "edit_title": "ערוך סט מודעות או מודעה",
     "edit_desc": "שנה טירגוט (מיקום, גיל, תקציב) בסט מודעות, או עדכן טקסט מודעה, מדיה וטפסי לידים. כוונן את הקמפיינים הקיימים שלך.",
-    "continue": "המשך"
+    "continue": "המשך",
+    "new_campaign": "New Campaign",
+    "what_would_you_like": "What would you like to do?",
+    "choose_path_desc": "Choose the option that best fits your goal",
+    "create_when": "Choose this when you want a new objective or new targeting",
+    "create_examples": "Examples: New product launch, testing a different audience, new marketing goal",
+    "how_to_start": "How would you like to start?",
+    "start_fresh": "Start Fresh",
+    "start_fresh_desc": "ליצור קמפיין חדש לגמרי מאפס",
+    "duplicate_existing": "שכפול קמפיין קיים",
+    "duplicate_existing_desc": "התחלה עם הגדרות מקמפיין שעבד היטב",
+    "add_when": "בחר באפשרות זו כאשר ברצונך לבדוק קריאייטיבים חדשים עם אותם פרמטרי מיקוד",
+    "add_examples": "נהדר עבור בדיקות A/B: קהל זהה, תמונות או טקסט שונים",
+    "edit_when": "בחר באפשרות זו כדי לשנות קמפיינים שכבר פועלים",
+    "edit_examples": "שנה מיקוד (מיקום, גיל) או עדכן תוכן מודעה (טקסט, תמונה, קריאה לפעולה)",
+    "what_to_edit": "מה תרצה לערוך?",
+    "edit_targeting": "ערוך מיקוד (Targeting)",
+    "edit_targeting_desc": "שנה מיקומים, טווח גילאים ונתונים דמוגרפיים",
+    "edit_creative": "ערוך קריאייטיב (מודעה)",
+    "edit_creative_desc": "שנה כותרת, טקסט, תמונה, סרטון או כפתור קריאה לפעולה",
+    "select_option_hint": "בחר אפשרות למעלה כדי להמשיך",
+    "duplicate_title": "שכפל קמפיין",
+    "duplicate_desc": "שכפל קמפיין קיים עם כל ההגדרות והמודעות שלו",
+    "select_campaign_to_clone": "בחר קמפיין לשכפול",
+    "no_campaigns_found": "לא נמצאו קמפיינים",
+    "select_campaign": "בחר קמפיין...",
+    "select_adset": "בחר מיקוד...",
+    "select_campaign_adset": "בחר קמפיין ומיקוד",
+    "no_adsets_found": "לא נמצאו קבוצות מיקוד בקמפיין זה",
+    "clone_campaign": "שכפל קמפיין",
+    "loading_campaign_data": "טוען נתוני קמפיין..."
   },
   "edit": {
     "title": "ערוך סט מודעות או מודעה",
@@ -1107,7 +1206,8 @@
       "spent": "הוצאה",
       "this_week": "השבוע",
       "results": "תוצאות",
-      "active_campaigns": "קמפיינים פעילים"
+      "active_campaigns": "קמפיינים פעילים",
+      "active": "פעיל"
     },
     "campaigns": {
       "title": "הקמפיינים שלך",
@@ -1144,6 +1244,83 @@
       "view_all": "צפה בכל הקריאייטיבים",
       "no_creatives": "אין קריאייטיבים עדיין",
       "results_label": "תוצאות"
+    },
+    "hero": {
+      "good_title": "המודעות שלך עושות עבודה נהדרת!",
+      "good_subtitle": "הכל פועל בצורה חלקה. תמשיך כך!",
+      "attention_title": "יש כמה דברים שדורשים את תשומת ליבך",
+      "attention_subtitle": "{count} קמפיינים יכולים להשתמש קצת בעזרה",
+      "issues_title": "בואו נתקן כמה בעיות ביחד",
+      "issues_subtitle": "אל תדאג, אנחנו נעזור לך למיין את זה",
+      "new_user_title": "ברוך הבא! מוכן להשיק את המודעה הראשונה שלך?",
+      "new_user_subtitle": "אנו נדריך אותך בכל שלב",
+      "loading_title": "טוען את הנתונים שלך...",
+      "loading_subtitle": "רק רגע"
+    },
+    "ai_assistant": {
+      "badge": "הקפטן הבינה המלאכותית שלך",
+      "greeting_morning": "בוקר טוב! בוא נבדוק את המודעות שלך.",
+      "greeting_afternoon": "שלום! צריך עזרה במשהו?",
+      "greeting_evening": "ערב טוב! איך אני יכול לעזור לך הלילה?",
+      "tagline": "אני מנתח את הנתונים שלך ונותן לך עצות בשפה פשוטה.",
+      "placeholder": "שאל אותי כל דבר על המודעות שלך...",
+      "try_these": "או נסה אחד מאלה:",
+      "q_how_doing": "מה שלום המודעות שלי?",
+      "q_what_next": "מה עלי לעשות הלאה?",
+      "q_scale": "איזה קמפיין עלי להרחיב?",
+      "q_create_campaign": "איך אני יוצר קמפיין?",
+      "q_budget": "מהו תקציב יומי טוב?",
+      "q_how_it_works": "איך הפלטפורמה הזו עובדת?",
+      "q_whats_wrong": "מה לא בסדר עם המודעות שלי?",
+      "q_improve": "איך אוכל לשפר את התוצאות שלי?"
+    },
+    "whats_happening": {
+      "title": "מה קורה",
+      "all_good_title": "All quiet!",
+      "all_good_subtitle": "Your ads are running smoothly. Nothing needs attention right now.",
+      "fix_this": "Fix This",
+      "see_details": "See Details",
+      "view_report": "View Report",
+      "learn_more": "Learn More",
+      "campaign_problem": "\"{name}\" needs fresh creatives",
+      "campaign_problem_detail": "This campaign is spending but not getting results",
+      "campaign_attention": "\"{name}\" could be doing better",
+      "low_ctr_detail": "Low click rate - people aren't engaging with your ads",
+      "no_conversions_detail": "Getting clicks but no conversions yet"
+    },
+    "guided_actions": {
+      "title": "What's Next?",
+      "create_first_campaign": "Create Your First Campaign",
+      "learn_facebook_ads": "Learn How Facebook Ads Work",
+      "talk_to_eddie": "Ask Eddie for Help",
+      "add_new_creative": "Add New Creative",
+      "view_results": "View Detailed Results",
+      "get_ai_analysis": "Get AI Analysis",
+      "fix_campaign": "Fix \"{name}\"",
+      "fix_issues": "Fix Campaign Issues",
+      "ask_eddie_help": "Ask Eddie for Help",
+      "see_all_campaigns": "See All Campaigns",
+      "resume_campaign": "Resume a Campaign",
+      "review_performance": "Review Past Performance",
+      "encouragement_new": "Don't worry, it's easier than you think!",
+      "encouragement_issues": "Eddie can help you fix these in minutes",
+      "encouragement_good": "Keep up the great work!"
+    },
+    "capabilities": {
+      "title": "Did you know Eddie can...",
+      "see_all": "See All Features",
+      "monitoring": "Monitor your ads 24/7",
+      "monitoring_desc": "Always watching so you don't have to",
+      "budget": "Suggest budget changes",
+      "budget_desc": "AI-powered optimization tips",
+      "creatives": "Find your best creatives",
+      "creatives_desc": "Data-driven creative insights",
+      "alerts": "Alert you to problems",
+      "alerts_desc": "Get notified before issues grow",
+      "trends": "Spot performance trends",
+      "trends_desc": "Weekly and daily patterns",
+      "insights": "Give plain-English insights",
+      "insights_desc": "No marketing jargon needed"
     }
   },
   "wizard_simple": {
@@ -1151,7 +1328,81 @@
     "duplicate_last_ad": "שכפל מודעה אחרונה",
     "add_another_ad": "הוסף מודעה נוספת",
     "duplicate_ad": "שכפל מודעה",
-    "duplicate_form": "שכפל טופס"
+    "duplicate_form": "שכפל טופס",
+    "step_x_of_5": "Step {step} of 5",
+    "next": "Next",
+    "back": "Back",
+    "launch_campaign": "Launch Campaign",
+    "remove_ad": "Remove",
+    "ad_number": "Ad {number}",
+    "max_ads": "ads",
+    "budget_recommended": "Recommended: {amount}",
+    "budget_based_on_history": "Based on your account history",
+    "budget_best_practice": "Recommended for new advertisers",
+    "create_lead_form": "Create New Form",
+    "refresh_forms": "Refresh",
+    "no_forms_found": "No lead forms found",
+    "create_form_hint": "Create a lead form in Facebook first",
+    "form_name": "Form Name",
+    "form_name_placeholder": "My Lead Form",
+    "form_name_required": "Form name is required",
+    "form_questions": "Questions to Ask",
+    "select_questions": "Select at least one question",
+    "privacy_policy_url": "Privacy Policy URL",
+    "privacy_url_required": "Privacy policy URL is required",
+    "privacy_policy_hint": "Required by Facebook for lead forms",
+    "required": "Required",
+    "creating": "Creating...",
+    "create_form": "Create Form",
+    "form_create_error": "Failed to create lead form",
+    "form_intro": "Form Introduction",
+    "form_headline": "Headline",
+    "form_headline_placeholder": "Get more info",
+    "form_description": "Description",
+    "form_description_placeholder": "Tell users what they'll get...",
+    "custom_questions": "Custom Questions",
+    "add_question": "Add Question",
+    "no_custom_questions": "No custom questions added",
+    "question_label": "Question text...",
+    "text_input": "Text Input",
+    "dropdown_select": "Dropdown Select",
+    "options_placeholder": "Options (comma-separated)",
+    "options": "Options",
+    "option": "Option",
+    "add_option": "Add Option",
+    "allow_multiple": "Allow multiple selections",
+    "thank_you_page": "Thank You Page",
+    "thank_you_title": "Title",
+    "thank_you_title_placeholder": "Thank you!",
+    "thank_you_body": "Message",
+    "thank_you_body_placeholder": "We'll be in touch soon...",
+    "thank_you_button": "Button Text",
+    "thank_you_button_placeholder": "Visit Website",
+    "thank_you_url": "Button URL",
+    "thank_you_headline": "Headline",
+    "thank_you_headline_placeholder": "Thank you!",
+    "thank_you_description": "Description",
+    "thank_you_description_placeholder": "We'll be in touch soon...",
+    "website_url": "Website URL",
+    "thank_you_hint": "Users will see a \"Go to website\" button after submitting",
+    "using_existing_image": "Using existing image",
+    "click_to_replace": "Click to replace",
+    "form_tips_title": "Tips for Better Lead Forms",
+    "form_tip_1": "Ask 2-3 qualifying questions to filter out low-quality leads",
+    "form_tip_2": "Use 'Higher Intent' form type for more serious leads (they confirm info)",
+    "form_tip_3": "Facebook's algorithm learns what good leads look like from your responses",
+    "form_hint_questions": "More questions = fewer but higher quality leads",
+    "form_hint_custom": "Add questions like 'What's your budget?' to pre-qualify",
+    "optional": "Optional",
+    "existing_post_url_hint": "Add a destination URL for the CTA button",
+    "existing_post_form_hint": "Select a lead form - clicking the ad will open this form",
+    "create_new": "Create New",
+    "use_existing": "Use Existing Post",
+    "using_instagram_post": "Using Instagram post",
+    "using_facebook_post": "Using Facebook post",
+    "change_post": "Change post",
+    "select_existing_post": "Select an existing post",
+    "existing_post_hint": "Preserves likes, comments and shares"
   },
   "captain": {
     "title": "עוזר AI",
@@ -1159,12 +1410,10 @@
     "ai_description": "צעד אחר צעד עם המלצות",
     "back_to_manual": "חזרה להעלאה ידנית",
     "switch_to_manual": "עבור לידני",
-
     "welcome_choose_flow": "ברוכים הבאים! מה תרצו לעשות היום?",
     "welcome_create": "בואו ניצור קמפיין חדש. מה המטרה שלכם?",
     "welcome_add": "הוספת מודעה חדשה לקמפיין קיים. בחרו את הקמפיין למטה.",
     "welcome_edit": "עריכת קמפיין קיים. מה תרצו לשנות?",
-
     "ask_campaign_name": "איך נקרא לקמפיין הזה?",
     "ask_objective": "מה המטרה של הקמפיין?",
     "ask_lead_type": "איך תרצו לאסוף לידים?",
@@ -1188,14 +1437,12 @@
     "ask_new_body": "מה הטקסט הראשי החדש?",
     "ask_ad_name": "תנו שם למודעה הזו (אופציונלי)",
     "ask_add_another": "האם תרצו להוסיף מודעה נוספת?",
-
     "placeholder_campaign_name": "למשל, קמפיין מבצע קיץ",
     "placeholder_budget": "למשל, 20",
     "placeholder_headline": "למשל, קנה עכשיו - 50% הנחה!",
     "placeholder_body": "למשל, אל תפספסו את המבצע הגדול שלנו...",
     "placeholder_link": "למשל, https://yoursite.com/sale",
     "placeholder_ad_name": "למשל, וריאציית מודעה 1",
-
     "opt_sales": "מכירות",
     "opt_leads": "לידים",
     "opt_traffic": "תנועה",
@@ -1209,37 +1456,31 @@
     "opt_male": "גברים",
     "opt_female": "נשים",
     "opt_both_platforms": "שניהם",
-
     "objective_desc_sales": "הגברת רכישות באתר שלכם",
     "objective_desc_leads": "איסוף פרטי קשר מלקוחות פוטנציאליים",
     "objective_desc_traffic": "שליחת אנשים לאתר שלכם",
     "objective_desc_engagement": "קבלת יותר לייקים, תגובות ושיתופים",
     "objective_desc_whatsapp": "התחלת שיחות בוואטסאפ",
     "objective_desc_calls": "לגרום לאנשים להתקשר לעסק שלכם",
-
     "lead_type_website_title": "לידים מהאתר",
     "lead_type_website_desc": "מבקרים לוחצים לאתר שלכם וממלאים את הטופס שם. דורש התקנת פיקסל פייסבוק באתר שלכם למעקב המרות.",
     "lead_type_form_title": "טופס מיידי",
     "lead_type_form_desc": "הטופס מופיע ישירות בפייסבוק/אינסטגרם. לא צריך אתר. הלידים נאספים בפייסבוק.",
-
     "ask_targeting_type": "איך לטפל בטרגוט הקהל?",
     "targeting_advantage_title": "Advantage+ (מומלץ)",
     "targeting_advantage_desc": "תנו לבינה המלאכותית של Meta למצוא את הקהל הטוב ביותר עבורכם. מעולה לרוב הקמפיינים - בדרך כלל תוצאות טובות יותר עם פחות מאמץ.",
     "targeting_custom_title": "טרגוט מותאם אישית",
     "targeting_custom_desc": "הגדירו בעצמכם העדפות ספציפיות לגיל, מגדר ופלטפורמה. השתמשו באפשרות זו אם אתם מכירים את הקהל שלכם בדיוק.",
-
     "ask_audiences": "יש לכם קהלים מותאמים אישית לטרגוט? (אופציונלי)",
     "ask_interests": "מה מעניין את הקהל שלכם? חפשו והוסיפו תחומי עניין. (אופציונלי)",
     "search_interests": "חפש תחומי עניין...",
     "no_audiences": "לא נמצאו קהלים מותאמים אישית. תוכלו ליצור אותם במנהל המודעות של Meta.",
     "continue": "המשך",
-
     "ask_ad_format": "איזה סוג מודעה תרצו ליצור?",
     "ad_format_single_title": "תמונה או סרטון בודד",
     "ad_format_single_desc": "תמונה או סרטון אחד עם הכותרת והטקסט שלכם. מעולה למסרים ממוקדים.",
     "ad_format_carousel_title": "קרוסלה",
     "ad_format_carousel_desc": "מספר תמונות או סרטונים שאנשים יכולים להחליק ביניהם. מעולה להצגת מוצרים או סיפור סיפור.",
-
     "search_location": "חפש מדינה או עיר...",
     "confirm_locations": "אשר מיקומים",
     "click_to_upload": "לחץ להעלאת תמונה או סרטון",
@@ -1248,11 +1489,9 @@
     "budget_recommendation": "אנחנו ממליצים על לפחות $10 ליום לתוצאות הטובות ביותר",
     "budget_minimum_warning": "התקציב היומי המינימלי הוא $5",
     "url_invalid": "אנא הכניסו כתובת URL תקינה (למשל, https://yoursite.com)",
-
     "age_min": "גיל מינימלי",
     "age_max": "גיל מקסימלי",
     "confirm_age": "אשר טווח גילאים",
-
     "step_objective": "מטרה",
     "step_lead_type": "סוג ליד",
     "step_campaign_name": "שם הקמפיין",
@@ -1271,14 +1510,12 @@
     "step_link": "קישור",
     "step_cta": "כפתור CTA",
     "step_x_of_y": "שלב {current} מתוך {total}",
-
     "warning_no_pixel": "לא נמצא פיקסל פייסבוק. למעקב המרות טוב יותר, הגדירו פיקסל במנהל האירועים.",
     "warning_no_pixel_link": "למדו איך להגדיר פיקסל פייסבוק",
     "warning_no_whatsapp": "וואטסאפ עסקי לא מחובר לדף הזה. חברו אותו ב-Meta Business Suite.",
     "warning_no_whatsapp_link": "למדו איך לחבר וואטסאפ",
     "warning_no_forms": "לא נמצאו טפסי לידים. צרו אחד לאיסוף לידים ישירות בפייסבוק.",
     "warning_continue_anyway": "המשך בכל זאת",
-
     "create_form": "צור טופס",
     "form_name": "שם הטופס",
     "form_name_placeholder": "למשל, טופס יצירת קשר",
@@ -1294,20 +1531,15 @@
     "form_phone": "מספר טלפון",
     "form_city": "עיר",
     "form_country": "מדינה",
-
     "add_another_same_creative": "אותו קריאייטיב, טקסט שונה",
     "add_another_same_copy": "אותו טקסט, קריאייטיב שונה",
     "add_another_scratch": "התחל מאפס",
     "add_another_done": "סיימתי להוסיף מודעות",
-
     "preview_title": "תצוגה מקדימה של המודעה",
     "preview_ad_name": "שם המודעה",
     "preview_no_image": "לא הועלתה תמונה",
     "duplicate_ad": "שכפול מודעה",
     "delete_ad": "מחיקת מודעה",
-
-    "show_history": "הצג היסטוריית שיחה",
-
     "thinking": "מעבד...",
     "summary_ready": "הנה סיכום הקמפיין שלכם. מוכנים להשקה?",
     "summary_campaign": "קמפיין",
@@ -1317,21 +1549,33 @@
     "summary_budget": "תקציב",
     "summary_ad": "קריאייטיב מודעה",
     "summary_ads": "מודעות ({count})",
-
     "objective": "מטרה",
     "lead_type": "סוג ליד",
     "campaign": "קמפיין",
-    "adset": "קבוצת מודעות",
     "age": "גיל",
     "gender": "מגדר",
     "platform": "פלטפורמה",
-
     "launch": "השק קמפיין",
     "edit_something": "ערוך משהו",
     "launching": "יוצר את הקמפיין שלכם...",
     "success": "הקמפיין הושק בהצלחה!",
     "view_campaign": "צפה בקמפיין",
-    "create_another": "צור עוד אחד"
+    "create_another": "צור עוד אחד",
+    "targeting": "Targeting",
+    "view_campaign_control": "View Campaign Control",
+    "what_happens_next": "What happens next:",
+    "learning_phase_info": "Your ad enters 'Learning Phase' for 2-3 days",
+    "facebook_optimization_info": "Facebook tests audiences to find what works best",
+    "no_changes_48h": "Don't make changes for 48 hours - let it learn",
+    "write_for_me": "✨ Write this for me",
+    "ai_copy_modal_title": "AI-Generated Ad Copy",
+    "ai_copy_context_label": "Tell us more (optional)",
+    "ai_copy_context_placeholder": "e.g., 'Black Friday sale' or 'New product launch'",
+    "generate_copy": "Generate Copy",
+    "generating": "Generating...",
+    "use_this_copy": "Use This",
+    "ai_copy_error": "Failed to generate copy. Please try again.",
+    "no_business_profile": "Please complete your business profile first to use AI copy generation."
   },
   "homepage3": {
     "title": "מה תרצה לעשות?",
@@ -1387,5 +1631,163 @@
     "analysis_complete": "הניתוח הושלם",
     "analysis_failed": "הניתוח לא הושלם, אבל אתה יכול להמשיך",
     "step_indicator": "שלב {current} מתוך {total}"
+  },
+  "tooltips": {
+    "spend": "Total money spent on ads during this period",
+    "impressions": "How many times your ad was shown to people",
+    "clicks": "How many people clicked on your ad",
+    "ctr": "Click-through rate - % who clicked. Above 1% is good!",
+    "cpc": "Cost per click - how much you pay for each click. Lower is better!",
+    "conversions": "Actions you want: purchases, sign-ups, leads, etc.",
+    "cpa": "Cost per conversion - what you pay for each result. Lower is better!",
+    "conversion_rate": "% of clicks that became conversions. Higher is better!"
+  },
+  "status_modal": {
+    "title_pause": "Pause",
+    "title_resume": "Resume",
+    "type_campaign": "Campaign",
+    "type_adset": "Targeting",
+    "type_ad": "Ad",
+    "pause_campaign_explanation": "Pausing this campaign will stop all ads inside it. Your audience won't see any of these ads until you resume.",
+    "pause_adset_explanation": "Pausing this targeting will stop all ads inside it. Other targeting groups in the campaign will continue running.",
+    "pause_ad_explanation": "Pausing this ad will stop showing it to your audience. Other ads in the targeting will continue running.",
+    "resume_campaign_explanation": "Resuming this campaign will start showing your ads again. Make sure your budget is set correctly.",
+    "resume_adset_explanation": "Resuming this targeting will start showing its ads again. The parent campaign must also be active.",
+    "resume_ad_explanation": "Resuming this ad will start showing it again. The parent targeting and campaign must also be active.",
+    "daily_spend": "Recent daily spend",
+    "reassurance": "You can change this back anytime - nothing is permanent.",
+    "confirm_pause": "Pause",
+    "confirm_resume": "Resume"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "colorful": "Colorful"
+  },
+  "glossary": {
+    "title": "Glossary",
+    "search_placeholder": "Search terms...",
+    "no_results": "No terms found",
+    "categories": {
+      "metrics": "Metrics",
+      "campaign_structure": "Campaign Structure",
+      "targeting": "Targeting",
+      "creatives": "Creatives"
+    },
+    "terms": {
+      "spend": {
+        "name": "Spend",
+        "category": "metrics",
+        "definition": "Total money spent on your ads during this period. This is the actual amount deducted from your budget."
+      },
+      "impressions": {
+        "name": "Impressions",
+        "category": "metrics",
+        "definition": "How many times your ads were displayed to people. One person might see your ad multiple times."
+      },
+      "clicks": {
+        "name": "Clicks",
+        "category": "metrics",
+        "definition": "Number of times people clicked on your ads. This includes clicks to your website, app, or other destinations."
+      },
+      "ctr": {
+        "name": "CTR (Click-Through Rate)",
+        "category": "metrics",
+        "definition": "Percentage of people who clicked after seeing your ad. Calculated as clicks ÷ impressions × 100. Above 1% is generally good."
+      },
+      "cpc": {
+        "name": "CPC (Cost Per Click)",
+        "category": "metrics",
+        "definition": "Average cost for each click on your ad. Calculated as spend ÷ clicks. Lower is more efficient."
+      },
+      "cpm": {
+        "name": "CPM (Cost Per 1000 Impressions)",
+        "category": "metrics",
+        "definition": "How much you pay for every 1,000 times your ad is shown. Useful for comparing reach efficiency across campaigns."
+      },
+      "conversions": {
+        "name": "המרה",
+        "category": "מדדים",
+        "definition": "פעולות שאכפת לך שאנשים יבצעו לאחר לחיצה על המודעה שלך - כמו רכישות, הרשמות, שליחת טפסים או הורדות."
+      },
+      "cpa": {
+        "name": "CPA (עלות לרכישה)",
+        "category": "מדדים",
+        "definition": "עלות ממוצעת לכל המרה. מחושב כהוצאה ÷ המרות. נמוך יותר פירושו שאתה מקבל תוצאות ביעילות רבה יותר."
+      },
+      "roas": {
+        "name": "ROAS (החזר על הוצאות הפרסום)",
+        "category": "מדדים",
+        "definition": "הכנסות שהרווחת לכל דולר שהוצא על מודעות. ROAS של פי 3 פירושו שהרווחת 3 דולר עבור כל דולר שהוצא. גבוה יותר עדיף."
+      },
+      "conversion_rate": {
+        "name": "אחוז המרה",
+        "category": "מדדים",
+        "definition": "אחוז הלחיצות שהפכו להמרות. מחושב כהמרות ÷ קליקים × 100. מראה כמה טוב דף הנחיתה שלך ממיר."
+      },
+      "campaign": {
+        "name": "קמפיין",
+        "category": "מבנה_קמפיין",
+        "definition": "הרמה העליונה של מודעות פייסבוק. מכיל את המטרה שלך (מה שאתה רוצה להשיג) ואת אסטרטגיית התקציב הכוללת. תחשוב על זה כתיקייה לקבוצות מיקוד קשורות."
+      },
+      "targeting": {
+        "name": "טרגוט",
+        "category": "מבנה_קמפיין",
+        "definition": "הרמה האמצעית השולטת מי רואה את המודעות שלך, מתי הם רואים אותן והיכן הן מופיעות. מכיל הגדרות מיקוד, לוח זמנים ותקציב."
+      },
+      "ad": {
+        "name": "מודעה",
+        "category": "מבנה_קמפיין",
+        "definition": "הקריאייטיב בפועל שאנשים רואים - התמונה או הסרטון שלך, הכותרת, הטקסט וכפתור הקריאה לפעולה. ניתן לבדוק מספר מודעות בתוך טרגוט אחד."
+      },
+      "lookalike": {
+        "name": "קהל דומה",
+        "category": "טרגוט",
+        "definition": "פייסבוק מוצאת אנשים הדומים ללקוחות הקיימים שלך או למבקרים באתר שלך. נהדר להרחבת טווח ההגעה לקונים סבירים."
+      },
+      "custom_audience": {
+        "name": "קהל מותאם אישית",
+        "category": "טרגוט",
+        "definition": "טרגט אנשים שכבר יצרו אינטראקציה עם העסק שלך - מבקרי אתרים, משתמשי אפליקציות, מנויי דוא\"ל או אנשים שעסקו בתוכן שלך."
+      },
+      "broad_targeting": {
+        "name": "טרגוט רחב",
+        "category": "טרגוט",
+        "definition": "לתת לבינה המלאכותית של פייסבוק למצוא את הקהל הטוב ביותר עבור המודעות שלך עם מינימום הגבלות. לעתים קרובות מתפקד היטב מכיוון שהאלגוריתם מייעל את המסירה."
+      },
+      "hook_rate": {
+        "name": "שיעור מעבר",
+        "category": "קריאייטיב",
+        "definition": "אחוז הצופים שצפו מעבר לשלוש השניות הראשונות של הסרטון שלך. מראה אם הפתיחה שלך מושכת תשומת לב. מעל 30% זה טוב."
+      },
+      "hold_rate": {
+        "name": "שיעור שמירה",
+        "category": "קריאייטיב",
+        "definition": "אחוז הצופים שהמשיכו לצפות אחרי ה\"הוק\". מראה אם התוכן שלך שומר על עניין לאורך הסרטון."
+      },
+      "fatigue": {
+        "name": "שחיקת מודעה",
+        "category": "קריאייטיב",
+        "definition": "כאשר הקהל שלך ראה את המודעה שלך פעמים רבות מדי והביצועים מתחילים לרדת. סימנים כוללים עליית CPC וירידת CTR. הגיע הזמן לקריאייטיב רענן!"
+      }
+    }
+  },
+  "cookies": {
+    "title": "אנו משתמשים בקובצי Cookie",
+    "description": "אנו משתמשים בקובצי Cookie כדי לשפר את החוויה שלך, לנתח את תעבורת האתר ולמטרות שיווק. על ידי לחיצה על \"קבל הכל\", אתה מסכים לשימוש שלנו בקובצי Cookie.",
+    "accept_all": "קבל הכל",
+    "necessary_only": "הכרחי בלבד",
+    "customize": "התאמה אישית",
+    "learn_more": "למידע נוסף ב",
+    "privacy_policy": "מדיניות הפרטיות",
+    "preferences_title": "העדפות עוגיות",
+    "necessary": "עוגיות הכרחיות",
+    "necessary_desc": "נדרש כדי שהאתר יתפקד. לא ניתן להשבית.",
+    "analytics": "עוגיות ניתוח",
+    "analytics_desc": "עזור לנו להבין כיצד מבקרים מקיימים אינטראקציה עם האתר שלנו.",
+    "marketing": "קבצי Cookie שיווקיים",
+    "marketing_desc": "משמשים למעקב אחר מבקרים ברחבי אתרים למטרות פרסום.",
+    "save_preferences": "שמור העדפות"
   }
 }

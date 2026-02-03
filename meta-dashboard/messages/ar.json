@@ -31,7 +31,12 @@
     "saved_successfully": "تم الحفظ بنجاح",
     "actions": "إجراءات",
     "loading": "جارٍ التحميل...",
-    "today": "اليوم"
+    "today": "اليوم",
+    "next": "التالي",
+    "remove": "إزالة",
+    "edit": "تعديل",
+    "new": "جديد",
+    "or": "أو"
   },
   "nav": {
     "dashboard": "لوحة التحكم",
@@ -102,13 +107,13 @@
     "conversions_tooltip": "الإجراءات التي تهمك: المشتريات أو الاشتراكات أو العملاء المحتملين",
     "conversion_value": "قيمة التحويل",
     "conversion_value_tooltip": "إجمالي الإيرادات الناتجة من تحويلاتك",
-    "roas": "ROAS",
-    "total_roas": "ROAS",
+    "roas": "عائد الإنفاق الإعلاني",
+    "total_roas": "عائد الإنفاق الإعلاني",
     "roas_tooltip": "عائد الإنفاق الإعلاني: الإيرادات المكتسبة لكل دولار منفق. أعلى = أكثر ربحية",
     "cpa": "تكلفة التحويل",
     "total_cpa": "تكلفة التحويل",
     "cpa_tooltip": "متوسط التكلفة لكل تحويل. أقل = كفاءة أفضل",
-    "average_roas": "ROAS",
+    "average_roas": "عائد الإنفاق الإعلاني",
     "average_cpa": "تكلفة التحويل",
     "primary_metric": "المقياس الرئيسي",
     "leads": "العملاء المحتملون",
@@ -147,7 +152,6 @@
     "campaign_name": "اسم الحملة",
     "loading_campaigns": "جارٍ تحميل الحملات...",
     "campaign_status": "حالة الحملة",
-    "adsets": "مجموعات الإعلانات",
     "ads": "الإعلانات",
     "platform": "منصة",
     "placement": "التوظيف",
@@ -160,7 +164,8 @@
     "download_csv": "تحميل CSV",
     "filter_group_name": "فلتر الحملات",
     "filter_group_status": "فلتر الحالة",
-    "filter_group_delivery": "فلتر التوصيل"
+    "filter_group_delivery": "فلتر التوصيل",
+    "targetingGroups": "مجموعات الاستهداف"
   },
   "reports": {
     "title": "تقارير متقدمة",
@@ -201,7 +206,6 @@
       "week": "حسب الأسبوع",
       "month": "حسب الشهر",
       "campaign": "حسب الحملة",
-      "adset": "حسب المجموعة الإعلانية",
       "ad": "حسب الإعلان",
       "placement": "حسب موضع الإعلان",
       "platform": "حسب النظام الأساسي",
@@ -209,7 +213,8 @@
       "country": "حسب البلد",
       "time": "الوقت",
       "entity": "الكيان",
-      "audience": "الجمهور"
+      "audience": "الجمهور",
+      "targeting": "حسب الاستهداف"
     },
     "quick_templates": "قوالب سريعة",
     "templates_title": "قوالب التقارير",
@@ -227,10 +232,10 @@
       "daily": "يوميًا",
       "weekly": "أسبوعيًا",
       "campaign": "حملة",
-      "adset": "مجموعة إعلانية",
       "placement": "موضع الإعلان",
       "demographics": "التركيبة السكانية",
-      "geographic": "جغرافي"
+      "geographic": "جغرافي",
+      "targeting": "الاستهداف"
     },
     "builder": {
       "title": "بناء التقرير",
@@ -238,7 +243,6 @@
       "by_time": "حسب الوقت",
       "audience": "رؤى الجمهور",
       "campaign": "حملة",
-      "adset": "مجموعة إعلانية",
       "ad": "إعلان",
       "day": "يوم",
       "week": "أسبوع",
@@ -254,7 +258,9 @@
       "clear": "مسح",
       "filter_campaign": "تصفية حسب اسم الحملة...",
       "filter_adset": "تصفية حسب اسم المجموعة الإعلانية...",
-      "filter_ad": "تصفية حسب اسم الإعلان..."
+      "filter_ad": "تصفية حسب اسم الإعلان...",
+      "targeting": "الاستهداف",
+      "add_grouping": "إضافة تجميع"
     }
   },
   "creatives": {
@@ -323,7 +329,8 @@
       "Lookalike": "جمهور مشابه",
       "Interest Audience": "اهتمامات",
       "Custom Audience": "جمهور مخصص"
-    }
+    },
+    "type": "النوع"
   },
   "actions": {
     "export": "تصدير",
@@ -966,7 +973,70 @@
     "end_date_hint": "اتركه فارغاً للتشغيل بدون حد",
     "language_targeting": "استهداف اللغة",
     "language_optional": "اختياري",
-    "language_hint": "استهدف المستخدمين الذين يتحدثون لغات محددة. اتركه فارغاً لجميع اللغات."
+    "language_hint": "استهدف المستخدمين الذين يتحدثون لغات محددة. اتركه فارغاً لجميع اللغات.",
+    "lead_type_desc": "اختر من أين تريد جمع العملاء المحتملين من جمهورك",
+    "media": "الوسائط",
+    "cta": "عبارة CTA",
+    "lead_form": "نموذج العملاء المحتملين",
+    "url": "عنوان URL",
+    "select_pixel": "-- تحديد بكسل --",
+    "select_event": "-- تحديد الحدث --",
+    "no_pixel_warning_title": "لم يتم العثور على بكسل فيسبوك",
+    "no_pixel_warning_desc": "بدون بكسل، لا يمكن لفيسبوك تتبع التحويلات على موقع الويب الخاص بك. قد لا يتم تحسين حملتك بشكل فعال.",
+    "setup_pixel_link": "إعداد البكسل الخاص بك في مدير الأحداث",
+    "whatsapp": "واتساب",
+    "whatsapp_desc": "بدء المحادثات",
+    "calls": "مكالمات",
+    "calls_desc": "الحصول على مكالمات هاتفية",
+    "objective_whatsapp": "اجعل الأشخاص يرسلون رسالة إليك على واتساب. رائع لخدمة العملاء.",
+    "objective_calls": "اجعل الأشخاص يتصلون بنشاطك التجاري مباشرة. رائع للمواعيد.",
+    "calls_tracking_note": "تم تتبع النقر للاتصال فقط",
+    "whatsapp_not_connected_title": "واتساب للأعمال غير متصل",
+    "whatsapp_not_connected_desc": "لتشغيل إعلانات واتساب، يجب عليك توصيل واتساب للأعمال بصفحة فيسبوك الخاصة بك. يجب القيام بذلك في إعدادات فيسبوك للأعمال.",
+    "whatsapp_setup_link": "إعداد في إعدادات فيسبوك للأعمال",
+    "cta_whatsapp_message": "إرسال رسالة واتساب",
+    "cta_call_now": "اتصل الآن",
+    "cta_contact_us": "اتصل بنا",
+    "cta_get_quote": "احصل على عرض أسعار",
+    "whatsapp_destination_note": "سيقوم المستخدمون بإرسال رسالة إليك على واتساب عندما ينقرون على الإعلان",
+    "calls_destination_note": "سيقوم المستخدمون بالاتصال برقم هاتف نشاطك التجاري عندما ينقرون على الإعلان",
+    "setup_check": "التحقق من الإعداد",
+    "setup_check_desc": "دعنا نتأكد من أن لديك كل شيء تم إعداده للحصول على أفضل النتائج",
+    "no_setup_needed": "لا حاجة إلى إعداد إضافي",
+    "pixel_found": "تم العثور على البكسل! حدد أي واحد للاستخدام:",
+    "checking_pixel": "التحقق من وجود بكسل فيسبوك...",
+    "checking_lead_forms": "التحقق من نماذج العملاء المحتملين...",
+    "checking_whatsapp": "التحقق من اتصال واتساب...",
+    "continue_without_pixel": "يمكنك المتابعة بدون بكسل، ولكن التتبع لن يعمل.",
+    "lead_forms": "نماذج العملاء المحتملين",
+    "lead_forms_found": "تم العثور على {count} نموذج (نماذج) عملاء محتملين. يمكنك تحديد واحد في خطوة إنشاء الإعلان.",
+    "no_lead_forms_title": "No Lead Forms Found",
+    "no_lead_forms_desc": "You'll need to create a lead form to collect leads. You can create one in the ad creation step, or set one up in Facebook now.",
+    "create_lead_form_facebook": "Create Form in Facebook",
+    "create_form_later": "You can also create a form in the ad creation step.",
+    "whatsapp_business": "WhatsApp Business",
+    "whatsapp_connected": "WhatsApp Business is connected to your page.",
+    "connect_whatsapp": "Connect WhatsApp Business",
+    "next_step_location": "Next: Choose where to show your ads",
+    "review_title": "Review Your Campaign",
+    "review_desc": "Make sure everything looks good before launching",
+    "objective": "Objective",
+    "locations": "Locations",
+    "no_locations": "No locations selected",
+    "targeting": "Targeting",
+    "ads": "Ads",
+    "note": "Note",
+    "campaign_starts_paused": "Your campaign will start in PAUSED status. You can activate it from the Manage page after reviewing.",
+    "edit": "Edit",
+    "active_on_account": "نشط في حسابك",
+    "no_purchase_event_title": "لم يتم اكتشاف حدث شراء على البكسل",
+    "no_purchase_event_desc": "البكسل نشط لكنه لا يتتبع أحداث الشراء. لن يتمكن فيسبوك من التحسين للمبيعات بدون هذا الحدث.",
+    "pixel_healthy": "البكسل يعمل (آخر 24 ساعة)",
+    "pixel_active": "البكسل نشط (آخر 7 أيام)",
+    "pixel_stale": "البكسل قديم (أكثر من 7 أيام)",
+    "pixel_never_fired": "البكسل لم يعمل أبداً",
+    "available_events": "أحداث التحسين المتاحة (آخر 30 يوم):",
+    "generate_with_ai": "إنشاء بالذكاء الاصطناعي"
   },
   "ai_panel": {
     "title": "اسأل مساعد الذكاء الاصطناعي",
@@ -1023,7 +1093,37 @@
     "add_creative_desc": "أضف تنويعًا إعلانيًا جديدًا لحملة قيد التشغيل بالفعل. حافظ على نفس الاستهداف أثناء اختبار تصميمات إبداعية جديدة. رائع لاختبارات A/B.",
     "edit_title": "تعديل مجموعة إعلانية أو إعلان",
     "edit_desc": "عدّل الاستهداف (الموقع، العمر، الميزانية) في مجموعة إعلانية، أو حدّث نص الإعلان والوسائط ونماذج العملاء المحتملين. اضبط حملاتك الحالية.",
-    "continue": "متابعة"
+    "continue": "متابعة",
+    "new_campaign": "حملة جديدة",
+    "what_would_you_like": "ماذا تريد أن تفعل؟",
+    "choose_path_desc": "اختر الخيار الذي يناسب هدفك",
+    "create_when": "اختر هذا عندما تريد هدفًا جديدًا أو استهدافًا جديدًا",
+    "create_examples": "أمثلة: إطلاق منتج جديد، أو اختبار جمهور مختلف، أو هدف تسويقي جديد",
+    "how_to_start": "كيف ترغب في البدء؟",
+    "start_fresh": "البدء من جديد",
+    "start_fresh_desc": "أنشئ حملة جديدة تمامًا من البداية",
+    "duplicate_existing": "تكرار حملة إعلانية حالية",
+    "duplicate_existing_desc": "ابدأ بالإعدادات من حملة إعلانية حققت نتائج جيدة",
+    "add_when": "اختر هذا الخيار عندما تريد اختبار تصميمات إعلانية جديدة مع نفس الاستهداف",
+    "add_examples": "رائع للاختبارات بتقسيم الجمهور إلى مجموعتين (A/B): نفس الجمهور، صور أو نصوص مختلفة",
+    "edit_when": "اختر هذا لتعديل الحملات الإعلانية التي تعمل بالفعل",
+    "edit_examples": "غيّر الاستهداف (الموقع، العمر) أو حدّث محتوى الإعلان (النص، الصورة، عبارة CTA)",
+    "what_to_edit": "ماذا تود أن تعدل؟",
+    "edit_targeting": "تعديل الاستهداف (الاستهداف)",
+    "edit_targeting_desc": "غيّر المواقع والنطاق العمري والتركيبة السكانية",
+    "edit_creative": "تعديل التصميم الإبداعي (الإعلان)",
+    "edit_creative_desc": "غيّر العنوان الرئيسي أو النص أو الصورة أو الفيديو أو زر CTA",
+    "select_option_hint": "حدد خيارًا أعلاه للمتابعة",
+    "duplicate_title": "تكرار الحملة الإعلانية",
+    "duplicate_desc": "استنساخ حملة إعلانية حالية بجميع إعداداتها وإعلاناتها",
+    "select_campaign_to_clone": "حدد الحملة الإعلانية المراد استنساخها",
+    "no_campaigns_found": "لم يتم العثور على حملات إعلانية",
+    "select_campaign": "حدد حملة إعلانية...",
+    "select_adset": "حدد استهدافًا...",
+    "select_campaign_adset": "حدد الحملة الإعلانية والاستهداف",
+    "no_adsets_found": "لم يتم العثور على مجموعات استهداف في هذه الحملة الإعلانية",
+    "clone_campaign": "استنساخ الحملة الإعلانية",
+    "loading_campaign_data": "جارٍ تحميل بيانات الحملة الإعلانية..."
   },
   "edit": {
     "title": "تعديل مجموعة إعلانية أو إعلان",
@@ -1106,7 +1206,8 @@
       "spent": "الإنفاق",
       "this_week": "هذا الأسبوع",
       "results": "النتائج",
-      "active_campaigns": "الحملات النشطة"
+      "active_campaigns": "الحملات النشطة",
+      "active": "نشط"
     },
     "campaigns": {
       "title": "حملاتك",
@@ -1143,6 +1244,83 @@
       "view_all": "عرض جميع التصميمات",
       "no_creatives": "لا توجد تصميمات بعد",
       "results_label": "نتائج"
+    },
+    "hero": {
+      "good_title": "إعلاناتك تحقق نتائج رائعة!",
+      "good_subtitle": "كل شيء يسير بسلاسة. استمر على هذا المنوال!",
+      "attention_title": "هناك بعض الأمور التي تحتاج إلى اهتمامك",
+      "attention_subtitle": "تحتاج {count} من الحملات الإعلانية إلى بعض الاهتمام",
+      "issues_title": "دعنا نعالج بعض المشكلات معًا",
+      "issues_subtitle": "لا تقلق، سنساعدك في حل هذه المشكلات",
+      "new_user_title": "مرحبًا بك! هل أنت مستعد لإطلاق إعلانك الأول؟",
+      "new_user_subtitle": "سنوجهك في كل خطوة على الطريق",
+      "loading_title": "جارٍ تحميل بياناتك...",
+      "loading_subtitle": "لحظة من فضلك"
+    },
+    "ai_assistant": {
+      "badge": "قبطانك المدعوم بالذكاء الاصطناعي",
+      "greeting_morning": "صباح الخير! دعنا نتحقق من إعلاناتك.",
+      "greeting_afternoon": "مرحبًا! هل تحتاج إلى مساعدة في أي شيء؟",
+      "greeting_evening": "مساء الخير! كيف يمكنني مساعدتك الليلة؟",
+      "tagline": "أقوم بتحليل بياناتك وأقدم لك نصائح بلغة بسيطة.",
+      "placeholder": "اسألني عن أي شيء يخص إعلاناتك...",
+      "try_these": "أو جرب أحد هذه الخيارات:",
+      "q_how_doing": "كيف حال إعلاناتي؟",
+      "q_what_next": "ماذا علي أن أفعل بعد ذلك؟",
+      "q_scale": "أي حملة إعلانية يجب أن أوسع نطاقها؟",
+      "q_create_campaign": "كيف يمكنني إنشاء حملة إعلانية؟",
+      "q_budget": "ما هي الميزانية اليومية الجيدة؟",
+      "q_how_it_works": "كيف تعمل هذه المنصة؟",
+      "q_whats_wrong": "ما هي المشكلة في إعلاناتي؟",
+      "q_improve": "كيف يمكنني تحسين نتائجي؟"
+    },
+    "whats_happening": {
+      "title": "ما الذي يحدث",
+      "all_good_title": "كل شيء هادئ!",
+      "all_good_subtitle": "Your ads are running smoothly. Nothing needs attention right now.",
+      "fix_this": "Fix This",
+      "see_details": "See Details",
+      "view_report": "View Report",
+      "learn_more": "Learn More",
+      "campaign_problem": "\"{name}\" needs fresh creatives",
+      "campaign_problem_detail": "This campaign is spending but not getting results",
+      "campaign_attention": "\"{name}\" could be doing better",
+      "low_ctr_detail": "Low click rate - people aren't engaging with your ads",
+      "no_conversions_detail": "Getting clicks but no conversions yet"
+    },
+    "guided_actions": {
+      "title": "What's Next?",
+      "create_first_campaign": "Create Your First Campaign",
+      "learn_facebook_ads": "Learn How Facebook Ads Work",
+      "talk_to_eddie": "Ask Eddie for Help",
+      "add_new_creative": "Add New Creative",
+      "view_results": "View Detailed Results",
+      "get_ai_analysis": "Get AI Analysis",
+      "fix_campaign": "Fix \"{name}\"",
+      "fix_issues": "Fix Campaign Issues",
+      "ask_eddie_help": "Ask Eddie for Help",
+      "see_all_campaigns": "See All Campaigns",
+      "resume_campaign": "Resume a Campaign",
+      "review_performance": "Review Past Performance",
+      "encouragement_new": "Don't worry, it's easier than you think!",
+      "encouragement_issues": "Eddie can help you fix these in minutes",
+      "encouragement_good": "Keep up the great work!"
+    },
+    "capabilities": {
+      "title": "Did you know Eddie can...",
+      "see_all": "See All Features",
+      "monitoring": "Monitor your ads 24/7",
+      "monitoring_desc": "Always watching so you don't have to",
+      "budget": "Suggest budget changes",
+      "budget_desc": "AI-powered optimization tips",
+      "creatives": "Find your best creatives",
+      "creatives_desc": "Data-driven creative insights",
+      "alerts": "Alert you to problems",
+      "alerts_desc": "Get notified before issues grow",
+      "trends": "Spot performance trends",
+      "trends_desc": "Weekly and daily patterns",
+      "insights": "Give plain-English insights",
+      "insights_desc": "No marketing jargon needed"
     }
   },
   "wizard_simple": {
@@ -1150,7 +1328,81 @@
     "duplicate_last_ad": "تكرار آخر إعلان",
     "add_another_ad": "إضافة إعلان آخر",
     "duplicate_ad": "تكرار الإعلان",
-    "duplicate_form": "تكرار النموذج"
+    "duplicate_form": "تكرار النموذج",
+    "step_x_of_5": "Step {step} of 5",
+    "next": "Next",
+    "back": "Back",
+    "launch_campaign": "Launch Campaign",
+    "remove_ad": "Remove",
+    "ad_number": "Ad {number}",
+    "max_ads": "ads",
+    "budget_recommended": "Recommended: {amount}",
+    "budget_based_on_history": "Based on your account history",
+    "budget_best_practice": "Recommended for new advertisers",
+    "create_lead_form": "Create New Form",
+    "refresh_forms": "Refresh",
+    "no_forms_found": "No lead forms found",
+    "create_form_hint": "Create a lead form in Facebook first",
+    "form_name": "Form Name",
+    "form_name_placeholder": "My Lead Form",
+    "form_name_required": "Form name is required",
+    "form_questions": "Questions to Ask",
+    "select_questions": "Select at least one question",
+    "privacy_policy_url": "Privacy Policy URL",
+    "privacy_url_required": "Privacy policy URL is required",
+    "privacy_policy_hint": "Required by Facebook for lead forms",
+    "required": "Required",
+    "creating": "Creating...",
+    "create_form": "Create Form",
+    "form_create_error": "Failed to create lead form",
+    "form_intro": "Form Introduction",
+    "form_headline": "Headline",
+    "form_headline_placeholder": "Get more info",
+    "form_description": "Description",
+    "form_description_placeholder": "Tell users what they'll get...",
+    "custom_questions": "Custom Questions",
+    "add_question": "إضافة سؤال",
+    "no_custom_questions": "لم تتم إضافة أسئلة مخصصة",
+    "question_label": "نص السؤال...",
+    "text_input": "إدخال نص",
+    "dropdown_select": "تحديد القائمة المنسدلة",
+    "options_placeholder": "خيارات (مفصولة بفواصل)",
+    "options": "خيارات",
+    "option": "خيار",
+    "add_option": "إضافة خيار",
+    "allow_multiple": "السماح بتحديدات متعددة",
+    "thank_you_page": "صفحة الشكر",
+    "thank_you_title": "العنوان",
+    "thank_you_title_placeholder": "شكرًا لك!",
+    "thank_you_body": "الرسالة",
+    "thank_you_body_placeholder": "سنتواصل معك قريبًا...",
+    "thank_you_button": "نص الزر",
+    "thank_you_button_placeholder": "زيارة الموقع",
+    "thank_you_url": "عنوان URL للزر",
+    "thank_you_headline": "العنوان الرئيسي",
+    "thank_you_headline_placeholder": "شكرًا لك!",
+    "thank_you_description": "الوصف",
+    "thank_you_description_placeholder": "سنتواصل معك قريبًا...",
+    "website_url": "عنوان URL للموقع",
+    "thank_you_hint": "سيشاهد المستخدمون زر \"الانتقال إلى الموقع\" بعد الإرسال",
+    "using_existing_image": "باستخدام صورة موجودة",
+    "click_to_replace": "انقر للاستبدال",
+    "form_tips_title": "نصائح لتحسين نماذج العملاء المحتملين",
+    "form_tip_1": "اطرح 2-3 أسئلة تأهيلية لتصفية العملاء المحتملين ذوي الجودة المنخفضة",
+    "form_tip_2": "استخدم نوع نموذج \"نية أعلى\" للحصول على عملاء محتملين أكثر جدية (يؤكدون المعلومات)",
+    "form_tip_3": "تتعلم خوارزمية فيسبوك كيف تبدو العملاء المحتملون الجيدون من ردودك",
+    "form_hint_questions": "المزيد من الأسئلة = عدد أقل من العملاء المحتملين ولكن بجودة أعلى",
+    "form_hint_custom": "أضف أسئلة مثل \"ما هي ميزانيتك؟\" للتأهيل المسبق",
+    "optional": "اختياري",
+    "existing_post_url_hint": "أضف عنوان URL وجهة لزر الحث على اتخاذ إجراء",
+    "existing_post_form_hint": "حدد نموذج عملاء محتملين - سيؤدي النقر على الإعلان إلى فتح هذا النموذج",
+    "create_new": "إنشاء جديد",
+    "use_existing": "استخدام منشور حالي",
+    "using_instagram_post": "باستخدام منشور Instagram",
+    "using_facebook_post": "باستخدام منشور Facebook",
+    "change_post": "تغيير المنشور",
+    "select_existing_post": "حدد منشورًا حاليًا",
+    "existing_post_hint": "يحافظ على الإعجابات والتعليقات والمشاركات"
   },
   "captain": {
     "title": "مساعد الذكاء الاصطناعي",
@@ -1158,12 +1410,10 @@
     "ai_description": "خطوة بخطوة مع التوصيات",
     "back_to_manual": "العودة للرفع اليدوي",
     "switch_to_manual": "التبديل إلى اليدوي",
-
     "welcome_choose_flow": "مرحباً! ماذا تريد أن تفعل اليوم؟",
     "welcome_create": "لننشئ حملة جديدة. ما هو هدفك؟",
     "welcome_add": "إضافة إعلان جديد لحملة موجودة. اختر الحملة أدناه.",
     "welcome_edit": "تعديل حملة موجودة. ماذا تريد تعديله؟",
-
     "ask_campaign_name": "ماذا يجب أن نسمي هذه الحملة؟",
     "ask_objective": "ما هو هدف هذه الحملة؟",
     "ask_lead_type": "كيف تريد جمع العملاء المحتملين؟",
@@ -1187,14 +1437,12 @@
     "ask_new_body": "ما هو النص الرئيسي الجديد؟",
     "ask_ad_name": "أعطِ هذا الإعلان اسماً (اختياري)",
     "ask_add_another": "هل تريد إضافة إعلان آخر؟",
-
     "placeholder_campaign_name": "مثال: حملة تخفيضات الصيف",
     "placeholder_budget": "مثال: 20",
     "placeholder_headline": "مثال: اشترِ الآن - خصم 50%!",
     "placeholder_body": "مثال: لا تفوت أكبر تخفيضاتنا...",
     "placeholder_link": "مثال: https://yoursite.com/sale",
     "placeholder_ad_name": "مثال: نسخة إعلان 1",
-
     "opt_sales": "مبيعات",
     "opt_leads": "عملاء محتملون",
     "opt_traffic": "زيارات",
@@ -1208,37 +1456,31 @@
     "opt_male": "ذكور",
     "opt_female": "إناث",
     "opt_both_platforms": "كلاهما",
-
     "objective_desc_sales": "زيادة المشتريات على موقعك",
     "objective_desc_leads": "جمع معلومات الاتصال من العملاء المحتملين",
     "objective_desc_traffic": "إرسال الأشخاص إلى موقعك",
     "objective_desc_engagement": "الحصول على المزيد من الإعجابات والتعليقات والمشاركات",
     "objective_desc_whatsapp": "بدء محادثات على واتساب",
     "objective_desc_calls": "حث الأشخاص على الاتصال بنشاطك التجاري",
-
     "lead_type_website_title": "عملاء محتملون من الموقع",
     "lead_type_website_desc": "ينقر الزوار للوصول إلى موقعك ويملؤون النموذج هناك. يتطلب تثبيت بكسل فيسبوك على موقعك لتتبع التحويلات.",
     "lead_type_form_title": "نموذج فوري",
     "lead_type_form_desc": "يظهر النموذج مباشرة في فيسبوك/انستغرام. لا حاجة لموقع ويب. يتم جمع العملاء المحتملين في فيسبوك.",
-
     "ask_targeting_type": "كيف يجب أن نتعامل مع استهداف الجمهور؟",
     "targeting_advantage_title": "Advantage+ (موصى به)",
     "targeting_advantage_desc": "دع الذكاء الاصطناعي من Meta يجد أفضل جمهور لك. رائع لمعظم الحملات - عادة نتائج أفضل بجهد أقل.",
     "targeting_custom_title": "استهداف مخصص",
     "targeting_custom_desc": "حدد تفضيلات العمر والجنس والمنصة بنفسك. استخدم هذا إذا كنت تعرف جمهورك بالضبط.",
-
     "ask_audiences": "هل لديك جماهير مخصصة لاستهدافها؟ (اختياري)",
     "ask_interests": "ما هي اهتمامات جمهورك؟ ابحث وأضف اهتمامات. (اختياري)",
     "search_interests": "ابحث عن اهتمامات...",
     "no_audiences": "لم يتم العثور على جماهير مخصصة. يمكنك إنشاؤها في مدير الإعلانات.",
     "continue": "متابعة",
-
     "ask_ad_format": "ما نوع الإعلان الذي تريد إنشاءه؟",
     "ad_format_single_title": "صورة أو فيديو واحد",
     "ad_format_single_desc": "صورة أو فيديو واحد مع العنوان والنص. رائع للرسائل المركزة.",
     "ad_format_carousel_title": "كاروسيل",
     "ad_format_carousel_desc": "صور أو مقاطع فيديو متعددة يمكن للأشخاص التمرير خلالها. رائع لعرض المنتجات أو سرد قصة.",
-
     "search_location": "ابحث عن دولة أو مدينة...",
     "confirm_locations": "تأكيد المواقع",
     "click_to_upload": "انقر لرفع صورة أو فيديو",
@@ -1247,11 +1489,9 @@
     "budget_recommendation": "نوصي بـ $10 على الأقل يومياً لأفضل النتائج",
     "budget_minimum_warning": "الحد الأدنى للميزانية اليومية هو $5",
     "url_invalid": "الرجاء إدخال رابط صالح (مثال: https://yoursite.com)",
-
     "age_min": "الحد الأدنى للعمر",
     "age_max": "الحد الأقصى للعمر",
     "confirm_age": "تأكيد الفئة العمرية",
-
     "step_objective": "الهدف",
     "step_lead_type": "نوع العميل المحتمل",
     "step_campaign_name": "اسم الحملة",
@@ -1270,14 +1510,12 @@
     "step_link": "الرابط",
     "step_cta": "زر الإجراء",
     "step_x_of_y": "الخطوة {current} من {total}",
-
     "warning_no_pixel": "لم يتم العثور على بكسل فيسبوك. للحصول على أفضل تتبع للتحويلات، قم بإعداد بكسل في مدير الأحداث.",
     "warning_no_pixel_link": "تعرف على كيفية إعداد بكسل فيسبوك",
     "warning_no_whatsapp": "واتساب للأعمال غير متصل بهذه الصفحة. قم بتوصيله في Meta Business Suite.",
     "warning_no_whatsapp_link": "تعرف على كيفية توصيل واتساب",
     "warning_no_forms": "لم يتم العثور على نماذج عملاء محتملين. أنشئ واحداً لجمع العملاء المحتملين مباشرة على فيسبوك.",
     "warning_continue_anyway": "المتابعة على أي حال",
-
     "create_form": "إنشاء نموذج",
     "form_name": "اسم النموذج",
     "form_name_placeholder": "مثال: نموذج الاتصال",
@@ -1293,20 +1531,15 @@
     "form_phone": "رقم الهاتف",
     "form_city": "المدينة",
     "form_country": "الدولة",
-
     "add_another_same_creative": "نفس التصميم، نص مختلف",
     "add_another_same_copy": "نفس النص، تصميم مختلف",
     "add_another_scratch": "البدء من الصفر",
     "add_another_done": "انتهيت من إضافة الإعلانات",
-
     "preview_title": "معاينة الإعلان",
     "preview_ad_name": "اسم الإعلان",
     "preview_no_image": "لم يتم رفع صورة",
     "duplicate_ad": "نسخ الإعلان",
     "delete_ad": "حذف الإعلان",
-
-    "show_history": "عرض سجل المحادثة",
-
     "thinking": "جاري المعالجة...",
     "summary_ready": "إليك ملخص حملتك. مستعد للإطلاق؟",
     "summary_campaign": "الحملة",
@@ -1316,21 +1549,33 @@
     "summary_budget": "الميزانية",
     "summary_ad": "تصميم الإعلان",
     "summary_ads": "الإعلانات ({count})",
-
     "objective": "الهدف",
     "lead_type": "نوع العميل المحتمل",
     "campaign": "الحملة",
-    "adset": "المجموعة الإعلانية",
     "age": "العمر",
     "gender": "الجنس",
     "platform": "المنصة",
-
     "launch": "إطلاق الحملة",
     "edit_something": "تعديل شيء",
     "launching": "جاري إنشاء حملتك...",
     "success": "تم إطلاق الحملة بنجاح!",
     "view_campaign": "عرض الحملة",
-    "create_another": "إنشاء أخرى"
+    "create_another": "إنشاء أخرى",
+    "targeting": "Targeting",
+    "view_campaign_control": "View Campaign Control",
+    "what_happens_next": "What happens next:",
+    "learning_phase_info": "Your ad enters 'Learning Phase' for 2-3 days",
+    "facebook_optimization_info": "Facebook tests audiences to find what works best",
+    "no_changes_48h": "Don't make changes for 48 hours - let it learn",
+    "write_for_me": "✨ Write this for me",
+    "ai_copy_modal_title": "AI-Generated Ad Copy",
+    "ai_copy_context_label": "Tell us more (optional)",
+    "ai_copy_context_placeholder": "e.g., 'Black Friday sale' or 'New product launch'",
+    "generate_copy": "Generate Copy",
+    "generating": "Generating...",
+    "use_this_copy": "Use This",
+    "ai_copy_error": "Failed to generate copy. Please try again.",
+    "no_business_profile": "Please complete your business profile first to use AI copy generation."
   },
   "homepage3": {
     "title": "ماذا تريد أن تفعل؟",
@@ -1386,5 +1631,163 @@
     "analysis_complete": "اكتمل التحليل",
     "analysis_failed": "لم يكتمل التحليل، لكن يمكنك المتابعة",
     "step_indicator": "الخطوة {current} من {total}"
+  },
+  "tooltips": {
+    "spend": "Total money spent on ads during this period",
+    "impressions": "How many times your ad was shown to people",
+    "clicks": "How many people clicked on your ad",
+    "ctr": "Click-through rate - % who clicked. Above 1% is good!",
+    "cpc": "Cost per click - how much you pay for each click. Lower is better!",
+    "conversions": "Actions you want: purchases, sign-ups, leads, etc.",
+    "cpa": "Cost per conversion - what you pay for each result. Lower is better!",
+    "conversion_rate": "% of clicks that became conversions. Higher is better!"
+  },
+  "status_modal": {
+    "title_pause": "Pause",
+    "title_resume": "Resume",
+    "type_campaign": "Campaign",
+    "type_adset": "Targeting",
+    "type_ad": "Ad",
+    "pause_campaign_explanation": "Pausing this campaign will stop all ads inside it. Your audience won't see any of these ads until you resume.",
+    "pause_adset_explanation": "Pausing this targeting will stop all ads inside it. Other targeting groups in the campaign will continue running.",
+    "pause_ad_explanation": "Pausing this ad will stop showing it to your audience. Other ads in the targeting will continue running.",
+    "resume_campaign_explanation": "Resuming this campaign will start showing your ads again. Make sure your budget is set correctly.",
+    "resume_adset_explanation": "Resuming this targeting will start showing its ads again. The parent campaign must also be active.",
+    "resume_ad_explanation": "Resuming this ad will start showing it again. The parent targeting and campaign must also be active.",
+    "daily_spend": "Recent daily spend",
+    "reassurance": "You can change this back anytime - nothing is permanent.",
+    "confirm_pause": "Pause",
+    "confirm_resume": "Resume"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "colorful": "Colorful"
+  },
+  "glossary": {
+    "title": "Glossary",
+    "search_placeholder": "Search terms...",
+    "no_results": "No terms found",
+    "categories": {
+      "metrics": "Metrics",
+      "campaign_structure": "Campaign Structure",
+      "targeting": "Targeting",
+      "creatives": "Creatives"
+    },
+    "terms": {
+      "spend": {
+        "name": "Spend",
+        "category": "metrics",
+        "definition": "Total money spent on your ads during this period. This is the actual amount deducted from your budget."
+      },
+      "impressions": {
+        "name": "Impressions",
+        "category": "metrics",
+        "definition": "How many times your ads were displayed to people. One person might see your ad multiple times."
+      },
+      "clicks": {
+        "name": "Clicks",
+        "category": "metrics",
+        "definition": "Number of times people clicked on your ads. This includes clicks to your website, app, or other destinations."
+      },
+      "ctr": {
+        "name": "CTR (Click-Through Rate)",
+        "category": "مقاييس الأداء",
+        "definition": "النسبة المئوية للأشخاص الذين نقروا بعد رؤية إعلانك. يتم حسابها على النحو التالي: النقرات ÷ مرات الظهور × 100. تعتبر النسبة التي تزيد عن 1% جيدة بشكل عام."
+      },
+      "cpc": {
+        "name": "تكلفة النقرة (CPC)",
+        "category": "مقاييس الأداء",
+        "definition": "متوسط التكلفة لكل نقرة على إعلانك. يتم حسابه على النحو التالي: الإنفاق ÷ النقرات. الأقل هو الأكثر فعالية."
+      },
+      "cpm": {
+        "name": "تكلفة الألف ظهور (CPM)",
+        "category": "مقاييس الأداء",
+        "definition": "المبلغ الذي تدفعه مقابل كل 1000 مرة يتم فيها عرض إعلانك. مفيد لمقارنة كفاءة الوصول عبر الحملات."
+      },
+      "conversions": {
+        "name": "التحويلات",
+        "category": "مقاييس الأداء",
+        "definition": "الإجراءات التي تهتم بها والتي يتخذها الأشخاص بعد النقر على إعلانك - مثل عمليات الشراء أو الاشتراكات أو إرسال النماذج أو التنزيلات."
+      },
+      "cpa": {
+        "name": "تكلفة الإجراء (CPA)",
+        "category": "مقاييس الأداء",
+        "definition": "متوسط التكلفة لكل تحويل. يتم حسابه على النحو التالي: الإنفاق ÷ التحويلات. يعني انخفاض التكلفة أنك تحصل على نتائج أكثر كفاءة."
+      },
+      "roas": {
+        "name": "عائد الإنفاق الإعلاني (ROAS)",
+        "category": "مقاييس الأداء",
+        "definition": "الإيرادات المكتسبة لكل دولار يتم إنفاقه على الإعلانات. عائد الإنفاق الإعلاني 3x يعني أنك ربحت 3 دولارات مقابل كل دولار واحد يتم إنفاقه. الأعلى هو الأفضل."
+      },
+      "conversion_rate": {
+        "name": "معدل التحويل",
+        "category": "مقاييس الأداء",
+        "definition": "النسبة المئوية للنقرات التي أصبحت تحويلات. يتم حسابه على النحو التالي: التحويلات ÷ النقرات × 100. يوضح مدى جودة تحويل صفحتك المقصودة."
+      },
+      "campaign": {
+        "name": "الحملة",
+        "category": "هيكل_الحملة",
+        "definition": "المستوى الأعلى لإعلانات Facebook. يحتوي على هدفك (ما تريد تحقيقه) واستراتيجية الميزانية الإجمالية. فكر في الأمر كمجلد لمجموعات الاستهداف ذات الصلة."
+      },
+      "targeting": {
+        "name": "الاستهداف",
+        "category": "هيكل_الحملة",
+        "definition": "المستوى الأوسط الذي يتحكم في من يرى إعلاناتك ومتى يرونها وأين تظهر. يحتوي على إعدادات الاستهداف والجدول الزمني والميزانية."
+      },
+      "ad": {
+        "name": "إعلان",
+        "category": "هيكل_الحملة",
+        "definition": "العنصر الإبداعي الفعلي الذي يراه الأشخاص - صورتك أو الفيديو أو العنوان الرئيسي أو النص أو زر الحث على اتخاذ إجراء. يمكن اختبار إعلانات متعددة داخل استهداف واحد."
+      },
+      "lookalike": {
+        "name": "الجمهور المشابه",
+        "category": "الاستهداف",
+        "definition": "يجد Facebook الأشخاص الذين يشبهون عملائك الحاليين أو زوار موقعك على الويب. رائع لتوسيع نطاق الوصول إلى المشترين المحتملين."
+      },
+      "custom_audience": {
+        "name": "الجمهور المخصص",
+        "category": "الاستهداف",
+        "definition": "استهدف الأشخاص الذين تفاعلوا بالفعل مع نشاطك التجاري - زوار موقع الويب أو مستخدمو التطبيق أو مشتركو البريد الإلكتروني أو الأشخاص الذين تفاعلوا مع المحتوى الخاص بك."
+      },
+      "broad_targeting": {
+        "name": "الاستهداف الواسع",
+        "category": "الاستهداف",
+        "definition": "السماح للذكاء الاصطناعي من Facebook بالعثور على أفضل جمهور لإعلاناتك بأقل قدر من القيود. غالبًا ما يكون الأداء جيدًا لأن الخوارزمية تعمل على تحسين التسليم."
+      },
+      "hook_rate": {
+        "name": "معدل جذب الانتباه",
+        "category": "العناصر_الإبداعية",
+        "definition": "النسبة المئوية للمشاهدين الذين شاهدوا ما بعد الثواني الثلاث الأولى من الفيديو الخاص بك. يوضح ما إذا كانت افتتاحيتك تجذب الانتباه. يعتبر أكثر من 30% جيدًا."
+      },
+      "hold_rate": {
+        "name": "معدل الاستمرار",
+        "category": "العناصر_الإبداعية",
+        "definition": "النسبة المئوية للمشاهدين الذين استمروا في المشاهدة بعد جذب الانتباه. يوضح ما إذا كان المحتوى الخاص بك يحافظ على الاهتمام طوال الفيديو."
+      },
+      "fatigue": {
+        "name": "إرهاق الإعلان",
+        "category": "العناصر_الإبداعية",
+        "definition": "عندما يشاهد جمهورك إعلانك عدة مرات جدًا ويبدأ الأداء في الانخفاض. تشمل العلامات ارتفاع تكلفة النقرة وانخفاض نسبة النقر إلى الظهور. حان الوقت للحصول على عنصر إبداعي جديد!"
+      }
+    }
+  },
+  "cookies": {
+    "title": "نحن نستخدم ملفات تعريف الارتباط",
+    "description": "نحن نستخدم ملفات تعريف الارتباط لتحسين تجربتك وتحليل حركة مرور الموقع ولأغراض التسويق. بالنقر فوق \"قبول الكل\"، فإنك توافق على استخدامنا لملفات تعريف الارتباط.",
+    "accept_all": "قبول الكل",
+    "necessary_only": "الضروري فقط",
+    "customize": "تخصيص",
+    "learn_more": "تعرف على المزيد في",
+    "privacy_policy": "سياسة الخصوصية",
+    "preferences_title": "تفضيلات ملفات تعريف الارتباط",
+    "necessary": "ملفات تعريف الارتباط الضرورية",
+    "necessary_desc": "مطلوبة لكي يعمل الموقع. لا يمكن تعطيلها.",
+    "analytics": "ملفات تعريف ارتباط التحليلات",
+    "analytics_desc": "تساعدنا في فهم كيفية تفاعل الزوار مع موقعنا.",
+    "marketing": "ملفات تعريف الارتباط التسويقية",
+    "marketing_desc": "تُستخدم لتتبع الزوار عبر مواقع الويب لأغراض إعلانية.",
+    "save_preferences": "حفظ التفضيلات"
   }
 }
