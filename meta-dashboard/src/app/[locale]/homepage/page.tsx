@@ -1,31 +1,17 @@
 "use client";
 
 /**
- * Homepage - Task-oriented homepage
- * Clean, friendly interface that helps users navigate to what they want to do
+ * Homepage - Simplified homepage with KPI cards and date filter
+ * Uses MainLayout2 (top nav) similar to homepage2
  */
 
-import { useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { MainLayout } from '../../../components/MainLayout';
+import { MainLayout2 } from '../../../components/MainLayout2';
 import { useUser } from '../../../context/UserContext';
-import { useAccount } from '../../../context/AccountContext';
-import ActionCard from '../../../components/homepage/ActionCard';
-
-// Icons
-import {
-  Sliders,
-  BarChart3,
-  TrendingUp,
-  Sparkles,
-  MessageCircle,
-  FileText,
-} from 'lucide-react';
-
-// Services for hints
-import { fetchCampaignsWithComparison } from '../../../services/campaigns.service';
+import DateFilter from '../../../components/DateFilter';
+import HomepageKPICards from '../../../components/homepage/HomepageKPICards';
 import { formatDate, calculateDateRange } from '../../../utils/date';
 
 export default function Homepage() {
@@ -33,7 +19,11 @@ export default function Homepage() {
   const locale = useLocale();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
-  const { selectedAccountId } = useAccount();
+
+  // Default to last 7 days
+  const initialDates = useMemo(() => calculateDateRange('last_7_days'), []);
+  const [startDate, setStartDate] = useState<string | null>(formatDate(initialDates.start));
+  const [endDate, setEndDate] = useState<string | null>(formatDate(initialDates.end));
 
   // Redirect to connect Facebook if user hasn't connected yet
   useEffect(() => {
@@ -42,87 +32,17 @@ export default function Homepage() {
     }
   }, [user, isUserLoading, router, locale]);
 
-  // Fetch campaigns for hints
-  const dateRange = useMemo(() => calculateDateRange('last_30_days'), []);
-  const startDate = formatDate(dateRange.start) || '';
-  const endDate = formatDate(dateRange.end) || '';
-
-  const { data: campaigns } = useQuery({
-    queryKey: ['homepage-campaigns', startDate, endDate, selectedAccountId],
-    queryFn: () =>
-      fetchCampaignsWithComparison(
-        { startDate, endDate },
-        [],
-        '',
-        'spend',
-        'desc',
-        selectedAccountId
-      ),
-    enabled: !!startDate && !!endDate && !!selectedAccountId,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Calculate hints
-  const activeCampaigns = campaigns?.filter(c => c.campaign_status === 'ACTIVE').length || 0;
-  const totalSpend = campaigns?.reduce((sum, c) => sum + (c.spend || 0), 0) || 0;
-  const avgDailySpend = totalSpend / 30;
+  // Handle date range changes from DateFilter
+  const handleDateRangeChange = useCallback((newStartDate: string | null, newEndDate: string | null) => {
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+  }, []);
 
   // Get first name for greeting
   const firstName = user?.full_name?.split(' ')[0] || t('homepage3.default_name');
 
-  // Navigation helper
-  const navigateTo = (path: string) => {
-    router.push(`/${locale}${path}`);
-  };
-
-  // Action cards configuration
-  const actions = [
-    {
-      key: 'manage',
-      icon: Sliders,
-      gradient: 'from-blue-500 to-cyan-500',
-      route: '/campaign-control',
-      hint: activeCampaigns > 0 ? t('homepage3.manage.hint', { count: activeCampaigns }) : undefined,
-    },
-    {
-      key: 'performance',
-      icon: BarChart3,
-      gradient: 'from-green-500 to-emerald-500',
-      route: '/account-dashboard',
-      hint: avgDailySpend > 0 ? t('homepage3.performance.hint', { amount: avgDailySpend.toFixed(0) }) : undefined,
-    },
-    {
-      key: 'trends',
-      icon: TrendingUp,
-      gradient: 'from-purple-500 to-pink-500',
-      route: '/insights',
-      hint: t('homepage3.trends.hint'),
-    },
-    {
-      key: 'ai_strategy',
-      icon: Sparkles,
-      gradient: 'from-orange-500 to-red-500',
-      route: '/ai-investigator',
-      hint: undefined,
-    },
-    {
-      key: 'ask',
-      icon: MessageCircle,
-      gradient: 'from-indigo-500 to-violet-500',
-      route: '/ai-investigator',
-      hint: undefined,
-    },
-    {
-      key: 'reports',
-      icon: FileText,
-      gradient: 'from-pink-500 to-rose-500',
-      route: '/reports',
-      hint: undefined,
-    },
-  ];
-
   return (
-    <MainLayout title={t('homepage3.title')} description="" compact>
+    <MainLayout2 title={t('homepage3.title')} description="" compact>
       {/* Greeting */}
       <div className="text-center mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
@@ -134,20 +54,23 @@ export default function Homepage() {
         <p className="text-gray-400 text-sm">{t('homepage3.subtitle')}</p>
       </div>
 
-      {/* Action Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-        {actions.map(action => (
-          <ActionCard
-            key={action.key}
-            icon={action.icon}
-            title={t(`homepage3.${action.key}.title`)}
-            description={t(`homepage3.${action.key}.description`)}
-            hint={action.hint}
-            gradient={action.gradient}
-            onClick={() => navigateTo(action.route)}
-          />
-        ))}
+      {/* Date Filter */}
+      <div className="flex justify-center mb-6">
+        <DateFilter
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={handleDateRangeChange}
+        />
       </div>
-    </MainLayout>
+
+      {/* KPI Cards */}
+      <div className="max-w-4xl mx-auto">
+        <HomepageKPICards
+          startDate={startDate}
+          endDate={endDate}
+          locale={locale}
+        />
+      </div>
+    </MainLayout2>
   );
 }
