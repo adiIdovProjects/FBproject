@@ -282,23 +282,39 @@ function captainReducer(state: CaptainState, action: CaptainAction): CaptainStat
             return { ...state, phase: 'conversation' };
         case 'GO_TO_STEP': {
             // Navigate to a specific step by finding its index in history
+            // Keep all entered data - just navigate to that step
             const stepIndex = state.questionHistory.indexOf(action.questionId);
             if (stepIndex === -1) return state;
+
+            // Calculate how many steps we're going back
+            const stepsBack = state.questionHistory.length - stepIndex;
+            // Remove 2 messages per step (user answer + captain question)
+            const messagesToRemove = stepsBack * 2;
+            const newMessages = state.messages.slice(0, -messagesToRemove);
+
             return {
                 ...state,
                 questionHistory: state.questionHistory.slice(0, stepIndex),
-                currentQuestionId: action.questionId
+                currentQuestionId: action.questionId,
+                messages: newMessages.length >= 0 ? newMessages : state.messages
             };
         }
         case 'GO_BACK': {
             // Go back to previous question in history
+            // Keep all entered data - just navigate back
             if (state.questionHistory.length === 0) return state;
             const newHistory = [...state.questionHistory];
             const previousQuestion = newHistory.pop()!;
+
+            // Remove the last 2 messages (user's answer + captain's next question)
+            // This keeps the conversation in sync with navigation
+            const newMessages = state.messages.slice(0, -2);
+
             return {
                 ...state,
                 questionHistory: newHistory,
-                currentQuestionId: previousQuestion
+                currentQuestionId: previousQuestion,
+                messages: newMessages.length >= 0 ? newMessages : state.messages
             };
         }
         case 'ADD_NEW_AD': {
