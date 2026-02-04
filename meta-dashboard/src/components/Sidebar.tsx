@@ -4,19 +4,34 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+    LayoutDashboard,
     BarChart3,
+    Palette,
     Settings,
     ChevronRight,
+    ChevronLeft,
     Sparkles,
+    Zap,
+    PlusCircle,
+    BarChart,
     User,
+    Lightbulb,
+    ChevronDown,
+    Target,
+    ChevronUp,
     Sliders,
+    Brain,
+    Upload,
     Shield,
+    TrendingUp,
+    FileText,
     GraduationCap,
     Home
 } from 'lucide-react';
 import { useAccount } from '@/context/AccountContext';
 import { useUser } from '@/context/UserContext';
 import { useLocale, useTranslations } from 'next-intl';
+import { accountsService } from '@/services/accounts.service';
 import ThemeSelector from '@/components/ThemeSelector';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -33,15 +48,97 @@ export const Sidebar: React.FC = () => {
     const { isAdmin } = useUser();
     const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
 
+    // Section expand/collapse state - default to expanded, load from localStorage in useEffect
+    const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
+        analytics: true,
+        manage_account: true,
+        intelligence: true
+    });
+
+    // Load expanded sections from localStorage after mount (prevents hydration mismatch)
+    React.useEffect(() => {
+        const saved = localStorage.getItem('sidebar-expanded-sections');
+        if (saved) {
+            try {
+                setExpandedSections(JSON.parse(saved));
+            } catch {
+                // Keep defaults
+            }
+        }
+    }, []);
+
+    // Auto-expand section if nested item is active
+    React.useEffect(() => {
+        const analyticsRoutes = ['/account-dashboard', '/campaigns', '/targeting', '/creatives'];
+        const manageRoutes = ['/campaign-control', '/uploader', '/learning'];
+        const intelligenceRoutes = ['/insights', '/reports', '/ai-investigator'];
+
+        const isAnalyticsActive = analyticsRoutes.some(route => pathname.includes(route));
+        const isManageActive = manageRoutes.some(route => pathname.includes(route));
+        const isIntelligenceActive = intelligenceRoutes.some(route => pathname.includes(route));
+
+        setExpandedSections(prev => {
+            let updated = { ...prev };
+            if (isAnalyticsActive && !prev.analytics) updated.analytics = true;
+            if (isManageActive && !prev.manage_account) updated.manage_account = true;
+            if (isIntelligenceActive && !prev.intelligence) updated.intelligence = true;
+
+            if (JSON.stringify(updated) !== JSON.stringify(prev)) {
+                localStorage.setItem('sidebar-expanded-sections', JSON.stringify(updated));
+                return updated;
+            }
+            return prev;
+        });
+    }, [pathname]);
+
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
-    // Simple flat navigation - only 4 items
-    const navItems = [
-        { name: t('homepage.title'), href: `/${locale}/homepage`, icon: Home },
-        { name: t('nav.campaign_control'), href: `/${locale}/campaign-control`, icon: Sliders },
-        { name: t('nav.ai_investigator'), href: `/${locale}/ai-investigator`, icon: Sparkles },
-        { name: t('nav.learning_center'), href: `/${locale}/learning`, icon: GraduationCap },
+
+    // Navigation structure with sections
+    const navStructure = [
+        {
+            type: 'section' as const,
+            id: 'analytics',
+            name: t('nav.analytics'),
+            icon: BarChart3,
+            items: [
+                { name: t('nav.account_performance'), href: `/${locale}/account-dashboard`, icon: LayoutDashboard },
+                { name: t('nav.campaigns_performance'), href: `/${locale}/campaigns`, icon: TrendingUp },
+                { name: t('nav.targeting_performance'), href: `/${locale}/targeting`, icon: Target },
+                { name: t('nav.creative_performance'), href: `/${locale}/creatives`, icon: Palette },
+            ]
+        },
+        {
+            type: 'section' as const,
+            id: 'manage_account',
+            name: t('nav.manage_account'),
+            icon: Sliders,
+            items: [
+                { name: t('nav.campaign_control'), href: `/${locale}/campaign-control`, icon: Sliders },
+                { name: t('nav.uploader'), href: `/${locale}/uploader`, icon: Upload },
+                { name: t('nav.learning_center'), href: `/${locale}/learning`, icon: GraduationCap },
+            ]
+        },
+        {
+            type: 'section' as const,
+            id: 'intelligence',
+            name: t('nav.intelligence'),
+            icon: Brain,
+            items: [
+                { name: t('nav.insights'), href: `/${locale}/insights`, icon: Lightbulb },
+                { name: t('nav.custom_reports'), href: `/${locale}/reports`, icon: FileText },
+                { name: t('nav.ai_investigator'), href: `/${locale}/ai-investigator`, icon: Sparkles },
+            ]
+        },
     ];
+
+    const toggleSection = (sectionId: string) => {
+        setExpandedSections(prev => {
+            const updated = { ...prev, [sectionId]: !prev[sectionId] };
+            localStorage.setItem('sidebar-expanded-sections', JSON.stringify(updated));
+            return updated;
+        });
+    };
 
     return (
         <aside
@@ -130,34 +227,104 @@ export const Sidebar: React.FC = () => {
                 </div>
             </div>
 
-            {/* Main Navigation - Simple 4 items */}
-            <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                    const Icon = item.icon;
+            {/* Main Navigation */}
+            <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+                {/* Home Link - Always visible at top */}
+                <Link
+                    href={`/${locale}/homepage`}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 mb-4 ${
+                        pathname === `/${locale}/homepage`
+                            ? isColorful
+                                ? 'bg-cyan-500/20 text-cyan-300 font-bold shadow-[0_0_15px_rgba(0,212,255,0.3)]'
+                                : 'bg-accent/15 text-accent font-bold'
+                            : isColorful
+                                ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
+                                : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
+                    } ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                    <Home className={`w-5 h-5 ${pathname === `/${locale}/homepage` ? 'text-accent' : ''}`} />
+                    <span className="text-sm">{t('homepage.title')}</span>
+                    {pathname === `/${locale}/homepage` && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-accent ml-auto" />
+                    )}
+                </Link>
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-                                isActive
-                                    ? isColorful
-                                        ? 'bg-cyan-500/20 text-cyan-300 font-bold shadow-[0_0_15px_rgba(0,212,255,0.3)]'
-                                        : 'bg-accent/15 text-accent font-bold'
-                                    : isColorful
-                                        ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
-                                        : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
-                            } ${isRTL ? 'flex-row-reverse' : ''}`}
-                        >
-                            <Icon className={`w-5 h-5 ${isActive ? 'text-accent' : ''}`} />
-                            <span className="text-sm">{item.name}</span>
-                            {isActive && (
-                                <div className={`w-1.5 h-1.5 rounded-full bg-accent ${isRTL ? 'mr-auto' : 'ml-auto'}`} />
-                            )}
-                        </Link>
-                    );
-                })}
+                <div className="mb-4">
+                    <p className={`px-2 text-[10px] font-semibold uppercase tracking-widest mb-2 ${isColorful ? 'text-cyan-400/70' : 'text-text-muted'}`}>Main Menu</p>
+                    {navStructure.map((item) => {
+                        // Section rendering
+                        if (item.type === 'section') {
+                            const isExpanded = expandedSections[item.id];
+                            const Icon = item.icon;
+                            const ChevronIcon = isExpanded ? ChevronUp : ChevronDown;
+
+                            return (
+                                <div key={item.id}>
+                                    <button
+                                        onClick={() => toggleSection(item.id)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isRTL ? 'flex-row-reverse' : ''} ${
+                                            isColorful
+                                                ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
+                                                : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
+                                        }`}
+                                    >
+                                        <Icon className="w-5 h-5 group-hover:text-foreground" />
+                                        <span className={`text-sm flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{item.name}</span>
+                                        <ChevronIcon className={`w-4 h-4 transition-transform duration-200 ${isRTL ? 'rotate-0' : ''}`} />
+                                    </button>
+
+                                    {isExpanded && (
+                                        <div className="mt-1 space-y-1">
+                                            {item.items.map((subItem: any) => {
+                                                const isActive = pathname === subItem.href;
+                                                const SubIcon = subItem.icon;
+                                                const isHighlight = subItem.highlight;
+
+                                                return (
+                                                    <Link
+                                                        key={subItem.href}
+                                                        href={subItem.href}
+                                                        className={`flex items-center gap-3 py-2 rounded-xl transition-all duration-200 group ${isRTL ? 'pr-12 pl-3' : 'pl-12 pr-3'} ${
+                                                            isHighlight
+                                                                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:from-purple-600/30 hover:to-pink-600/30 text-foreground font-semibold'
+                                                                : isActive
+                                                                    ? isColorful
+                                                                        ? 'bg-cyan-500/20 text-cyan-300 font-black shadow-[0_0_15px_rgba(0,212,255,0.3)] border-l-2 border-cyan-400'
+                                                                        : 'bg-accent/15 text-accent font-black shadow-sm'
+                                                                    : isColorful
+                                                                        ? 'text-indigo-200 hover:text-cyan-300 hover:bg-cyan-500/10'
+                                                                        : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
+                                                        }`}
+                                                    >
+                                                        {isRTL ? (
+                                                            <>
+                                                                {isActive && !isHighlight && (
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                                                )}
+                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-foreground'}`} />
+                                                                <span className="text-sm">{subItem.name}</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                {isActive && !isHighlight && (
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                                                )}
+                                                                <SubIcon className={`w-4 h-4 ${isHighlight ? 'text-purple-400' : isActive ? 'text-accent' : 'group-hover:text-foreground'}`} />
+                                                                <span className="text-sm">{subItem.name}</span>
+                                                            </>
+                                                        )}
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
+                        return null;
+                    })}
+                </div>
             </nav>
 
             {/* Bottom Actions */}
