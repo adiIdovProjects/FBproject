@@ -9,7 +9,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Info, Eye, PlusCircle, ArrowRight, Sparkles, BarChart3, Lightbulb, MessageSquare } from 'lucide-react';
+import { Info, Eye, PlusCircle, ArrowRight, Sparkles, Lightbulb, MessageSquare } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -37,14 +37,13 @@ export default function ManagePage() {
   const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
   const currency = selectedAccount?.currency || 'USD';
 
-  // Tab state - check URL param for initial tab
-  const [activeTab, setActiveTab] = useState<'view' | 'create' | 'analysis' | 'recommendations' | 'ai-chat'>(() => {
+  // Tab state - check URL param for initial tab (4 tabs: campaigns, create, insights, ai-chat)
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'create' | 'insights' | 'ai-chat'>(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam === 'create') return 'create';
-    if (tabParam === 'analysis') return 'analysis';
-    if (tabParam === 'recommendations') return 'recommendations';
+    if (tabParam === 'insights' || tabParam === 'analysis' || tabParam === 'recommendations') return 'insights';
     if (tabParam === 'ai-chat') return 'ai-chat';
-    return 'view';
+    return 'campaigns';
   });
 
   // Initialize date range
@@ -63,18 +62,18 @@ export default function ManagePage() {
       title={t('nav.campaign_control')}
       description={t('manage.subtitle')}
     >
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Simplified to 4 tabs */}
       <div className="flex gap-2 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <button
-          onClick={() => setActiveTab('view')}
+          onClick={() => setActiveTab('campaigns')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
-            activeTab === 'view'
+            activeTab === 'campaigns'
               ? 'bg-blue-500 text-white'
               : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
           }`}
         >
           <Eye className="w-4 h-4" />
-          {t('campaign_control.tab_view') || 'View & Control'}
+          {t('campaign_control.tab_campaigns') || 'Campaigns'}
         </button>
         <button
           onClick={() => setActiveTab('create')}
@@ -85,29 +84,18 @@ export default function ManagePage() {
           }`}
         >
           <PlusCircle className="w-4 h-4" />
-          {t('campaign_control.tab_create') || 'Create / Edit'}
+          {t('campaign_control.tab_create') || 'Create'}
         </button>
         <button
-          onClick={() => setActiveTab('analysis')}
+          onClick={() => setActiveTab('insights')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
-            activeTab === 'analysis'
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" />
-          {t('campaign_control.tab_analysis') || 'Analysis'}
-        </button>
-        <button
-          onClick={() => setActiveTab('recommendations')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
-            activeTab === 'recommendations'
+            activeTab === 'insights'
               ? 'bg-purple-500 text-white'
               : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
           }`}
         >
           <Lightbulb className="w-4 h-4" />
-          {t('campaign_control.tab_recommendations') || 'Recommendations'}
+          {t('campaign_control.tab_insights') || 'Insights'}
         </button>
         <button
           onClick={() => setActiveTab('ai-chat')}
@@ -122,8 +110,8 @@ export default function ManagePage() {
         </button>
       </div>
 
-      {/* View & Control Tab */}
-      {activeTab === 'view' && (
+      {/* Campaigns Tab */}
+      {activeTab === 'campaigns' && (
         <>
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
             <DateFilter
@@ -193,14 +181,12 @@ export default function ManagePage() {
           </p>
         </div>
       )}
-      {/* Analysis Tab */}
-      {activeTab === 'analysis' && (
-        <AnalysisTab accountId={selectedAccountId} />
-      )}
-
-      {/* Recommendations Tab */}
-      {activeTab === 'recommendations' && (
-        <RecommendationsTab accountId={selectedAccountId} />
+      {/* Insights Tab - Combines Analysis + Recommendations */}
+      {activeTab === 'insights' && (
+        <div className="space-y-8">
+          <AnalysisTab accountId={selectedAccountId} />
+          <RecommendationsTab accountId={selectedAccountId} />
+        </div>
       )}
 
       {/* AI Chat Tab */}

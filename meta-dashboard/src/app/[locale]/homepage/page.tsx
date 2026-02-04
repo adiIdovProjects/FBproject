@@ -1,30 +1,30 @@
 "use client";
 
 /**
- * Homepage - Simplified homepage for beginners
- * Shows: KPIs + AI Summary + 2 navigation buttons
+ * Homepage - Simple 6-box action menu for beginners
+ * No data, no AI - just navigation options
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { LayoutGrid, Sparkles } from 'lucide-react';
+import {
+  LayoutGrid,
+  Sparkles,
+  GraduationCap,
+  PlusCircle,
+  Lightbulb,
+  MessageSquare
+} from 'lucide-react';
 import { MainLayout2 } from '../../../components/MainLayout2';
 import { useUser } from '../../../context/UserContext';
-import HomepageKPICards from '../../../components/homepage/HomepageKPICards';
-import AISummaryCard from '../../../components/homepage/AISummaryCard';
-import { formatDate, calculateDateRange } from '../../../utils/date';
+import ActionCard from '../../../components/homepage/ActionCard';
 
 export default function Homepage() {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
-
-  // Fixed to last 7 days (no date picker needed)
-  const dates = useMemo(() => calculateDateRange('last_7_days'), []);
-  const startDate = formatDate(dates.start);
-  const endDate = formatDate(dates.end);
 
   // Redirect to connect Facebook if user hasn't connected yet
   useEffect(() => {
@@ -40,47 +40,75 @@ export default function Homepage() {
     router.push(`/${locale}${path}`);
   };
 
+  const actions = [
+    {
+      icon: LayoutGrid,
+      title: t('homepage.actions.manage_campaigns'),
+      description: t('homepage.box_descriptions.manage_campaigns') || 'View and control your campaigns',
+      gradient: 'from-blue-500 to-cyan-500',
+      onClick: () => navigateTo('/campaign-control'),
+    },
+    {
+      icon: PlusCircle,
+      title: t('homepage.actions.create_campaign'),
+      description: t('homepage.box_descriptions.create_campaign') || 'Create a new campaign with AI',
+      gradient: 'from-amber-500 to-orange-500',
+      onClick: () => navigateTo('/campaign-control?tab=create'),
+    },
+    {
+      icon: Lightbulb,
+      title: t('campaign_control.tab_insights') || 'Insights',
+      description: t('homepage.box_descriptions.insights') || 'Get AI-powered insights',
+      gradient: 'from-purple-500 to-pink-500',
+      onClick: () => navigateTo('/campaign-control?tab=insights'),
+    },
+    {
+      icon: MessageSquare,
+      title: t('homepage.actions.ask_ai'),
+      description: t('homepage.box_descriptions.ask_ai') || 'Ask questions about your ads',
+      gradient: 'from-cyan-500 to-teal-500',
+      onClick: () => navigateTo('/ai-investigator'),
+    },
+    {
+      icon: GraduationCap,
+      title: t('homepage.actions.learn'),
+      description: t('homepage.box_descriptions.learn') || 'Learn how Facebook Ads work',
+      gradient: 'from-green-500 to-emerald-500',
+      onClick: () => navigateTo('/learning'),
+    },
+    {
+      icon: Sparkles,
+      title: t('campaign_control.tab_ai_chat') || 'Ask AI',
+      description: t('homepage.box_descriptions.chat') || 'Chat with your AI assistant',
+      gradient: 'from-indigo-500 to-violet-500',
+      onClick: () => navigateTo('/campaign-control?tab=ai-chat'),
+    },
+  ];
+
   return (
     <MainLayout2 title={t('homepage3.title')} description="" compact>
       {/* Greeting */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
           {t('homepage3.greeting', { name: firstName })}
         </h1>
         <p className="text-gray-400 text-sm">{t('homepage3.subtitle')}</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <HomepageKPICards
-          startDate={startDate}
-          endDate={endDate}
-          locale={locale}
-        />
-      </div>
-
-      {/* AI Summary */}
-      <div className="max-w-3xl mx-auto mb-8">
-        <AISummaryCard locale={locale} />
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-        <button
-          onClick={() => navigateTo('/campaign-control')}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
-        >
-          <LayoutGrid className="w-5 h-5" />
-          {t('homepage.actions.manage_campaigns')}
-        </button>
-
-        <button
-          onClick={() => navigateTo('/ai-investigator')}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
-        >
-          <Sparkles className="w-5 h-5" />
-          {t('homepage.actions.ask_ai')}
-        </button>
+      {/* 6 Action Boxes - 2x3 grid */}
+      <div className="max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {actions.map((action, index) => (
+            <ActionCard
+              key={index}
+              icon={action.icon}
+              title={action.title}
+              description={action.description}
+              gradient={action.gradient}
+              onClick={action.onClick}
+            />
+          ))}
+        </div>
       </div>
     </MainLayout2>
   );

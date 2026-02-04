@@ -78,10 +78,12 @@
   },
   "campaign_control": {
     "tab_view": "Voir et Contrôler",
-    "tab_create": "Créer / Modifier",
+    "tab_create": "Créer",
     "tab_analysis": "Analyse",
     "tab_recommendations": "Recommandations",
     "tab_ai_chat": "Demander à l'IA",
+    "tab_campaigns": "Campagnes",
+    "tab_insights": "Aperçus",
     "best_practices_title": "Bonnes pratiques Facebook",
     "best_practices_subtitle": "Conseils rapides pour améliorer les performances de vos publicités",
     "ai_recommendations_title": "Recommandations IA",
@@ -1229,7 +1231,8 @@
       "analyze_results": "Analyser les résultats",
       "talk_to_ai": "Parler à l'IA",
       "manage_campaigns": "Gérer les campagnes",
-      "ask_ai": "Demander à l'IA"
+      "ask_ai": "Demander à l'IA",
+      "learn": "Apprendre"
     },
     "recommendations": {
       "title": "Recommandations",

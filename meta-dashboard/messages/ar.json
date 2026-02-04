@@ -72,10 +72,12 @@
   },
   "campaign_control": {
     "tab_view": "عرض والتحكم",
-    "tab_create": "إنشاء / تعديل",
+    "tab_create": "إنشاء",
     "tab_analysis": "تحليل",
     "tab_recommendations": "توصيات",
     "tab_ai_chat": "اسأل الذكاء",
+    "tab_campaigns": "الحملات",
+    "tab_insights": "رؤى",
     "best_practices_title": "أفضل ممارسات فيسبوك",
     "best_practices_subtitle": "نصائح سريعة لتحسين أداء إعلاناتك",
     "ai_recommendations_title": "توصيات الذكاء الاصطناعي",
@@ -1229,7 +1231,8 @@
       "analyze_results": "تحليل النتائج",
       "talk_to_ai": "تحدث مع الذكاء الاصطناعي",
       "manage_campaigns": "إدارة الحملات",
-      "ask_ai": "اسأل الذكاء الاصطناعي"
+      "ask_ai": "اسأل الذكاء الاصطناعي",
+      "learn": "تعلّم"
     },
     "recommendations": {
       "title": "التوصيات",

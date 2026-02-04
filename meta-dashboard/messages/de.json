@@ -72,10 +72,12 @@
   },
   "campaign_control": {
     "tab_view": "Ansehen & Steuern",
-    "tab_create": "Erstellen / Bearbeiten",
+    "tab_create": "Erstellen",
     "tab_analysis": "Analyse",
     "tab_recommendations": "Empfehlungen",
     "tab_ai_chat": "KI fragen",
+    "tab_campaigns": "Kampagnen",
+    "tab_insights": "Einblicke",
     "best_practices_title": "Facebook – Bewährte Methoden",
     "best_practices_subtitle": "Schnelle Tipps zur Verbesserung Ihrer Anzeigenleistung",
     "ai_recommendations_title": "KI-Empfehlungen",
@@ -1229,7 +1231,8 @@
       "analyze_results": "Ergebnisse analysieren",
       "talk_to_ai": "Mit KI sprechen",
       "manage_campaigns": "Kampagnen verwalten",
-      "ask_ai": "KI fragen"
+      "ask_ai": "KI fragen",
+      "learn": "Lernen"
     },
     "recommendations": {
       "title": "Empfehlungen",

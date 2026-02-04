@@ -78,10 +78,12 @@
   },
   "campaign_control": {
     "tab_view": "צפה ושלוט",
-    "tab_create": "צור / ערוך",
+    "tab_create": "צור",
     "tab_analysis": "ניתוח",
     "tab_recommendations": "המלצות",
     "tab_ai_chat": "שאל AI",
+    "tab_campaigns": "קמפיינים",
+    "tab_insights": "תובנות",
     "best_practices_title": "שיטות עבודה מומלצות בפייסבוק",
     "best_practices_subtitle": "טיפים מהירים לשיפור ביצועי המודעות שלך",
     "ai_recommendations_title": "המלצות AI",
@@ -1229,7 +1231,8 @@
       "analyze_results": "נתח תוצאות",
       "talk_to_ai": "שוחח עם AI",
       "manage_campaigns": "נהל קמפיינים",
-      "ask_ai": "שאל את ה-AI"
+      "ask_ai": "שאל את ה-AI",
+      "learn": "למד"
     },
     "recommendations": {
       "title": "המלצות",
