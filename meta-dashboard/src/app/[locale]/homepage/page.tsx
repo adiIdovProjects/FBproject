@@ -19,6 +19,7 @@ import {
 import { MainLayout2 } from '../../../components/MainLayout2';
 import { useUser } from '../../../context/UserContext';
 import ActionCard from '../../../components/homepage/ActionCard';
+import BudgetTrackerCard from '../../../components/homepage/BudgetTrackerCard';
 
 export default function Homepage() {
   const t = useTranslations();
@@ -93,6 +94,11 @@ export default function Homepage() {
           {t('homepage3.greeting', { name: firstName })}
         </h1>
         <p className="text-gray-400 text-sm">{t('homepage3.subtitle')}</p>
+      </div>
+
+      {/* Budget Tracker Card */}
+      <div className="max-w-3xl mx-auto mb-6">
+        <BudgetTrackerCard />
       </div>
 
       {/* 6 Action Boxes - 2x3 grid */}

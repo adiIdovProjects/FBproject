@@ -46,6 +46,8 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "create_ad": "Create Ad",
+    "ask_ai": "Ask AI",
     "performance": "Performance",
     "campaigns": "Campaigns",
     "targeting": "Targeting",
@@ -1831,6 +1833,10 @@
     "create": "Create",
     "advanced": "Advanced"
   },
+  "account_performance": {
+    "title": "Account Performance",
+    "description": "See how your campaigns are performing"
+  },
   "campaigns2": {
     "title": "Your Campaigns",
     "description": "View and control your campaigns",
@@ -1889,5 +1895,18 @@
     "analysis_complete": "Analysis complete",
     "analysis_failed": "Analysis couldn't complete, but you can continue",
     "step_indicator": "Step {current} of {total}"
+  },
+  "budget_tracker": {
+    "title": "Monthly Budget",
+    "subtitle": "Track your spending goal",
+    "goal": "Goal",
+    "spent": "Spent",
+    "remaining": "Left",
+    "used": "used",
+    "days": "days",
+    "edit_goal": "Edit goal",
+    "use_calculated": "Use auto",
+    "on_track": "✓ On track to stay within budget",
+    "over_budget": "⚠ Projected to exceed budget by "
   }
 }

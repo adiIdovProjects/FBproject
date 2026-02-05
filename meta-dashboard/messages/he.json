@@ -46,6 +46,8 @@
   },
   "nav": {
     "dashboard": "לוח בקרה",
+    "create_ad": "יצירת מודעה",
+    "ask_ai": "שאל את הבינה",
     "performance": "ביצועים",
     "campaigns": "קמפיינים",
     "targeting": "טרגוט",
@@ -1794,5 +1796,18 @@
     "marketing": "קבצי Cookie שיווקיים",
     "marketing_desc": "משמשים למעקב אחר מבקרים ברחבי אתרים למטרות פרסום.",
     "save_preferences": "שמור העדפות"
+  },
+  "budget_tracker": {
+    "title": "תקציב חודשי",
+    "subtitle": "עקוב אחר יעד ההוצאות",
+    "goal": "יעד",
+    "spent": "הוצאות",
+    "remaining": "נותר",
+    "used": "נוצל",
+    "days": "ימים",
+    "edit_goal": "ערוך יעד",
+    "use_calculated": "השתמש אוטו",
+    "on_track": "✓ במסלול להישאר בתקציב",
+    "over_budget": "⚠ צפוי לחרוג מהתקציב ב-"
   }
 }

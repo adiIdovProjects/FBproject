@@ -46,6 +46,8 @@
   },
   "nav": {
     "dashboard": "Tableau de bord",
+    "create_ad": "Créer une annonce",
+    "ask_ai": "Demander à l'IA",
     "performance": "Performance",
     "campaigns": "Campagnes",
     "targeting": "Ciblage",
@@ -1794,5 +1796,18 @@
     "marketing": "Cookies de Marketing",
     "marketing_desc": "Utilisés pour suivre les visiteurs sur les sites web à des fins publicitaires.",
     "save_preferences": "Enregistrer les préférences"
+  },
+  "budget_tracker": {
+    "title": "Budget Mensuel",
+    "subtitle": "Suivez votre objectif de dépenses",
+    "goal": "Objectif",
+    "spent": "Dépensé",
+    "remaining": "Restant",
+    "used": "utilisé",
+    "days": "jours",
+    "edit_goal": "Modifier l'objectif",
+    "use_calculated": "Utiliser auto",
+    "on_track": "✓ En bonne voie pour rester dans le budget",
+    "over_budget": "⚠ Prévu de dépasser le budget de "
   }
 }

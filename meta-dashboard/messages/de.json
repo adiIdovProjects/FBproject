@@ -40,6 +40,8 @@
   },
   "nav": {
     "dashboard": "Armaturenbrett",
+    "create_ad": "Anzeige erstellen",
+    "ask_ai": "KI fragen",
     "performance": "Leistung",
     "campaigns": "Kampagnen",
     "targeting": "Zielsetzung",
@@ -1794,5 +1796,18 @@
     "marketing": "Marketing Cookies",
     "marketing_desc": "Used to track visitors across websites for advertising purposes.",
     "save_preferences": "Save Preferences"
+  },
+  "budget_tracker": {
+    "title": "Monatsbudget",
+    "subtitle": "Ausgabenziel verfolgen",
+    "goal": "Ziel",
+    "spent": "Ausgegeben",
+    "remaining": "Übrig",
+    "used": "verwendet",
+    "days": "Tage",
+    "edit_goal": "Ziel bearbeiten",
+    "use_calculated": "Auto verwenden",
+    "on_track": "✓ Auf Kurs, um im Budget zu bleiben",
+    "over_budget": "⚠ Voraussichtliche Budgetüberschreitung um "
   }
 }

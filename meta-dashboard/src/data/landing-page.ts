@@ -1,33 +1,33 @@
 export const landingPageData = {
-    painPoints: {
-        title: "You Deserve Better",
-        subtitle: "Running Facebook Ads shouldn't feel like this.",
+    youCanDoIt: {
+        title: "You Can Do It",
+        subtitle: "It's easier than you think. We simplified everything.",
         items: [
             {
-                title: "Lost in Translation",
-                description: "Agencies send reports full of jargon. You pay thousands but never really understand what's happening with your money.",
-                icon: "translate"
+                title: "Campaign Building Made Simple",
+                description: "Create campaigns without the confusion. Our step-by-step wizard makes it feel like filling out a form.",
+                icon: "rocket_launch"
             },
             {
-                title: "Overwhelmed by Complexity",
-                description: "Facebook's interface changes constantly. Dozens of settings, cryptic metrics — it's designed for experts, not business owners.",
-                icon: "psychology_alt"
+                title: "Add New Ads in Minutes",
+                description: "Upload creatives, write copy, set targeting — all guided by AI that speaks plain English.",
+                icon: "add_photo_alternate"
             },
             {
-                title: "You Know Your Business Best",
-                description: "Generic agency playbooks ignore what makes you special. Your customers, your story, your unique value.",
-                icon: "storefront"
+                title: "Guidance Every Step of the Way",
+                description: "Never feel lost. Get real-time tips, best practices, and an AI assistant ready to answer any question.",
+                icon: "support_agent"
             },
             {
-                title: "No Good Options",
-                description: "Pay agency prices or figure it out alone. Until now, there was no middle ground for smart business owners like you.",
-                icon: "balance"
+                title: "Full Control, All Your Data",
+                description: "See everything in one place. Pause, adjust, or scale campaigns with confidence.",
+                icon: "tune"
             }
         ]
     },
     hero: {
-        headline: "Your Compass for Facebook Ads",
-        subheadline: "Finally, navigate the complexity with confidence. We guide you through every decision — you stay in control.",
+        headline: "Take Control of Your Marketing",
+        subheadline: "We simplified everything so you can save money, improve performance, and grow your business. We're here to guide you every step of the way.",
         cta: "Start Free Trial",
         trustBadges: [
             { text: "7-Day Free Trial", icon: "check_circle" },
@@ -81,9 +81,9 @@ export const landingPageData = {
                 icon: "description"
             },
             {
-                title: "Full Transparency, Full Control",
-                description: "See everything. Understand everything. Every dollar tracked, every decision yours to make.",
-                icon: "analytics"
+                title: "AI That Knows Your Data",
+                description: "Ask any question about your campaigns and get instant answers. Your AI assistant knows your data inside out.",
+                icon: "psychology"
             }
         ]
     },
@@ -148,7 +148,7 @@ export const landingPageData = {
             { feature: "Contract Lock-in", agency: "3-12 months", adcaptain: "Cancel anytime" },
             { feature: "Control", agency: "They decide", adcaptain: "You decide" },
             { feature: "Transparency", agency: "Monthly reports", adcaptain: "Real-time data" },
-            { feature: "Response Time", agency: "Days", adcaptain: "Instant AI" },
+            { feature: "Response Time", agency: "Days", adcaptain: "Instant AI — yes, even at 2am" },
             { feature: "Typical Results", agency: "2-3 months to see impact", adcaptain: "Insights within 24 hours" },
             { feature: "Your Data", agency: "They control insights & strategy", adcaptain: "You own all data, insights, and strategy" }
         ]

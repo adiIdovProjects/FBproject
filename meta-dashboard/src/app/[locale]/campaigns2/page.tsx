@@ -1,47 +1,51 @@
 "use client";
 
 /**
- * Campaigns2 - Simplified campaigns view
- * Shows Name, Spend, Conversions, CPA, Status toggle
+ * Account Performance - Beginner-friendly campaigns view
+ * Shows campaigns with status toggle, budget editing, and spend graph
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { MainLayout2 } from '../../../components/MainLayout2';
 import SimpleCampaignList from '../../../components/campaigns/SimpleCampaignList';
+import DateFilter from '../../../components/DateFilter';
+import { formatDate, calculateDateRange } from '../../../utils/date';
 
-type DateRangeType = 'last_7_days' | 'last_14_days' | 'last_30_days';
-
-export default function Campaigns2() {
+export default function AccountPerformance() {
   const t = useTranslations();
   const locale = useLocale();
-  const [dateRange, setDateRange] = useState<DateRangeType>('last_7_days');
+  const isRTL = locale === 'ar' || locale === 'he';
 
-  const dateRangeOptions = [
-    { value: 'last_7_days', label: t('campaigns2.last_7_days') },
-    { value: 'last_14_days', label: t('campaigns2.last_14_days') },
-    { value: 'last_30_days', label: t('campaigns2.last_30_days') },
-  ];
+  // Initialize date range (default to last 30 days)
+  const initialDates = useMemo(() => calculateDateRange('last_30_days'), []);
+  const [startDate, setStartDate] = useState<string | null>(formatDate(initialDates.start));
+  const [endDate, setEndDate] = useState<string | null>(formatDate(initialDates.end));
+
+  const handleDateRangeChange = (newStart: string | null, newEnd: string | null) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
 
   return (
-    <MainLayout2 title={t('campaigns2.title')} description={t('campaigns2.description')} compact>
-      {/* Date Range Selector */}
+    <MainLayout2
+      title={t('account_performance.title') || 'Account Performance'}
+      description={t('account_performance.description') || ''}
+      compact
+    >
+      {/* Date Filter */}
       <div className="flex justify-end mb-4">
-        <select
-          value={dateRange}
-          onChange={(e) => setDateRange(e.target.value as DateRangeType)}
-          className="bg-card border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-        >
-          {dateRangeOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <DateFilter
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={handleDateRangeChange}
+          lang={locale as any}
+          isRTL={isRTL}
+        />
       </div>
 
-      {/* Campaign List */}
-      <SimpleCampaignList dateRange={dateRange} />
+      {/* Campaign List with Graph */}
+      <SimpleCampaignList startDate={startDate} endDate={endDate} />
     </MainLayout2>
   );
 }

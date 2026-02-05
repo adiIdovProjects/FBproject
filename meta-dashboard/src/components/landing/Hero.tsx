@@ -209,7 +209,7 @@ const Hero = () => {
                                 <span className="font-semibold">AI Insight</span>
                             </div>
                             <p className="text-xs text-slate-300 leading-relaxed">
-                                &quot;Increase budget on Ad Set #3 for better ROAS&quot;
+                                &quot;Your weekend campaign is outperforming — consider scaling up.&quot;
                             </p>
                             <div className="text-xs font-bold mt-2 text-green-400">
                                 Potential +18% ROI

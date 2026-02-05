@@ -88,7 +88,7 @@ const HowItWorks = () => {
                     className="text-center mt-20"
                 >
                     <p className="text-slate-500 text-lg mb-2">
-                        No switching between apps. No complicated setup.
+                        No jargon. No confusion.
                     </p>
                     <p className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400 font-bold text-2xl">
                         Just results.
