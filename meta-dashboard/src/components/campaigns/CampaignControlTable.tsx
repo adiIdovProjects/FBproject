@@ -5,7 +5,7 @@
  * Shows Campaign -> Ad Set -> Ad hierarchy with expandable rows, status toggle, budget editing
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronDown, ChevronLeft, Pause, Play, Loader2, Pencil, X, Check, HelpCircle } from 'lucide-react';
 
@@ -47,6 +47,7 @@ interface CampaignControlTableProps {
   startDate: string;
   endDate: string;
   hideActions?: boolean;
+  statusFilter?: string;
 }
 
 export default function CampaignControlTable({
@@ -56,6 +57,7 @@ export default function CampaignControlTable({
   startDate,
   endDate,
   hideActions = false,
+  statusFilter = '',
 }: CampaignControlTableProps) {
   const t = useTranslations();
   const isRTL = locale === 'ar' || locale === 'he';
@@ -119,6 +121,12 @@ export default function CampaignControlTable({
 
     fetchCampaigns();
   }, [startDate, endDate, accountId]);
+
+  // Filter campaigns by status
+  const filteredCampaigns = useMemo(() => {
+    if (!statusFilter) return campaigns;
+    return campaigns.filter(c => c.campaign_status === statusFilter);
+  }, [campaigns, statusFilter]);
 
   // Handle campaign expand/collapse
   const handleCampaignExpand = async (campaignId: number) => {
@@ -460,14 +468,14 @@ export default function CampaignControlTable({
                   <span className="text-text-muted">{t('common.loading')}</span>
                 </td>
               </tr>
-            ) : campaigns.length === 0 ? (
+            ) : filteredCampaigns.length === 0 ? (
               <tr>
                 <td colSpan={12} className="px-6 py-12 text-center text-text-muted">
                   {t('campaigns.no_data')}
                 </td>
               </tr>
             ) : (
-              campaigns.map(campaign => {
+              filteredCampaigns.map(campaign => {
                 const campaignBudgetInfo = campaignBudgets[String(campaign.campaign_id)];
                 const isCbo = campaignBudgetInfo?.is_cbo ?? false;
 

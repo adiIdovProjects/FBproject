@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Info, Eye, Target, Image } from 'lucide-react';
+import { Info, Eye, Target, Image, Filter } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -27,8 +27,8 @@ import { useInView } from '../../../hooks/useInView';
 import { useAccount } from '../../../context/AccountContext';
 
 // Services
-import { fetchTrendData, fetchBreakdown } from '../../../services/campaigns.service';
-import { fetchCreatives } from '../../../services/creatives.service';
+import { fetchTrendData, fetchBreakdown, fetchBreakdownWithComparison } from '../../../services/campaigns.service';
+import { fetchCreatives, fetchCreativesWithComparison } from '../../../services/creatives.service';
 import { TargetingRow } from '../../../types/targeting.types';
 import { CreativeMetrics } from '../../../types/creatives.types';
 import { MetricType, DateRange } from '../../../types/dashboard.types';
@@ -67,13 +67,20 @@ export default function AdvancedAnalyticsPage() {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
 
+  // Campaigns tab filters
+  const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<string>('');
+
   // Targeting tab state
   const [targetingData, setTargetingData] = useState<TargetingRow[]>([]);
   const [isTargetingLoading, setIsTargetingLoading] = useState(false);
+  const [showTargetingComparison, setShowTargetingComparison] = useState(false);
+  const [targetingTypeFilter, setTargetingTypeFilter] = useState<string>('');
 
   // Creatives tab state
   const [creatives, setCreatives] = useState<CreativeMetrics[]>([]);
   const [isCreativesLoading, setIsCreativesLoading] = useState(false);
+  const [showCreativesComparison, setShowCreativesComparison] = useState(false);
+  const [creativesTypeFilter, setCreativesTypeFilter] = useState<string>('');
 
   // Viewport-based lazy loading for breakdown section
   const [breakdownRef, isBreakdownVisible] = useInView();
@@ -114,8 +121,16 @@ export default function AdvancedAnalyticsPage() {
     const loadTargeting = async () => {
       setIsTargetingLoading(true);
       try {
-        const data = await fetchBreakdown(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined);
-        setTargetingData(data as TargetingRow[]);
+        const adsetsData = showTargetingComparison
+          ? await fetchBreakdownWithComparison(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined)
+          : await fetchBreakdown(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined);
+
+        // Apply type filter client-side
+        let filteredData = adsetsData;
+        if (targetingTypeFilter) {
+          filteredData = adsetsData.filter((adset: any) => adset.targeting_type === targetingTypeFilter);
+        }
+        setTargetingData(filteredData as TargetingRow[]);
       } catch (err) {
         console.error('Error fetching targeting data:', err);
       } finally {
@@ -123,7 +138,7 @@ export default function AdvancedAnalyticsPage() {
       }
     };
     loadTargeting();
-  }, [activeTab, dateRange, selectedAccountId, startDate, endDate]);
+  }, [activeTab, dateRange, selectedAccountId, startDate, endDate, showTargetingComparison, targetingTypeFilter]);
 
   // Fetch creatives data
   useEffect(() => {
@@ -132,8 +147,24 @@ export default function AdvancedAnalyticsPage() {
     const loadCreatives = async () => {
       setIsCreativesLoading(true);
       try {
-        const data = await fetchCreatives({ dateRange, sort_by: 'spend' }, selectedAccountId);
-        setCreatives(data);
+        // Convert filter type to API parameter
+        const isVideoParam = creativesTypeFilter === 'video' ? true :
+          (creativesTypeFilter === 'image' || creativesTypeFilter === 'carousel') ? false : undefined;
+
+        const filter = { dateRange, sort_by: 'spend' as const, is_video: isVideoParam };
+
+        const creativesData = showCreativesComparison
+          ? await fetchCreativesWithComparison(filter, selectedAccountId)
+          : await fetchCreatives(filter, selectedAccountId);
+
+        // Apply frontend filtering for image vs carousel
+        let filteredData = creativesData;
+        if (creativesTypeFilter === 'image') {
+          filteredData = creativesData.filter(c => !c.is_carousel);
+        } else if (creativesTypeFilter === 'carousel') {
+          filteredData = creativesData.filter(c => c.is_carousel);
+        }
+        setCreatives(filteredData);
       } catch (err) {
         console.error('Error fetching creatives:', err);
       } finally {
@@ -141,7 +172,7 @@ export default function AdvancedAnalyticsPage() {
       }
     };
     loadCreatives();
-  }, [activeTab, dateRange, selectedAccountId, startDate, endDate]);
+  }, [activeTab, dateRange, selectedAccountId, startDate, endDate, showCreativesComparison, creativesTypeFilter]);
 
   // Map trend data for chart
   const chartData = useMemo(() => {
@@ -227,6 +258,26 @@ export default function AdvancedAnalyticsPage() {
 
           {/* Campaign Control Table */}
           <div className="mb-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h2 className="text-2xl font-bold text-gray-100">
+                {t('campaigns.title') || 'Campaigns'}
+              </h2>
+              <div className="flex items-center gap-3">
+                {/* Status Filter */}
+                <div className="relative">
+                  <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+                  <select
+                    value={campaignsStatusFilter}
+                    onChange={(e) => setCampaignsStatusFilter(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
+                  >
+                    <option value="" className="bg-gray-900 text-white">{t('common.all_statuses')}</option>
+                    <option value="ACTIVE" className="bg-gray-900 text-white">{t('status.ACTIVE')}</option>
+                    <option value="PAUSED" className="bg-gray-900 text-white">{t('status.PAUSED')}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
             <CampaignControlTable
               accountId={selectedAccountId}
               currency={currency}
@@ -234,6 +285,7 @@ export default function AdvancedAnalyticsPage() {
               startDate={startDate || ''}
               endDate={endDate || ''}
               hideActions={true}
+              statusFilter={campaignsStatusFilter}
             />
           </div>
 
@@ -278,9 +330,41 @@ export default function AdvancedAnalyticsPage() {
       {activeTab === 'targeting' && (
         <>
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-100 mb-4">
-              {t('targeting.table_title') || 'Ad Sets by Targeting Type'}
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h2 className="text-2xl font-bold text-gray-100">
+                {t('targeting.table_title') || 'Ad Sets by Targeting Type'}
+              </h2>
+              <div className="flex items-center gap-3">
+                {/* Type Filter */}
+                <div className="relative">
+                  <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+                  <select
+                    value={targetingTypeFilter}
+                    onChange={(e) => setTargetingTypeFilter(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
+                  >
+                    <option value="" className="bg-gray-900 text-white">{t('common.all_types')}</option>
+                    <option value="Broad" className="bg-gray-900 text-white">{t('targeting.types.Broad')}</option>
+                    <option value="Lookalike" className="bg-gray-900 text-white">{t('targeting.types.Lookalike')}</option>
+                    <option value="Interest Audience" className="bg-gray-900 text-white">{t('targeting.types.Interest Audience')}</option>
+                    <option value="Custom Audience" className="bg-gray-900 text-white">{t('targeting.types.Custom Audience')}</option>
+                  </select>
+                </div>
+                {/* Comparison Toggle */}
+                <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
+                  <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
+                  <button
+                    onClick={() => setShowTargetingComparison(!showTargetingComparison)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showTargetingComparison ? 'bg-accent' : 'bg-gray-700'}`}
+                  >
+                    <span className="sr-only">Enable comparison</span>
+                    <span
+                      className={`${showTargetingComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
             <TargetingTable
               targetingData={targetingData}
               isLoading={isTargetingLoading}
@@ -288,7 +372,7 @@ export default function AdvancedAnalyticsPage() {
               isRTL={isRTL}
               selectedAdsetIds={[]}
               onSelectionChange={() => {}}
-              showComparison={false}
+              showComparison={showTargetingComparison}
             />
           </div>
 
@@ -333,9 +417,40 @@ export default function AdvancedAnalyticsPage() {
       {activeTab === 'creatives' && (
         <>
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-100 mb-4">
-              {t('creatives.all_creatives') || 'All Creatives'}
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h2 className="text-2xl font-bold text-gray-100">
+                {t('creatives.all_creatives') || 'All Creatives'}
+              </h2>
+              <div className="flex items-center gap-3">
+                {/* Type Filter */}
+                <div className="relative">
+                  <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+                  <select
+                    value={creativesTypeFilter}
+                    onChange={(e) => setCreativesTypeFilter(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
+                  >
+                    <option value="" className="bg-gray-900 text-white">{t('common.all_types')}</option>
+                    <option value="video" className="bg-gray-900 text-white">{t('creatives.types.video')}</option>
+                    <option value="image" className="bg-gray-900 text-white">{t('creatives.types.image')}</option>
+                    <option value="carousel" className="bg-gray-900 text-white">{t('creatives.types.carousel')}</option>
+                  </select>
+                </div>
+                {/* Comparison Toggle */}
+                <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
+                  <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
+                  <button
+                    onClick={() => setShowCreativesComparison(!showCreativesComparison)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showCreativesComparison ? 'bg-accent' : 'bg-gray-700'}`}
+                  >
+                    <span className="sr-only">Enable comparison</span>
+                    <span
+                      className={`${showCreativesComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
             <CreativesTable
               creatives={creatives}
               isLoading={isCreativesLoading}
@@ -345,7 +460,7 @@ export default function AdvancedAnalyticsPage() {
               accountId={selectedAccountId}
               selectedCreativeIds={[]}
               onSelectionChange={() => {}}
-              showComparison={false}
+              showComparison={showCreativesComparison}
             />
           </div>
 
