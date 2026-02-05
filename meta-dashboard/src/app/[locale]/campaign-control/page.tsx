@@ -161,8 +161,8 @@ export default function AdvancedAnalyticsPage() {
       title={t('nav.advanced_analytics') || 'Advanced Analytics'}
       description={t('advanced.subtitle') || 'Pause, resume, and analyze your campaigns, targeting, and creatives'}
     >
-      {/* Tab Navigation - 3 tabs: Campaigns, Targeting, Creatives */}
-      <div className="flex gap-2 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Tab Navigation - 3 tabs: Campaigns Performance, Targeting, Creatives - Centered */}
+      <div className="flex justify-center gap-2 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <button
           onClick={() => setActiveTab('campaigns')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
@@ -172,7 +172,7 @@ export default function AdvancedAnalyticsPage() {
           }`}
         >
           <Eye className="w-4 h-4" />
-          {t('nav.campaigns') || 'Campaigns'}
+          {t('nav.campaigns_performance') || 'Campaigns Performance'}
         </button>
         <button
           onClick={() => setActiveTab('targeting')}
