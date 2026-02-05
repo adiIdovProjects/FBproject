@@ -140,7 +140,14 @@
     "quick_insights": "Quick Insights",
     "view_full_analysis": "View Full Analysis",
     "day_of_week_performance": "Performance by Day of Week",
-    "day": "Day"
+    "day": "Day",
+    "performance_dashboard": "Performance Dashboard",
+    "create_new_ad": "Create New Ad",
+    "weekly_performance": "Weekly Performance",
+    "total_spend": "Total Spend",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "conversions": "Conversions"
   },
   "days": {
     "monday": "Monday",
