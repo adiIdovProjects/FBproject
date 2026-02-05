@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Info, Eye, Target, Image, Filter } from 'lucide-react';
+import { Info, Eye, Target, Image, Filter, X } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -27,7 +27,7 @@ import { useInView } from '../../../hooks/useInView';
 import { useAccount } from '../../../context/AccountContext';
 
 // Services
-import { fetchTrendData, fetchBreakdown, fetchBreakdownWithComparison } from '../../../services/campaigns.service';
+import { fetchTrendData, fetchBreakdown, fetchBreakdownWithComparison, fetchCampaignsWithComparison } from '../../../services/campaigns.service';
 import { fetchCreatives, fetchCreativesWithComparison } from '../../../services/creatives.service';
 import { TargetingRow } from '../../../types/targeting.types';
 import { CreativeMetrics } from '../../../types/creatives.types';
@@ -70,6 +70,11 @@ export default function AdvancedAnalyticsPage() {
   // Campaigns tab filters
   const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<string>('');
 
+  // Campaign selection and filter state (for Filter/Compare functionality)
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<number[]>([]);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [filteredCampaignIds, setFilteredCampaignIds] = useState<number[]>([]);
+
   // Global campaign filter (shared across all tabs)
   const [availableCampaigns, setAvailableCampaigns] = useState<Array<{ id: number; name: string }>>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
@@ -100,6 +105,30 @@ export default function AdvancedAnalyticsPage() {
     setEndDate(newEnd);
   }, []);
 
+  // Fetch available campaigns for the filter dropdown
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+
+    const loadCampaigns = async () => {
+      try {
+        const campaignsData = await fetchCampaignsWithComparison(
+          dateRange,
+          [],
+          '',
+          'spend',
+          'desc',
+          selectedAccountId
+        );
+        setAvailableCampaigns(
+          campaignsData.map(c => ({ id: c.campaign_id, name: c.campaign_name }))
+        );
+      } catch (err) {
+        console.error('Error fetching campaigns for filter:', err);
+      }
+    };
+    loadCampaigns();
+  }, [dateRange, selectedAccountId, startDate, endDate]);
+
   // Fetch trend data for campaigns tab
   useEffect(() => {
     if (activeTab !== 'campaigns' || !startDate || !endDate) return;
@@ -107,7 +136,8 @@ export default function AdvancedAnalyticsPage() {
     const fetchTrend = async () => {
       setIsTrendLoading(true);
       try {
-        const data = await fetchTrendData(dateRange, granularity, selectedAccountId || undefined);
+        const campaignIds = selectedCampaignId ? [selectedCampaignId] : null;
+        const data = await fetchTrendData(dateRange, granularity, selectedAccountId || undefined, null, campaignIds);
         setTrendData(data || []);
       } catch (err) {
         console.error('Error fetching trend data:', err);
@@ -116,7 +146,7 @@ export default function AdvancedAnalyticsPage() {
       }
     };
     fetchTrend();
-  }, [activeTab, dateRange, granularity, selectedAccountId, startDate, endDate]);
+  }, [activeTab, dateRange, granularity, selectedAccountId, startDate, endDate, selectedCampaignId]);
 
   // Fetch targeting data
   useEffect(() => {
@@ -125,9 +155,10 @@ export default function AdvancedAnalyticsPage() {
     const loadTargeting = async () => {
       setIsTargetingLoading(true);
       try {
+        const campaignIds = selectedCampaignId ? [selectedCampaignId] : undefined;
         const adsetsData = showTargetingComparison
-          ? await fetchBreakdownWithComparison(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined)
-          : await fetchBreakdown(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined);
+          ? await fetchBreakdownWithComparison(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined, undefined, campaignIds)
+          : await fetchBreakdown(dateRange, 'adset', 'both', [], '', selectedAccountId || undefined, undefined, campaignIds);
 
         // Apply type filter client-side
         let filteredData = adsetsData;
@@ -142,7 +173,7 @@ export default function AdvancedAnalyticsPage() {
       }
     };
     loadTargeting();
-  }, [activeTab, dateRange, selectedAccountId, startDate, endDate, showTargetingComparison, targetingTypeFilter]);
+  }, [activeTab, dateRange, selectedAccountId, startDate, endDate, showTargetingComparison, targetingTypeFilter, selectedCampaignId]);
 
   // Fetch creatives data
   useEffect(() => {
@@ -155,7 +186,12 @@ export default function AdvancedAnalyticsPage() {
         const isVideoParam = creativesTypeFilter === 'video' ? true :
           (creativesTypeFilter === 'image' || creativesTypeFilter === 'carousel') ? false : undefined;
 
-        const filter = { dateRange, sort_by: 'spend' as const, is_video: isVideoParam };
+        // Get campaign name for filtering if a campaign is selected
+        const campaignName = selectedCampaignId
+          ? availableCampaigns.find(c => c.id === selectedCampaignId)?.name
+          : undefined;
+
+        const filter = { dateRange, sort_by: 'spend' as const, is_video: isVideoParam, campaign_name: campaignName };
 
         const creativesData = showCreativesComparison
           ? await fetchCreativesWithComparison(filter, selectedAccountId)
@@ -176,7 +212,7 @@ export default function AdvancedAnalyticsPage() {
       }
     };
     loadCreatives();
-  }, [activeTab, dateRange, selectedAccountId, startDate, endDate, showCreativesComparison, creativesTypeFilter]);
+  }, [activeTab, dateRange, selectedAccountId, startDate, endDate, showCreativesComparison, creativesTypeFilter, selectedCampaignId, availableCampaigns]);
 
   // Map trend data for chart
   const chartData = useMemo(() => {
@@ -233,7 +269,7 @@ export default function AdvancedAnalyticsPage() {
         </button>
       </div>
 
-      {/* Date Filter - Shared across all tabs */}
+      {/* Date Filter and Campaign Filter - Shared across all tabs */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
         <DateFilter
           startDate={startDate}
@@ -243,6 +279,22 @@ export default function AdvancedAnalyticsPage() {
           t={t}
           isRTL={isRTL}
         />
+        {/* Campaign Filter */}
+        <div className="relative">
+          <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+          <select
+            value={selectedCampaignId ?? ''}
+            onChange={(e) => setSelectedCampaignId(e.target.value ? Number(e.target.value) : null)}
+            className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[200px] max-w-[300px]`}
+          >
+            <option value="" className="bg-gray-900 text-white">{t('common.all_campaigns') || 'All Campaigns'}</option>
+            {availableCampaigns.map(campaign => (
+              <option key={campaign.id} value={campaign.id} className="bg-gray-900 text-white">
+                {campaign.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Campaigns Tab */}
@@ -277,6 +329,44 @@ export default function AdvancedAnalyticsPage() {
                     <option value="PAUSED" className="bg-gray-900 text-white">{t('status.PAUSED')}</option>
                   </select>
                 </div>
+
+                {/* Filter Page Button - Shows when campaigns selected and filter not active */}
+                {selectedCampaignIds.length > 0 && !isFilterActive && (
+                  <button
+                    onClick={() => {
+                      setIsFilterActive(true);
+                      setFilteredCampaignIds(selectedCampaignIds);
+                    }}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Filter ({selectedCampaignIds.length})</span>
+                  </button>
+                )}
+
+                {/* Clear Filter Button - Shows when filter is active */}
+                {isFilterActive && (
+                  <button
+                    onClick={() => {
+                      setIsFilterActive(false);
+                      setFilteredCampaignIds([]);
+                      setSelectedCampaignIds([]);
+                    }}
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Clear Filter</span>
+                  </button>
+                )}
+
+                {/* Compare Button - Shows when 2-5 campaigns selected */}
+                {selectedCampaignIds.length >= 2 && selectedCampaignIds.length <= 5 && !isFilterActive && (
+                  <button
+                    className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <span>Compare ({selectedCampaignIds.length})</span>
+                  </button>
+                )}
               </div>
             </div>
             <CampaignControlTable
@@ -287,6 +377,9 @@ export default function AdvancedAnalyticsPage() {
               endDate={endDate || ''}
               hideActions={true}
               statusFilter={campaignsStatusFilter}
+              campaignIdFilter={isFilterActive ? filteredCampaignIds : (selectedCampaignId ? [selectedCampaignId] : undefined)}
+              selectedCampaignIds={selectedCampaignIds}
+              onSelectionChange={setSelectedCampaignIds}
             />
           </div>
 

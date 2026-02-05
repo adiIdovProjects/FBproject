@@ -388,7 +388,10 @@
     "this_month": "This Month",
     "today_yesterday": "Today & Yesterday",
     "yesterday": "Yesterday",
-    "maximum": "All Time"
+    "maximum": "All Time",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
   },
   "footer": {
     "system_info": "AdSolus Analytics System"
@@ -1862,7 +1865,8 @@
     "see_detailed": "See detailed view",
     "last_7_days": "Last 7 days",
     "last_14_days": "Last 14 days",
-    "last_30_days": "Last 30 days"
+    "last_30_days": "Last 30 days",
+    "performance_by_time": "Performance by Time"
   },
   "performance": {
     "title": "Performance",

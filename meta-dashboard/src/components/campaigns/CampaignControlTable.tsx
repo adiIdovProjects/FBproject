@@ -512,14 +512,14 @@ export default function CampaignControlTable({
           <tbody className="divide-y divide-border-subtle">
             {isLoading ? (
               <tr>
-                <td colSpan={12} className="px-6 py-12 text-center">
+                <td colSpan={onSelectionChange ? 13 : 12} className="px-6 py-12 text-center">
                   <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-2" />
                   <span className="text-text-muted">{t('common.loading')}</span>
                 </td>
               </tr>
             ) : filteredCampaigns.length === 0 ? (
               <tr>
-                <td colSpan={12} className="px-6 py-12 text-center text-text-muted">
+                <td colSpan={onSelectionChange ? 13 : 12} className="px-6 py-12 text-center text-text-muted">
                   {t('campaigns.no_data')}
                 </td>
               </tr>
@@ -532,6 +532,16 @@ export default function CampaignControlTable({
                   <React.Fragment key={`campaign-${campaign.campaign_id}`}>
                     {/* Campaign Row */}
                     <tr className="hover:bg-row-hover">
+                      {onSelectionChange && (
+                        <td className="px-4 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedCampaignIds.includes(campaign.campaign_id)}
+                            onChange={() => handleCheckboxToggle(campaign.campaign_id)}
+                            className="w-4 h-4 rounded border-border-subtle bg-secondary text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                          />
+                        </td>
+                      )}
                       <td className={`px-4 py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <button
@@ -574,7 +584,7 @@ export default function CampaignControlTable({
                       <>
                         {loadingAdsets.has(campaign.campaign_id) ? (
                           <tr key={`loading-adsets-${campaign.campaign_id}`}>
-                            <td colSpan={12} className="px-6 py-4 text-center bg-secondary/30">
+                            <td colSpan={onSelectionChange ? 13 : 12} className="px-6 py-4 text-center bg-secondary/30">
                               <Loader2 className="w-5 h-5 text-text-muted animate-spin mx-auto" />
                             </td>
                           </tr>
@@ -583,6 +593,7 @@ export default function CampaignControlTable({
                             <React.Fragment key={`adset-${adset.adset_id}`}>
                               {/* Ad Set Row */}
                               <tr className="bg-secondary/30 hover:bg-secondary/50">
+                                {onSelectionChange && <td className="px-4 py-3"></td>}
                                 <td className={`px-4 py-3 ${isRTL ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
                                   <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                                     <button
@@ -625,13 +636,14 @@ export default function CampaignControlTable({
                                 <>
                                   {loadingAds.has(adset.adset_id) ? (
                                     <tr key={`loading-ads-${adset.adset_id}`}>
-                                      <td colSpan={12} className="px-6 py-3 text-center bg-secondary/50">
+                                      <td colSpan={onSelectionChange ? 13 : 12} className="px-6 py-3 text-center bg-secondary/50">
                                         <Loader2 className="w-4 h-4 text-text-muted animate-spin mx-auto" />
                                       </td>
                                     </tr>
                                   ) : (
                                     (ads[adset.adset_id] || []).map(ad => (
                                       <tr key={`ad-${ad.ad_id}`} className="bg-secondary/50 hover:bg-secondary/70">
+                                        {onSelectionChange && <td className="px-4 py-2"></td>}
                                         <td className={`px-4 py-2 ${isRTL ? 'pr-16' : 'pl-16'}`}>
                                           <div className={isRTL ? 'text-right' : 'text-left'}>
                                             <div className="text-foreground text-sm">{ad.ad_name}</div>
