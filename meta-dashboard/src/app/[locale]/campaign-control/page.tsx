@@ -24,6 +24,7 @@ import TargetingTable from '../../../components/targeting/TargetingTable';
 import CreativesTable from '../../../components/creatives/CreativesTable';
 import CampaignComparisonModal from '../../../components/campaigns/CampaignComparisonModal';
 import CreativeComparisonModal from '../../../components/creatives/CreativeComparisonModal';
+import TargetingComparisonModal from '../../../components/targeting/TargetingComparisonModal';
 import { useInView } from '../../../hooks/useInView';
 
 import { useAccount } from '../../../context/AccountContext';
@@ -94,6 +95,7 @@ export default function AdvancedAnalyticsPage() {
   const [isTargetingFilterActive, setIsTargetingFilterActive] = useState(false);
   const [filteredAdsetIds, setFilteredAdsetIds] = useState<number[]>([]);
   const [targetingSearchValue, setTargetingSearchValue] = useState('');
+  const [showTargetingCompareModal, setShowTargetingCompareModal] = useState(false);
 
   // Creatives tab state
   const [creatives, setCreatives] = useState<CreativeMetrics[]>([]);
@@ -558,6 +560,16 @@ export default function AdvancedAnalyticsPage() {
                   </button>
                 )}
 
+                {/* Compare Button */}
+                {selectedAdsetIds.length >= 2 && selectedAdsetIds.length <= 5 && !isTargetingFilterActive && (
+                  <button
+                    onClick={() => setShowTargetingCompareModal(true)}
+                    className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <span>Compare ({selectedAdsetIds.length})</span>
+                  </button>
+                )}
+
                 {/* Comparison Toggle */}
                 <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
                   <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
@@ -618,6 +630,18 @@ export default function AdvancedAnalyticsPage() {
               isVisible={isBreakdownVisible}
             />
           </div>
+
+          {/* Targeting Comparison Modal */}
+          {showTargetingCompareModal && (
+            <TargetingComparisonModal
+              isOpen={showTargetingCompareModal}
+              onClose={() => setShowTargetingCompareModal(false)}
+              adsetIds={selectedAdsetIds}
+              targetingData={targetingData}
+              dateRange={dateRange}
+              accountId={selectedAccountId}
+            />
+          )}
         </>
       )}
 
