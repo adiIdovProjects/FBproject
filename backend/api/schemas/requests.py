@@ -167,3 +167,11 @@ class CampaignComparisonRequest(BaseModel):
     end_date: date = Field(..., description="End date (YYYY-MM-DD)")
     metrics: List[str] = Field(default=['spend', 'roas', 'ctr', 'cpc', 'conversions', 'cpa'], description="Metrics to compare")
 
+
+class AdsetComparisonRequest(BaseModel):
+    """Request parameters for comparing multiple ad sets"""
+    adset_ids: List[int] = Field(..., min_items=2, max_items=5, description="List of 2-5 ad set IDs to compare")
+    start_date: date = Field(..., description="Start date (YYYY-MM-DD)")
+    end_date: date = Field(..., description="End date (YYYY-MM-DD)")
+    metrics: List[str] = Field(default=['spend', 'roas', 'ctr', 'cpc', 'conversions', 'cpa'], description="Metrics to compare")
+

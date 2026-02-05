@@ -402,6 +402,98 @@ class MetricsService:
             comparisons=comparisons
         )
 
+    def compare_adsets(
+        self,
+        adset_ids: List[int],
+        start_date: date,
+        end_date: date,
+        metrics: List[str],
+        account_ids: Optional[List[int]] = None
+    ) -> Any:
+        """
+        Compare multiple ad sets side-by-side.
+
+        Args:
+            adset_ids: List of adset IDs (2-5)
+            start_date: Start date
+            end_date: End date
+            metrics: List of metrics to compare
+            account_ids: Optional list of account IDs
+
+        Returns:
+            AdsetComparisonResponse with comparison data
+        """
+        # Resolve account IDs
+        filtered_account_ids = self._resolve_account_ids(account_ids)
+
+        # Get comparison data from repository
+        adset_data = self.adset_repo.get_adset_comparison(
+            adset_ids, start_date, end_date, filtered_account_ids
+        )
+
+        if not adset_data:
+            return None
+
+        # Calculate derived metrics for each adset
+        calculated_data = {}
+        for adset_id, data in adset_data.items():
+            ctr = self.calculator.ctr(data['clicks'], data['impressions'])
+            cpc = self.calculator.cpc(data['spend'], data['clicks'])
+            cpa = self.calculator.cpa(data['spend'], data['conversions'])
+            roas = self.calculator.roas(data['conversion_value'], data['spend'], data['conversions'])
+
+            calculated_data[adset_id] = {
+                'spend': data['spend'],
+                'impressions': data['impressions'],
+                'clicks': data['clicks'],
+                'conversions': data['conversions'],
+                'ctr': ctr,
+                'cpc': cpc,
+                'cpa': cpa,
+                'roas': roas
+            }
+
+        # Build comparison metrics
+        from backend.api.schemas.responses import ComparisonMetric, AdsetComparisonResponse
+
+        comparisons = []
+        for metric_name in metrics:
+            values = {}
+            winner_id = None
+            winner_value = None
+
+            # Lower is better for: cpc, cpa
+            # Higher is better for: spend, roas, ctr, conversions
+            is_higher_better = metric_name not in ['cpc', 'cpa']
+
+            for adset_id, data in calculated_data.items():
+                value = data.get(metric_name)
+                if value is not None:
+                    values[adset_id] = value
+
+                    if winner_value is None:
+                        winner_value = value
+                        winner_id = adset_id
+                    else:
+                        if is_higher_better and value > winner_value:
+                            winner_value = value
+                            winner_id = adset_id
+                        elif not is_higher_better and value < winner_value and value > 0:
+                            winner_value = value
+                            winner_id = adset_id
+
+            comparison = ComparisonMetric(
+                metric_name=metric_name,
+                values=values,
+                winner_id=winner_id
+            )
+            comparisons.append(comparison)
+
+        return AdsetComparisonResponse(
+            adset_ids=adset_ids,
+            comparisons=comparisons
+        )
+
     def get_time_series(
         self,
         start_date: date,

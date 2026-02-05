@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.dependencies import get_db, get_current_user
 from backend.api.services.metrics_service import MetricsService
-from backend.api.schemas.requests import CampaignStatus, Granularity, CampaignComparisonRequest
+from backend.api.schemas.requests import CampaignStatus, Granularity, CampaignComparisonRequest, AdsetComparisonRequest
 from backend.api.schemas.responses import (
     MetricsOverviewResponse,
     CampaignMetrics,
@@ -28,6 +28,7 @@ from backend.api.schemas.responses import (
     AdsetComparisonMetrics,
     AdBreakdown,
     CampaignComparisonResponse,
+    AdsetComparisonResponse,
     DayOfWeekBreakdown
 )
 from backend.api.utils.exceptions import DatabaseError
@@ -197,6 +198,49 @@ def compare_campaigns(
         raise
     except Exception as e:
         raise DatabaseError(detail=f"Failed to compare campaigns: {str(e)}")
+
+
+@router.post(
+    "/adsets/compare",
+    response_model=AdsetComparisonResponse,
+    summary="Compare multiple ad sets side-by-side",
+    description="Compare 2-5 ad sets with winner highlighting"
+)
+def compare_adsets(
+    request: AdsetComparisonRequest = Body(...),
+    account_id: Optional[int] = Query(None, description="Filter by specific account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Compare multiple ad sets side-by-side.
+
+    Accepts 2-5 adset IDs and returns comparison data showing which ad set
+    performs best for each metric.
+    """
+    try:
+        if len(request.adset_ids) < 2:
+            raise HTTPException(status_code=400, detail="Must provide at least 2 ad set IDs")
+        if len(request.adset_ids) > 5:
+            raise HTTPException(status_code=400, detail="Cannot compare more than 5 ad sets")
+
+        service = MetricsService(db, user_id=current_user.id)
+        result = service.compare_adsets(
+            adset_ids=request.adset_ids,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            metrics=request.metrics,
+            account_ids=[account_id] if account_id else None
+        )
+
+        if not result:
+            raise HTTPException(status_code=404, detail="No data found for the provided ad set IDs")
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to compare ad sets: {str(e)}")
 
 
 @router.get(

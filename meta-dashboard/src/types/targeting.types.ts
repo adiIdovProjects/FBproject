@@ -53,3 +53,16 @@ export interface TargetingTypeMetrics {
   totalSpend: number;
   count: number;
 }
+
+// Comparison response for ad sets
+export interface TargetingComparisonResponse {
+  adset_ids: number[];
+  comparisons: TargetingComparisonMetric[];
+}
+
+// Comparison metric with winner information
+export interface TargetingComparisonMetric {
+  metric_name: string;
+  values: Record<number, number>;  // adset_id -> value
+  winner_id: number | null;
+}

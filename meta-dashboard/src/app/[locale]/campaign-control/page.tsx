@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Info, Eye, Target, Image, Filter, X } from 'lucide-react';
+import { Info, Eye, Target, Image, Filter, X, Search } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -22,6 +22,8 @@ import ActionsMetricsChart from '../../../components/dashboard/ActionsMetricsCha
 import CreativeBreakdownTabs from '../../../components/creatives/CreativeBreakdownTabs';
 import TargetingTable from '../../../components/targeting/TargetingTable';
 import CreativesTable from '../../../components/creatives/CreativesTable';
+import CampaignComparisonModal from '../../../components/campaigns/CampaignComparisonModal';
+import CreativeComparisonModal from '../../../components/creatives/CreativeComparisonModal';
 import { useInView } from '../../../hooks/useInView';
 
 import { useAccount } from '../../../context/AccountContext';
@@ -74,6 +76,9 @@ export default function AdvancedAnalyticsPage() {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<number[]>([]);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [filteredCampaignIds, setFilteredCampaignIds] = useState<number[]>([]);
+  const [campaignSearchValue, setCampaignSearchValue] = useState('');
+  const [showCampaignComparison, setShowCampaignComparison] = useState(false);
+  const [showCampaignCompareModal, setShowCampaignCompareModal] = useState(false);
 
   // Global campaign filter (shared across all tabs)
   const [availableCampaigns, setAvailableCampaigns] = useState<Array<{ id: number; name: string }>>([]);
@@ -84,12 +89,23 @@ export default function AdvancedAnalyticsPage() {
   const [isTargetingLoading, setIsTargetingLoading] = useState(false);
   const [showTargetingComparison, setShowTargetingComparison] = useState(false);
   const [targetingTypeFilter, setTargetingTypeFilter] = useState<string>('');
+  const [targetingStatusFilter, setTargetingStatusFilter] = useState<string>('');
+  const [selectedAdsetIds, setSelectedAdsetIds] = useState<number[]>([]);
+  const [isTargetingFilterActive, setIsTargetingFilterActive] = useState(false);
+  const [filteredAdsetIds, setFilteredAdsetIds] = useState<number[]>([]);
+  const [targetingSearchValue, setTargetingSearchValue] = useState('');
 
   // Creatives tab state
   const [creatives, setCreatives] = useState<CreativeMetrics[]>([]);
   const [isCreativesLoading, setIsCreativesLoading] = useState(false);
   const [showCreativesComparison, setShowCreativesComparison] = useState(false);
   const [creativesTypeFilter, setCreativesTypeFilter] = useState<string>('');
+  const [creativesStatusFilter, setCreativesStatusFilter] = useState<string>('');
+  const [selectedCreativeIds, setSelectedCreativeIds] = useState<number[]>([]);
+  const [isCreativesFilterActive, setIsCreativesFilterActive] = useState(false);
+  const [filteredCreativeIds, setFilteredCreativeIds] = useState<number[]>([]);
+  const [creativesSearchValue, setCreativesSearchValue] = useState('');
+  const [showCreativeCompareModal, setShowCreativeCompareModal] = useState(false);
 
   // Viewport-based lazy loading for breakdown section
   const [breakdownRef, isBreakdownVisible] = useInView();
@@ -316,6 +332,18 @@ export default function AdvancedAnalyticsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                {/* Search Box */}
+                <div className="relative">
+                  <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
+                  <input
+                    type="text"
+                    placeholder={t('campaigns.search_placeholder') || 'Search campaigns...'}
+                    value={campaignSearchValue}
+                    onChange={(e) => setCampaignSearchValue(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all w-48`}
+                  />
+                </div>
+
                 {/* Status Filter */}
                 <div className="relative">
                   <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
@@ -362,11 +390,23 @@ export default function AdvancedAnalyticsPage() {
                 {/* Compare Button - Shows when 2-5 campaigns selected */}
                 {selectedCampaignIds.length >= 2 && selectedCampaignIds.length <= 5 && !isFilterActive && (
                   <button
+                    onClick={() => setShowCampaignCompareModal(true)}
                     className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
                   >
                     <span>Compare ({selectedCampaignIds.length})</span>
                   </button>
                 )}
+
+                {/* Compare Periods Toggle */}
+                <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
+                  <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
+                  <button
+                    onClick={() => setShowCampaignComparison(!showCampaignComparison)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${showCampaignComparison ? 'bg-accent' : 'bg-gray-700'}`}
+                  >
+                    <span className={`${showCampaignComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                  </button>
+                </div>
               </div>
             </div>
             <CampaignControlTable
@@ -417,6 +457,24 @@ export default function AdvancedAnalyticsPage() {
               isVisible={isBreakdownVisible}
             />
           </div>
+
+          {/* Campaign Comparison Modal */}
+          {showCampaignCompareModal && (
+            <CampaignComparisonModal
+              isOpen={showCampaignCompareModal}
+              onClose={() => setShowCampaignCompareModal(false)}
+              campaignIds={selectedCampaignIds}
+              campaigns={availableCampaigns.map(c => ({
+                campaign_id: c.id,
+                campaign_name: c.name,
+                campaign_status: 'ACTIVE',
+                spend: 0, impressions: 0, clicks: 0, ctr: 0, cpc: 0, cpm: 0,
+                conversions: 0, cpa: 0, conv_rate: 0, conversion_value: 0, roas: 0
+              }))}
+              dateRange={dateRange}
+              accountId={selectedAccountId}
+            />
+          )}
         </>
       )}
 
@@ -429,6 +487,18 @@ export default function AdvancedAnalyticsPage() {
                 {t('targeting.table_title') || 'Ad Sets by Targeting Type'}
               </h2>
               <div className="flex items-center gap-3">
+                {/* Search Box */}
+                <div className="relative">
+                  <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
+                  <input
+                    type="text"
+                    placeholder={t('targeting.search_placeholder') || 'Search ad sets...'}
+                    value={targetingSearchValue}
+                    onChange={(e) => setTargetingSearchValue(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all w-48`}
+                  />
+                </div>
+
                 {/* Type Filter */}
                 <div className="relative">
                   <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
@@ -444,28 +514,72 @@ export default function AdvancedAnalyticsPage() {
                     <option value="Custom Audience" className="bg-gray-900 text-white">{t('targeting.types.Custom Audience')}</option>
                   </select>
                 </div>
+
+                {/* Status Filter */}
+                <div className="relative">
+                  <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+                  <select
+                    value={targetingStatusFilter}
+                    onChange={(e) => setTargetingStatusFilter(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
+                  >
+                    <option value="" className="bg-gray-900 text-white">{t('common.all_statuses')}</option>
+                    <option value="ACTIVE" className="bg-gray-900 text-white">{t('status.ACTIVE')}</option>
+                    <option value="PAUSED" className="bg-gray-900 text-white">{t('status.PAUSED')}</option>
+                  </select>
+                </div>
+
+                {/* Filter Button */}
+                {selectedAdsetIds.length > 0 && !isTargetingFilterActive && (
+                  <button
+                    onClick={() => {
+                      setIsTargetingFilterActive(true);
+                      setFilteredAdsetIds(selectedAdsetIds);
+                    }}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Filter ({selectedAdsetIds.length})</span>
+                  </button>
+                )}
+
+                {/* Clear Filter Button */}
+                {isTargetingFilterActive && (
+                  <button
+                    onClick={() => {
+                      setIsTargetingFilterActive(false);
+                      setFilteredAdsetIds([]);
+                      setSelectedAdsetIds([]);
+                    }}
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Clear Filter</span>
+                  </button>
+                )}
+
                 {/* Comparison Toggle */}
                 <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
                   <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
                   <button
                     onClick={() => setShowTargetingComparison(!showTargetingComparison)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showTargetingComparison ? 'bg-accent' : 'bg-gray-700'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${showTargetingComparison ? 'bg-accent' : 'bg-gray-700'}`}
                   >
-                    <span className="sr-only">Enable comparison</span>
-                    <span
-                      className={`${showTargetingComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                    />
+                    <span className={`${showTargetingComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
                   </button>
                 </div>
               </div>
             </div>
             <TargetingTable
-              targetingData={targetingData}
+              targetingData={isTargetingFilterActive && filteredAdsetIds.length > 0
+                ? targetingData.filter(a => filteredAdsetIds.includes(a.adset_id))
+                : targetingData
+              }
               isLoading={isTargetingLoading}
               currency={currency}
               isRTL={isRTL}
-              selectedAdsetIds={[]}
-              onSelectionChange={() => {}}
+              selectedAdsetIds={selectedAdsetIds}
+              onSelectionChange={setSelectedAdsetIds}
               showComparison={showTargetingComparison}
             />
           </div>
@@ -516,6 +630,18 @@ export default function AdvancedAnalyticsPage() {
                 {t('creatives.all_creatives') || 'All Creatives'}
               </h2>
               <div className="flex items-center gap-3">
+                {/* Search Box */}
+                <div className="relative">
+                  <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
+                  <input
+                    type="text"
+                    placeholder={t('creatives.search_placeholder') || 'Search creatives...'}
+                    value={creativesSearchValue}
+                    onChange={(e) => setCreativesSearchValue(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} text-sm text-white focus:border-accent/50 outline-none transition-all w-48`}
+                  />
+                </div>
+
                 {/* Type Filter */}
                 <div className="relative">
                   <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
@@ -530,30 +656,84 @@ export default function AdvancedAnalyticsPage() {
                     <option value="carousel" className="bg-gray-900 text-white">{t('creatives.types.carousel')}</option>
                   </select>
                 </div>
+
+                {/* Status Filter */}
+                <div className="relative">
+                  <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500`} />
+                  <select
+                    value={creativesStatusFilter}
+                    onChange={(e) => setCreativesStatusFilter(e.target.value)}
+                    className={`bg-card-bg/40 border border-border-subtle rounded-xl py-2.5 ${isRTL ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8'} text-sm text-white focus:border-accent/50 outline-none transition-all appearance-none cursor-pointer min-w-[140px]`}
+                  >
+                    <option value="" className="bg-gray-900 text-white">{t('common.all_statuses')}</option>
+                    <option value="ACTIVE" className="bg-gray-900 text-white">{t('status.ACTIVE')}</option>
+                    <option value="PAUSED" className="bg-gray-900 text-white">{t('status.PAUSED')}</option>
+                  </select>
+                </div>
+
+                {/* Filter Button */}
+                {selectedCreativeIds.length > 0 && !isCreativesFilterActive && (
+                  <button
+                    onClick={() => {
+                      setIsCreativesFilterActive(true);
+                      setFilteredCreativeIds(selectedCreativeIds);
+                    }}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Filter ({selectedCreativeIds.length})</span>
+                  </button>
+                )}
+
+                {/* Clear Filter Button */}
+                {isCreativesFilterActive && (
+                  <button
+                    onClick={() => {
+                      setIsCreativesFilterActive(false);
+                      setFilteredCreativeIds([]);
+                      setSelectedCreativeIds([]);
+                    }}
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Clear Filter</span>
+                  </button>
+                )}
+
+                {/* Compare Button */}
+                {selectedCreativeIds.length >= 2 && selectedCreativeIds.length <= 5 && !isCreativesFilterActive && (
+                  <button
+                    onClick={() => setShowCreativeCompareModal(true)}
+                    className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
+                  >
+                    <span>Compare ({selectedCreativeIds.length})</span>
+                  </button>
+                )}
+
                 {/* Comparison Toggle */}
                 <div className="flex items-center gap-2 bg-card-bg/40 border border-border-subtle rounded-xl px-4 py-2.5" dir="ltr">
                   <span className="text-sm text-gray-400">{t('common.compare_periods')}</span>
                   <button
                     onClick={() => setShowCreativesComparison(!showCreativesComparison)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900 ${showCreativesComparison ? 'bg-accent' : 'bg-gray-700'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${showCreativesComparison ? 'bg-accent' : 'bg-gray-700'}`}
                   >
-                    <span className="sr-only">Enable comparison</span>
-                    <span
-                      className={`${showCreativesComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                    />
+                    <span className={`${showCreativesComparison ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
                   </button>
                 </div>
               </div>
             </div>
             <CreativesTable
-              creatives={creatives}
+              creatives={isCreativesFilterActive && filteredCreativeIds.length > 0
+                ? creatives.filter(c => filteredCreativeIds.includes(c.creative_id))
+                : creatives
+              }
               isLoading={isCreativesLoading}
               currency={currency}
               isRTL={isRTL}
               dateRange={dateRange}
               accountId={selectedAccountId}
-              selectedCreativeIds={[]}
-              onSelectionChange={() => {}}
+              selectedCreativeIds={selectedCreativeIds}
+              onSelectionChange={setSelectedCreativeIds}
               showComparison={showCreativesComparison}
             />
           </div>
@@ -592,6 +772,18 @@ export default function AdvancedAnalyticsPage() {
               isVisible={isBreakdownVisible}
             />
           </div>
+
+          {/* Creative Comparison Modal */}
+          {showCreativeCompareModal && (
+            <CreativeComparisonModal
+              isOpen={showCreativeCompareModal}
+              onClose={() => setShowCreativeCompareModal(false)}
+              creativeIds={selectedCreativeIds}
+              creatives={creatives}
+              dateRange={dateRange}
+              accountId={selectedAccountId}
+            />
+          )}
         </>
       )}
     </MainLayout>

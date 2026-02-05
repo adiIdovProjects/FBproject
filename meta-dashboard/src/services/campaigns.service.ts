@@ -5,6 +5,7 @@
 
 import { apiClient } from './apiClient';
 import { CampaignRow, BreakdownRow, TimeGranularity, BreakdownType, DateRange, CampaignComparisonResponse } from '../types/campaigns.types';
+import { TargetingComparisonResponse } from '../types/targeting.types';
 
 /**
  * Fetch campaigns for a specific date range
@@ -388,6 +389,38 @@ export async function fetchCampaignComparison(
     return response.data;
   } catch (error) {
     console.error('[Campaigns Service] Error comparing campaigns:', error);
+    throw error;
+  }
+}
+
+/**
+ * Compare multiple ad sets (targeting) side-by-side
+ */
+export async function fetchTargetingComparison(
+  adsetIds: number[],
+  dateRange: DateRange,
+  accountId?: string | null
+): Promise<TargetingComparisonResponse> {
+  const { startDate, endDate } = dateRange;
+
+  try {
+    const response = await apiClient.post<TargetingComparisonResponse>(
+      '/api/v1/metrics/adsets/compare',
+      {
+        adset_ids: adsetIds,
+        start_date: startDate,
+        end_date: endDate,
+        metrics: ['spend', 'roas', 'ctr', 'cpc', 'conversions', 'cpa']
+      },
+      {
+        params: {
+          account_id: accountId
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('[Campaigns Service] Error comparing ad sets:', error);
     throw error;
   }
 }

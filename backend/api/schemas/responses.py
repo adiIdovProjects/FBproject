@@ -471,6 +471,12 @@ class CampaignComparisonResponse(BaseModel):
     comparisons: List[ComparisonMetric] = Field(..., description="Metric comparisons")
 
 
+class AdsetComparisonResponse(BaseModel):
+    """Response for ad set comparison"""
+    adset_ids: List[int] = Field(..., description="List of ad set IDs being compared")
+    comparisons: List[ComparisonMetric] = Field(..., description="Metric comparisons")
+
+
 class DayOfWeekBreakdown(BaseModel):
     """Performance breakdown by day of week"""
     day_of_week: str = Field(..., description="Day name (Monday, Tuesday, etc.)")

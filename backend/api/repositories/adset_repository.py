@@ -160,6 +160,96 @@ class AdSetRepository(BaseRepository):
 
         return adsets
 
+    def get_adset_comparison(
+        self,
+        adset_ids: List[int],
+        start_date: date,
+        end_date: date,
+        account_ids: Optional[List[int]] = None
+    ) -> Dict[int, Dict[str, Any]]:
+        """
+        Get comparison data for multiple ad sets.
+
+        Args:
+            adset_ids: List of adset IDs (2-5)
+            start_date: Start date
+            end_date: End date
+            account_ids: Optional list of account IDs
+
+        Returns:
+            Dict mapping adset_id to metrics dict
+        """
+        # Build account filter
+        account_filter = ""
+        param_account_ids = {}
+        if account_ids:
+            placeholders = ', '.join([f":acc_id_{i}" for i in range(len(account_ids))])
+            account_filter = f"AND f.account_id IN ({placeholders})"
+            for i, acc_id in enumerate(account_ids):
+                param_account_ids[f'acc_id_{i}'] = acc_id
+
+        # Build adset filter
+        adset_placeholders = ', '.join([f":adset_id_{i}" for i in range(len(adset_ids))])
+
+        query = text(f"""
+            SELECT
+                f.adset_id,
+                SUM(f.spend) as spend,
+                SUM(f.impressions) as impressions,
+                SUM(f.clicks) as clicks,
+                COALESCE(SUM(conv.action_count), 0) as conversions,
+                COALESCE(SUM(conv.action_value), 0) as conversion_value
+            FROM fact_core_metrics f
+            JOIN dim_date d ON f.date_id = d.date_id
+            LEFT JOIN (
+                SELECT fam.date_id, fam.account_id, fam.campaign_id, fam.adset_id, fam.ad_id, fam.creative_id,
+                       SUM(fam.action_count) as action_count,
+                       SUM(fam.action_value) as action_value
+                FROM fact_action_metrics fam
+                JOIN dim_action_type dat ON fam.action_type_id = dat.action_type_id
+                JOIN dim_date d2 ON fam.date_id = d2.date_id
+                WHERE dat.is_conversion = TRUE
+                    AND d2.date >= :start_date
+                    AND d2.date <= :end_date
+                GROUP BY 1, 2, 3, 4, 5, 6
+            ) conv ON f.date_id = conv.date_id
+                  AND f.account_id = conv.account_id
+                  AND f.campaign_id = conv.campaign_id
+                  AND f.adset_id = conv.adset_id
+                  AND f.ad_id = conv.ad_id
+                  AND f.creative_id = conv.creative_id
+            WHERE d.date >= :start_date
+                AND d.date <= :end_date
+                AND f.adset_id IN ({adset_placeholders})
+                {account_filter}
+            GROUP BY f.adset_id
+        """)
+
+        params = {
+            'start_date': start_date,
+            'end_date': end_date,
+            **param_account_ids
+        }
+
+        # Add adset ID params
+        for i, adset_id in enumerate(adset_ids):
+            params[f'adset_id_{i}'] = adset_id
+
+        results = self.db.execute(query, params).fetchall()
+
+        # Build result dict
+        comparison_data = {}
+        for row in results:
+            comparison_data[int(row.adset_id)] = {
+                'spend': float(row.spend or 0),
+                'impressions': int(row.impressions or 0),
+                'clicks': int(row.clicks or 0),
+                'conversions': int(row.conversions or 0),
+                'conversion_value': float(row.conversion_value or 0)
+            }
+
+        return comparison_data
+
     def get_adsets_for_campaign(
         self,
         campaign_id: int,
