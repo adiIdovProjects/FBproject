@@ -53,7 +53,7 @@ const LandingNavbar = () => {
             <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white transition-transform group-hover:scale-110 shadow-lg shadow-indigo-500/20">
               <span className="material-symbols-outlined text-xl">steering</span>
             </div>
-            <span className="text-lg font-extrabold tracking-tight text-white">AdCaptain</span>
+            <span className="text-lg font-extrabold tracking-tight text-white">Adstyr</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

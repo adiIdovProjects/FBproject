@@ -31,7 +31,7 @@ const Testimonials = () => {
                         transition={{ delay: 0.1 }}
                         className="text-slate-400 text-xl"
                     >
-                        See why marketers are switching from expensive agencies to AdCaptain.
+                        See why marketers are switching from expensive agencies to Adstyr.
                     </motion.p>
                 </div>
 

@@ -37,7 +37,7 @@ const LandingFooter = () => {
                             <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30">
                                 <span className="material-symbols-outlined text-xl">steering</span>
                             </div>
-                            <span className="text-xl font-extrabold tracking-tight text-white">AdCaptain</span>
+                            <span className="text-xl font-extrabold tracking-tight text-white">Adstyr</span>
                         </Link>
                         <p className="text-slate-400 mb-6 max-w-xs leading-relaxed">
                             Take control of your Facebook ads with AI-powered insights. No agency required.
@@ -99,7 +99,7 @@ const LandingFooter = () => {
                 {/* Bottom bar */}
                 <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-sm text-slate-500">
-                        &copy; {currentYear} AdCaptain. All rights reserved.
+                        &copy; {currentYear} Adstyr. All rights reserved.
                     </p>
                     <div className="flex gap-6 text-sm text-slate-500">
                         <Link href={`/${locale}/privacy-policy`} className="hover:text-indigo-400 transition-colors">Privacy</Link>

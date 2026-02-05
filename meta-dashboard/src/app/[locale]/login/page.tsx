@@ -99,7 +99,7 @@ export default function LoginPage() {
                         </div>
 
                         <h1 className="text-3xl font-black text-white mb-2 tracking-tight">
-                            AdCaptain
+                            Adstyr
                         </h1>
                         <p className="text-gray-400 font-medium">
                             {t('auth.login_title')}

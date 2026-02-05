@@ -135,7 +135,7 @@ const Hero = () => {
                                 <div className="window-dot window-dot-red"></div>
                                 <div className="window-dot window-dot-yellow"></div>
                                 <div className="window-dot window-dot-green"></div>
-                                <span className="ml-4 text-xs text-slate-500 font-medium">AdCaptain Dashboard</span>
+                                <span className="ml-4 text-xs text-slate-500 font-medium">Adstyr Dashboard</span>
                             </div>
 
                             {/* Dashboard content */}

@@ -51,7 +51,7 @@ const AgencyComparison = () => {
                         <div className="p-5 text-center font-bold text-white border-l border-white/10 bg-gradient-to-b from-indigo-500/20 to-transparent relative">
                             {/* Gradient top border */}
                             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500"></div>
-                            AdCaptain
+                            Adstyr
                         </div>
                     </div>
 
@@ -70,7 +70,7 @@ const AgencyComparison = () => {
                             </div>
                             <div className="p-5 text-center text-white text-sm bg-indigo-500/5 border-l border-white/10 flex items-center justify-center gap-2 font-medium">
                                 <span className="material-symbols-outlined text-green-400 text-lg">check_circle</span>
-                                <span>{item.adcaptain}</span>
+                                <span>{item.adstyr}</span>
                             </div>
                         </div>
                     ))}
