@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { MainLayout2 } from '../../../components/MainLayout2';
+import { MainLayout } from '../../../components/MainLayout';
 import SimpleCampaignList from '../../../components/campaigns/SimpleCampaignList';
 import DateFilter from '../../../components/DateFilter';
 import { formatDate, calculateDateRange } from '../../../utils/date';
@@ -28,7 +28,7 @@ export default function AccountPerformance() {
   };
 
   return (
-    <MainLayout2
+    <MainLayout
       title={t('account_performance.title') || 'Account Performance'}
       description={t('account_performance.description') || ''}
       compact
@@ -46,6 +46,6 @@ export default function AccountPerformance() {
 
       {/* Campaign List with Graph */}
       <SimpleCampaignList startDate={startDate} endDate={endDate} />
-    </MainLayout2>
+    </MainLayout>
   );
 }

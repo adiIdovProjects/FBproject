@@ -70,6 +70,10 @@ export default function AdvancedAnalyticsPage() {
   // Campaigns tab filters
   const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<string>('');
 
+  // Global campaign filter (shared across all tabs)
+  const [availableCampaigns, setAvailableCampaigns] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+
   // Targeting tab state
   const [targetingData, setTargetingData] = useState<TargetingRow[]>([]);
   const [isTargetingLoading, setIsTargetingLoading] = useState(false);
@@ -244,24 +248,21 @@ export default function AdvancedAnalyticsPage() {
       {/* Campaigns Tab */}
       {activeTab === 'campaigns' && (
         <>
-          {/* Quick Guide - Hierarchy explanation */}
-          <div
-            className="flex items-start gap-3 p-4 mb-6 bg-blue-500/5 border border-blue-500/20 rounded-xl group cursor-help"
-            dir={isRTL ? 'rtl' : 'ltr'}
-            title={t('advanced.hierarchy_tooltip') || 'Campaign → Targeting → Ad. Click the arrow to expand. If a campaign or targeting is paused, all items inside it won\'t run even if they show as active.'}
-          >
-            <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
-            <div className="text-sm text-gray-300">
-              {t('advanced.hierarchy_guide') || 'Campaign → Targeting → Ad. Click the arrow to expand.'}
-            </div>
-          </div>
-
           {/* Campaign Control Table */}
           <div className="mb-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <h2 className="text-2xl font-bold text-gray-100">
-                {t('campaigns.title') || 'Campaigns'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-100">
+                  {t('campaigns.title') || 'Campaigns'}
+                </h2>
+                <div className="relative group">
+                  <Info className="w-4 h-4 text-gray-400 hover:text-gray-200 cursor-help" />
+                  <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg border border-gray-700 whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    {t('advanced.hierarchy_guide') || 'Campaign → Targeting → Ad. Click the arrow to expand.'}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center gap-3">
                 {/* Status Filter */}
                 <div className="relative">

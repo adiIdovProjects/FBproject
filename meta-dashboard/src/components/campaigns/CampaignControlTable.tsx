@@ -48,6 +48,9 @@ interface CampaignControlTableProps {
   endDate: string;
   hideActions?: boolean;
   statusFilter?: string;
+  selectedCampaignIds?: number[];
+  onSelectionChange?: (selectedIds: number[]) => void;
+  campaignIdFilter?: number[];
 }
 
 export default function CampaignControlTable({
@@ -58,6 +61,9 @@ export default function CampaignControlTable({
   endDate,
   hideActions = false,
   statusFilter = '',
+  selectedCampaignIds = [],
+  onSelectionChange,
+  campaignIdFilter,
 }: CampaignControlTableProps) {
   const t = useTranslations();
   const isRTL = locale === 'ar' || locale === 'he';
@@ -122,11 +128,39 @@ export default function CampaignControlTable({
     fetchCampaigns();
   }, [startDate, endDate, accountId]);
 
-  // Filter campaigns by status
+  // Filter campaigns by status and campaign ID filter
   const filteredCampaigns = useMemo(() => {
-    if (!statusFilter) return campaigns;
-    return campaigns.filter(c => c.campaign_status === statusFilter);
-  }, [campaigns, statusFilter]);
+    let result = campaigns;
+    if (statusFilter) {
+      result = result.filter(c => c.campaign_status === statusFilter);
+    }
+    if (campaignIdFilter && campaignIdFilter.length > 0) {
+      result = result.filter(c => campaignIdFilter.includes(c.campaign_id));
+    }
+    return result;
+  }, [campaigns, statusFilter, campaignIdFilter]);
+
+  // Selection handlers for checkbox functionality
+  const handleCheckboxToggle = (campaignId: number) => {
+    if (!onSelectionChange) return;
+    const isSelected = selectedCampaignIds.includes(campaignId);
+    const newSelection = isSelected
+      ? selectedCampaignIds.filter(id => id !== campaignId)
+      : [...selectedCampaignIds, campaignId];
+    onSelectionChange(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+    if (selectedCampaignIds.length === filteredCampaigns.length) {
+      onSelectionChange([]);
+    } else {
+      onSelectionChange(filteredCampaigns.map(c => c.campaign_id));
+    }
+  };
+
+  const allSelected = filteredCampaigns.length > 0 && selectedCampaignIds.length === filteredCampaigns.length;
+  const someSelected = selectedCampaignIds.length > 0 && selectedCampaignIds.length < filteredCampaigns.length;
 
   // Handle campaign expand/collapse
   const handleCampaignExpand = async (campaignId: number) => {
@@ -430,6 +464,21 @@ export default function CampaignControlTable({
         <table className="w-full border-collapse" dir={isRTL ? 'rtl' : 'ltr'}>
           <thead>
             <tr className="bg-secondary/50 border-b border-border-subtle">
+              {onSelectionChange && (
+                <th className="px-4 py-4 w-12">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate = someSelected;
+                      }
+                    }}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-border-subtle bg-secondary text-accent focus:ring-accent focus:ring-offset-gray-900 cursor-pointer"
+                  />
+                </th>
+              )}
               <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase min-w-[280px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.name')}</th>
               {!hideActions && <th className="px-4 py-4 text-center text-[10px] font-black text-text-muted uppercase">{t('common.actions')}</th>}
               <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.status')}</th>
