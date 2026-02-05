@@ -17,6 +17,7 @@ import { TooltipIcon } from '@/components/common/TooltipIcon';
 import { getPersonalizedTooltip } from '@/utils/tooltipContent';
 import { businessProfileService, BusinessProfile } from '@/services/business_profile.service';
 import { AICopyModal } from '@/components/common/AICopyModal';
+import { MainLayout } from '@/components/MainLayout';
 
 interface Campaign {
     id: string;
@@ -586,30 +587,8 @@ export const AICaptainChat: React.FC = () => {
     // Render flow selection screen
     if (state.phase === 'flow_select') {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] to-[#1a1a2e] flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-                {/* Header */}
-                <div className="p-4">
-                    <button
-                        onClick={() => router.push(`/${locale}/uploader`)}
-                        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
-                        {t('captain.back_to_manual')}
-                    </button>
-                </div>
-
-                {/* Captain Avatar */}
-                <div className="flex-1 flex flex-col items-center justify-center p-6">
-                    <div className="text-8xl mb-6 animate-bounce">
-                        🤖
-                    </div>
-
-                    <SpeechBubble className="mb-8">
-                        <p className="text-center font-medium">
-                            {t('captain.welcome_choose_flow')}
-                        </p>
-                    </SpeechBubble>
-
+            <MainLayout title={t('captain.create_ad_title') || 'Create Your Ad'} description={t('captain.create_ad_subtitle') || 'Choose how you\'d like to proceed'} compact>
+                <div className="flex flex-col items-center py-8" dir={isRTL ? 'rtl' : 'ltr'}>
                     {/* Flow options */}
                     <div className="w-full max-w-xl space-y-4">
                         <FlowCard
@@ -633,19 +612,9 @@ export const AICaptainChat: React.FC = () => {
                             color="orange"
                             onClick={() => handleFlowSelect('edit')}
                         />
-
-                        {/* Build manually link */}
-                        <div className="text-center pt-4 mt-4 border-t border-gray-800">
-                            <button
-                                onClick={() => router.push(`/${locale}/uploader/wizard`)}
-                                className="text-sm text-gray-500 hover:text-gray-400 transition-colors"
-                            >
-                                {t('uploader.build_manually')}
-                            </button>
-                        </div>
                     </div>
                 </div>
-            </div>
+            </MainLayout>
         );
     }
 
@@ -678,12 +647,7 @@ export const AICaptainChat: React.FC = () => {
                     </div>
                     <span className="text-amber-500 font-bold">{t('captain.title')}</span>
                 </div>
-                <button
-                    onClick={() => router.push(`/${locale}/uploader/wizard`)}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                    {t('captain.switch_to_manual')}
-                </button>
+                <div className="w-24"></div>
             </div>
 
             {/* Main content with sidebars */}
@@ -695,10 +659,6 @@ export const AICaptainChat: React.FC = () => {
 
                 {/* Center - Chat area */}
                 <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
-                    {/* Captain Avatar */}
-                    <div className="text-7xl mb-4" style={{ animation: 'float 3s ease-in-out infinite' }}>
-                        🤖
-                    </div>
 
                     {/* Prerequisite warning */}
                     {prereqWarning && (

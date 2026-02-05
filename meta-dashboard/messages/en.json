@@ -1459,6 +1459,8 @@
     "ai_description": "Step by step with recommendations",
     "back_to_manual": "Back to Manual Uploader",
     "switch_to_manual": "Switch to Manual",
+    "create_ad_title": "Create Your Ad",
+    "create_ad_subtitle": "Choose how you'd like to proceed",
 
     "welcome_choose_flow": "Welcome! What would you like to do today?",
     "welcome_create": "Let's create a new campaign. What's your goal?",
