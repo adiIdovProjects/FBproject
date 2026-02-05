@@ -48,6 +48,7 @@
     "dashboard": "Dashboard",
     "create_ad": "Create Ad",
     "ask_ai": "Ask AI",
+    "advanced_analytics": "Advanced Analytics",
     "performance": "Performance",
     "campaigns": "Campaigns",
     "targeting": "Targeting",
@@ -1908,5 +1909,10 @@
     "use_calculated": "Use auto",
     "on_track": "✓ On track to stay within budget",
     "over_budget": "⚠ Projected to exceed budget by "
+  },
+  "advanced": {
+    "subtitle": "Pause, resume, and analyze your campaigns, targeting, and creatives",
+    "hierarchy_guide": "Campaign → Targeting → Ad. Click the arrow to expand.",
+    "hierarchy_tooltip": "Campaign → Targeting → Ad. Click the arrow to expand. If a campaign or targeting is paused, all items inside it won't run even if they show as active."
   }
 }

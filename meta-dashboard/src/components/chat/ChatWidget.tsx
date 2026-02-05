@@ -3,6 +3,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
+
+// Pages where the purple ChatWidget should appear (marketing/public pages)
+const PUBLIC_PAGES = ['/', '/login', '/signup', '/pricing', '/features', '/about', '/contact'];
 
 interface Message {
     id: string;
@@ -12,6 +16,7 @@ interface Message {
 
 const ChatWidget: React.FC = () => {
     const t = useTranslations();
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -148,9 +153,17 @@ const ChatWidget: React.FC = () => {
         }
     };
 
+    // Only show on public/marketing pages (strip locale prefix for check)
+    const pathWithoutLocale = pathname.replace(/^\/(en|ar|de|fr|he)/, '') || '/';
+    const isPublicPage = PUBLIC_PAGES.some(page => pathWithoutLocale === page || pathWithoutLocale.startsWith(page + '/'));
+
+    if (!isPublicPage) {
+        return null;
+    }
+
     return (
         <>
-            {/* Floating Button */}
+            {/* Floating Button - Only on marketing pages */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="fixed bottom-6 right-16 rtl:right-auto rtl:left-16 z-50 w-14 h-14 rounded-full bg-accent text-white shadow-lg hover:bg-accent-hover transition-all flex items-center justify-center"

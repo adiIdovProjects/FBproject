@@ -46,6 +46,7 @@ interface CampaignControlTableProps {
   locale: string;
   startDate: string;
   endDate: string;
+  hideActions?: boolean;
 }
 
 export default function CampaignControlTable({
@@ -54,6 +55,7 @@ export default function CampaignControlTable({
   locale,
   startDate,
   endDate,
+  hideActions = false,
 }: CampaignControlTableProps) {
   const t = useTranslations();
   const isRTL = locale === 'ar' || locale === 'he';
@@ -421,7 +423,7 @@ export default function CampaignControlTable({
           <thead>
             <tr className="bg-secondary/50 border-b border-border-subtle">
               <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase min-w-[280px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.name')}</th>
-              <th className="px-4 py-4 text-center text-[10px] font-black text-text-muted uppercase">{t('common.actions')}</th>
+              {!hideActions && <th className="px-4 py-4 text-center text-[10px] font-black text-text-muted uppercase">{t('common.actions')}</th>}
               <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.status')}</th>
               <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('manage.daily_budget')}</th>
               <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
@@ -491,9 +493,11 @@ export default function CampaignControlTable({
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        {renderActionButton('campaign', campaign.campaign_id, campaign.campaign_name, campaign.campaign_status, campaign.spend)}
-                      </td>
+                      {!hideActions && (
+                        <td className="px-4 py-4 text-center">
+                          {renderActionButton('campaign', campaign.campaign_id, campaign.campaign_name, campaign.campaign_status, campaign.spend)}
+                        </td>
+                      )}
                       <td className="px-4 py-4">{renderStatusBadge(campaign.campaign_status)}</td>
                       <td className={`px-4 py-4 text-foreground ${isRTL ? 'text-left' : 'text-right'}`}>
                         {renderBudgetCell('campaign', campaign.campaign_id, isCbo)}
@@ -540,9 +544,11 @@ export default function CampaignControlTable({
                                     </div>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-center">
-                                  {renderActionButton('adset', adset.adset_id, adset.adset_name, adset.adset_status, adset.spend)}
-                                </td>
+                                {!hideActions && (
+                                  <td className="px-4 py-3 text-center">
+                                    {renderActionButton('adset', adset.adset_id, adset.adset_name, adset.adset_status, adset.spend)}
+                                  </td>
+                                )}
                                 <td className="px-4 py-3">{renderStatusBadge(adset.adset_status)}</td>
                                 <td className={`px-4 py-3 text-text-muted ${isRTL ? 'text-left' : 'text-right'}`}>
                                   {renderBudgetCell('adset', adset.adset_id, isCbo)}
@@ -575,9 +581,11 @@ export default function CampaignControlTable({
                                             <div className="text-[10px] text-text-disabled font-mono">{ad.ad_id}</div>
                                           </div>
                                         </td>
-                                        <td className="px-4 py-2 text-center">
-                                          {renderActionButton('ad', ad.ad_id, ad.ad_name, ad.ad_status, ad.spend)}
-                                        </td>
+                                        {!hideActions && (
+                                          <td className="px-4 py-2 text-center">
+                                            {renderActionButton('ad', ad.ad_id, ad.ad_name, ad.ad_status, ad.spend)}
+                                          </td>
+                                        )}
                                         <td className="px-4 py-2">{renderStatusBadge(ad.ad_status)}</td>
                                         <td className={`px-4 py-2 text-text-muted text-sm ${isRTL ? 'text-left' : 'text-right'}`}>-</td>
                                         <td className={`px-4 py-2 text-text-muted text-sm ${isRTL ? 'text-left' : 'text-right'}`}>{formatCurrency(ad.spend)}</td>

@@ -48,6 +48,7 @@
     "dashboard": "Tableau de bord",
     "create_ad": "Créer une annonce",
     "ask_ai": "Demander à l'IA",
+    "advanced_analytics": "Analyses Avancées",
     "performance": "Performance",
     "campaigns": "Campagnes",
     "targeting": "Ciblage",
@@ -1809,5 +1810,10 @@
     "use_calculated": "Utiliser auto",
     "on_track": "✓ En bonne voie pour rester dans le budget",
     "over_budget": "⚠ Prévu de dépasser le budget de "
+  },
+  "advanced": {
+    "subtitle": "Mettre en pause, reprendre et analyser vos campagnes, ciblages et créatifs",
+    "hierarchy_guide": "Campagne → Ciblage → Annonce. Cliquez sur la flèche pour développer.",
+    "hierarchy_tooltip": "Campagne → Ciblage → Annonce. Cliquez sur la flèche pour développer. Si une campagne ou un ciblage est en pause, tous les éléments qu'il contient ne seront pas diffusés même s'ils apparaissent comme actifs."
   }
 }

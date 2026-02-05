@@ -42,6 +42,7 @@
     "dashboard": "Armaturenbrett",
     "create_ad": "Anzeige erstellen",
     "ask_ai": "KI fragen",
+    "advanced_analytics": "Erweiterte Analysen",
     "performance": "Leistung",
     "campaigns": "Kampagnen",
     "targeting": "Zielsetzung",
@@ -1809,5 +1810,10 @@
     "use_calculated": "Auto verwenden",
     "on_track": "✓ Auf Kurs, um im Budget zu bleiben",
     "over_budget": "⚠ Voraussichtliche Budgetüberschreitung um "
+  },
+  "advanced": {
+    "subtitle": "Kampagnen, Targeting und Creatives pausieren, fortsetzen und analysieren",
+    "hierarchy_guide": "Kampagne → Targeting → Anzeige. Klicken Sie auf den Pfeil zum Erweitern.",
+    "hierarchy_tooltip": "Kampagne → Targeting → Anzeige. Klicken Sie auf den Pfeil zum Erweitern. Wenn eine Kampagne oder ein Targeting pausiert ist, werden alle darin enthaltenen Elemente nicht ausgeführt, auch wenn sie als aktiv angezeigt werden."
   }
 }
