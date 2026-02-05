@@ -137,20 +137,20 @@ export const landingPageData = {
         },
         {
             question: "What if I'm currently working with an agency?",
-            answer: "Many users run AdCaptain alongside their agency for transparency and second opinions. When ready to switch, our AI can help you transition smoothly without losing momentum."
+            answer: "Many users run Adstyr alongside their agency for transparency and second opinions. When ready to switch, our AI can help you transition smoothly without losing momentum."
         }
     ],
     agencyComparison: {
         title: "Take Back Control",
         subtitle: "No more middlemen. Your business, your ads, your decisions.",
         items: [
-            { feature: "Monthly Cost", agency: "$1,000 - $5,000+", adcaptain: "Starting at $25/month" },
-            { feature: "Contract Lock-in", agency: "3-12 months", adcaptain: "Cancel anytime" },
-            { feature: "Control", agency: "They decide", adcaptain: "You decide" },
-            { feature: "Transparency", agency: "Monthly reports", adcaptain: "Real-time data" },
-            { feature: "Response Time", agency: "Days", adcaptain: "Instant AI — yes, even at 2am" },
-            { feature: "Typical Results", agency: "2-3 months to see impact", adcaptain: "Insights within 24 hours" },
-            { feature: "Your Data", agency: "They control insights & strategy", adcaptain: "You own all data, insights, and strategy" }
+            { feature: "Monthly Cost", agency: "$1,000 - $5,000+", adstyr: "Starting at $25/month" },
+            { feature: "Contract Lock-in", agency: "3-12 months", adstyr: "Cancel anytime" },
+            { feature: "Control", agency: "They decide", adstyr: "You decide" },
+            { feature: "Transparency", agency: "Monthly reports", adstyr: "Real-time data" },
+            { feature: "Response Time", agency: "Days", adstyr: "Instant AI — yes, even at 2am" },
+            { feature: "Typical Results", agency: "2-3 months to see impact", adstyr: "Insights within 24 hours" },
+            { feature: "Your Data", agency: "They control insights & strategy", adstyr: "You own all data, insights, and strategy" }
         ]
     },
     pricingTiers: [
