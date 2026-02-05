@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
+import AdstyrLogo from '@/components/common/AdstyrLogo';
 
 const LandingFooter = () => {
     const locale = useLocale();
@@ -33,11 +34,8 @@ const LandingFooter = () => {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
                     {/* Brand column */}
                     <div className="col-span-2">
-                        <Link href={`/${locale}`} className="flex items-center gap-3 mb-6">
-                            <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30">
-                                <span className="material-symbols-outlined text-xl">steering</span>
-                            </div>
-                            <span className="text-xl font-extrabold tracking-tight text-white">Adstyr</span>
+                        <Link href={`/${locale}`} className="inline-block mb-6">
+                            <AdstyrLogo size="lg" />
                         </Link>
                         <p className="text-slate-400 mb-6 max-w-xs leading-relaxed">
                             Take control of your Facebook ads with AI-powered insights. No agency required.

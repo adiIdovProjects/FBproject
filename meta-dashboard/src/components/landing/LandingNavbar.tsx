@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from 'next-intl';
 import { apiClient } from '@/services/apiClient';
+import AdstyrLogo from '@/components/common/AdstyrLogo';
 
 const LandingNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -49,11 +50,8 @@ const LandingNavbar = () => {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href={`/${locale}`} className="flex items-center gap-2 group">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white transition-transform group-hover:scale-110 shadow-lg shadow-indigo-500/20">
-              <span className="material-symbols-outlined text-xl">steering</span>
-            </div>
-            <span className="text-lg font-extrabold tracking-tight text-white">Adstyr</span>
+          <Link href={`/${locale}`} className="group transition-transform hover:scale-105">
+            <AdstyrLogo size="md" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

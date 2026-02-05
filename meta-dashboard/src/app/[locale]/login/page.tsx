@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { generateState } from '@/utils/csrf';
 import { getGoogleLoginUrl, getFacebookLoginUrl, requestMagicLink } from '@/services/auth.service';
 import { apiClient } from '@/services/apiClient';
-import { BarChart3, Mail, Loader2, AlertCircle, Facebook, CheckCircle, Sparkles } from 'lucide-react';
+import { Mail, Loader2, AlertCircle, Facebook, CheckCircle, Sparkles } from 'lucide-react';
+import AdstyrLogo from '@/components/common/AdstyrLogo';
 
 export default function LoginPage() {
     const t = useTranslations();
@@ -94,13 +95,9 @@ export default function LoginPage() {
 
                     <div className="text-center mb-8">
                         {/* Logo */}
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 mb-6 shadow-lg shadow-indigo-500/30">
-                            <BarChart3 className="w-8 h-8 text-white" />
+                        <div className="flex justify-center mb-4">
+                            <AdstyrLogo size="xl" />
                         </div>
-
-                        <h1 className="text-3xl font-black text-white mb-2 tracking-tight">
-                            Adstyr
-                        </h1>
                         <p className="text-gray-400 font-medium">
                             {t('auth.login_title')}
                         </p>
