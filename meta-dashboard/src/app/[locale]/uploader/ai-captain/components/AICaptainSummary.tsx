@@ -101,11 +101,15 @@ export const AICaptainSummary: React.FC = () => {
         // Create campaign with first ad
         const firstAd = state.ads[0];
 
-        // Upload media for first ad
+        // Upload media for first ad (skip if using existing post)
         let imageHash: string | undefined;
         let videoId: string | undefined;
+        let objectStoryId: string | undefined;
 
-        if (firstAd.file) {
+        if (firstAd.useExistingPost && firstAd.objectStoryId) {
+            // Use existing post instead of uploading new media
+            objectStoryId = firstAd.objectStoryId;
+        } else if (firstAd.file) {
             const isVideo = firstAd.file.type.startsWith('video/');
             const result = await mutationsService.uploadMedia(
                 selectedAccount.account_id,
@@ -144,6 +148,7 @@ export const AICaptainSummary: React.FC = () => {
                 link_url: firstAd.link || undefined,
                 image_hash: imageHash,
                 video_id: videoId,
+                object_story_id: objectStoryId,
                 lead_form_id: state.leadType === 'FORM' ? firstAd.leadFormId : undefined,
             },
             ad_name: firstAd.adName || undefined,
@@ -158,8 +163,12 @@ export const AICaptainSummary: React.FC = () => {
 
                 let adImageHash: string | undefined;
                 let adVideoId: string | undefined;
+                let adObjectStoryId: string | undefined;
 
-                if (ad.file) {
+                if (ad.useExistingPost && ad.objectStoryId) {
+                    // Use existing post
+                    adObjectStoryId = ad.objectStoryId;
+                } else if (ad.file) {
                     const isVideo = ad.file.type.startsWith('video/');
                     const uploadResult = await mutationsService.uploadMedia(
                         selectedAccount.account_id,
@@ -182,6 +191,7 @@ export const AICaptainSummary: React.FC = () => {
                         link_url: ad.link || undefined,
                         image_hash: adImageHash,
                         video_id: adVideoId,
+                        object_story_id: adObjectStoryId,
                         lead_form_id: state.leadType === 'FORM' ? ad.leadFormId : undefined,
                     },
                     ad_name: ad.adName || `Ad ${i + 1}`,

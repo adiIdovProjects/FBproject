@@ -158,7 +158,13 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         id: 'creative_upload',
         questionKey: 'captain.upload_creatives',
         inputType: 'multi_file_upload',
-        nextNode: () => 'ai_copy',
+        nextNode: (answer, state) => {
+            // If using existing post, skip AI copy (post already has copy)
+            if (answer === 'existing_post_selected' || state?.ads?.[0]?.useExistingPost) {
+                return 'link_cta';
+            }
+            return 'ai_copy';
+        },
     },
     ai_copy: {
         id: 'ai_copy',

@@ -593,13 +593,57 @@ export const AICaptainChat: React.FC = () => {
         }
     };
 
+    // State for existing post selection
+    const [existingPost, setExistingPost] = useState<{
+        objectStoryId: string;
+        preview?: {
+            thumbnail?: string;
+            message?: string;
+            source?: 'facebook' | 'instagram';
+        };
+    } | null>(null);
+
     // New batch upload flow handlers
     const handleMultiFileUpload = (files: File[], previews: string[]) => {
         setUploadedFiles(files);
         setUploadedPreviews(previews);
+        // Clear existing post if user uploads files
+        if (files.length > 0) {
+            setExistingPost(null);
+        }
+    };
+
+    const handleExistingPostSelect = (data: {
+        objectStoryId: string;
+        preview?: { thumbnail?: string; message?: string; source?: 'facebook' | 'instagram' };
+    }) => {
+        setExistingPost(data);
+        // Clear uploaded files when selecting existing post
+        setUploadedFiles([]);
+        setUploadedPreviews([]);
+    };
+
+    const handleClearExistingPost = () => {
+        setExistingPost(null);
+    };
+
+    const handleExistingPostContinue = () => {
+        // Create a single ad from the existing post
+        dispatch({
+            type: 'SET_ADS_FROM_EXISTING_POST',
+            objectStoryId: existingPost!.objectStoryId,
+            preview: existingPost!.preview,
+        });
+        // Move directly to link_cta step (skip AI copy since post already has copy)
+        processAnswer('existing_post_selected', 'Using existing post');
     };
 
     const handleMultiFileContinue = () => {
+        // If using existing post, handle differently
+        if (existingPost) {
+            handleExistingPostContinue();
+            return;
+        }
         // Create ads from uploaded files
         dispatch({ type: 'SET_ADS_FROM_FILES', files: uploadedFiles, previews: uploadedPreviews });
         // Load AI suggestions for first ad
@@ -1398,6 +1442,11 @@ export const AICaptainChat: React.FC = () => {
                                 onFilesChange={handleMultiFileUpload}
                                 onContinue={handleMultiFileContinue}
                                 isRTL={isRTL}
+                                accountId={selectedAccount?.account_id}
+                                pageId={selectedAccount?.page_id}
+                                onSelectExistingPost={handleExistingPostSelect}
+                                existingPost={existingPost}
+                                onClearExistingPost={handleClearExistingPost}
                             />
                         )}
 

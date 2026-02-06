@@ -14,6 +14,14 @@ export interface CaptainAdCreative {
     file: File | null;
     previewUrl: string | null;
     leadFormId: string;
+    // Existing post support
+    useExistingPost?: boolean;
+    objectStoryId?: string;
+    objectStoryPreview?: {
+        thumbnail?: string;
+        message?: string;
+        source?: 'facebook' | 'instagram';
+    };
 }
 
 // Message in conversation
@@ -137,6 +145,7 @@ type CaptainAction =
     | { type: 'SET_CURRENT_AD_INDEX'; index: number } // Switch between ads
     // New batch upload flow actions
     | { type: 'SET_ADS_FROM_FILES'; files: File[]; previews: string[] } // Create ads from uploaded files
+    | { type: 'SET_ADS_FROM_EXISTING_POST'; objectStoryId: string; preview?: { thumbnail?: string; message?: string; source?: 'facebook' | 'instagram' } } // Create ad from existing post
     | { type: 'SET_AD_COPY'; index: number; headline: string; body: string } // Set copy for specific ad
     | { type: 'APPLY_COPY_TO_ALL'; headline: string; body: string } // Apply copy to all remaining ads
     | { type: 'SET_LINK_CTA_ALL'; link: string; cta: string } // Set link/CTA for all ads
@@ -409,6 +418,23 @@ function captainReducer(state: CaptainState, action: CaptainAction): CaptainStat
             return {
                 ...state,
                 ads: newAds,
+                currentAdIndex: 0,
+            };
+        }
+        case 'SET_ADS_FROM_EXISTING_POST': {
+            // Create a single ad from an existing post
+            const existingPostAd: CaptainAdCreative = {
+                ...createBlankAd(),
+                useExistingPost: true,
+                objectStoryId: action.objectStoryId,
+                objectStoryPreview: action.preview,
+                // Use the post's message as body text (can be edited)
+                body: action.preview?.message || '',
+                previewUrl: action.preview?.thumbnail || null,
+            };
+            return {
+                ...state,
+                ads: [existingPostAd],
                 currentAdIndex: 0,
             };
         }

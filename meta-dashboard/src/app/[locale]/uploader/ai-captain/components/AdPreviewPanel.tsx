@@ -165,6 +165,18 @@ export const AdPreviewPanel: React.FC<AdPreviewPanelProps> = ({ className = '' }
                             <span className="text-sm">{t('captain.preview_no_image')}</span>
                         </div>
                     )}
+                    {/* Existing post badge */}
+                    {currentAd.useExistingPost && (
+                        <div className="absolute top-2 left-2">
+                            <span className={`text-xs px-2 py-1 rounded-full text-white ${
+                                currentAd.objectStoryPreview?.source === 'instagram'
+                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                                    : 'bg-blue-500'
+                            }`}>
+                                {currentAd.objectStoryPreview?.source === 'instagram' ? 'Instagram' : 'Facebook'} Post
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Link preview bar */}
