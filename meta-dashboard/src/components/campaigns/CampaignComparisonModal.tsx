@@ -95,7 +95,7 @@ export const CampaignComparisonModal: React.FC<CampaignComparisonModalProps> = (
           <div>
             <h2 className="text-2xl font-bold text-white">Campaign Comparison</h2>
             <p className="text-sm text-gray-400 mt-1">
-              Comparing {campaignIds.length} campaigns
+              Comparing {campaignIds.length} campaigns • <span className="text-gray-500">The winner for each metric is highlighted with a crown</span>
             </p>
           </div>
           <button

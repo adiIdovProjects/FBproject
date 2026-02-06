@@ -9,6 +9,7 @@ export interface AdAccount {
   name: string;
   currency: string;
   page_id?: string;  // Default Facebook Page ID for this account
+  page_name?: string;  // Facebook Page name for display
 }
 
 export const fetchLinkedAccounts = async (): Promise<AdAccount[]> => {

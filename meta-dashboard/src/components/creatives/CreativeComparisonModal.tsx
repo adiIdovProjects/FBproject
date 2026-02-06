@@ -96,7 +96,7 @@ export const CreativeComparisonModal: React.FC<CreativeComparisonModalProps> = (
           <div>
             <h2 className="text-2xl font-bold text-white">Creative Comparison</h2>
             <p className="text-sm text-gray-400 mt-1">
-              Comparing {creativeIds.length} creatives
+              Comparing {creativeIds.length} creatives • <span className="text-gray-500">The winner for each metric is highlighted with a crown</span>
             </p>
           </div>
           <button

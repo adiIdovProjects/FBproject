@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Filter, Target, Search, X, Layers, TrendingUp, TrendingDown } from 'lucide-react';
+import { Filter, Target, Search, X, Layers, TrendingUp, TrendingDown, Info } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -379,10 +379,10 @@ export default function TargetingPage() {
                         </thead>
                         <tbody className="divide-y divide-border-subtle">
                             {[
-                                { key: 'broad', nameKey: 'Broad', targetingType: 'Broad', icon: Layers, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' },
-                                { key: 'lookalike', nameKey: 'Lookalike', targetingType: 'Lookalike', icon: Target, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400' },
-                                { key: 'interest', nameKey: 'Interest Audience', targetingType: 'Interest Audience', icon: Target, bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400' },
-                                { key: 'custom', nameKey: 'Custom Audience', targetingType: 'Custom Audience', icon: Target, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400' },
+                                { key: 'broad', nameKey: 'Broad', targetingType: 'Broad', icon: Layers, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400', helpKey: 'targeting.broad_targeting_help' },
+                                { key: 'lookalike', nameKey: 'Lookalike', targetingType: 'Lookalike', icon: Target, bgClass: 'bg-purple-500/10', borderClass: 'border-purple-500/20', textClass: 'text-purple-400', helpKey: 'targeting.lookalike_targeting_help' },
+                                { key: 'interest', nameKey: 'Interest Audience', targetingType: 'Interest Audience', icon: Target, bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400', helpKey: 'targeting.interest_targeting_help' },
+                                { key: 'custom', nameKey: 'Custom Audience', targetingType: 'Custom Audience', icon: Target, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/20', textClass: 'text-orange-400', helpKey: 'targeting.custom_audience_targeting_help' },
                             ]
                                 .map((type) => {
                                     const data = formatMetrics[type.key as keyof typeof formatMetrics];
@@ -419,6 +419,13 @@ export default function TargetingPage() {
                                                         <type.icon className={`w-3.5 h-3.5 ${type.textClass}`} />
                                                     </div>
                                                     <span className="text-sm font-medium text-white">{t(`targeting.types.${type.nameKey}`)}</span>
+                                                    <div className="relative group">
+                                                        <Info className="w-3.5 h-3.5 text-gray-500 hover:text-gray-300 cursor-help" />
+                                                        <div className="absolute z-50 bottom-full left-0 mb-2 px-2 py-1.5 text-xs text-white bg-gray-800 rounded-lg shadow-lg border border-gray-700 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                                                            {t(type.helpKey)}
+                                                            <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
+                                                        </div>
+                                                    </div>
                                                     <span className="text-xs text-gray-500">({type.data.count})</span>
                                                 </div>
                                             </td>

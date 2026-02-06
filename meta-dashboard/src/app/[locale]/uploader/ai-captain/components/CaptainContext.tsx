@@ -133,6 +133,11 @@ type CaptainAction =
     | { type: 'DUPLICATE_AD'; index: number } // Duplicate an ad entirely
     | { type: 'DELETE_AD'; index: number } // Delete an ad
     | { type: 'SET_CURRENT_AD_INDEX'; index: number } // Switch between ads
+    // New batch upload flow actions
+    | { type: 'SET_ADS_FROM_FILES'; files: File[]; previews: string[] } // Create ads from uploaded files
+    | { type: 'SET_AD_COPY'; index: number; headline: string; body: string } // Set copy for specific ad
+    | { type: 'APPLY_COPY_TO_ALL'; headline: string; body: string } // Apply copy to all remaining ads
+    | { type: 'SET_LINK_CTA_ALL'; link: string; cta: string } // Set link/CTA for all ads
     | { type: 'RESET' };
 
 // Helper to create a new blank ad
@@ -391,6 +396,55 @@ function captainReducer(state: CaptainState, action: CaptainAction): CaptainStat
                 ...state,
                 currentAdIndex: Math.max(0, Math.min(action.index, state.ads.length - 1)),
             };
+        // New batch upload flow cases
+        case 'SET_ADS_FROM_FILES': {
+            // Create ads from uploaded files
+            const newAds: CaptainAdCreative[] = action.files.map((file, index) => ({
+                ...createBlankAd(),
+                file,
+                previewUrl: action.previews[index] || null,
+            }));
+            return {
+                ...state,
+                ads: newAds,
+                currentAdIndex: 0,
+            };
+        }
+        case 'SET_AD_COPY': {
+            // Set copy for specific ad by index
+            return {
+                ...state,
+                ads: state.ads.map((ad, i) =>
+                    i === action.index
+                        ? { ...ad, title: action.headline, body: action.body }
+                        : ad
+                ),
+            };
+        }
+        case 'APPLY_COPY_TO_ALL': {
+            // Apply copy to current and all remaining ads
+            return {
+                ...state,
+                ads: state.ads.map((ad, i) =>
+                    i >= state.currentAdIndex
+                        ? { ...ad, title: action.headline, body: action.body }
+                        : ad
+                ),
+                // Move to last ad since all are filled
+                currentAdIndex: state.ads.length - 1,
+            };
+        }
+        case 'SET_LINK_CTA_ALL': {
+            // Set link and CTA for all ads
+            return {
+                ...state,
+                ads: state.ads.map(ad => ({
+                    ...ad,
+                    link: action.link,
+                    cta: action.cta,
+                })),
+            };
+        }
         case 'RESET':
             return { ...initialState, ads: [createBlankAd()] };
         default:

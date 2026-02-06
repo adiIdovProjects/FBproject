@@ -10,8 +10,20 @@ from sqlalchemy.orm import Session
 
 from backend.api.dependencies import get_db, get_current_user
 from backend.api.services.reports_service import ReportsService
+from backend.api.services.my_report_service import MyReportService
 from backend.api.schemas.responses import ReportsComparisonResponse
 from backend.api.utils.exceptions import DatabaseError, ValidationError, AppException
+from backend.api.repositories.user_repository import UserRepository
+from pydantic import BaseModel
+from typing import List
+
+
+class MyReportPreferencesRequest(BaseModel):
+    """Request body for saving report preferences."""
+    selected_metrics: List[str] = ['spend', 'conversions', 'cpa']
+    chart_type: str = 'none'
+    include_recommendations: bool = True
+    email_schedule: str = 'none'
 
 router = APIRouter(
     prefix="/api/v1/reports",
@@ -104,3 +116,132 @@ def get_comparison_report(
         raise
     except Exception as e:
         raise DatabaseError(detail=f"Failed to generate comparison report: {str(e)}")
+
+
+# ============================================
+# My Report Endpoints (Simple Report Builder)
+# ============================================
+
+def _get_user_account_ids(db: Session, user_id: int) -> List[int]:
+    """Helper to get account IDs for a user."""
+    user_repo = UserRepository(db)
+    return user_repo.get_user_account_ids(user_id) or []
+
+
+@router.get("/my-report")
+def get_my_report(
+    account_id: Optional[str] = Query(None, description="Optional specific account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's report preferences and preview data.
+    Returns metrics, chart data, and recommendations.
+    """
+    try:
+        # Get account IDs
+        account_ids = _get_user_account_ids(db, current_user.id)
+        if account_id:
+            account_ids = [int(account_id)] if int(account_id) in account_ids else []
+
+        service = MyReportService(db, current_user.id, account_ids)
+
+        # Get preferences
+        prefs = service.get_user_preferences()
+
+        # Get preview data
+        selected_metrics = prefs.selected_metrics if prefs else ['spend', 'conversions', 'cpa']
+        preview = service.get_report_preview(selected_metrics)
+
+        return {
+            'preferences': {
+                'selected_metrics': prefs.selected_metrics if prefs else ['spend', 'conversions', 'cpa'],
+                'chart_type': prefs.chart_type if prefs else 'none',
+                'include_recommendations': prefs.include_recommendations if prefs else True,
+                'email_schedule': prefs.email_schedule if prefs else 'none'
+            } if prefs else None,
+            'preview': preview
+        }
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to get my report: {str(e)}")
+
+
+@router.post("/my-report/preferences")
+def save_my_report_preferences(
+    request: MyReportPreferencesRequest,
+    account_id: Optional[str] = Query(None, description="Optional specific account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Save user's report configuration.
+    """
+    try:
+        # Validate selected_metrics
+        valid_metrics = ['spend', 'conversions', 'cpa', 'clicks', 'impressions', 'ctr', 'roas', 'budget_status']
+        for metric in request.selected_metrics:
+            if metric not in valid_metrics:
+                raise ValidationError(detail=f"Invalid metric '{metric}'. Valid: {', '.join(valid_metrics)}")
+
+        # Validate chart_type
+        if request.chart_type not in ['none', 'spend', 'conversions']:
+            raise ValidationError(detail="chart_type must be 'none', 'spend', or 'conversions'")
+
+        # Validate email_schedule
+        if request.email_schedule not in ['none', 'daily', 'weekly']:
+            raise ValidationError(detail="email_schedule must be 'none', 'daily', or 'weekly'")
+
+        # Get account IDs
+        account_ids = _get_user_account_ids(db, current_user.id)
+        if account_id:
+            account_ids = [int(account_id)] if int(account_id) in account_ids else []
+
+        service = MyReportService(db, current_user.id, account_ids)
+
+        prefs = service.save_preferences(
+            selected_metrics=request.selected_metrics,
+            chart_type=request.chart_type,
+            include_recommendations=request.include_recommendations,
+            email_schedule=request.email_schedule
+        )
+
+        return {
+            'success': True,
+            'preferences': {
+                'selected_metrics': prefs.selected_metrics,
+                'chart_type': prefs.chart_type,
+                'include_recommendations': prefs.include_recommendations,
+                'email_schedule': prefs.email_schedule
+            }
+        }
+    except ValidationError:
+        raise
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to save preferences: {str(e)}")
+
+
+@router.get("/my-report/recommendations")
+def get_recommendations(
+    account_id: Optional[str] = Query(None, description="Optional specific account ID"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get simple recommendations for homepage tips card.
+    Returns 1-2 actionable recommendations.
+    """
+    try:
+        # Get account IDs
+        account_ids = _get_user_account_ids(db, current_user.id)
+        if account_id:
+            account_ids = [int(account_id)] if int(account_id) in account_ids else []
+
+        service = MyReportService(db, current_user.id, account_ids)
+
+        recommendations = service.generate_recommendations(max_count=2)
+
+        return {
+            'recommendations': recommendations
+        }
+    except Exception as e:
+        raise DatabaseError(detail=f"Failed to get recommendations: {str(e)}")

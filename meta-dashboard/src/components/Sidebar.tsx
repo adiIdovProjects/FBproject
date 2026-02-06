@@ -13,8 +13,11 @@ import {
     Lightbulb,
     TrendingUp,
     Home,
-    Shield
+    Shield,
+    MessageSquare,
+    FileText,
 } from 'lucide-react';
+import FeedbackModal from '@/components/feedback/FeedbackModal';
 import { useAccount } from '@/context/AccountContext';
 import { useUser } from '@/context/UserContext';
 import { useLocale, useTranslations } from 'next-intl';
@@ -33,12 +36,14 @@ export const Sidebar: React.FC = () => {
     const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
     const { isAdmin } = useUser();
     const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
+    const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
-    // Flat navigation - 5 simple items
+    // Flat navigation - 6 simple items
     const navItems = [
         { name: t('nav.dashboard') || 'Dashboard', href: `/${locale}/homepage`, icon: Home },
+        { name: t('nav.my_report') || 'My Report', href: `/${locale}/my-reports`, icon: FileText },
         { name: t('nav.create_ad') || 'Create Ad', href: `/${locale}/uploader/ai-captain`, icon: PlusCircle },
         { name: t('nav.campaigns') || 'Campaigns', href: `/${locale}/campaigns2`, icon: TrendingUp },
         { name: t('nav.insights') || 'Insights', href: `/${locale}/insights`, icon: Lightbulb },
@@ -195,6 +200,16 @@ export const Sidebar: React.FC = () => {
                     </Link>
                 )}
 
+                {/* Feedback Button */}
+                <button
+                    onClick={() => setIsFeedbackOpen(true)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-text-muted hover:text-foreground hover:bg-secondary transition-all text-sm w-full ${isRTL ? 'flex-row-reverse' : ''}`}
+                    title={t('feedback.button_tooltip')}
+                >
+                    <MessageSquare className={`w-5 h-5 ${isRTL ? 'order-last' : ''}`} />
+                    <span className={isRTL ? 'flex-1' : ''}>{t('feedback.title')}</span>
+                </button>
+
                 {/* Theme Selector */}
                 <div className="pt-2 border-t border-border-subtle mt-2">
                     <div className={`flex items-center gap-2 px-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -203,6 +218,9 @@ export const Sidebar: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Feedback Modal */}
+            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
         </aside>
     );
 };

@@ -36,7 +36,15 @@
     "remove": "Entfernen",
     "edit": "Bearbeiten",
     "new": "Neu",
-    "or": "oder"
+    "or": "oder",
+    "error_loading_help": "Versuchen Sie, die Seite zu aktualisieren oder Ihre Internetverbindung zu überprüfen.",
+    "no_data_date_hint": "Versuchen Sie, Ihren Datumsbereich zu erweitern, um mehr Daten anzuzeigen.",
+    "no_campaigns_hint": "Keine Kampagnen gefunden. Erstellen Sie Ihre erste Kampagne, um loszulegen.",
+    "no_creatives_hint": "Keine Creatives gefunden. Versuchen Sie, Ihre Filter oder den Datumsbereich anzupassen.",
+    "no_targeting_hint": "Keine Targeting-Gruppen gefunden. Stellen Sie sicher, dass Sie aktive Anzeigengruppen haben.",
+    "no_results_filters": "Keine Ergebnisse entsprechen Ihren Filtern. Versuchen Sie, die Filter anzupassen oder zu löschen.",
+    "error_connection_lost": "Verbindung verloren. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    "error_permission_denied": "Sie haben keine Berechtigung, dies anzuzeigen. Wenden Sie sich an Ihren Account-Administrator."
   },
   "nav": {
     "dashboard": "Armaturenbrett",
@@ -134,7 +142,14 @@
     "quick_insights": "Schnelle Einblicke",
     "view_full_analysis": "Vollständige Analyse anzeigen",
     "day_of_week_performance": "Leistung nach Wochentag",
-    "day": "Tag"
+    "day": "Tag",
+    "performance_dashboard": "Performance Dashboard",
+    "create_new_ad": "Neue Anzeige erstellen",
+    "weekly_performance": "Wöchentliche Leistung",
+    "total_spend": "Gesamte Ausgaben",
+    "impressions": "Impressions",
+    "clicks": "Klicks",
+    "conversions": "Conversions"
   },
   "days": {
     "monday": "Montag",
@@ -170,7 +185,15 @@
     "filter_group_name": "Kampagnenfilter",
     "filter_group_status": "Statusfilter",
     "filter_group_delivery": "Lieferfilter",
-    "targetingGroups": "Targeting-Gruppen"
+    "targetingGroups": "Targeting-Gruppen",
+    "platform_help": "Sehen Sie, wie Ihre Anzeigen auf Facebook, Instagram und Audience Network abschneiden",
+    "placement_help": "Vergleichen Sie Feed, Stories, Reels und andere Anzeigenplatzierungen",
+    "demographics_help": "Analysieren Sie die Leistung nach Altersgruppe und Geschlecht",
+    "country_help": "Sehen Sie, welche Länder die besten Ergebnisse erzielen",
+    "age": "Alter",
+    "age_help": "Finden Sie Ihre leistungsstärksten Altersgruppen",
+    "gender": "Geschlecht",
+    "gender_help": "Vergleichen Sie die Leistung zwischen männlichen und weiblichen Zielgruppen"
   },
   "reports": {
     "title": "Erweiterte Berichte",
@@ -335,7 +358,11 @@
       "Interest Audience": "Interessen",
       "Custom Audience": "Custom Audience"
     },
-    "type": "Typ"
+    "type": "Typ",
+    "broad_targeting_help": "Kein spezifisches Targeting - Facebook findet die beste Zielgruppe mithilfe von KI",
+    "lookalike_targeting_help": "Personen, die Ihren bestehenden Kunden ähnlich sind",
+    "interest_targeting_help": "Personen, die sich für bestimmte Themen oder Verhaltensweisen interessieren",
+    "custom_audience_targeting_help": "Ihre eigenen Zielgruppenlisten (E-Mail, Website-Besucher usw.)"
   },
   "actions": {
     "export": "Exportieren",
@@ -375,7 +402,10 @@
     "this_month": "Dieser Monat",
     "today_yesterday": "Heute & Gestern",
     "yesterday": "Gestern",
-    "maximum": "Alle Zeiten"
+    "maximum": "Alle Zeiten",
+    "day": "Tag",
+    "week": "Woche",
+    "month": "Monat"
   },
   "footer": {
     "system_info": "Next.js & FastAPI Analysesystem"
@@ -493,7 +523,8 @@
       "scarcity": "Knappheit",
       "trust": "Vertrauen",
       "curiosity": "Neugier"
-    }
+    },
+    "open_ai_chat": "Open AI Chat"
   },
   "auth": {
     "login_title": "Melden Sie sich bei Ihrem Konto an",
@@ -1553,7 +1584,7 @@
     "summary_campaign": "Kampagne",
     "summary_target": "Ziel",
     "summary_editing": "Bearbeitung",
-    "summary_targeting": "Targeting",
+    "summary_targeting": "Zielgruppen",
     "summary_budget": "Budget",
     "summary_ad": "Anzeigen-Creative",
     "summary_ads": "Anzeigen ({count})",
@@ -1569,21 +1600,23 @@
     "success": "Kampagne erfolgreich gestartet! Anker lichten!",
     "view_campaign": "Kampagne anzeigen",
     "create_another": "Weitere erstellen",
-    "targeting": "Targeting",
+    "targeting": "Zielgruppen",
     "view_campaign_control": "Kampagnensteuerung anzeigen",
     "what_happens_next": "Was als Nächstes geschieht:",
     "learning_phase_info": "Ihre Anzeige geht für 2-3 Tage in die 'Lernphase' über",
     "facebook_optimization_info": "Facebook testet Zielgruppen, um herauszufinden, was am besten funktioniert",
     "no_changes_48h": "Nehmen Sie 48 Stunden lang keine Änderungen vor – lassen Sie es lernen",
-    "write_for_me": "✨ Write this for me",
-    "ai_copy_modal_title": "AI-Generated Ad Copy",
-    "ai_copy_context_label": "Tell us more (optional)",
-    "ai_copy_context_placeholder": "e.g., 'Black Friday sale' or 'New product launch'",
-    "generate_copy": "Generate Copy",
-    "generating": "Generating...",
-    "use_this_copy": "Use This",
-    "ai_copy_error": "Failed to generate copy. Please try again.",
-    "no_business_profile": "Please complete your business profile first to use AI copy generation."
+    "write_for_me": "✨ Schreib das für mich",
+    "ai_copy_modal_title": "KI-generierter Anzeigentext",
+    "ai_copy_context_label": "Erzähl uns mehr (optional)",
+    "ai_copy_context_placeholder": "z. B. „Black Friday Sale“ oder „Neue Produkteinführung“",
+    "generate_copy": "Text generieren",
+    "generating": "Generiere...",
+    "use_this_copy": "Das verwenden",
+    "ai_copy_error": "Kopiergenerierung fehlgeschlagen. Bitte versuche es noch einmal.",
+    "no_business_profile": "Bitte vervollständigen Sie zuerst Ihr Unternehmensprofil, um die KI-Texterstellung nutzen zu können.",
+    "create_ad_title": "Erstelle deine Anzeige",
+    "create_ad_subtitle": "Wähle aus, wie du vorgehen möchtest"
   },
   "homepage3": {
     "title": "Was möchten Sie tun?",
@@ -1680,8 +1713,8 @@
     "categories": {
       "metrics": "Messwerte",
       "campaign_structure": "Kampagnenstruktur",
-      "targeting": "Targeting",
-      "creatives": "Creatives"
+      "targeting": "Zielgruppen",
+      "creatives": "Anzeigenmotive"
     },
     "terms": {
       "spend": {
@@ -1705,98 +1738,98 @@
         "definition": "Prozentsatz der Personen, die nach dem Anzeigen Ihrer Anzeige geklickt haben. Berechnet als Klicks ÷ Impressionen × 100. Über 1 % ist im Allgemeinen gut."
       },
       "cpc": {
-        "name": "CPC (Cost Per Click)",
-        "category": "metrics",
-        "definition": "Average cost for each click on your ad. Calculated as spend ÷ clicks. Lower is more efficient."
+        "name": "CPC (Kosten pro Klick)",
+        "category": "Metriken",
+        "definition": "Durchschnittliche Kosten für jeden Klick auf Ihre Anzeige. Berechnet als Kosten ÷ Klicks. Je niedriger, desto effizienter."
       },
       "cpm": {
-        "name": "CPM (Cost Per 1000 Impressions)",
-        "category": "metrics",
-        "definition": "How much you pay for every 1,000 times your ad is shown. Useful for comparing reach efficiency across campaigns."
+        "name": "CPM (Kosten pro 1000 Impressionen)",
+        "category": "Metriken",
+        "definition": "Wie viel Sie für jede 1.000 Anzeigenimpressionen bezahlen. Nützlich, um die Reichweiteneffizienz über Kampagnen hinweg zu vergleichen."
       },
       "conversions": {
         "name": "Conversions",
-        "category": "metrics",
-        "definition": "Actions you care about that people take after clicking your ad - like purchases, signups, form submissions, or downloads."
+        "category": "Metriken",
+        "definition": "Aktionen, die Ihnen wichtig sind, die Personen nach dem Klicken auf Ihre Anzeige ausführen - wie Käufe, Anmeldungen, Formulareinsendungen oder Downloads."
       },
       "cpa": {
-        "name": "CPA (Cost Per Acquisition)",
-        "category": "metrics",
-        "definition": "Average cost for each conversion. Calculated as spend ÷ conversions. Lower means you're getting results more efficiently."
+        "name": "CPA (Kosten pro Acquisition)",
+        "category": "Metriken",
+        "definition": "Durchschnittliche Kosten für jede Conversion. Berechnet als Kosten ÷ Conversions. Je niedriger, desto effizienter erzielen Sie Ergebnisse."
       },
       "roas": {
         "name": "ROAS (Return on Ad Spend)",
-        "category": "metrics",
-        "definition": "Revenue earned per dollar spent on ads. A ROAS of 3x means you earned $3 for every $1 spent. Higher is better."
+        "category": "Metriken",
+        "definition": "Umsatz, der pro für Anzeigen ausgegebenem Dollar erzielt wird. Ein ROAS von 3x bedeutet, dass Sie 3 $ für jeden ausgegebenen Dollar verdient haben. Je höher, desto besser."
       },
       "conversion_rate": {
-        "name": "Conversion Rate",
-        "category": "metrics",
-        "definition": "Percentage of clicks that became conversions. Calculated as conversions ÷ clicks × 100. Shows how well your landing page converts."
+        "name": "Conversion-Rate",
+        "category": "Metriken",
+        "definition": "Prozentsatz der Klicks, die zu Conversions wurden. Berechnet als Conversions ÷ Klicks × 100. Zeigt, wie gut Ihre Landingpage konvertiert."
       },
       "campaign": {
-        "name": "Campaign",
+        "name": "Kampagne",
         "category": "campaign_structure",
-        "definition": "The top level of Facebook ads. Contains your objective (what you want to achieve) and overall budget strategy. Think of it as a folder for related targeting groups."
+        "definition": "Die oberste Ebene von Facebook-Anzeigen. Enthält Ihr Ziel (was Sie erreichen möchten) und die allgemeine Budgetstrategie. Stellen Sie sich dies als Ordner für verwandte Zielgruppengruppen vor."
       },
       "targeting": {
-        "name": "Targeting",
+        "name": "Zielgruppen",
         "category": "campaign_structure",
-        "definition": "The middle level that controls WHO sees your ads, WHEN they see them, and WHERE they appear. Contains targeting, schedule, and budget settings."
+        "definition": "Die mittlere Ebene, die steuert, WER Ihre Anzeigen sieht, WANN sie sie sieht und WO sie erscheinen. Enthält Zielgruppen-, Zeitplan- und Budgeteinstellungen."
       },
       "ad": {
-        "name": "Ad",
+        "name": "Anzeige",
         "category": "campaign_structure",
-        "definition": "The actual creative that people see - your image or video, headline, text, and call-to-action button. Multiple ads can be tested within one targeting."
+        "definition": "Das tatsächliche Werbemittel, das die Leute sehen - Ihr Bild oder Video, Ihre Überschrift, Ihr Text und Ihre Call-to-Action-Schaltfläche. Innerhalb einer Zielgruppe können mehrere Anzeigen getestet werden."
       },
       "lookalike": {
         "name": "Lookalike Audience",
-        "category": "targeting",
-        "definition": "Facebook finds people who are similar to your existing customers or website visitors. Great for expanding reach to likely buyers."
+        "category": "Zielgruppen",
+        "definition": "Facebook findet Personen, die Ihren bestehenden Kunden oder Website-Besuchern ähnlich sind. Ideal, um die Reichweite auf wahrscheinliche Käufer auszudehnen."
       },
       "custom_audience": {
         "name": "Custom Audience",
-        "category": "targeting",
-        "definition": "Target people who already interacted with your business - website visitors, app users, email subscribers, or people who engaged with your content."
+        "category": "Zielgruppen",
+        "definition": "Sprechen Sie Personen an, die bereits mit Ihrem Unternehmen interagiert haben - Website-Besucher, App-Benutzer, E-Mail-Abonnenten oder Personen, die sich mit Ihren Inhalten beschäftigt haben."
       },
       "broad_targeting": {
         "name": "Broad Targeting",
-        "category": "targeting",
-        "definition": "Letting Facebook's AI find the best audience for your ads with minimal restrictions. Often performs well because the algorithm optimizes delivery."
+        "category": "Zielgruppen",
+        "definition": "Lassen Sie die KI von Facebook die beste Zielgruppe für Ihre Anzeigen mit minimalen Einschränkungen finden. Funktioniert oft gut, da der Algorithmus die Auslieferung optimiert."
       },
       "hook_rate": {
         "name": "Hook Rate",
-        "category": "creatives",
-        "definition": "Percentage of viewers who watched past the first 3 seconds of your video. Shows if your opening grabs attention. Above 30% is good."
+        "category": "Anzeigenmotive",
+        "definition": "Prozentsatz der Zuschauer, die die ersten 3 Sekunden Ihres Videos gesehen haben. Zeigt, ob Ihr Opening die Aufmerksamkeit erregt. Über 30 % ist gut."
       },
       "hold_rate": {
         "name": "Hold Rate",
-        "category": "creatives",
-        "definition": "Percentage of viewers who kept watching after the hook. Shows if your content maintains interest throughout the video."
+        "category": "Anzeigenmotive",
+        "definition": "Prozentsatz der Zuschauer, die nach dem Hook weitergeschaut haben. Zeigt, ob Ihre Inhalte das Interesse während des gesamten Videos aufrechterhalten."
       },
       "fatigue": {
         "name": "Ad Fatigue",
-        "category": "creatives",
-        "definition": "When your audience has seen your ad too many times and performance starts declining. Signs include rising CPC and falling CTR. Time for fresh creative!"
+        "category": "Anzeigenmotive",
+        "definition": "Wenn Ihre Zielgruppe Ihre Anzeige zu oft gesehen hat und die Leistung nachlässt. Anzeichen dafür sind steigende CPC und fallende CTR. Zeit für frische Werbemittel!"
       }
     }
   },
   "cookies": {
-    "title": "We use cookies",
-    "description": "We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. By clicking \"Accept All\", you consent to our use of cookies.",
-    "accept_all": "Accept All",
-    "necessary_only": "Necessary Only",
-    "customize": "Customize",
-    "learn_more": "Learn more in our",
-    "privacy_policy": "Privacy Policy",
-    "preferences_title": "Cookie Preferences",
-    "necessary": "Necessary Cookies",
-    "necessary_desc": "Required for the website to function. Cannot be disabled.",
-    "analytics": "Analytics Cookies",
-    "analytics_desc": "Help us understand how visitors interact with our website.",
-    "marketing": "Marketing Cookies",
-    "marketing_desc": "Used to track visitors across websites for advertising purposes.",
-    "save_preferences": "Save Preferences"
+    "title": "Wir verwenden Cookies",
+    "description": "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern, den Website-Traffic zu analysieren und für Marketingzwecke. Durch Klicken auf \"Alle akzeptieren\" stimmen Sie unserer Verwendung von Cookies zu.",
+    "accept_all": "Alle akzeptieren",
+    "necessary_only": "Nur notwendige",
+    "customize": "Anpassen",
+    "learn_more": "Erfahren Sie mehr in unseren",
+    "privacy_policy": "Datenschutzbestimmungen",
+    "preferences_title": "Cookie-Einstellungen",
+    "necessary": "Notwendige Cookies",
+    "necessary_desc": "Erforderlich, damit die Website funktioniert. Kann nicht deaktiviert werden.",
+    "analytics": "Analyse-Cookies",
+    "analytics_desc": "Helfen Sie uns zu verstehen, wie Besucher mit unserer Website interagieren.",
+    "marketing": "Marketing-Cookies",
+    "marketing_desc": "Werden verwendet, um Besucher über Websites hinweg zu Werbezwecken zu verfolgen.",
+    "save_preferences": "Einstellungen speichern"
   },
   "budget_tracker": {
     "title": "Monatsbudget",
@@ -1815,5 +1848,122 @@
     "subtitle": "Kampagnen, Targeting und Creatives pausieren, fortsetzen und analysieren",
     "hierarchy_guide": "Kampagne → Targeting → Anzeige. Klicken Sie auf den Pfeil zum Erweitern.",
     "hierarchy_tooltip": "Kampagne → Targeting → Anzeige. Klicken Sie auf den Pfeil zum Erweitern. Wenn eine Kampagne oder ein Targeting pausiert ist, werden alle darin enthaltenen Elemente nicht ausgeführt, auch wenn sie als aktiv angezeigt werden."
+  },
+  "homepage2": {
+    "greeting": "Hallo {name}!",
+    "subtitle": "So performen Ihre Anzeigen",
+    "default_name": "da",
+    "ai_summary": {
+      "title": "KI-Zusammenfassung",
+      "subtitle": "Ihr Konto auf einen Blick",
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "tldr": "Wichtigste Erkenntnisse",
+      "no_data": "Noch keine Daten verfügbar. Verbinden Sie ein Konto, um loszulegen."
+    },
+    "metrics": {
+      "spend": "Monetäre Kosten",
+      "conversions": "Conversions",
+      "cpa": "CPA",
+      "roas": "ROAS"
+    },
+    "actions": {
+      "create": "Erstellen",
+      "performance": "Performance",
+      "ask_ai": "KI fragen"
+    }
+  },
+  "topnav": {
+    "home": "Home",
+    "performance": "Performance",
+    "campaigns": "Kampagnen",
+    "create": "Erstellen",
+    "advanced": "Erweitert"
+  },
+  "account_performance": {
+    "title": "Konto-Performance",
+    "description": "Sehen Sie, wie Ihre Kampagnen performen"
+  },
+  "campaigns2": {
+    "title": "Ihre Kampagnen",
+    "description": "Anzeigen und Steuern Sie Ihre Kampagnen",
+    "name": "Kampagne",
+    "spend": "Monetäre Kosten",
+    "conversions": "Conv",
+    "cpa": "CPA",
+    "status": "Status",
+    "on": "An",
+    "off": "Aus",
+    "total": "Gesamt",
+    "no_campaigns": "Keine Kampagnen gefunden",
+    "see_detailed": "Detaillierte Ansicht anzeigen",
+    "last_7_days": "Letzte 7 Tage",
+    "last_14_days": "Letzte 14 Tage",
+    "last_30_days": "Letzte 30 Tage",
+    "performance_by_time": "Performance nach Zeit"
+  },
+  "performance": {
+    "title": "Performance",
+    "description": "KI-gestützte Performance-Übersicht",
+    "what_to_do": "Was ist als Nächstes zu tun?",
+    "ai_recommendations": "KI-gestützte Empfehlungen",
+    "no_recommendations": "Noch keine Empfehlungen verfügbar",
+    "rec_scale_title": "Erfolgreiche Kampagne skalieren",
+    "rec_scale_desc": "„{name}“ hat {roas}x ROAS – Budgeterhöhung in Betracht ziehen",
+    "rec_scale_action": "Kampagne anzeigen",
+    "rec_fix_title": "Schlecht laufende Kampagne überprüfen",
+    "rec_fix_desc": "„{name}“ benötigt Aufmerksamkeit – Targeting und Anzeigenmotive überprüfen",
+    "rec_fix_action": "Überprüfen",
+    "rec_general_title": "Erkenntnisse entdecken",
+    "rec_general_desc": "Tauchen Sie tiefer in Ihre Kontoanalysen ein",
+    "rec_general_action": "Erkenntnisse anzeigen"
+  },
+  "create_page": {
+    "title": "Was möchten Sie tun?",
+    "add_ads_title": "Anzeigen hinzufügen/aktualisieren",
+    "add_ads_desc": "Fügen Sie funktionierenden Kampagnen neue Anzeigenmotive hinzu",
+    "add_ads_hint": "Häufigste Aktion",
+    "new_campaign_title": "Neue Kampagne erstellen",
+    "new_campaign_desc": "Beginnen Sie neu mit neuem Budget und Targeting",
+    "build_manually": "Kampagne manuell erstellen"
+  },
+  "help": {
+    "campaign_control_page": "Verwalten Sie alle Kampagnen, das Targeting und die Anzeigenmotive an einem Ort. Verwenden Sie Registerkarten, um die Ansicht zu wechseln. Klicken Sie auf Zeilen, um Details zu erweitern.",
+    "reports_page": "Erstellen Sie benutzerdefinierte Berichte, indem Sie Dimensionen und Segmentierungen auswählen. Exportieren Sie nach Excel oder Google Sheets.",
+    "insights_page": "KI-gestützte Analyse Ihrer Anzeigen-Performance. Stellen Sie Fragen oder durchsuchen Sie automatisierte Erkenntnisse.",
+    "comparison_intro": "Wählen Sie 2-5 Elemente für einen direkten Vergleich aus. Der Gewinner wird mit einer Krone hervorgehoben.",
+    "comparison_how_to": "Aktivieren Sie die Kontrollkästchen, um Elemente auszuwählen, und klicken Sie dann auf Vergleichen"
+  },
+  "getting_started": {
+    "title": "Willkommen! So legen Sie los",
+    "tip_1": "Überprüfen Sie Ihre KPIs oben, um die Gesamtperformance zu sehen",
+    "tip_2": "Verwenden Sie den Datumsfilter, um verschiedene Zeiträume zu vergleichen",
+    "tip_3": "Klicken Sie auf eine beliebige Metrikkarte, um weitere Details zu erhalten",
+    "tip_4": "Besuchen Sie den Anfängerleitfaden für Best Practices für Facebook Ads",
+    "dismiss": "Verstanden, nicht mehr anzeigen",
+    "learn_more": "Mehr erfahren"
+  },
+  "feedback": {
+    "title": "Feedback senden",
+    "subtitle": "Helfen Sie uns, uns zu verbessern, indem Sie Ihre Gedanken teilen",
+    "type_label": "Welche Art von Feedback?",
+    "type_bug": "Fehlerbericht",
+    "type_feature_request": "Funktionsanfrage",
+    "type_improvement": "Vorschlag",
+    "type_other": "Sonstiges",
+    "title_label": "Titel",
+    "title_placeholder": "Kurze Zusammenfassung Ihres Feedbacks",
+    "message_label": "Beschreibung",
+    "message_placeholder": "Erzählen Sie uns mehr Details...",
+    "rating_label": "Wie zufrieden sind Sie? (optional)",
+    "submit": "Feedback absenden",
+    "submitting": "Wird gesendet...",
+    "cancel": "Abbrechen",
+    "error_required": "Bitte füllen Sie Titel und Beschreibung aus",
+    "error_submit": "Feedback konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "success_title": "Vielen Dank!",
+    "success_message": "Ihr Feedback wurde erfolgreich übermittelt.",
+    "button_tooltip": "Senden Sie uns Feedback"
   }
 }

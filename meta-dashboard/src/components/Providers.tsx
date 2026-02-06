@@ -7,6 +7,7 @@ import { AccountProvider } from '@/context/AccountContext';
 import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AIChatProvider } from '@/context/AIChatContext';
+import { ToastProvider } from '@/context/ToastContext';
 import ChatWidget from '@/components/chat/ChatWidget';
 import CookieConsent from '@/components/CookieConsent';
 
@@ -29,9 +30,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 <UserProvider>
                     <AccountProvider>
                             <AIChatProvider>
-                                {children}
-                                <ChatWidget />
-                                <CookieConsent />
+                                <ToastProvider>
+                                    {children}
+                                    <ChatWidget />
+                                    <CookieConsent />
+                                </ToastProvider>
                             </AIChatProvider>
                         </AccountProvider>
                 </UserProvider>

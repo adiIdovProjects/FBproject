@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Lightbulb, TrendingUp, Palette, AlertTriangle } from 'lucide-react';
+import { Lightbulb, TrendingUp, Palette, AlertTriangle, HelpCircle } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -122,9 +122,17 @@ export default function InsightsPage() {
       title={t('insights.title')}
       description={t('insights.subtitle')}
     >
-      {/* Tabs */}
+      {/* Page Help + Tabs */}
       <div className={`mb-8 border-b border-border-subtle ${isRTL ? 'direction-rtl' : ''}`}>
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="flex items-center gap-3 overflow-x-auto">
+          {/* Page Help */}
+          <div className="relative group shrink-0">
+            <HelpCircle className="w-5 h-5 text-gray-400 hover:text-gray-200 cursor-help" />
+            <div className="absolute z-50 bottom-full left-0 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg border border-gray-700 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+              {t('help.insights_page') || 'AI-powered analysis of your ad performance. Ask questions or browse automated insights.'}
+              <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
+            </div>
+          </div>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;

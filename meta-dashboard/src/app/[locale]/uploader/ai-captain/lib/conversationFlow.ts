@@ -4,7 +4,7 @@ import { CaptainFlow, QuickReplyOption } from '../components/CaptainContext';
 export interface ConversationNode {
     id: string;
     questionKey: string; // i18n key
-    inputType: 'quick_reply' | 'text' | 'location_search' | 'file_upload' | 'campaign_select' | 'adset_select' | 'budget' | 'age_range' | 'lead_type_select' | 'add_another_ad' | 'targeting_type_select' | 'ad_format_select' | 'interest_search' | 'audience_select';
+    inputType: 'quick_reply' | 'text' | 'location_search' | 'file_upload' | 'campaign_select' | 'adset_select' | 'budget' | 'age_range' | 'lead_type_select' | 'add_another_ad' | 'targeting_type_select' | 'ad_format_select' | 'interest_search' | 'audience_select' | 'multi_file_upload' | 'ai_copy_step' | 'link_cta_step';
     options?: QuickReplyOption[];
     placeholder?: string;
     nextNode: (answer: string, state: any) => string | 'summary';
@@ -140,7 +140,7 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_budget',
         inputType: 'budget',
         placeholder: 'captain.placeholder_budget',
-        nextNode: () => 'creative',
+        nextNode: () => 'creative_upload',
         validate: (answer) => {
             const num = parseFloat(answer);
             return !isNaN(num) && num >= 5;
@@ -151,8 +151,47 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_ad_format',
         inputType: 'ad_format_select',
         options: AD_FORMAT_OPTIONS,
-        nextNode: () => 'creative',
+        nextNode: () => 'creative_upload',
     },
+    // New batch upload flow
+    creative_upload: {
+        id: 'creative_upload',
+        questionKey: 'captain.upload_creatives',
+        inputType: 'multi_file_upload',
+        nextNode: () => 'ai_copy',
+    },
+    ai_copy: {
+        id: 'ai_copy',
+        questionKey: 'captain.ai_copy_step',
+        inputType: 'ai_copy_step',
+        nextNode: (_, state) => {
+            // If more ads to process, stay on ai_copy (handled by component)
+            // When all ads have copy, move to link_cta
+            const currentAdIndex = state?.currentAdIndex ?? 0;
+            const totalAds = state?.ads?.length ?? 1;
+            if (currentAdIndex < totalAds - 1) {
+                return 'ai_copy';
+            }
+            return 'link_cta';
+        },
+    },
+    link_cta: {
+        id: 'link_cta',
+        questionKey: 'captain.link_cta_step',
+        inputType: 'link_cta_step',
+        nextNode: (_, state) => {
+            // Skip link for WhatsApp and Calls objectives
+            if (state?.objective === 'WHATSAPP' || state?.objective === 'CALLS') {
+                return 'summary';
+            }
+            // Skip link for instant forms
+            if (state?.leadType === 'FORM') {
+                return 'summary';
+            }
+            return 'summary';
+        },
+    },
+    // Legacy single creative flow (kept for edit flow compatibility)
     creative: {
         id: 'creative',
         questionKey: 'captain.ask_creative',

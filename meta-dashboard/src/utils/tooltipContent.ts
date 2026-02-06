@@ -3,7 +3,7 @@
  * Provides minimal, personalized explanations of technical terms
  */
 
-type TooltipTerm = 'pixel' | 'targeting' | 'conversion_event' | 'advantage_plus' | 'budget' | 'objective';
+type TooltipTerm = 'pixel' | 'targeting' | 'conversion_event' | 'advantage_plus' | 'budget' | 'objective' | 'headline' | 'body' | 'cta' | 'link' | 'creative' | 'location' | 'age_range' | 'gender' | 'interests' | 'audiences';
 type BusinessType = 'ecommerce' | 'lead_gen' | 'saas' | 'local_business' | 'agency' | 'media' | 'nonprofit' | 'other';
 
 interface TooltipContent {
@@ -58,6 +58,86 @@ const tooltips: Record<TooltipTerm, TooltipContent> = {
     lead_gen: "Leads = Collect contacts | Engagement = Build awareness",
     local_business: "Store Visits = Drive foot traffic | Leads = Get calls/messages",
     saas: "Leads = Capture emails | Traffic = Drive website visits",
+  },
+
+  headline: {
+    generic: "First thing people see. Keep it short and action-oriented.",
+    ecommerce: "Highlight your offer: '50% Off Today' or 'Free Shipping'",
+    lead_gen: "Focus on the benefit: 'Get Your Free Guide' or 'Expert Consultation'",
+    local_business: "Include your area: 'Best Pizza in Brooklyn' or 'Open Now Near You'",
+    saas: "Lead with value: 'Save 10 Hours/Week' or 'Try Free for 14 Days'",
+  },
+
+  body: {
+    generic: "The main text of your ad. Explain your offer clearly.",
+    ecommerce: "Describe your products and why customers should buy now",
+    lead_gen: "Explain what they'll get and why it's valuable",
+    local_business: "Highlight what makes you special and include a call to visit",
+    saas: "Focus on solving their problem, not your features",
+  },
+
+  cta: {
+    generic: "The button text. 'Learn More' works for most cases.",
+    ecommerce: "'Shop Now' for products, 'Get Offer' for promotions",
+    lead_gen: "'Sign Up' for forms, 'Learn More' for content offers",
+    local_business: "'Book Now' for appointments, 'Get Directions' for visits",
+    saas: "'Sign Up' for trials, 'Learn More' for demos",
+  },
+
+  link: {
+    generic: "Where people go when they click. Use your landing page.",
+    ecommerce: "Link to product page or collection, not just homepage",
+    lead_gen: "Link to dedicated landing page with your form",
+    local_business: "Link to your booking page or location page",
+    saas: "Link to signup or demo request page",
+  },
+
+  creative: {
+    generic: "Your image or video. Square (1:1) works best on both platforms.",
+    ecommerce: "Show your product clearly. Lifestyle images often outperform",
+    lead_gen: "Use images that represent the value they'll receive",
+    local_business: "Show your location, team, or satisfied customers",
+    saas: "Show your product in action or happy customer testimonials",
+  },
+
+  location: {
+    generic: "Where your potential customers are located.",
+    ecommerce: "Target regions where you can ship to",
+    lead_gen: "Focus on areas where your services are available",
+    local_business: "Target your city/neighborhood + nearby areas",
+    saas: "Target countries where your product is available",
+  },
+
+  age_range: {
+    generic: "Age of people you want to reach. Default 18-65 covers everyone.",
+    ecommerce: "Match your typical customer age group",
+    lead_gen: "Focus on decision-maker ages (usually 25-54)",
+    local_business: "Match your local customer demographics",
+    saas: "B2B typically 25-55, consumer products vary",
+  },
+
+  gender: {
+    generic: "All genders usually performs best unless you have a specific product.",
+    ecommerce: "Only restrict if your product is gender-specific",
+    lead_gen: "Leave as 'All' unless targeting specific demographics",
+    local_business: "Match your typical customer profile",
+    saas: "Usually leave as 'All' for business products",
+  },
+
+  interests: {
+    generic: "Topics your ideal customers care about. Facebook finds similar people.",
+    ecommerce: "Add interests related to your products and competitors",
+    lead_gen: "Add interests related to your industry and services",
+    local_business: "Add local interests and activities in your area",
+    saas: "Add industry, job titles, and business-related interests",
+  },
+
+  audiences: {
+    generic: "Your existing customer lists or website visitors.",
+    ecommerce: "Use past purchasers for lookalikes, cart abandoners for retargeting",
+    lead_gen: "Use email lists to find similar prospects",
+    local_business: "Upload customer list to find similar locals",
+    saas: "Use trial users and demo requesters for lookalikes",
   },
 };
 

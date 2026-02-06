@@ -500,36 +500,77 @@ export const AICaptainSummary: React.FC = () => {
                                 title={state.ads.length > 1 ? t('captain.summary_ads', { count: state.ads.length }) : t('captain.summary_ad')}
                                 color="pink"
                             >
-                                <div className="space-y-4">
-                                    {state.ads.map((ad, index) => (
-                                        <div key={ad.id} className={`flex gap-4 ${index > 0 ? 'pt-4 border-t border-gray-700' : ''}`}>
-                                            {ad.previewUrl && (
-                                                <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-800 shrink-0">
-                                                    {ad.file?.type.startsWith('video/') ? (
-                                                        <video src={ad.previewUrl} className="w-full h-full object-cover" />
+                                {/* Grid layout for multiple ads (3+ ads) */}
+                                {state.ads.length >= 3 ? (
+                                    <div className="space-y-4">
+                                        {/* Thumbnails grid */}
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {state.ads.map((ad, index) => (
+                                                <div key={ad.id} className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 border-2 border-pink-500/50">
+                                                    {ad.previewUrl ? (
+                                                        ad.file?.type.startsWith('video/') ? (
+                                                            <video src={ad.previewUrl} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <img src={ad.previewUrl} alt={`Ad ${index + 1}`} className="w-full h-full object-cover" />
+                                                        )
                                                     ) : (
-                                                        <img src={ad.previewUrl} alt="Ad preview" className="w-full h-full object-cover" />
+                                                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                            {index + 1}
+                                                        </div>
                                                     )}
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 text-center truncate">
+                                                        {ad.title ? ad.title.slice(0, 15) + (ad.title.length > 15 ? '...' : '') : `Ad ${index + 1}`}
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div className="flex-1 min-w-0">
-                                                {(state.ads.length > 1 || ad.adName) && (
-                                                    <p className="text-pink-400 text-xs font-medium mb-1">
-                                                        {ad.adName || `Ad ${index + 1}`}
-                                                    </p>
-                                                )}
-                                                <p className="text-white font-medium truncate">{ad.title || 'No headline'}</p>
-                                                <p className="text-gray-400 text-sm line-clamp-2">{ad.body || 'No description'}</p>
-                                                {ad.link && (
-                                                    <p className="text-blue-400 text-xs mt-1 truncate">{ad.link}</p>
-                                                )}
-                                                <p className="text-gray-500 text-xs mt-1">
-                                                    CTA: {ad.cta}
+                                            ))}
+                                        </div>
+                                        {/* Shared link/CTA info */}
+                                        {state.ads[0]?.link && (
+                                            <div className="pt-2 border-t border-gray-700">
+                                                <p className="text-gray-400 text-sm">
+                                                    <span className="text-gray-500">{t('captain.link')}:</span>{' '}
+                                                    <span className="text-blue-400">{state.ads[0].link}</span>
+                                                </p>
+                                                <p className="text-gray-400 text-sm">
+                                                    <span className="text-gray-500">{t('captain.cta')}:</span>{' '}
+                                                    {state.ads[0].cta}
                                                 </p>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* List layout for 1-2 ads */
+                                    <div className="space-y-4">
+                                        {state.ads.map((ad, index) => (
+                                            <div key={ad.id} className={`flex gap-4 ${index > 0 ? 'pt-4 border-t border-gray-700' : ''}`}>
+                                                {ad.previewUrl && (
+                                                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-800 shrink-0">
+                                                        {ad.file?.type.startsWith('video/') ? (
+                                                            <video src={ad.previewUrl} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <img src={ad.previewUrl} alt="Ad preview" className="w-full h-full object-cover" />
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    {(state.ads.length > 1 || ad.adName) && (
+                                                        <p className="text-pink-400 text-xs font-medium mb-1">
+                                                            {ad.adName || `Ad ${index + 1}`}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-white font-medium truncate">{ad.title || 'No headline'}</p>
+                                                    <p className="text-gray-400 text-sm line-clamp-2">{ad.body || 'No description'}</p>
+                                                    {ad.link && (
+                                                        <p className="text-blue-400 text-xs mt-1 truncate">{ad.link}</p>
+                                                    )}
+                                                    <p className="text-gray-500 text-xs mt-1">
+                                                        CTA: {ad.cta}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </SummaryCard>
                         )}
                     </div>

@@ -11,6 +11,7 @@ import { ChevronRight, ChevronDown, ChevronLeft, Pause, Play, Loader2, Pencil, X
 
 // Services & Types
 import { mutationsService, BudgetInfo } from '../../services/mutations.service';
+import { useToast } from '../../context/ToastContext';
 import { HierarchyCampaign, HierarchyAdSet, HierarchyAd } from '../../types/campaigns.types';
 import StatusConfirmModal from './StatusConfirmModal';
 
@@ -66,6 +67,7 @@ export default function CampaignControlTable({
   campaignIdFilter,
 }: CampaignControlTableProps) {
   const t = useTranslations();
+  const { showToast } = useToast();
   const isRTL = locale === 'ar' || locale === 'he';
 
   // Data state
@@ -279,9 +281,10 @@ export default function CampaignControlTable({
         });
       }
       setStatusModal(null);
+      showToast(newStatus === 'ACTIVE' ? 'Activated successfully' : 'Paused successfully', 'success');
     } catch (error) {
       console.error('Failed to update status:', error);
-      alert(t('errors.failed_to_update'));
+      showToast(t('errors.failed_to_update') || 'Failed to update', 'error');
     } finally {
       setUpdatingId(null);
     }
@@ -315,9 +318,10 @@ export default function CampaignControlTable({
         }));
       }
       setEditingBudget(null);
+      showToast(t('common.saved_successfully') || 'Budget updated successfully', 'success');
     } catch (error) {
       console.error('Failed to update budget:', error);
-      alert(t('errors.failed_to_update'));
+      showToast(t('errors.failed_to_update') || 'Failed to update', 'error');
     } finally {
       setSavingBudget(false);
     }

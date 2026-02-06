@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
+import { InfoTooltip } from '../ui/InfoTooltip';
 import { BreakdownRow, BreakdownType, DateRange } from '../../types/campaigns.types';
 import { fetchBreakdown } from '../../services/campaigns.service';
 
@@ -25,15 +26,16 @@ interface BreakdownTabsProps {
 type Tab = {
   id: BreakdownType;
   labelKey: string;
+  helpKey?: string;
 };
 
 const TABS: Tab[] = [
   { id: 'adset', labelKey: 'campaigns.adsets' },
   { id: 'ad', labelKey: 'campaigns.ads' },
-  { id: 'platform', labelKey: 'campaigns.platform' },
-  { id: 'placement', labelKey: 'campaigns.placement' },
-  { id: 'age-gender', labelKey: 'campaigns.demographics' },
-  { id: 'country', labelKey: 'campaigns.country' },
+  { id: 'platform', labelKey: 'campaigns.platform', helpKey: 'campaigns.platform_help' },
+  { id: 'placement', labelKey: 'campaigns.placement', helpKey: 'campaigns.placement_help' },
+  { id: 'age-gender', labelKey: 'campaigns.demographics', helpKey: 'campaigns.demographics_help' },
+  { id: 'country', labelKey: 'campaigns.country', helpKey: 'campaigns.country_help' },
 ];
 
 // Tabs that don't have conversion data from Facebook API
@@ -191,7 +193,10 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                 }
               `}
             >
-              <span className="relative z-10">{t(tab.labelKey)}</span>
+              <span className="relative z-10 flex items-center gap-1">
+                {t(tab.labelKey)}
+                {tab.helpKey && <InfoTooltip tooltipKey={tab.helpKey} size="sm" />}
+              </span>
               {activeTab === tab.id && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent shadow-[0_0_15px_rgba(99,102,241,0.6)] z-0 rounded-t-full" />
               )}

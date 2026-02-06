@@ -592,3 +592,89 @@ export async function createSavedReport(name: string, config: ReportConfig): Pro
 export async function deleteSavedReport(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/saved-reports/${id}`);
 }
+
+// ============================================================
+// My Report Functions (Simple Report Builder)
+// ============================================================
+
+export interface Recommendation {
+  type: string;
+  icon: string;
+  message: string;
+}
+
+export interface MyReportPreferences {
+  selected_metrics: string[];
+  chart_type: string;
+  include_recommendations: boolean;
+  email_schedule: string;
+}
+
+export interface MyReportPreview {
+  date: string;
+  metrics: Record<string, number>;
+  chart_type: string;
+  chart_data: { date: string; value: number }[] | null;
+  budget_status: {
+    month_to_date_spend: number;
+    projected_spend: number;
+    days_passed: number;
+    days_in_month: number;
+    percent_of_month: number;
+  };
+  recommendations: Recommendation[];
+}
+
+export interface MyReportResponse {
+  preferences: MyReportPreferences | null;
+  preview: MyReportPreview;
+}
+
+/**
+ * Fetch user's report preferences and preview
+ */
+export async function fetchMyReport(accountId?: string): Promise<MyReportResponse> {
+  const params: Record<string, string> = {};
+  if (accountId) {
+    params.account_id = accountId;
+  }
+
+  const response = await apiClient.get<MyReportResponse>('/api/v1/reports/my-report', { params });
+  return response.data;
+}
+
+/**
+ * Save user's report preferences
+ */
+export async function saveMyReportPreferences(
+  preferences: MyReportPreferences,
+  accountId?: string
+): Promise<{ success: boolean; preferences: MyReportPreferences }> {
+  const params: Record<string, string> = {};
+  if (accountId) {
+    params.account_id = accountId;
+  }
+
+  const response = await apiClient.post<{ success: boolean; preferences: MyReportPreferences }>(
+    '/api/v1/reports/my-report/preferences',
+    preferences,
+    { params }
+  );
+  return response.data;
+}
+
+/**
+ * Fetch recommendations for homepage tips card
+ */
+export async function fetchRecommendations(accountId?: string): Promise<Recommendation[]> {
+  const params: Record<string, string> = {};
+  if (accountId) {
+    params.account_id = accountId;
+  }
+
+  const response = await apiClient.get<{ recommendations: Recommendation[] }>(
+    '/api/v1/reports/my-report/recommendations',
+    { params }
+  );
+  return response.data.recommendations;
+}

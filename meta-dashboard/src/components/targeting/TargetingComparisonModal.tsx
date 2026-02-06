@@ -96,7 +96,7 @@ export const TargetingComparisonModal: React.FC<TargetingComparisonModalProps> =
           <div>
             <h2 className="text-2xl font-bold text-white">Ad Set Comparison</h2>
             <p className="text-sm text-gray-400 mt-1">
-              Comparing {adsetIds.length} ad sets
+              Comparing {adsetIds.length} ad sets • <span className="text-gray-500">The winner for each metric is highlighted with a crown</span>
             </p>
           </div>
           <button

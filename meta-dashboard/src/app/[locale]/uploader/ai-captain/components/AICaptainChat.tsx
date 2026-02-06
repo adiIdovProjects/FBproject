@@ -18,6 +18,7 @@ import { getPersonalizedTooltip } from '@/utils/tooltipContent';
 import { businessProfileService, BusinessProfile } from '@/services/business_profile.service';
 import { AICopyModal } from '@/components/common/AICopyModal';
 import { MainLayout } from '@/components/MainLayout';
+import { MultiFileUpload, AICopyStep, PreviewModal, LinkCTAStep, Ad } from './inputs';
 
 interface Campaign {
     id: string;
@@ -99,6 +100,13 @@ export const AICaptainChat: React.FC = () => {
     const [showAICopyModal, setShowAICopyModal] = useState(false);
     const [aiCopyFieldType, setAICopyFieldType] = useState<'headline' | 'body'>('headline');
 
+    // New batch upload flow state
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [uploadedPreviews, setUploadedPreviews] = useState<string[]>([]);
+    const [aiSuggestions, setAiSuggestions] = useState<{ headline: string; body: string }[]>([]);
+    const [isLoadingAiSuggestions, setIsLoadingAiSuggestions] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -106,7 +114,7 @@ export const AICaptainChat: React.FC = () => {
     const isRTL = locale === 'he' || locale === 'ar';
 
     // Show preview panel after creative step
-    const showPreview = ['creative', 'headline', 'body', 'link', 'cta', 'add_another_ad'].includes(state.currentQuestionId);
+    const showPreview = ['creative', 'headline', 'body', 'link', 'cta', 'add_another_ad', 'creative_upload', 'ai_copy', 'link_cta'].includes(state.currentQuestionId);
 
     // Load business profile on mount
     useEffect(() => {
@@ -581,6 +589,95 @@ export const AICaptainChat: React.FC = () => {
             setTextInput(variant.headline);
         } else {
             setTextInput(variant.primary_text);
+        }
+    };
+
+    // New batch upload flow handlers
+    const handleMultiFileUpload = (files: File[], previews: string[]) => {
+        setUploadedFiles(files);
+        setUploadedPreviews(previews);
+    };
+
+    const handleMultiFileContinue = () => {
+        // Create ads from uploaded files
+        dispatch({ type: 'SET_ADS_FROM_FILES', files: uploadedFiles, previews: uploadedPreviews });
+        // Load AI suggestions for first ad
+        loadAiSuggestions();
+        // Move to AI copy step
+        processAnswer('files_uploaded', `${uploadedFiles.length} creatives uploaded`);
+    };
+
+    const loadAiSuggestions = async () => {
+        setIsLoadingAiSuggestions(true);
+        setAiSuggestions([]);
+        try {
+            // Generate 2 AI suggestions - for now use placeholder
+            // In production, this would call the recommendations API
+            const suggestions = [
+                { headline: t('captain.ai_suggestion_headline_1'), body: t('captain.ai_suggestion_body_1') },
+                { headline: t('captain.ai_suggestion_headline_2'), body: t('captain.ai_suggestion_body_2') },
+            ];
+            setAiSuggestions(suggestions);
+        } catch (e) {
+            console.error('Failed to load AI suggestions:', e);
+        } finally {
+            setIsLoadingAiSuggestions(false);
+        }
+    };
+
+    const handleAiCopySelect = (headline: string, body: string) => {
+        dispatch({ type: 'SET_AD_COPY', index: state.currentAdIndex, headline, body });
+        // Move to next ad or link_cta step
+        if (state.currentAdIndex < state.ads.length - 1) {
+            dispatch({ type: 'SET_CURRENT_AD_INDEX', index: state.currentAdIndex + 1 });
+            loadAiSuggestions();
+        } else {
+            processAnswer('copy_complete', 'All ads have copy');
+        }
+    };
+
+    const handleAiCopyApplyToAll = (headline: string, body: string) => {
+        dispatch({ type: 'APPLY_COPY_TO_ALL', headline, body });
+        processAnswer('copy_complete', 'Copy applied to all ads');
+    };
+
+    const handleGuideAi = (prompt: string) => {
+        // Reload suggestions with user guidance
+        setIsLoadingAiSuggestions(true);
+        // In production, this would call the API with the prompt
+        setTimeout(() => {
+            setAiSuggestions([
+                { headline: `${prompt} - Headline 1`, body: `${prompt} - Body text for your ad` },
+                { headline: `${prompt} - Headline 2`, body: `${prompt} - Alternative body text` },
+            ]);
+            setIsLoadingAiSuggestions(false);
+        }, 1000);
+    };
+
+    const handleLinkCtaSubmit = (link: string, cta: string) => {
+        dispatch({ type: 'SET_LINK_CTA_ALL', link, cta });
+        dispatch({ type: 'GO_TO_SUMMARY' });
+    };
+
+    const handleAiCopyBack = () => {
+        if (state.currentAdIndex > 0) {
+            dispatch({ type: 'SET_CURRENT_AD_INDEX', index: state.currentAdIndex - 1 });
+            loadAiSuggestions();
+        } else {
+            // Go back to creative upload
+            handleGoBack();
+        }
+    };
+
+    const handleAiCopyNext = () => {
+        const currentAd = state.ads[state.currentAdIndex];
+        if (currentAd.title && currentAd.body) {
+            if (state.currentAdIndex < state.ads.length - 1) {
+                dispatch({ type: 'SET_CURRENT_AD_INDEX', index: state.currentAdIndex + 1 });
+                loadAiSuggestions();
+            } else {
+                processAnswer('copy_complete', 'All ads have copy');
+            }
         }
     };
 
@@ -1236,6 +1333,56 @@ export const AICaptainChat: React.FC = () => {
                             </div>
                         )}
 
+                        {/* Multi-file upload (new batch flow) */}
+                        {currentNode?.inputType === 'multi_file_upload' && (
+                            <MultiFileUpload
+                                files={uploadedFiles}
+                                previews={uploadedPreviews}
+                                maxFiles={5}
+                                onFilesChange={handleMultiFileUpload}
+                                onContinue={handleMultiFileContinue}
+                                isRTL={isRTL}
+                            />
+                        )}
+
+                        {/* AI Copy step (new batch flow) */}
+                        {currentNode?.inputType === 'ai_copy_step' && (
+                            <AICopyStep
+                                adIndex={state.currentAdIndex}
+                                totalAds={state.ads.length}
+                                creative={state.ads[state.currentAdIndex]?.file || null}
+                                previewUrl={state.ads[state.currentAdIndex]?.previewUrl || null}
+                                currentHeadline={state.ads[state.currentAdIndex]?.title || ''}
+                                currentBody={state.ads[state.currentAdIndex]?.body || ''}
+                                suggestions={aiSuggestions}
+                                isLoadingSuggestions={isLoadingAiSuggestions}
+                                onSelect={handleAiCopySelect}
+                                onGuideAI={handleGuideAi}
+                                onApplyToAll={handleAiCopyApplyToAll}
+                                onSeePreview={() => setShowPreviewModal(true)}
+                                onNext={handleAiCopyNext}
+                                onBack={handleAiCopyBack}
+                                isRTL={isRTL}
+                            />
+                        )}
+
+                        {/* Link & CTA step (new batch flow) */}
+                        {currentNode?.inputType === 'link_cta_step' && (
+                            <LinkCTAStep
+                                ads={state.ads.map(ad => ({
+                                    id: ad.id,
+                                    previewUrl: ad.previewUrl,
+                                    headline: ad.title,
+                                    body: ad.body,
+                                }))}
+                                initialLink={state.ads[0]?.link || ''}
+                                initialCta={state.ads[0]?.cta || 'LEARN_MORE'}
+                                onSubmit={handleLinkCtaSubmit}
+                                onBack={handleGoBack}
+                                isRTL={isRTL}
+                            />
+                        )}
+
                         {/* Campaign selection */}
                         {currentNode?.inputType === 'campaign_select' && (
                             <div className="space-y-2">
@@ -1332,6 +1479,19 @@ export const AICaptainChat: React.FC = () => {
                     fieldType={aiCopyFieldType}
                 />
             )}
+
+            {/* Preview Modal (new batch flow) */}
+            <PreviewModal
+                isOpen={showPreviewModal}
+                onClose={() => setShowPreviewModal(false)}
+                previewUrl={state.ads[state.currentAdIndex]?.previewUrl || null}
+                headline={state.ads[state.currentAdIndex]?.title || ''}
+                body={state.ads[state.currentAdIndex]?.body || ''}
+                link={state.ads[state.currentAdIndex]?.link}
+                cta={state.ads[state.currentAdIndex]?.cta}
+                pageName={selectedAccount?.page_name || 'Your Page'}
+                isRTL={isRTL}
+            />
 
             {/* CSS for float animation */}
             <style jsx global>{`

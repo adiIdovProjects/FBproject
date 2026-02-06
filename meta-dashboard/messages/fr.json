@@ -36,7 +36,15 @@
     "remove": "Supprimer",
     "edit": "Modifier",
     "new": "Nouveau",
-    "or": "ou"
+    "or": "ou",
+    "error_loading_help": "Essayez d’actualiser la page ou vérifiez votre connexion Internet.",
+    "no_data_date_hint": "Essayez d’élargir votre plage de dates pour afficher plus de données.",
+    "no_campaigns_hint": "Aucune campagne trouvée. Créez votre première campagne pour commencer.",
+    "no_creatives_hint": "Aucune créative trouvée. Essayez d’ajuster vos filtres ou votre plage de dates.",
+    "no_targeting_hint": "Aucun groupe de ciblage trouvé. Assurez-vous d’avoir des ensembles de publicités actifs.",
+    "no_results_filters": "Aucun résultat ne correspond à vos filtres. Essayez d’ajuster ou d’effacer les filtres.",
+    "error_connection_lost": "Connexion perdue. Veuillez vérifier votre connexion Internet et réessayer.",
+    "error_permission_denied": "Vous n’êtes pas autorisé à afficher ceci. Contactez l’administrateur de votre compte."
   },
   "status": {
     "ACTIVE": "Actif",
@@ -140,7 +148,14 @@
     "quick_insights": "Aperçu rapide",
     "view_full_analysis": "Voir l'analyse complète",
     "day_of_week_performance": "Performance par jour de la semaine",
-    "day": "Jour"
+    "day": "Jour",
+    "performance_dashboard": "Tableau de bord des performances",
+    "create_new_ad": "Créer une nouvelle publicité",
+    "weekly_performance": "Performance hebdomadaire",
+    "total_spend": "Coût total",
+    "impressions": "Impressions",
+    "clicks": "Clics",
+    "conversions": "Conversions"
   },
   "days": {
     "monday": "Lundi",
@@ -168,7 +183,7 @@
     "campaign_status": "État de la campagne",
     "ads": "Annonces",
     "platform": "Plate-forme",
-    "placement": "Placement",
+    "placement": "Emplacement",
     "demographics": "Données démographiques",
     "country": "Pays",
     "click_tab_to_load": "Cliquez sur un onglet pour charger les données détaillées",
@@ -176,7 +191,15 @@
     "leads": "Prospects",
     "download_leads": "Télécharger les Prospects",
     "download_csv": "Télécharger CSV",
-    "targetingGroups": "Groupes de ciblage"
+    "targetingGroups": "Groupes de ciblage",
+    "platform_help": "Voyez comment vos publicités fonctionnent sur Facebook, Instagram et Audience Network",
+    "placement_help": "Comparer le fil d’actualité, les stories, les Reels et les autres placements publicitaires",
+    "demographics_help": "Analysez les performances par tranche d’âge et par sexe",
+    "country_help": "Voyez quels pays génèrent les meilleurs résultats",
+    "age": "Âge",
+    "age_help": "Trouvez vos tranches d’âge les plus performantes",
+    "gender": "Sexe",
+    "gender_help": "Comparer les performances entre les audiences masculines et féminines"
   },
   "reports": {
     "title": "Rapports avancés",
@@ -243,7 +266,7 @@
       "daily": "Quotidien",
       "weekly": "Hebdomadaire",
       "campaign": "Campagne",
-      "placement": "Placement",
+      "placement": "Emplacement",
       "demographics": "Données démographiques",
       "geographic": "Zone géographique",
       "targeting": "Ciblage"
@@ -258,7 +281,7 @@
       "day": "Jour",
       "week": "Semaine",
       "month": "Mois",
-      "placement": "Placement",
+      "placement": "Emplacement",
       "platform": "Plate-forme",
       "age": "Âge",
       "gender": "Genre",
@@ -341,7 +364,11 @@
       "Interest Audience": "Intérêts",
       "Custom Audience": "Audience personnalisée"
     },
-    "type": "Type"
+    "type": "Type",
+    "broad_targeting_help": "Aucun ciblage spécifique - Facebook trouve la meilleure audience grâce à l’IA",
+    "lookalike_targeting_help": "Personnes similaires à vos clients existants",
+    "interest_targeting_help": "Personnes intéressées par des sujets ou des comportements spécifiques",
+    "custom_audience_targeting_help": "Vos propres listes d’audience (e-mail, visiteurs du site Web, etc.)"
   },
   "actions": {
     "export": "Exporter",
@@ -381,7 +408,10 @@
     "this_month": "Ce mois-ci",
     "today_yesterday": "Aujourd'hui et hier",
     "yesterday": "Hier",
-    "maximum": "Tout le temps"
+    "maximum": "Tout le temps",
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois"
   },
   "footer": {
     "system_info": "Système d'analyse FBWatson"
@@ -499,7 +529,8 @@
       "scarcity": "Rareté",
       "trust": "Confiance",
       "curiosity": "Curiosité"
-    }
+    },
+    "open_ai_chat": "Open AI Chat"
   },
   "auth": {
     "login_title": "Connectez-vous à votre compte",
@@ -724,7 +755,7 @@
   },
   "breakdown": {
     "platform": "Plate-forme",
-    "placement": "Placement",
+    "placement": "Emplacement",
     "demographics": "Données démographiques",
     "country": "Pays",
     "age": "Âge",
@@ -847,7 +878,7 @@
     "leads_desc": "Collecter des inscriptions",
     "traffic": "Trafic",
     "traffic_desc": "Visites du site",
-    "engagement": "Engagement",
+    "engagement": "Interaction",
     "engagement_desc": "J'aime et commentaires",
     "instant_form": "Formulaire instantané",
     "website": "Site web",
@@ -985,25 +1016,25 @@
     "lead_form": "Formulaire de prospect",
     "url": "URL",
     "select_pixel": "-- Sélectionner un pixel --",
-    "select_event": "-- Select Event --",
-    "no_pixel_warning_title": "No Facebook Pixel Found",
-    "no_pixel_warning_desc": "Without a pixel, Facebook can't track conversions on your website. Your campaign may not optimize effectively.",
-    "setup_pixel_link": "Set up your pixel in Events Manager",
+    "select_event": "-- Sélectionner un événement --",
+    "no_pixel_warning_title": "Aucun pixel Facebook trouvé",
+    "no_pixel_warning_desc": "Sans pixel, Facebook ne peut pas suivre les conversions sur votre site web. Votre campagne pourrait ne pas être optimisée efficacement.",
+    "setup_pixel_link": "Configurez votre pixel dans le Gestionnaire d'événements",
     "whatsapp": "WhatsApp",
-    "whatsapp_desc": "Start conversations",
-    "calls": "Calls",
-    "calls_desc": "Get phone calls",
-    "objective_whatsapp": "Get people to message you on WhatsApp. Great for customer service.",
-    "objective_calls": "Get people to call your business directly. Great for appointments.",
-    "calls_tracking_note": "Only click-to-call tracked",
-    "whatsapp_not_connected_title": "WhatsApp Business Not Connected",
-    "whatsapp_not_connected_desc": "To run WhatsApp ads, you need to connect WhatsApp Business to your Facebook Page. This must be done in Facebook Business Settings.",
-    "whatsapp_setup_link": "Set up in Facebook Business Settings",
-    "cta_whatsapp_message": "Send WhatsApp Message",
-    "cta_call_now": "Call Now",
-    "cta_contact_us": "Contact Us",
-    "cta_get_quote": "Get Quote",
-    "whatsapp_destination_note": "Users will message you on WhatsApp when they click the ad",
+    "whatsapp_desc": "Démarrer des conversations",
+    "calls": "Appels",
+    "calls_desc": "Recevez des appels téléphoniques",
+    "objective_whatsapp": "Encouragez les gens à vous envoyer des messages sur WhatsApp. Idéal pour le service client.",
+    "objective_calls": "Encouragez les gens à appeler directement votre entreprise. Idéal pour les rendez-vous.",
+    "calls_tracking_note": "Seuls les clics pour appeler sont suivis",
+    "whatsapp_not_connected_title": "WhatsApp Business non connecté",
+    "whatsapp_not_connected_desc": "Pour diffuser des publicités WhatsApp, vous devez connecter WhatsApp Business à votre page Facebook. Cela doit être fait dans les paramètres de Facebook Business.",
+    "whatsapp_setup_link": "Configurer dans les paramètres de Facebook Business",
+    "cta_whatsapp_message": "Envoyer un message WhatsApp",
+    "cta_call_now": "Appeler",
+    "cta_contact_us": "Nous contacter",
+    "cta_get_quote": "Obtenir un devis",
+    "whatsapp_destination_note": "Les utilisateurs vous enverront un message sur WhatsApp lorsqu'ils cliqueront sur la publicité",
     "calls_destination_note": "Les utilisateurs appelleront le numéro de téléphone de votre entreprise lorsqu'ils cliqueront sur l'annonce",
     "setup_check": "Vérification de la configuration",
     "setup_check_desc": "Assurons-nous que tout est configuré pour obtenir les meilleurs résultats",
@@ -1454,7 +1485,7 @@
     "opt_sales": "Ventes",
     "opt_leads": "Prospects",
     "opt_traffic": "Trafic",
-    "opt_engagement": "Engagement",
+    "opt_engagement": "Interaction",
     "opt_whatsapp": "WhatsApp",
     "opt_calls": "Appels",
     "opt_website": "Site web",
@@ -1534,7 +1565,7 @@
     "form_privacy_placeholder": "https://votresite.fr/confidentialite",
     "form_creating": "Création du formulaire...",
     "form_created": "Formulaire créé avec succès !",
-    "form_email": "Email",
+    "form_email": "E-mail",
     "form_full_name": "Nom complet",
     "form_phone": "Numéro de téléphone",
     "form_city": "Ville",
@@ -1569,12 +1600,12 @@
     "success": "Campagne lancée avec succès !",
     "view_campaign": "Voir la campagne",
     "create_another": "En créer une autre",
-    "targeting": "Targeting",
-    "view_campaign_control": "View Campaign Control",
-    "what_happens_next": "What happens next:",
-    "learning_phase_info": "Your ad enters 'Learning Phase' for 2-3 days",
-    "facebook_optimization_info": "Facebook tests audiences to find what works best",
-    "no_changes_48h": "Don't make changes for 48 hours - let it learn",
+    "targeting": "Ciblage",
+    "view_campaign_control": "Afficher le contrôle de la campagne",
+    "what_happens_next": "Ce qui se passe ensuite :",
+    "learning_phase_info": "Votre publicité entre dans la « phase d’apprentissage » pendant 2 à 3 jours",
+    "facebook_optimization_info": "Facebook teste les audiences pour trouver ce qui fonctionne le mieux",
+    "no_changes_48h": "N’apportez aucune modification pendant 48 heures : laissez-le apprendre",
     "write_for_me": "✨ Écris ceci pour moi",
     "ai_copy_modal_title": "Texte d'annonce généré par l'IA",
     "ai_copy_context_label": "Dites-nous en plus (facultatif)",
@@ -1583,7 +1614,9 @@
     "generating": "Génération en cours...",
     "use_this_copy": "Utiliser ceci",
     "ai_copy_error": "Échec de la génération de la copie. Veuillez réessayer.",
-    "no_business_profile": "Please complete your business profile first to use AI copy generation."
+    "no_business_profile": "Veuillez d'abord compléter votre profil d'entreprise pour utiliser la génération de textes par IA.",
+    "create_ad_title": "Créer votre pub",
+    "create_ad_subtitle": "Choisissez comment vous souhaitez procéder"
   },
   "homepage3": {
     "title": "Que souhaitez-vous faire ?",
@@ -1674,60 +1707,60 @@
     "colorful": "Coloré"
   },
   "glossary": {
-    "title": "Glossary",
-    "search_placeholder": "Search terms...",
-    "no_results": "No terms found",
+    "title": "Glossaire",
+    "search_placeholder": "Termes de recherche...",
+    "no_results": "Aucun terme trouvé",
     "categories": {
-      "metrics": "Metrics",
-      "campaign_structure": "Campaign Structure",
-      "targeting": "Targeting",
-      "creatives": "Creatives"
+      "metrics": "Mesures",
+      "campaign_structure": "Structure de la campagne",
+      "targeting": "Ciblage",
+      "creatives": "Créations"
     },
     "terms": {
       "spend": {
-        "name": "Spend",
-        "category": "metrics",
-        "definition": "Total money spent on your ads during this period. This is the actual amount deducted from your budget."
+        "name": "Coût",
+        "category": "mesures",
+        "definition": "Montant total dépensé pour vos publicités pendant cette période. Il s’agit du montant réel déduit de votre budget."
       },
       "impressions": {
         "name": "Impressions",
-        "category": "metrics",
-        "definition": "How many times your ads were displayed to people. One person might see your ad multiple times."
+        "category": "mesures",
+        "definition": "Nombre de fois que vos publicités ont été diffusées auprès des gens. Une personne peut voir votre publicité plusieurs fois."
       },
       "clicks": {
-        "name": "Clicks",
-        "category": "metrics",
-        "definition": "Number of times people clicked on your ads. This includes clicks to your website, app, or other destinations."
+        "name": "Clics",
+        "category": "mesures",
+        "definition": "Nombre de fois où les gens ont cliqué sur vos publicités. Cela comprend les clics vers votre site Web, votre application ou d’autres destinations."
       },
       "ctr": {
-        "name": "CTR (Click-Through Rate)",
-        "category": "metrics",
-        "definition": "Percentage of people who clicked after seeing your ad. Calculated as clicks ÷ impressions × 100. Above 1% is generally good."
+        "name": "CTR (taux de clics)",
+        "category": "mesures",
+        "definition": "Pourcentage de personnes ayant cliqué après avoir vu votre publicité. Calculé comme clics ÷ impressions × 100. Un résultat supérieur à 1 % est généralement bon."
       },
       "cpc": {
-        "name": "CPC (Cost Per Click)",
-        "category": "metrics",
-        "definition": "Average cost for each click on your ad. Calculated as spend ÷ clicks. Lower is more efficient."
+        "name": "CPC (coût par clic)",
+        "category": "mesures",
+        "definition": "Coût moyen pour chaque clic sur votre publicité. Calculé comme coût ÷ clics. Plus il est bas, plus il est efficace."
       },
       "cpm": {
-        "name": "CPM (Cost Per 1000 Impressions)",
-        "category": "metrics",
-        "definition": "How much you pay for every 1,000 times your ad is shown. Useful for comparing reach efficiency across campaigns."
+        "name": "CPM (coût pour 1 000 impressions)",
+        "category": "mesures",
+        "definition": "Ce que vous payez pour chaque tranche de 1 000 affichages de votre publicité. Utile pour comparer l’efficacité de la portée entre les campagnes."
       },
       "conversions": {
         "name": "Conversions",
-        "category": "metrics",
-        "definition": "Actions you care about that people take after clicking your ad - like purchases, signups, form submissions, or downloads."
+        "category": "mesures",
+        "definition": "Actions qui vous intéressent et que les gens effectuent après avoir cliqué sur votre publicité, comme les achats, les inscriptions, les soumissions de formulaires ou les téléchargements."
       },
       "cpa": {
-        "name": "CPA (Cost Per Acquisition)",
-        "category": "metrics",
-        "definition": "Average cost for each conversion. Calculated as spend ÷ conversions. Lower means you're getting results more efficiently."
+        "name": "CPA (coût par acquisition)",
+        "category": "mesures",
+        "definition": "Coût moyen pour chaque conversion. Calculé comme coût ÷ conversions. Plus il est bas, cela signifie que vous obtenez des résultats plus efficacement."
       },
       "roas": {
-        "name": "ROAS (Return on Ad Spend)",
-        "category": "metrics",
-        "definition": "Revenue earned per dollar spent on ads. A ROAS of 3x means you earned $3 for every $1 spent. Higher is better."
+        "name": "ROAS (retour sur les dépenses publicitaires)",
+        "category": "mesures",
+        "definition": "Revenu gagné par dollar dépensé en publicités. Un ROAS de 3x signifie que vous avez gagné 3 $ pour chaque 1 $ dépensé. Plus il est élevé, mieux c’est."
       },
       "conversion_rate": {
         "name": "Taux de conversion",
@@ -1736,17 +1769,17 @@
       },
       "campaign": {
         "name": "Campagne",
-        "category": "campaign_structure",
+        "category": "structure_de_la_campagne",
         "definition": "Le niveau supérieur des publicités Facebook. Contient votre objectif (ce que vous voulez atteindre) et votre stratégie budgétaire globale. Considérez-le comme un dossier pour les groupes de ciblage associés."
       },
       "targeting": {
         "name": "Ciblage",
-        "category": "campaign_structure",
+        "category": "structure_de_la_campagne",
         "definition": "Le niveau intermédiaire qui contrôle QUI voit vos publicités, QUAND ils les voient et OÙ elles apparaissent. Contient les paramètres de ciblage, de planification et de budget."
       },
       "ad": {
         "name": "Publicité",
-        "category": "campaign_structure",
+        "category": "structure_de_la_campagne",
         "definition": "La création réelle que les gens voient : votre image ou vidéo, votre titre, votre texte et votre bouton d'appel à l'action. Plusieurs publicités peuvent être testées au sein d'un même ciblage."
       },
       "lookalike": {
@@ -1815,5 +1848,122 @@
     "subtitle": "Mettre en pause, reprendre et analyser vos campagnes, ciblages et créatifs",
     "hierarchy_guide": "Campagne → Ciblage → Annonce. Cliquez sur la flèche pour développer.",
     "hierarchy_tooltip": "Campagne → Ciblage → Annonce. Cliquez sur la flèche pour développer. Si une campagne ou un ciblage est en pause, tous les éléments qu'il contient ne seront pas diffusés même s'ils apparaissent comme actifs."
+  },
+  "homepage2": {
+    "greeting": "Salut {name} !",
+    "subtitle": "Voici le rendement de vos publicités",
+    "default_name": "là",
+    "ai_summary": {
+      "title": "Résumé de l’IA",
+      "subtitle": "Votre compte en un coup d’œil",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "tldr": "Principaux enseignements",
+      "no_data": "Aucune donnée disponible pour le moment. Connectez un compte pour commencer."
+    },
+    "metrics": {
+      "spend": "Coût",
+      "conversions": "Conversions",
+      "cpa": "CPA",
+      "roas": "ROAS"
+    },
+    "actions": {
+      "create": "Créer",
+      "performance": "Performance",
+      "ask_ai": "Demander à l'IA"
+    }
+  },
+  "topnav": {
+    "home": "Accueil",
+    "performance": "Performance",
+    "campaigns": "Campagnes",
+    "create": "Créer",
+    "advanced": "Avancé"
+  },
+  "account_performance": {
+    "title": "Performance du compte",
+    "description": "Voyez comment vos campagnes fonctionnent"
+  },
+  "campaigns2": {
+    "title": "Vos campagnes",
+    "description": "Afficher et contrôler vos campagnes",
+    "name": "Campagne",
+    "spend": "Coût",
+    "conversions": "Conv",
+    "cpa": "CPA",
+    "status": "Statut",
+    "on": "Activé",
+    "off": "Désactivé",
+    "total": "Total",
+    "no_campaigns": "Aucune campagne trouvée",
+    "see_detailed": "Voir la vue détaillée",
+    "last_7_days": "7 derniers jours",
+    "last_14_days": "14 derniers jours",
+    "last_30_days": "30 derniers jours",
+    "performance_by_time": "Performance par période"
+  },
+  "performance": {
+    "title": "Performance",
+    "description": "Aperçu des performances basé sur l'IA",
+    "what_to_do": "Que faire ensuite?",
+    "ai_recommendations": "Recommandations basées sur l'IA",
+    "no_recommendations": "Aucune recommandation disponible pour le moment",
+    "rec_scale_title": "Augmenter la campagne gagnante",
+    "rec_scale_desc": "\"{name}\" a un ROAS de {roas}x - envisagez d'augmenter le budget",
+    "rec_scale_action": "Voir la campagne",
+    "rec_fix_title": "Examiner la campagne sous-performante",
+    "rec_fix_desc": "\"{name}\" nécessite une attention particulière - vérifiez le ciblage et les créations",
+    "rec_fix_action": "Vérifier",
+    "rec_general_title": "Explorer les informations",
+    "rec_general_desc": "Plongez plus profondément dans l'analyse de votre compte",
+    "rec_general_action": "Afficher les informations"
+  },
+  "create_page": {
+    "title": "Que souhaitez-vous faire?",
+    "add_ads_title": "Ajouter/Mettre à jour des annonces",
+    "add_ads_desc": "Ajouter de nouvelles créations aux campagnes qui fonctionnent",
+    "add_ads_hint": "Action la plus courante",
+    "new_campaign_title": "Créer une nouvelle campagne",
+    "new_campaign_desc": "Recommencer avec un nouveau budget et un nouveau ciblage",
+    "build_manually": "Créer une campagne manuellement"
+  },
+  "help": {
+    "campaign_control_page": "Gérer toutes les campagnes, le ciblage et les créations en un seul endroit. Utilisez les onglets pour changer de vue. Cliquez sur les lignes pour afficher les détails.",
+    "reports_page": "Créer des rapports personnalisés en sélectionnant des dimensions et des segmentations. Exporter vers Excel ou Google Sheets.",
+    "insights_page": "Analyse de vos performances publicitaires basée sur l'IA. Posez des questions ou parcourez les informations automatisées.",
+    "comparison_intro": "Sélectionnez 2 à 5 éléments à comparer côte à côte. Le gagnant est mis en évidence par une couronne.",
+    "comparison_how_to": "Cochez les cases pour sélectionner des éléments, puis cliquez sur Comparer"
+  },
+  "getting_started": {
+    "title": "Bienvenue ! Voici comment commencer",
+    "tip_1": "Vérifiez vos ICP en haut pour voir les performances globales",
+    "tip_2": "Utilisez le filtre de date pour comparer différentes périodes",
+    "tip_3": "Cliquez sur n'importe quelle fiche de métrique pour plus de détails",
+    "tip_4": "Consultez le guide du débutant pour connaître les meilleures pratiques de Facebook Ads",
+    "dismiss": "Compris, ne plus afficher",
+    "learn_more": "En savoir plus"
+  },
+  "feedback": {
+    "title": "Envoyer un commentaire",
+    "subtitle": "Aidez-nous à nous améliorer en partageant vos pensées",
+    "type_label": "Quel type de commentaire ?",
+    "type_bug": "Signaler un bug",
+    "type_feature_request": "Demande de fonctionnalité",
+    "type_improvement": "Suggestion",
+    "type_other": "Autre",
+    "title_label": "Titre",
+    "title_placeholder": "Bref résumé de votre commentaire",
+    "message_label": "Description",
+    "message_placeholder": "Donnez-nous plus de détails...",
+    "rating_label": "Êtes-vous satisfait ? (facultatif)",
+    "submit": "Envoyer le commentaire",
+    "submitting": "Envoi en cours...",
+    "cancel": "Annuler",
+    "error_required": "Veuillez remplir le titre et la description",
+    "error_submit": "Échec de l'envoi du commentaire. Veuillez réessayer.",
+    "success_title": "Merci !",
+    "success_message": "Votre commentaire a été envoyé avec succès.",
+    "button_tooltip": "Envoyez-nous vos commentaires"
   }
 }

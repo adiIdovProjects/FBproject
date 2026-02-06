@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime, Boolean, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, DateTime, Boolean, Text, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .schema import Base, DimAccount
@@ -165,3 +165,53 @@ class PageView(Base):
     user_agent = Column(Text)
 
     created_at = Column(DateTime, server_default=func.now(), index=True)
+
+
+class Feedback(Base):
+    """
+    User feedback table for bugs, feature requests, and suggestions.
+    """
+    __tablename__ = 'feedback'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+
+    feedback_type = Column(String(50), nullable=False)  # bug, feature_request, improvement, other
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    rating = Column(Integer, nullable=True)  # 1-5 satisfaction rating
+    page_path = Column(String(500), nullable=True)  # Where feedback was submitted from
+
+    status = Column(String(50), default='new')  # new, acknowledged, in_progress, closed
+    admin_notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+
+    # Relationships
+    user = relationship("User", backref="feedback")
+
+
+class UserReportPreferences(Base):
+    """
+    User's custom report configuration for My Report feature.
+    One row per user - stores their preferred metrics, chart, and email schedule.
+    """
+    __tablename__ = 'user_report_preferences'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
+
+    # Report configuration
+    selected_metrics = Column(ARRAY(String), default=['spend', 'conversions', 'cpa'])
+    chart_type = Column(String(50), default='none')  # 'none', 'spend', 'conversions'
+    include_recommendations = Column(Boolean, default=True)
+
+    # Email schedule
+    email_schedule = Column(String(20), default='none')  # 'none', 'daily', 'weekly'
+
+    # Metadata
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", backref="report_preferences")

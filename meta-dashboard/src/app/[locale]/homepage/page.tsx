@@ -14,6 +14,8 @@ import { useUser } from '../../../context/UserContext';
 import BudgetTrackerCard from '../../../components/homepage/BudgetTrackerCard';
 import DashboardKPICards from '../../../components/homepage/DashboardKPICards';
 import WeeklyPerformanceChart from '../../../components/homepage/WeeklyPerformanceChart';
+import GettingStartedCard from '../../../components/homepage/GettingStartedCard';
+import TipsCard from '../../../components/homepage/TipsCard';
 
 export default function Homepage() {
   const t = useTranslations();
@@ -61,12 +63,17 @@ export default function Homepage() {
         </button>
       </div>
 
+      {/* Getting Started Card (for new users) */}
+      <div className="mb-6">
+        <GettingStartedCard locale={locale} />
+      </div>
+
       {/* KPI Cards */}
       <div className="mb-6">
         <DashboardKPICards startDate={startDate} endDate={endDate} />
       </div>
 
-      {/* Chart + Budget Tracker Row */}
+      {/* Chart + Budget Tracker + Tips Row */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Weekly Performance Chart - Takes 3 columns */}
         <div className="lg:col-span-3">
@@ -74,8 +81,9 @@ export default function Homepage() {
         </div>
 
         {/* Budget Tracker - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <BudgetTrackerCard className="h-full" />
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <BudgetTrackerCard />
+          <TipsCard />
         </div>
       </div>
     </MainLayout>

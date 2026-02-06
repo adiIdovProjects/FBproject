@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Info, Eye, Target, Image, Filter, X, Search } from 'lucide-react';
+import { Info, Eye, Target, Image, Filter, X, Search, HelpCircle } from 'lucide-react';
 
 // Components
 import { MainLayout } from '../../../components/MainLayout';
@@ -251,7 +251,15 @@ export default function AdvancedAnalyticsPage() {
       description={t('advanced.subtitle') || 'Pause, resume, and analyze your campaigns, targeting, and creatives'}
     >
       {/* Tab Navigation - 3 tabs: Campaigns Performance, Targeting, Creatives - Centered */}
-      <div className="flex justify-center gap-2 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex justify-center items-center gap-2 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Page Help */}
+        <div className="relative group">
+          <HelpCircle className="w-5 h-5 text-gray-400 hover:text-gray-200 cursor-help" />
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg border border-gray-700 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+            {t('help.campaign_control_page') || 'Manage all campaigns, targeting, and creatives in one place. Use tabs to switch views. Click rows to expand details.'}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+          </div>
+        </div>
         <button
           onClick={() => setActiveTab('campaigns')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
