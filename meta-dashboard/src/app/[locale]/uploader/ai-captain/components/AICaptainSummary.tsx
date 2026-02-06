@@ -11,23 +11,42 @@ import { mutationsService, SmartCampaignRequest } from '@/services/mutations.ser
 import confetti from 'canvas-confetti';
 
 // Parse Facebook API errors to user-friendly messages
+// IMPORTANT: Never expose raw API errors to users
 function parseFbError(err: Error & { response?: { data?: { detail?: string } } }): string {
-    const msg = err.response?.data?.detail || err.message || '';
+    // Log full error for debugging
+    console.error('Campaign creation error:', err);
 
+    const msg = (err.response?.data?.detail || err.message || '').toLowerCase();
+
+    // Map known error patterns to user-friendly messages
     const errorMap: Record<string, string> = {
-        'Permission denied': "Your Facebook account doesn't have permission to create ads.",
-        'Budget too low': "Minimum budget is $1/day for your target audience.",
-        'Invalid pixel': "No conversion pixel found. Please set up Facebook Pixel first.",
-        'Invalid access token': "Your Facebook session has expired. Please log in again.",
-        'Invalid creative': "There's an issue with your image or video. Please try a different file.",
-        'Invalid page': "The selected Facebook page is invalid.",
+        'permission': "Your Facebook account doesn't have permission to create ads. Check your ad account settings.",
+        'budget': "Budget too low. Facebook requires at least $5/day for most campaigns.",
+        'pixel': "No conversion pixel found. Please set up Facebook Pixel in Events Manager first.",
+        'access token': "Your Facebook session has expired. Please reconnect your account in Settings.",
+        'token': "Your Facebook session has expired. Please reconnect your account in Settings.",
+        'creative': "There's an issue with your image or video. Please try a different file.",
+        'page': "The selected Facebook page is invalid or not connected.",
+        'rate limit': "Too many requests. Please wait a moment and try again.",
+        'timeout': "The request took too long. Please check your connection and try again.",
+        'network': "Network error. Please check your internet connection.",
+        'duplicate': "A campaign with this name already exists. Please use a different name.",
+        'targeting': "Your targeting settings are invalid. Try broadening your audience.",
+        'audience': "Your audience is too small. Try adding more locations or interests.",
+        'lead form': "There was an issue with the lead form. Please select a different form or create a new one.",
+        'whatsapp': "WhatsApp Business is not properly connected. Please check your settings in Meta Business Suite.",
+        'invalid parameter': "One of the settings is incorrect. Please review your campaign details.",
+        'daily spend limit': "Your ad account has reached its daily spend limit.",
+        'billing': "There's an issue with your payment method. Please update your billing information.",
     };
 
+    // Check for known error patterns
     for (const [key, friendly] of Object.entries(errorMap)) {
         if (msg.includes(key)) return friendly;
     }
 
-    return msg || 'An unexpected error occurred. Please try again.';
+    // NEVER expose raw API error messages - use generic message
+    return 'Something went wrong while creating your campaign. Please try again or contact support if the issue persists.';
 }
 
 export const AICaptainSummary: React.FC = () => {

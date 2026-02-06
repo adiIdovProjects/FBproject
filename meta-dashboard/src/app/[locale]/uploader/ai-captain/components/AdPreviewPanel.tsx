@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Image as ImageIcon, ExternalLink, ThumbsUp, MessageCircle, Share2, ChevronLeft, ChevronRight, Copy, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCaptain } from './CaptainContext';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 interface AdPreviewPanelProps {
     className?: string;
@@ -25,6 +26,7 @@ const CTA_DISPLAY: Record<string, string> = {
 export const AdPreviewPanel: React.FC<AdPreviewPanelProps> = ({ className = '' }) => {
     const t = useTranslations();
     const { state, dispatch } = useCaptain();
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const currentAd = state.ads[state.currentAdIndex];
     if (!currentAd) return null;
@@ -47,10 +49,15 @@ export const AdPreviewPanel: React.FC<AdPreviewPanelProps> = ({ className = '' }
         dispatch({ type: 'DUPLICATE_AD', index: state.currentAdIndex });
     };
 
-    const deleteAd = () => {
+    const handleDeleteClick = () => {
         if (state.ads.length > 1) {
-            dispatch({ type: 'DELETE_AD', index: state.currentAdIndex });
+            setShowDeleteConfirm(true);
         }
+    };
+
+    const confirmDeleteAd = () => {
+        dispatch({ type: 'DELETE_AD', index: state.currentAdIndex });
+        setShowDeleteConfirm(false);
     };
 
     return (
@@ -95,7 +102,7 @@ export const AdPreviewPanel: React.FC<AdPreviewPanelProps> = ({ className = '' }
                         </button>
                         {state.ads.length > 1 && (
                             <button
-                                onClick={deleteAd}
+                                onClick={handleDeleteClick}
                                 className="p-1.5 rounded hover:bg-gray-700 transition-colors text-gray-400 hover:text-red-400"
                                 title={t('captain.delete_ad')}
                             >
@@ -222,6 +229,18 @@ export const AdPreviewPanel: React.FC<AdPreviewPanelProps> = ({ className = '' }
                     <span className="truncate">{currentAd.link}</span>
                 </div>
             )}
+
+            {/* Delete confirmation dialog */}
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={confirmDeleteAd}
+                title={t('captain.delete_ad')}
+                message={t('captain.delete_ad_confirm') || 'Are you sure you want to delete this ad? This action cannot be undone.'}
+                confirmText={t('common.delete_permanently')}
+                cancelText={t('common.cancel')}
+                variant="danger"
+            />
         </div>
     );
 };

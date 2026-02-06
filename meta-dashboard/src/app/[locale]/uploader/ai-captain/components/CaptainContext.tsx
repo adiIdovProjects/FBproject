@@ -30,6 +30,8 @@ export interface QuickReplyOption {
     value: string;
     icon?: string;
     description?: string; // i18n key for description
+    isPopular?: boolean; // Show "Most Popular" badge
+    isRecommended?: boolean; // Show "Recommended" badge
 }
 
 // Flow types

@@ -11,6 +11,7 @@ import { StepIndicator, MobileStepIndicator } from './StepIndicator';
 import { AdPreviewPanel } from './AdPreviewPanel';
 import { LeadFormBuilder } from './LeadFormBuilder';
 import { getCurrentNode } from '../lib/conversationFlow';
+import { getBudgetRecommendation, getAgeRangeSuggestion, getRecommendedCTAs, isCTARecommended } from '../lib/recommendations';
 import { useAccount } from '@/context/AccountContext';
 import { mutationsService, GeoLocation, InterestTarget, CustomAudience } from '@/services/mutations.service';
 import { TooltipIcon } from '@/components/common/TooltipIcon';
@@ -831,11 +832,25 @@ export const AICaptainChat: React.FC = () => {
                                     <button
                                         key={option.value}
                                         onClick={() => processAnswer(option.value, option.label)}
-                                        className="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl hover:border-amber-500 text-left transition-colors flex items-center gap-3"
+                                        className={`w-full p-4 bg-gray-900 border rounded-xl hover:border-amber-500 text-left transition-colors flex items-center gap-3 ${
+                                            option.isRecommended ? 'border-amber-500/50' : option.isPopular ? 'border-blue-500/30' : 'border-gray-700'
+                                        }`}
                                     >
                                         {option.icon && <span className="text-2xl">{option.icon}</span>}
                                         <div className="flex-1">
-                                            <span className="text-white font-medium">{option.label}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-white font-medium">{option.label}</span>
+                                                {option.isRecommended && (
+                                                    <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                                                        {t('captain.badge_recommended')}
+                                                    </span>
+                                                )}
+                                                {option.isPopular && !option.isRecommended && (
+                                                    <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                                                        {t('captain.badge_popular')}
+                                                    </span>
+                                                )}
+                                            </div>
                                             {option.description && (
                                                 <p className="text-gray-400 text-sm mt-1">{t(option.description)}</p>
                                             )}
@@ -1071,46 +1086,68 @@ export const AICaptainChat: React.FC = () => {
                         )}
 
                         {/* Age range dual dropdowns */}
-                        {currentNode?.inputType === 'age_range' && (
-                            <div className="space-y-4">
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <label className="block text-sm text-gray-400 mb-2">{t('captain.age_min')}</label>
-                                        <select
-                                            value={ageMin}
-                                            onChange={(e) => setAgeMin(parseInt(e.target.value))}
-                                            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
-                                        >
-                                            {Array.from({ length: 47 }, (_, i) => 18 + i).map(age => (
-                                                <option key={age} value={age}>{age}</option>
-                                            ))}
-                                        </select>
+                        {currentNode?.inputType === 'age_range' && (() => {
+                            const ageRec = getAgeRangeSuggestion(state.objective || 'SALES');
+                            return (
+                                <div className="space-y-4">
+                                    {/* Age range suggestion */}
+                                    <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-blue-400 font-medium text-sm">
+                                                    {t('captain.age_suggested', { min: ageRec.min, max: ageRec.max })}
+                                                </p>
+                                                <p className="text-gray-400 text-xs mt-0.5">
+                                                    {t(ageRec.labelKey)}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => { setAgeMin(ageRec.min); setAgeMax(ageRec.max); }}
+                                                className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs rounded-lg transition-colors"
+                                            >
+                                                {t('captain.age_apply_suggestion')}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <label className="block text-sm text-gray-400 mb-2">{t('captain.age_max')}</label>
-                                        <select
-                                            value={ageMax}
-                                            onChange={(e) => setAgeMax(parseInt(e.target.value))}
-                                            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
-                                        >
-                                            {Array.from({ length: 47 }, (_, i) => 19 + i).map(age => (
-                                                <option key={age} value={age}>{age === 65 ? '65+' : age}</option>
-                                            ))}
-                                        </select>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block text-sm text-gray-400 mb-2">{t('captain.age_min')}</label>
+                                            <select
+                                                value={ageMin}
+                                                onChange={(e) => setAgeMin(parseInt(e.target.value))}
+                                                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                                            >
+                                                {Array.from({ length: 47 }, (_, i) => 18 + i).map(age => (
+                                                    <option key={age} value={age}>{age}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-sm text-gray-400 mb-2">{t('captain.age_max')}</label>
+                                            <select
+                                                value={ageMax}
+                                                onChange={(e) => setAgeMax(parseInt(e.target.value))}
+                                                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                                            >
+                                                {Array.from({ length: 47 }, (_, i) => 19 + i).map(age => (
+                                                    <option key={age} value={age}>{age === 65 ? '65+' : age}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
+                                    {ageMin >= ageMax && (
+                                        <p className="text-red-400 text-sm text-center">Minimum age must be less than maximum age</p>
+                                    )}
+                                    <button
+                                        onClick={handleAgeConfirm}
+                                        disabled={ageMin >= ageMax}
+                                        className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-700 text-white font-medium rounded-xl transition-colors"
+                                    >
+                                        {t('captain.confirm_age')}
+                                    </button>
                                 </div>
-                                {ageMin >= ageMax && (
-                                    <p className="text-red-400 text-sm text-center">Minimum age must be less than maximum age</p>
-                                )}
-                                <button
-                                    onClick={handleAgeConfirm}
-                                    disabled={ageMin >= ageMax}
-                                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-700 text-white font-medium rounded-xl transition-colors"
-                                >
-                                    {t('captain.confirm_age')}
-                                </button>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Add another ad options */}
                         {currentNode?.inputType === 'add_another_ad' && (
@@ -1185,39 +1222,58 @@ export const AICaptainChat: React.FC = () => {
                         )}
 
                         {/* Budget input */}
-                        {currentNode?.inputType === 'budget' && (
-                            <div className="space-y-4">
-                                <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                                        <input
-                                            type="number"
-                                            min="5"
-                                            value={textInput}
-                                            onChange={(e) => handleBudgetChange(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && !budgetWarning && handleTextSubmit()}
-                                            placeholder="20"
-                                            className={`w-full bg-gray-900 border rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500 outline-none ${budgetWarning ? 'border-red-500' : 'border-gray-700'}`}
-                                        />
+                        {currentNode?.inputType === 'budget' && (() => {
+                            const budgetRec = getBudgetRecommendation(state.objective || 'SALES');
+                            return (
+                                <div className="space-y-4">
+                                    {/* Budget recommendation */}
+                                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-amber-400 font-medium text-sm">
+                                                    {t('captain.budget_suggested', { amount: budgetRec.recommended })}
+                                                </p>
+                                                <p className="text-gray-400 text-xs mt-0.5">
+                                                    {t(budgetRec.reasonKey)}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => setTextInput(budgetRec.recommended.toString())}
+                                                className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs rounded-lg transition-colors"
+                                            >
+                                                {t('captain.budget_apply_suggestion')}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <button
-                                        onClick={handleTextSubmit}
-                                        disabled={!textInput || parseFloat(textInput) < 5}
-                                        className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-700 rounded-xl transition-colors"
-                                    >
-                                        <Send className="w-5 h-5 text-white" />
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                            <input
+                                                type="number"
+                                                min="5"
+                                                value={textInput}
+                                                onChange={(e) => handleBudgetChange(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && !budgetWarning && handleTextSubmit()}
+                                                placeholder={budgetRec.recommended.toString()}
+                                                className={`w-full bg-gray-900 border rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500 outline-none ${budgetWarning ? 'border-red-500' : 'border-gray-700'}`}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleTextSubmit}
+                                            disabled={!textInput || parseFloat(textInput) < 5}
+                                            className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-700 rounded-xl transition-colors"
+                                        >
+                                            <Send className="w-5 h-5 text-white" />
+                                        </button>
+                                    </div>
+                                    {budgetWarning && (
+                                        <p className="text-red-400 text-sm text-center">
+                                            {t('captain.budget_minimum_warning')}
+                                        </p>
+                                    )}
                                 </div>
-                                {budgetWarning && (
-                                    <p className="text-red-400 text-sm text-center">
-                                        {t('captain.budget_minimum_warning')}
-                                    </p>
-                                )}
-                                <p className="text-sm text-gray-400 text-center">
-                                    {t('captain.budget_recommendation')}
-                                </p>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Location search */}
                         {currentNode?.inputType === 'location_search' && (

@@ -13,8 +13,8 @@ export interface ConversationNode {
 
 // Quick reply options for objectives
 const OBJECTIVE_OPTIONS: QuickReplyOption[] = [
-    { label: 'Sales', value: 'SALES', icon: '💰', description: 'captain.objective_desc_sales' },
-    { label: 'Leads', value: 'LEADS', icon: '📋', description: 'captain.objective_desc_leads' },
+    { label: 'Sales', value: 'SALES', icon: '💰', description: 'captain.objective_desc_sales', isPopular: true },
+    { label: 'Leads', value: 'LEADS', icon: '📋', description: 'captain.objective_desc_leads', isPopular: true },
     { label: 'Traffic', value: 'TRAFFIC', icon: '🌐', description: 'captain.objective_desc_traffic' },
     { label: 'Engagement', value: 'ENGAGEMENT', icon: '❤️', description: 'captain.objective_desc_engagement' },
     { label: 'WhatsApp', value: 'WHATSAPP', icon: '💬', description: 'captain.objective_desc_whatsapp' },
@@ -40,7 +40,7 @@ const GENDER_OPTIONS: QuickReplyOption[] = [
 ];
 
 const PLATFORM_OPTIONS: QuickReplyOption[] = [
-    { label: 'Both', value: 'all', icon: '📱' },
+    { label: 'Both', value: 'all', icon: '📱', isRecommended: true },
     { label: 'Facebook', value: 'facebook', icon: '📘' },
     { label: 'Instagram', value: 'instagram', icon: '📸' },
 ];
@@ -58,7 +58,7 @@ const EDIT_TYPE_OPTIONS: QuickReplyOption[] = [
 ];
 
 const TARGETING_TYPE_OPTIONS: QuickReplyOption[] = [
-    { label: 'Advantage+', value: 'advantage', icon: '🚀', description: 'captain.targeting_advantage_desc' },
+    { label: 'Advantage+', value: 'advantage', icon: '🚀', description: 'captain.targeting_advantage_desc', isRecommended: true },
     { label: 'Custom', value: 'custom', icon: '🎯', description: 'captain.targeting_custom_desc' },
 ];
 
