@@ -2049,6 +2049,25 @@
     "success_message": "Ihr Feedback wurde erfolgreich übermittelt.",
     "button_tooltip": "Senden Sie uns Feedback"
   },
+  "leads": {
+    "title": "Leads",
+    "description": "Verwalten Sie Ihre Lead-Formulare",
+    "select_form": "Lead-Formular auswählen...",
+    "export_csv": "CSV exportieren",
+    "no_leads": "Keine Leads für dieses Formular gefunden",
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "date": "Datum",
+    "stage": "Phase",
+    "total_leads": "{count} Leads",
+    "gdpr_tooltip": "Sie sind für diese Lead-Daten gemäß DSGVO verantwortlich.",
+    "tab_details": "Details",
+    "tab_board": "Board",
+    "unnamed": "Unbenannt",
+    "no_contact": "Keine Kontaktdaten",
+    "drop_here": "Leads hier ablegen"
+  },
   "onboarding": {
     "step1_title": "Navigation",
     "step1_content": "Verwenden Sie die Seitenleiste, um zwischen verschiedenen Bereichen wie Dashboard, Kampagnen und Creatives zu navigieren.",

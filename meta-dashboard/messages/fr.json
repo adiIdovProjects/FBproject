@@ -2049,6 +2049,25 @@
     "success_message": "Votre commentaire a été envoyé avec succès.",
     "button_tooltip": "Envoyez-nous vos commentaires"
   },
+  "leads": {
+    "title": "Prospects",
+    "description": "Gérez vos formulaires de prospects",
+    "select_form": "Sélectionner un formulaire...",
+    "export_csv": "Exporter CSV",
+    "no_leads": "Aucun prospect trouvé pour ce formulaire",
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "date": "Date",
+    "stage": "Étape",
+    "total_leads": "{count} prospects",
+    "gdpr_tooltip": "Vous êtes responsable de ces données de prospects selon le RGPD.",
+    "tab_details": "Détails",
+    "tab_board": "Tableau",
+    "unnamed": "Sans nom",
+    "no_contact": "Pas d'informations de contact",
+    "drop_here": "Déposez les prospects ici"
+  },
   "onboarding": {
     "step1_title": "Navigation",
     "step1_content": "Utilisez la barre latérale pour naviguer entre les différentes sections comme Tableau de bord, Campagnes et Créatifs.",

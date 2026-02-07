@@ -41,13 +41,14 @@ export default function FunnelStages({ stages, counts, onStageNameUpdate }: Funn
         }
     };
 
-    // Stage colors for visual distinction
+    // Stage colors for visual distinction (6th = Unqualified in red/gray)
     const stageColors = [
         'from-blue-500 to-blue-600',
         'from-cyan-500 to-cyan-600',
         'from-teal-500 to-teal-600',
         'from-emerald-500 to-emerald-600',
         'from-green-500 to-green-600',
+        'from-red-500 to-red-600',
     ];
 
     return (

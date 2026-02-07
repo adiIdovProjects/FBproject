@@ -17,8 +17,8 @@ class LeadFunnelRepository:
         ).first()
 
         if not record:
-            # Create default stages
-            default_stages = ["New Lead", "Contacted", "Meeting Booked", "Proposal Sent", "Closed"]
+            # Create default stages (6 stages including Unqualified)
+            default_stages = ["New Lead", "Contacted", "Meeting Booked", "Proposal Sent", "Closed", "Unqualified"]
             record = LeadFunnelStages(
                 account_id=account_id,
                 stage_names=json.dumps(default_stages)

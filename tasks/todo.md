@@ -1,6 +1,53 @@
 # Project Tasks & Progress
 
-## Current Task: Pixel Event Scanner + Wizard Smart Guidance (COMPLETED)
+## Current Task: Leads Page Improvements (COMPLETED)
+
+### Goal
+Enhance the leads page with:
+1. **Date filter** - Allow users to adjust start/end dates to see more/less leads
+2. **Two tabs**:
+   - Tab 1: "Details" - Current table view (as-is)
+   - Tab 2: "Board" - Kanban-style board with drag-and-drop by lead name
+3. **Unqualified stage** - Add a 6th stage for irrelevant leads
+
+### Changes Made
+
+#### Frontend
+- **Modified** `meta-dashboard/src/app/[locale]/leads/page.tsx`:
+  - Converted hardcoded 30-day date range to state with date inputs
+  - Added tab buttons (Details/Board) with icons
+  - Conditionally renders LeadsTable or LeadsKanban based on active tab
+  - Updated stageCounts to handle 6 stages
+
+- **Created** `meta-dashboard/src/components/leads/LeadsKanban.tsx`:
+  - 6 columns (one per stage) with colored headers
+  - Lead cards showing name with hover tooltip (email/phone)
+  - Native HTML5 drag-and-drop (no external library)
+  - Visual feedback during drag (highlight target column)
+  - RTL support for Arabic/Hebrew
+
+- **Modified** `meta-dashboard/src/components/leads/FunnelStages.tsx`:
+  - Added red color for 6th stage (Unqualified)
+
+#### Backend
+- **Modified** `backend/api/repositories/lead_funnel_repository.py`:
+  - Added "Unqualified" as 6th default stage
+
+#### Translations (5 files)
+- Added keys: `tab_details`, `tab_board`, `unnamed`, `no_contact`, `drop_here`
+- Files: en.json, he.json, ar.json, de.json, fr.json
+
+### Review
+- Date filter: Two simple date inputs, auto-fetches leads when changed
+- Tabs: Toggle between table view and kanban board
+- Kanban: Drag leads by grabbing the card, drop in any column to change stage
+- Tooltip: Hover over card to see email/phone
+- Unqualified: 6th stage with red color for filtering out bad leads
+- No external dependencies added (uses native drag-and-drop)
+
+---
+
+## Previous Task: Pixel Event Scanner + Wizard Smart Guidance (COMPLETED)
 
 ### Goal
 Help users know what their pixel tracks before building campaigns, show smart guidance in the wizard.

@@ -7,12 +7,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Download } from 'lucide-react';
+import { Download, Table, LayoutGrid } from 'lucide-react';
 import { MainLayout } from '../../../components/MainLayout';
 import { useAccount } from '../../../context/AccountContext';
 import { mutationsService } from '../../../services/mutations.service';
 import FunnelStages from '../../../components/leads/FunnelStages';
 import LeadsTable from '../../../components/leads/LeadsTable';
+import LeadsKanban from '../../../components/leads/LeadsKanban';
 
 interface LeadForm {
     id: string;
@@ -33,17 +34,17 @@ export default function LeadsPage() {
     const [stageNames, setStageNames] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [activeTab, setActiveTab] = useState<'details' | 'board'>('details');
 
-    // Date range (last 30 days)
-    const { startDate, endDate } = useMemo(() => {
-        const end = new Date();
+    // Date range state (default: last 30 days)
+    const [startDate, setStartDate] = useState(() => {
         const start = new Date();
-        start.setDate(end.getDate() - 30);
-        return {
-            startDate: start.toISOString().split('T')[0],
-            endDate: end.toISOString().split('T')[0],
-        };
-    }, []);
+        start.setDate(start.getDate() - 30);
+        return start.toISOString().split('T')[0];
+    });
+    const [endDate, setEndDate] = useState(() => {
+        return new Date().toISOString().split('T')[0];
+    });
 
     // Get page ID from selected account
     const pageId = useMemo(() => {
@@ -167,9 +168,9 @@ export default function LeadsPage() {
         }
     };
 
-    // Calculate stage counts
+    // Calculate stage counts (6 stages: 0-4 + Unqualified at 5)
     const stageCounts = useMemo(() => {
-        const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+        const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         leads.forEach(lead => {
             const stage = leadStages[lead.id] ?? 0;
             counts[stage] = (counts[stage] || 0) + 1;
@@ -199,9 +200,47 @@ export default function LeadsPage() {
                     </select>
                 </div>
 
-                {/* Date Range Display */}
-                <div className="text-sm text-text-muted">
-                    {startDate} - {endDate}
+                {/* Date Range Inputs */}
+                <div className="flex items-center gap-2">
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="px-3 py-2 bg-card border border-border-subtle rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                    <span className="text-text-muted">-</span>
+                    <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="px-3 py-2 bg-card border border-border-subtle rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                </div>
+
+                {/* Tab Buttons */}
+                <div className="flex items-center border border-border-subtle rounded-xl overflow-hidden">
+                    <button
+                        onClick={() => setActiveTab('details')}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                            activeTab === 'details'
+                                ? 'bg-accent text-accent-text'
+                                : 'bg-card text-text-muted hover:text-foreground'
+                        }`}
+                    >
+                        <Table className="w-4 h-4" />
+                        {t('leads.tab_details') || 'Details'}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('board')}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                            activeTab === 'board'
+                                ? 'bg-accent text-accent-text'
+                                : 'bg-card text-text-muted hover:text-foreground'
+                        }`}
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                        {t('leads.tab_board') || 'Board'}
+                    </button>
                 </div>
 
                 {/* Export Button */}
@@ -226,14 +265,24 @@ export default function LeadsPage() {
                 </div>
             )}
 
-            {/* Leads Table */}
-            <LeadsTable
-                leads={leads}
-                leadStages={leadStages}
-                stageNames={stageNames}
-                isLoading={isLoading}
-                onStageUpdate={handleStageUpdate}
-            />
+            {/* Leads Content - Table or Kanban */}
+            {activeTab === 'details' ? (
+                <LeadsTable
+                    leads={leads}
+                    leadStages={leadStages}
+                    stageNames={stageNames}
+                    isLoading={isLoading}
+                    onStageUpdate={handleStageUpdate}
+                />
+            ) : (
+                <LeadsKanban
+                    leads={leads}
+                    leadStages={leadStages}
+                    stageNames={stageNames}
+                    isLoading={isLoading}
+                    onStageUpdate={handleStageUpdate}
+                />
+            )}
         </MainLayout>
     );
 }
