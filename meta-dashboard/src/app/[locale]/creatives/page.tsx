@@ -433,16 +433,16 @@ export default function CreativesPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border-subtle bg-black/20">
-                                <th className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-bold text-gray-500 uppercase tracking-wider`}>{t('creatives.type')}</th>
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.spend')}</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.ctr')}</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.cpc')}</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.conversions')}</th>
-                                {showComparison && <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('metrics.cpa')}</th>
+                                <th className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-bold text-gray-500 uppercase tracking-wider`}>{t('creatives.type')}</th>
+                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('metrics.spend')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('metrics.ctr')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('metrics.cpc')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('metrics.conversions')}</th>
+                                {showComparison && <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('common.vs_previous')}</th>}
+                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{t('metrics.cpa')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-subtle">

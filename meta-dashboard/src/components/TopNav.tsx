@@ -107,6 +107,9 @@ export const TopNav: React.FC = () => {
                 <div className="relative">
                     <button
                         onClick={() => setIsAdvancedMenuOpen(!isAdvancedMenuOpen)}
+                        aria-expanded={isAdvancedMenuOpen}
+                        aria-haspopup="menu"
+                        aria-controls="advanced-menu"
                         className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                             isAdvancedMenuOpen
                                 ? 'bg-secondary/50 text-foreground'
@@ -114,13 +117,18 @@ export const TopNav: React.FC = () => {
                         }`}
                     >
                         <span className="hidden md:inline">{t('topnav.advanced')}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${isAdvancedMenuOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isAdvancedMenuOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                     </button>
 
                     {isAdvancedMenuOpen && (
                         <>
-                            <div className="fixed inset-0 z-10" onClick={() => setIsAdvancedMenuOpen(false)} />
-                            <div className={`absolute top-full mt-1 ${isRTL ? 'right-0' : 'left-0'} w-56 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-20`}>
+                            <div className="fixed inset-0 z-10" onClick={() => setIsAdvancedMenuOpen(false)} aria-hidden="true" />
+                            <div
+                                id="advanced-menu"
+                                role="menu"
+                                aria-label={t('topnav.advanced')}
+                                className={`absolute top-full mt-1 ${isRTL ? 'right-0' : 'left-0'} w-56 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-20`}
+                            >
                                 <div className="p-1 max-h-80 overflow-y-auto">
                                     {advancedItems.map((item) => {
                                         const Icon = item.icon;
@@ -128,6 +136,7 @@ export const TopNav: React.FC = () => {
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
+                                                role="menuitem"
                                                 onClick={() => setIsAdvancedMenuOpen(false)}
                                                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                                                     isActive(item.href)
@@ -135,7 +144,7 @@ export const TopNav: React.FC = () => {
                                                         : 'text-text-muted hover:text-foreground hover:bg-secondary/50'
                                                 }`}
                                             >
-                                                <Icon className="w-4 h-4" />
+                                                <Icon className="w-4 h-4" aria-hidden="true" />
                                                 {item.name}
                                             </Link>
                                         );
@@ -158,28 +167,39 @@ export const TopNav: React.FC = () => {
                 <div className="relative">
                     <button
                         onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                        aria-expanded={isAccountMenuOpen}
+                        aria-haspopup="menu"
+                        aria-controls="account-menu"
+                        aria-label={t('common.select_account') || 'Select account'}
                         className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors ${
                             isAccountMenuOpen ? 'bg-secondary/50' : 'hover:bg-secondary/50'
                         }`}
                     >
-                        <div className="w-6 h-6 rounded bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center text-white font-bold text-xs">
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center text-white font-bold text-xs" aria-hidden="true">
                             {selectedAccount ? selectedAccount.name[0].toUpperCase() : 'A'}
                         </div>
                         <span className="text-xs font-medium text-foreground hidden lg:block max-w-24 truncate">
                             {selectedAccount?.name || 'Account'}
                         </span>
-                        <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${isAccountMenuOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${isAccountMenuOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                     </button>
 
                     {isAccountMenuOpen && (
                         <>
-                            <div className="fixed inset-0 z-10" onClick={() => setIsAccountMenuOpen(false)} />
-                            <div className={`absolute top-full mt-1 ${isRTL ? 'left-0' : 'right-0'} w-64 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-20`}>
+                            <div className="fixed inset-0 z-10" onClick={() => setIsAccountMenuOpen(false)} aria-hidden="true" />
+                            <div
+                                id="account-menu"
+                                role="menu"
+                                aria-label={t('common.select_account') || 'Select account'}
+                                className={`absolute top-full mt-1 ${isRTL ? 'left-0' : 'right-0'} w-64 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-20`}
+                            >
                                 <div className="p-1 max-h-60 overflow-y-auto">
                                     {linkedAccounts.length > 0 ? (
                                         linkedAccounts.map((account) => (
                                             <button
                                                 key={account.account_id}
+                                                role="menuitemradio"
+                                                aria-checked={selectedAccountId === account.account_id}
                                                 onClick={() => {
                                                     setSelectedAccountId(account.account_id);
                                                     setIsAccountMenuOpen(false);
@@ -190,17 +210,17 @@ export const TopNav: React.FC = () => {
                                                         : 'text-text-muted hover:bg-secondary/50 hover:text-foreground'
                                                 }`}
                                             >
-                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
                                                     selectedAccountId === account.account_id ? 'bg-accent text-white' : 'bg-secondary'
-                                                }`}>
+                                                }`} aria-hidden="true">
                                                     {account.name[0]}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-bold truncate">{account.name}</p>
-                                                    <p className="text-[9px] opacity-70 truncate">{account.account_id}</p>
+                                                    <p className="text-xs opacity-70 truncate">{account.account_id}</p>
                                                 </div>
                                                 {selectedAccountId === account.account_id && (
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
                                                 )}
                                             </button>
                                         ))
@@ -213,29 +233,32 @@ export const TopNav: React.FC = () => {
                                 <div className="border-t border-border-subtle p-1">
                                     <Link
                                         href={`/${locale}/settings`}
+                                        role="menuitem"
                                         onClick={() => setIsAccountMenuOpen(false)}
                                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-text-muted hover:text-foreground hover:bg-secondary/50"
                                     >
-                                        <User className="w-4 h-4" />
+                                        <User className="w-4 h-4" aria-hidden="true" />
                                         {t('settings.user_settings')}
                                     </Link>
                                     {selectedAccountId && (
                                         <Link
                                             href={`/${locale}/accounts/${selectedAccountId}/settings`}
+                                            role="menuitem"
                                             onClick={() => setIsAccountMenuOpen(false)}
                                             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-text-muted hover:text-foreground hover:bg-secondary/50"
                                         >
-                                            <Settings className="w-4 h-4" />
+                                            <Settings className="w-4 h-4" aria-hidden="true" />
                                             {t('settings.account_settings')}
                                         </Link>
                                     )}
                                     {isAdmin && (
                                         <Link
                                             href={`/${locale}/admin`}
+                                            role="menuitem"
                                             onClick={() => setIsAccountMenuOpen(false)}
                                             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-accent hover:bg-accent/20"
                                         >
-                                            <Shield className="w-4 h-4" />
+                                            <Shield className="w-4 h-4" aria-hidden="true" />
                                             Admin Dashboard
                                         </Link>
                                     )}

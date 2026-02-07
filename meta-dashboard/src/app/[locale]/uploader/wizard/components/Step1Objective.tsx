@@ -76,7 +76,7 @@ export default function Step1Objective({ t, pageId, accountId }: Props) {
     const renderActiveBadge = (objective: string) => {
         if (!optimizationData || !activeObjectives.has(objective)) return null;
         return (
-            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-500/20 text-green-400">
+            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
                 <Activity className="w-3 h-3" />
                 {t('wizard.active_on_account') || 'Active on your account'}
             </span>

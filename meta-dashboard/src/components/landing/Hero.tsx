@@ -98,7 +98,7 @@ const Hero = () => {
                             <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 rounded-xl p-4">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">ROAS</div>
+                                        <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">ROAS</div>
                                         <div className="text-2xl font-black text-white">3.8x</div>
                                         <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-xs">trending_up</span>
@@ -106,7 +106,7 @@ const Hero = () => {
                                         </div>
                                     </div>
                                     <div className="bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/20 rounded-xl p-4">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">CTR</div>
+                                        <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">CTR</div>
                                         <div className="text-2xl font-black text-white">4.2%</div>
                                         <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-xs">trending_up</span>
@@ -143,7 +143,7 @@ const Hero = () => {
                                 {/* Metrics row */}
                                 <div className="grid grid-cols-3 gap-4 mb-6">
                                     <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 rounded-xl p-4">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">ROAS</div>
+                                        <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">ROAS</div>
                                         <div className="text-2xl font-black text-white">3.8x</div>
                                         <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-xs">trending_up</span>
@@ -151,7 +151,7 @@ const Hero = () => {
                                         </div>
                                     </div>
                                     <div className="bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/20 rounded-xl p-4">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">CTR</div>
+                                        <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">CTR</div>
                                         <div className="text-2xl font-black text-white">4.2%</div>
                                         <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-xs">trending_up</span>
@@ -159,7 +159,7 @@ const Hero = () => {
                                         </div>
                                     </div>
                                     <div className="bg-gradient-to-br from-pink-500/20 to-pink-500/5 border border-pink-500/20 rounded-xl p-4">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">CPA</div>
+                                        <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">CPA</div>
                                         <div className="text-2xl font-black text-white">$12.40</div>
                                         <div className="text-xs text-green-400 font-medium mt-1 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-xs">trending_down</span>

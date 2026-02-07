@@ -100,16 +100,16 @@ export const ReportTable: React.FC<ReportTableProps> = ({
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-secondary/50 border-b border-border-subtle">
-              <th className="px-4 py-4 text-left text-[10px] font-black text-text-muted uppercase">{t('common.name')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.spend')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.impressions')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.clicks')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.ctr')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpc')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.conversions')}</th>
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpa')}</th>
+              <th className="px-4 py-4 text-left text-xs font-black text-text-muted uppercase">{t('common.name')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.spend')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.impressions')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.clicks')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.ctr')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.cpc')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.conversions')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.cpa')}</th>
               {hasConversionValue && (
-                <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.roas')}</th>
+                <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.roas')}</th>
               )}
             </tr>
           </thead>
@@ -144,16 +144,16 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-secondary/50 border-b border-border-subtle">
-            <th className="px-4 py-4 text-left text-[10px] font-black text-text-muted uppercase">{t('common.name')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.spend')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.impressions')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.clicks')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.ctr')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpc')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.conversions')}</th>
-            <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.cpa')}</th>
+            <th className="px-4 py-4 text-left text-xs font-black text-text-muted uppercase">{t('common.name')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.spend')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.impressions')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.clicks')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.ctr')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.cpc')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.conversions')}</th>
+            <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.cpa')}</th>
             {hasPurchaseValue && (
-              <th className="px-4 py-4 text-right text-[10px] font-black text-text-muted uppercase">{t('metrics.roas')}</th>
+              <th className="px-4 py-4 text-right text-xs font-black text-text-muted uppercase">{t('metrics.roas')}</th>
             )}
           </tr>
         </thead>

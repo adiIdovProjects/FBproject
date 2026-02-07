@@ -76,8 +76,11 @@ const LandingNavbar = () => {
             <button
               className="md:hidden p-2 text-slate-300"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav-menu"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
-              <span className="material-symbols-outlined">
+              <span className="material-symbols-outlined" aria-hidden="true">
                 {isMobileMenuOpen ? 'close' : 'menu'}
               </span>
             </button>
@@ -88,6 +91,9 @@ const LandingNavbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
+            id="mobile-nav-menu"
+            role="navigation"
+            aria-label="Mobile navigation"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}

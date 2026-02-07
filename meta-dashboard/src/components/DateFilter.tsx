@@ -170,7 +170,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                     {/* Header with Date Range */}
                     <div className="p-4 flex flex-col bg-secondary/50 border-b border-border-subtle gap-2">
                         <div className="flex justify-between items-center">
-                            <p className={`text-accent font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} text-[10px]`}>
+                            <p className={`text-accent font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} text-xs`}>
                                 <Clock className="w-3 h-3" />
                                 <span>{t('date.selected_range')}</span>
                             </p>
@@ -189,7 +189,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                             <button
                                 key={opt.key}
                                 onClick={() => handleQuickSelect(opt.key)}
-                                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all duration-200 ${selectedKey === opt.key ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-text-muted hover:bg-secondary hover:text-foreground'}`}
+                                className={`px-3 py-2 text-xs font-bold uppercase tracking-widest rounded-xl transition-all duration-200 ${selectedKey === opt.key ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-text-muted hover:bg-secondary hover:text-foreground'}`}
                             >
                                 {t(`date.${opt.key}`)}
                             </button>
@@ -198,12 +198,12 @@ const DateFilter: React.FC<DateFilterProps> = ({
 
                     {/* Custom Selection */}
                     <div className="p-4 border-t border-border-subtle bg-secondary/30">
-                        <h4 className={`text-text-muted text-[10px] font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} mb-3`}>
+                        <h4 className={`text-text-muted text-xs font-bold uppercase tracking-widest flex items-center space-x-2 ${flexDirectionClass} mb-3`}>
                             <SlidersHorizontal className="w-3 h-3" />
                             <span>{t('date.custom')}</span>
                         </h4>
                         <div className="flex flex-col space-y-3">
-                            <label className="flex flex-col text-[10px] font-bold text-text-muted uppercase tracking-widest gap-1.5">
+                            <label className="flex flex-col text-xs font-bold text-text-muted uppercase tracking-widest gap-1.5">
                                 {t('date.start')}
                                 <input
                                     type="date"
@@ -216,7 +216,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
                                     dir="ltr"
                                 />
                             </label>
-                            <label className="flex flex-col text-[10px] font-bold text-text-muted uppercase tracking-widest gap-1.5">
+                            <label className="flex flex-col text-xs font-bold text-text-muted uppercase tracking-widest gap-1.5">
                                 {t('date.end')}
                                 <input
                                     type="date"

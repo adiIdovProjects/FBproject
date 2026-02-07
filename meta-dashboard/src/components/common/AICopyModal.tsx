@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useModalAccessibility } from '../../hooks/useModalAccessibility';
 
 interface AdCopyVariant {
   headline: string;
@@ -26,6 +27,7 @@ export function AICopyModal({ isOpen, onClose, onSelect, accountId, objective, f
   const [isLoading, setIsLoading] = useState(false);
   const [variants, setVariants] = useState<AdCopyVariant[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { modalRef, handleKeyDown } = useModalAccessibility(isOpen, onClose);
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -78,18 +80,29 @@ export function AICopyModal({ isOpen, onClose, onSelect, accountId, objective, f
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+      {/* Backdrop */}
+      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ai-copy-modal-title"
+        onKeyDown={handleKeyDown}
+        className="bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto relative"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h2 className="text-xl font-semibold text-white">{t('ai_copy_modal_title')}</h2>
+            <Sparkles className="w-5 h-5 text-amber-400" aria-hidden="true" />
+            <h2 id="ai-copy-modal-title" className="text-xl font-semibold text-white">{t('ai_copy_modal_title')}</h2>
           </div>
           <button
             onClick={onClose}
+            aria-label={t('common.close') || 'Close'}
             className="text-gray-400 hover:text-white transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 

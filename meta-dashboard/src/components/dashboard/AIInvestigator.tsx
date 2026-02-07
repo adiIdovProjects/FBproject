@@ -145,7 +145,7 @@ export const AIInvestigator: React.FC = () => {
                 {/* Default Questions Grid - Shown below if no response yet */}
                 {!response && !loading && !error && (
                     <div className="space-y-4">
-                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] px-2 text-center">{t('ai_investigator.suggested_questions')}</p>
+                        <p className="text-gray-500 text-xs font-black uppercase tracking-[0.2em] px-2 text-center">{t('ai_investigator.suggested_questions')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {DEFAULT_QUESTIONS.map((q, idx) => {
                                 const translatedQuestion = t(q as any);
@@ -158,7 +158,7 @@ export const AIInvestigator: React.FC = () => {
                                         <p className="text-gray-400 group-hover:text-white transition-colors leading-relaxed font-bold text-sm">
                                             {translatedQuestion}
                                         </p>
-                                        <div className={`mt-4 flex items-center text-accent text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`mt-4 flex items-center text-accent text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
                                             {t('ai_investigator.ask_sol')} <ChevronRight className={`w-3 h-3 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
                                         </div>
                                     </button>
@@ -178,7 +178,7 @@ export const AIInvestigator: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => { setResponse(null); setQuery(''); }}
-                                className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+                                className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
                             >
                                 {t('common.clear')}
                             </button>

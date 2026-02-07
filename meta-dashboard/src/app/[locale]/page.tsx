@@ -10,6 +10,7 @@ import {
   AgencyComparison,
   LandingNavbar,
   LandingFooter,
+  AccessibilityWidget,
 } from '@/components/landing';
 
 export default function LandingPage() {
@@ -26,6 +27,8 @@ export default function LandingPage() {
         <FAQ />
       </main>
       <LandingFooter />
+      {/* Sienna Accessibility Widget - WCAG 2.1 & Israeli Standard 5568 */}
+      <AccessibilityWidget />
     </div>
   );
 }

@@ -295,7 +295,7 @@ export default function Step3Targeting({ t, accountId, pageId }: Props) {
                         <div className="flex items-center gap-2 mb-1">
                             <span className="text-lg">✨</span>
                             <span className="font-bold text-white text-sm">{t('wizard.advantage_plus')}</span>
-                            <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
                                 {t('wizard.recommended')}
                             </span>
                         </div>

@@ -1,6 +1,7 @@
 "use client";
 // src/components/MainLayout.tsx
 import React from 'react';
+import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { Sparkles } from 'lucide-react';
 import { Sidebar } from './Sidebar';
@@ -64,9 +65,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
                     {/* Footer */}
                     <footer className={`${compact ? 'mt-12' : 'mt-24'} pb-12 text-center`}>
                         <div className="h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent mb-8"></div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled hover:text-text-muted transition-colors cursor-default">
+                        <p className="text-xs font-black uppercase tracking-[0.2em] text-text-disabled hover:text-text-muted transition-colors cursor-default">
                             {t('footer.system_info')}
                         </p>
+                        <div className="mt-4 flex justify-center gap-4 text-xs text-text-muted">
+                            <Link href={`/${locale}/privacy-policy`} className="hover:text-accent transition-colors">
+                                {t('footer.privacy') || 'Privacy'}
+                            </Link>
+                            <Link href={`/${locale}/terms`} className="hover:text-accent transition-colors">
+                                {t('footer.terms') || 'Terms'}
+                            </Link>
+                            <Link href={`/${locale}/accessibility`} className="hover:text-accent transition-colors">
+                                {t('accessibility.footer_link') || 'Accessibility'}
+                            </Link>
+                        </div>
                     </footer>
                 </div>
             </div>

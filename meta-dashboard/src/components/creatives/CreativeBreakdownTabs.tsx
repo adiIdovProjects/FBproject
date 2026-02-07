@@ -246,27 +246,27 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-black/20 border-b border-border-subtle">
-                  <th className={`px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-6 py-5 text-xs font-black text-gray-500 uppercase tracking-widest ${isRTL ? 'text-right' : 'text-left'}`}>
                     {activeTab === 'platform' ? t('campaigns.platform') : activeTab === 'placement' ? t('campaigns.placement') : activeTab === 'country' ? t('campaigns.country') : t('campaigns.demographics')}
                   </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <th className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.spend')}
                   </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <th className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.impressions')}
                   </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <th className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.clicks')}
                   </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <th className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.ctr')}
                   </th>
-                  <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <th className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">
                     {t('metrics.cpc')}
                   </th>
                   {hasConversionValue && (
                     <>
-                      <th className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                      <th className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">
                         {t('metrics.roas')}
                       </th>
                     </>
@@ -302,11 +302,11 @@ export const CreativeBreakdownTabs: React.FC<CreativeBreakdownTabsProps> = ({
                       <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                         {row.roas !== null && row.roas !== undefined && row.roas > 0 ? (
                           <>
-                            <span className="text-gray-400 text-[10px] mr-1">x</span>
+                            <span className="text-gray-400 text-xs mr-1">x</span>
                             {row.roas.toFixed(2)}
                           </>
                         ) : (
-                          <span className="text-gray-500 italic text-[10px]">N/A</span>
+                          <span className="text-gray-500 italic text-xs">N/A</span>
                         )}
                       </td>
                     )}

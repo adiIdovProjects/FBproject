@@ -483,32 +483,32 @@ export default function CampaignControlTable({
                   />
                 </th>
               )}
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase min-w-[280px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.name')}</th>
-              {!hideActions && <th className="px-4 py-4 text-center text-[10px] font-black text-text-muted uppercase">{t('common.actions')}</th>}
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.status')}</th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('manage.daily_budget')}</th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase min-w-[280px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.name')}</th>
+              {!hideActions && <th className="px-4 py-4 text-center text-xs font-black text-text-muted uppercase">{t('common.actions')}</th>}
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.status')}</th>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>{t('manage.daily_budget')}</th>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.spend">{t('metrics.spend')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.impressions">{t('metrics.impressions')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.clicks">{t('metrics.clicks')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.ctr">{t('metrics.ctr')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.cpc">{t('metrics.cpc')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.conversions">{t('metrics.conversions')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.cpa">{t('metrics.cpa')}</MetricTooltip>
               </th>
-              <th className={`px-4 py-4 text-[10px] font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
+              <th className={`px-4 py-4 text-xs font-black text-text-muted uppercase ${isRTL ? 'text-left' : 'text-right'}`}>
                 <MetricTooltip tooltipKey="tooltips.conversion_rate">{t('metrics.conversion_rate')}</MetricTooltip>
               </th>
             </tr>
@@ -560,7 +560,7 @@ export default function CampaignControlTable({
                           </button>
                           <div className={isRTL ? 'text-right' : 'text-left'}>
                             <div className="font-bold text-foreground">{campaign.campaign_name}</div>
-                            <div className="text-[10px] text-text-muted font-mono">{campaign.campaign_id}</div>
+                            <div className="text-xs text-text-muted font-mono">{campaign.campaign_id}</div>
                           </div>
                         </div>
                       </td>
@@ -612,7 +612,7 @@ export default function CampaignControlTable({
                                     </button>
                                     <div className={isRTL ? 'text-right' : 'text-left'}>
                                       <div className="text-foreground">{adset.adset_name}</div>
-                                      <div className="text-[10px] text-text-disabled font-mono">{adset.adset_id}</div>
+                                      <div className="text-xs text-text-disabled font-mono">{adset.adset_id}</div>
                                     </div>
                                   </div>
                                 </td>
@@ -651,7 +651,7 @@ export default function CampaignControlTable({
                                         <td className={`px-4 py-2 ${isRTL ? 'pr-16' : 'pl-16'}`}>
                                           <div className={isRTL ? 'text-right' : 'text-left'}>
                                             <div className="text-foreground text-sm">{ad.ad_name}</div>
-                                            <div className="text-[10px] text-text-disabled font-mono">{ad.ad_id}</div>
+                                            <div className="text-xs text-text-disabled font-mono">{ad.ad_id}</div>
                                           </div>
                                         </td>
                                         {!hideActions && (

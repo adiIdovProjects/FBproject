@@ -22,6 +22,7 @@ const LandingFooter = () => {
         legal: [
             { name: 'Privacy Policy', href: `/${locale}/privacy-policy` },
             { name: 'Terms of Service', href: `/${locale}/terms` },
+            { name: 'Accessibility', href: `/${locale}/accessibility` },
         ],
     };
 
@@ -102,6 +103,7 @@ const LandingFooter = () => {
                     <div className="flex gap-6 text-sm text-slate-500">
                         <Link href={`/${locale}/privacy-policy`} className="hover:text-indigo-400 transition-colors">Privacy</Link>
                         <Link href={`/${locale}/terms`} className="hover:text-indigo-400 transition-colors">Terms</Link>
+                        <Link href={`/${locale}/accessibility`} className="hover:text-indigo-400 transition-colors">Accessibility</Link>
                     </div>
                 </div>
             </div>

@@ -6,8 +6,8 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
-import { Download, Info, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Download } from 'lucide-react';
 import { MainLayout } from '../../../components/MainLayout';
 import { useAccount } from '../../../context/AccountContext';
 import { mutationsService } from '../../../services/mutations.service';
@@ -23,7 +23,6 @@ interface LeadForm {
 
 export default function LeadsPage() {
     const t = useTranslations();
-    const locale = useLocale();
     const { selectedAccountId, linkedAccounts } = useAccount();
 
     // State
@@ -180,18 +179,7 @@ export default function LeadsPage() {
 
     return (
         <MainLayout
-            title={
-                <div className="flex items-center gap-2">
-                    <Users className="w-6 h-6" />
-                    <span>{t('leads.title') || 'Leads'}</span>
-                    <div className="relative group">
-                        <Info className="w-4 h-4 text-text-muted cursor-help" />
-                        <div className="absolute left-0 top-6 w-64 p-2 bg-card border border-border-subtle rounded-lg shadow-lg text-xs text-text-muted opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                            {t('leads.gdpr_tooltip') || 'You are the data controller for this lead data under GDPR.'}
-                        </div>
-                    </div>
-                </div>
-            }
+            title={t('leads.title') || 'Leads'}
             description={t('leads.description') || 'View and manage your lead form submissions'}
             compact
         >

@@ -8,6 +8,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Pause, Play, AlertCircle } from 'lucide-react';
+import { useModalAccessibility } from '../../hooks/useModalAccessibility';
 
 interface StatusConfirmModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function StatusConfirmModal({
   currency = 'USD',
 }: StatusConfirmModalProps) {
   const t = useTranslations();
+  const { modalRef, handleKeyDown } = useModalAccessibility(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -65,32 +67,41 @@ export default function StatusConfirmModal({
       <div
         className="absolute inset-0 bg-background/80 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative bg-card border border-border-subtle rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="status-modal-title"
+        onKeyDown={handleKeyDown}
+        className="relative bg-card border border-border-subtle rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+      >
         {/* Header */}
         <div className={`px-6 py-4 border-b border-border-subtle ${isPausing ? 'bg-yellow-900/20' : 'bg-green-900/20'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isPausing ? (
                 <div className="p-2 rounded-lg bg-yellow-900/30 border border-yellow-600">
-                  <Pause className="w-5 h-5 text-yellow-400" />
+                  <Pause className="w-5 h-5 text-yellow-400" aria-hidden="true" />
                 </div>
               ) : (
                 <div className="p-2 rounded-lg bg-green-900/30 border border-green-600">
-                  <Play className="w-5 h-5 text-green-400" />
+                  <Play className="w-5 h-5 text-green-400" aria-hidden="true" />
                 </div>
               )}
-              <h2 className="text-lg font-bold text-foreground">
+              <h2 id="status-modal-title" className="text-lg font-bold text-foreground">
                 {isPausing ? t('status_modal.title_pause') : t('status_modal.title_resume')} {getTypeLabel()}?
               </h2>
             </div>
             <button
               onClick={onClose}
+              aria-label={t('common.close') || 'Close'}
               className="p-1 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-text-muted" />
+              <X className="w-5 h-5 text-text-muted" aria-hidden="true" />
             </button>
           </div>
         </div>

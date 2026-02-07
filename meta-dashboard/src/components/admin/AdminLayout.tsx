@@ -83,7 +83,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
             </div>
             <div>
               <h2 className="font-bold text-lg text-foreground">Admin Panel</h2>
-              <p className="text-[10px] text-text-muted uppercase tracking-widest">Management</p>
+              <p className="text-xs text-text-muted uppercase tracking-widest">Management</p>
             </div>
           </div>
         </div>

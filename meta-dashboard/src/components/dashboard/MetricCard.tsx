@@ -164,7 +164,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       {/* Header with Icon */}
       <div className="flex items-center justify-between mb-5 relative z-10">
         <div className="flex items-center gap-1.5">
-          <Text className="text-text-muted text-[10px] font-black uppercase tracking-widest">{title}</Text>
+          <Text className="text-text-muted text-xs font-black uppercase tracking-widest">{title}</Text>
           {tooltipKey && <InfoTooltip tooltipKey={tooltipKey} size="sm" />}
         </div>
         <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform ${themeColors.iconBg} ${isColorful && 'glow' in themeColors ? (themeColors as any).glow : ''}`}>
@@ -182,7 +182,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <Metric className={`text-foreground text-3xl font-black tracking-tighter ${isColorful ? 'drop-shadow-[0_0_10px_rgba(0,212,255,0.3)]' : 'text-glow'}`}>{formatValue(value)}</Metric>
 
           {trend !== undefined && trend !== null && trend !== 0 && (
-            <div className={`mt-3 flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${trendStyle.bgColor} ${trendStyle.color}`}>
+            <div className={`mt-3 flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase border ${trendStyle.bgColor} ${trendStyle.color}`}>
               {trendStyle.icon === 'up' ? (
                 <TrendingUp className="w-3 h-3" />
               ) : (

@@ -145,7 +145,7 @@ export const TargetingComparisonModal: React.FC<TargetingComparisonModalProps> =
                           <span className="text-white font-bold text-base">
                             {getAdsetName(adsetId)}
                           </span>
-                          <span className="text-[10px] text-gray-500 font-mono">
+                          <span className="text-xs text-gray-500 font-mono">
                             ID: {adsetId}
                           </span>
                         </div>

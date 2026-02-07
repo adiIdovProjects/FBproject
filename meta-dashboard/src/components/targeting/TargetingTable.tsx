@@ -226,7 +226,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
 
               {/* Ad Set Name */}
               <th
-                className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-left text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('adset_name')}
               >
                 <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
 
               {/* Targeting Type */}
               <th
-                className="px-6 py-5 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-left text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('targeting_type')}
               >
                 <div className="flex items-center gap-2">
@@ -248,7 +248,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
 
               {/* Spend */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -257,11 +257,11 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* CTR */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('ctr')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -270,11 +270,11 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* CPC */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpc')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -283,11 +283,11 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* Conversions */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -296,11 +296,11 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* CPA */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -309,12 +309,12 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 opacity-50" />
                 </div>
               </th>
-              {showComparison && <th className="px-4 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
+              {showComparison && <th className="px-4 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest">{t('common.vs_previous')}</th>}
 
               {/* ROAS - Conditional */}
               {hasConversionValue && (
                 <th
-                  className="px-6 py-5 text-right text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                  className="px-6 py-5 text-right text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                   onClick={() => handleSort('roas')}
                 >
                   <div className="flex items-center justify-end gap-2">
@@ -352,7 +352,7 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                       <span className="text-sm text-white font-bold">
                         {adset.adset_name || `Adset ${adset.adset_id}`}
                       </span>
-                      <span className="text-[10px] text-gray-500 font-mono mt-0.5">{adset.adset_id}</span>
+                      <span className="text-xs text-gray-500 font-mono mt-0.5">{adset.adset_id}</span>
                     </div>
                   </td>
 
@@ -416,11 +416,11 @@ export const TargetingTable: React.FC<TargetingTableProps> = ({
                     <td className="px-6 py-5 text-sm text-white text-right font-black tracking-tighter">
                       {adset.roas !== null && adset.roas !== undefined && adset.roas > 0 ? (
                         <>
-                          <span className="text-gray-400 text-[10px] mr-1">x</span>
+                          <span className="text-gray-400 text-xs mr-1">x</span>
                           {adset.roas.toFixed(2)}
                         </>
                       ) : (
-                        <span className="text-gray-500 italic text-[10px]">N/A</span>
+                        <span className="text-gray-500 italic text-xs">N/A</span>
                       )}
                     </td>
                   )}

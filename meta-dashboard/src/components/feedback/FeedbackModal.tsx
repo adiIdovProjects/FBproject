@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Loader2, Star, MessageSquare } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { submitFeedback, FeedbackSubmission } from '../../services/feedback.service';
+import { useModalAccessibility } from '../../hooks/useModalAccessibility';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { modalRef, handleKeyDown } = useModalAccessibility(isOpen, onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,22 +77,33 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-lg mx-auto card-gradient rounded-2xl border border-border-subtle shadow-2xl">
+      {/* Backdrop */}
+      <div className="absolute inset-0" onClick={handleClose} aria-hidden="true" />
+
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feedback-modal-title"
+        onKeyDown={handleKeyDown}
+        className="relative w-full max-w-lg mx-auto card-gradient rounded-2xl border border-border-subtle shadow-2xl"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border-subtle">
           <div className="flex items-center gap-3">
-            <MessageSquare className="w-6 h-6 text-accent" />
+            <MessageSquare className="w-6 h-6 text-accent" aria-hidden="true" />
             <div>
-              <h2 className="text-xl font-bold text-white">{t('title')}</h2>
+              <h2 id="feedback-modal-title" className="text-xl font-bold text-white">{t('title')}</h2>
               <p className="text-sm text-gray-400">{t('subtitle')}</p>
             </div>
           </div>
           <button
             onClick={handleClose}
             disabled={isLoading}
+            aria-label={t('cancel') || 'Close'}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-gray-400" aria-hidden="true" />
           </button>
         </div>
 
@@ -164,12 +177,14 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 {t('rating_label')}
               </label>
-              <div className="flex gap-1">
+              <div className="flex gap-1" role="group" aria-label={t('rating_label')}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
                     onClick={() => setRating(rating === star ? null : star)}
+                    aria-label={`${star} ${star === 1 ? 'star' : 'stars'}`}
+                    aria-pressed={rating === star}
                     className="p-1 transition-transform hover:scale-110"
                   >
                     <Star
@@ -178,6 +193,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-500'
                       }`}
+                      aria-hidden="true"
                     />
                   </button>
                 ))}

@@ -272,13 +272,13 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
 
               {/* Thumbnail */}
-              <th className={`px-4 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest`}>
+              <th className={`px-4 py-5 ${isRTL ? 'text-right' : 'text-left'} text-xs font-black text-text-muted uppercase tracking-widest`}>
                 <span>{t('creatives.preview')}</span>
               </th>
 
               {/* Creative Name */}
               <th
-                className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors`}
+                className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors`}
                 onClick={() => handleSort('title')}
               >
                 <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -288,12 +288,12 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               </th>
 
               {/* Type */}
-              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest`}>
+              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-xs font-black text-text-muted uppercase tracking-widest`}>
                 <span>{t('creatives.type')}</span>
               </th>
 
               {/* Fatigue */}
-              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-[10px] font-black text-text-muted uppercase tracking-widest`}>
+              <th className={`px-6 py-5 ${isRTL ? 'text-right' : 'text-left'} text-xs font-black text-text-muted uppercase tracking-widest`}>
                 <div className="flex items-center gap-1.5">
                   <InfoTooltip tooltipKey="creatives.fatigue_tooltip" size="sm" />
                   <span>{t('creatives.fatigue')}</span>
@@ -302,7 +302,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Spend */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('spend')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -312,14 +312,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CTR */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('ctr')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -329,14 +329,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CPC */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpc')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -346,14 +346,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* Conversions */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('conversions')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -363,14 +363,14 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
 
               {/* CPA */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('cpa')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -380,7 +380,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                 </div>
               </th>
               {showComparison && (
-                <th className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">
+                <th className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest">
                   {t('common.vs_previous')}
                 </th>
               )}
@@ -388,7 +388,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
               {/* ROAS - Conditional */}
               {hasConversionValue && (
                 <th
-                  className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                  className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                   onClick={() => handleSort('roas')}
                 >
                   <div className="flex items-center justify-end gap-2">
@@ -401,7 +401,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Hook Rate (video only - show for all but display N/A for images) */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('hook_rate')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -413,7 +413,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
 
               {/* Completion Rate (video only) */}
               <th
-                className="px-6 py-5 text-right text-[10px] font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
+                className="px-6 py-5 text-right text-xs font-black text-text-muted uppercase tracking-widest cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort('completion_rate')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -485,7 +485,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                           {creative.title || `Creative ${creative.creative_id}`}
                         </span>
                       )}
-                      <span className="text-[10px] text-text-muted font-mono mt-0.5">{creative.creative_id}</span>
+                      <span className="text-xs text-text-muted font-mono mt-0.5">{creative.creative_id}</span>
                     </div>
                   </td>
 
@@ -570,11 +570,11 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                     <td className="px-6 py-5 text-sm text-foreground text-right font-black tracking-tighter">
                       {creative.roas !== null && creative.roas !== undefined && creative.roas > 0 ? (
                         <>
-                          <span className="text-text-muted text-[10px] mr-1">x</span>
+                          <span className="text-text-muted text-xs mr-1">x</span>
                           {creative.roas.toFixed(2)}
                         </>
                       ) : (
-                        <span className="text-text-muted italic text-[10px]">N/A</span>
+                        <span className="text-text-muted italic text-xs">N/A</span>
                       )}
                     </td>
                   )}
@@ -584,7 +584,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                     {creative.is_video && creative.hook_rate !== null ? (
                       formatPercentage(creative.hook_rate)
                     ) : (
-                      <span className="text-text-muted italic text-[10px]">N/A</span>
+                      <span className="text-text-muted italic text-xs">N/A</span>
                     )}
                   </td>
 
@@ -593,7 +593,7 @@ export const CreativesTable: React.FC<CreativesTableProps> = ({
                     {creative.is_video && creative.completion_rate !== null ? (
                       formatPercentage(creative.completion_rate)
                     ) : (
-                      <span className="text-text-muted italic text-[10px]">N/A</span>
+                      <span className="text-text-muted italic text-xs">N/A</span>
                     )}
                   </td>
                 </tr>

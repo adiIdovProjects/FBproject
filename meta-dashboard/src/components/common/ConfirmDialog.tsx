@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useModalAccessibility } from '../../hooks/useModalAccessibility';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -26,6 +27,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   variant = 'warning',
   isLoading = false,
 }) => {
+  const { modalRef, handleKeyDown } = useModalAccessibility(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const variantStyles = {
@@ -47,21 +50,32 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-gray-900 rounded-xl w-full max-w-md shadow-2xl border border-gray-800">
+      {/* Backdrop - click to close */}
+      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        onKeyDown={handleKeyDown}
+        className="bg-gray-900 rounded-xl w-full max-w-md shadow-2xl border border-gray-800 relative"
+      >
         {/* Header */}
         <div className="flex items-start gap-4 p-6">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${styles.icon}`}>
-            <AlertTriangle className="w-6 h-6" />
+            <AlertTriangle className="w-6 h-6" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+            <h3 id="confirm-dialog-title" className="text-lg font-semibold text-white mb-2">{title}</h3>
             <p className="text-gray-400 text-sm">{message}</p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-1 text-gray-500 hover:text-white rounded-lg transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 

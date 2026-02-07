@@ -680,7 +680,7 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 <button
                                     type="button"
                                     onClick={() => { setAiCopyFieldType('body'); setShowAICopyModal(true); }}
-                                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition-colors"
+                                    className="flex items-center gap-1 px-2 py-0.5 text-xs text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition-colors"
                                 >
                                     <Sparkles className="w-3 h-3" />
                                     {t('wizard.generate_with_ai') || 'Generate with AI'}
@@ -705,7 +705,7 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 <button
                                     type="button"
                                     onClick={() => { setAiCopyFieldType('headline'); setShowAICopyModal(true); }}
-                                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition-colors"
+                                    className="flex items-center gap-1 px-2 py-0.5 text-xs text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition-colors"
                                 >
                                     <Sparkles className="w-3 h-3" />
                                     {t('wizard.generate_with_ai') || 'Generate with AI'}
@@ -1109,7 +1109,7 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                                 {ad.title || "Headline"}
                                             </h4>
                                         </div>
-                                        <span className="bg-gray-300 px-2 py-0.5 rounded text-[10px] font-semibold text-gray-700">
+                                        <span className="bg-gray-300 px-2 py-0.5 rounded text-xs font-semibold text-gray-700">
                                             {ad.cta.replace('_', ' ')}
                                         </span>
                                     </div>
@@ -1138,12 +1138,12 @@ export default function AdCard({ ad, index, canRemove, t, locale, pageId, accoun
                                 </div>
                             )}
                             <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                                <p className="text-white text-[10px] mb-1 line-clamp-1">{ad.body || "Your ad text..."}</p>
+                                <p className="text-white text-xs mb-1 line-clamp-1">{ad.body || "Your ad text..."}</p>
                                 <div className="flex items-center justify-between">
                                     <span className="text-white text-xs font-bold truncate flex-1">
                                         {ad.title || "Headline"}
                                     </span>
-                                    <span className="bg-white text-black px-2 py-0.5 rounded text-[10px] font-semibold ml-1">
+                                    <span className="bg-white text-black px-2 py-0.5 rounded text-xs font-semibold ml-1">
                                         {ad.cta.replace('_', ' ')}
                                     </span>
                                 </div>

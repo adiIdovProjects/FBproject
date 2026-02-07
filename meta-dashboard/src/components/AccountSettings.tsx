@@ -389,11 +389,11 @@ export const AccountSettings: React.FC = () => {
                             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('settings.payment_method')}</h4>
                             <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="w-12 h-8 bg-gray-800 rounded border border-white/5 flex items-center justify-center">
-                                    <span className="text-[10px] font-bold text-white">{t('settings.visa')}</span>
+                                    <span className="text-xs font-bold text-white">{t('settings.visa')}</span>
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white">•••• •••• •••• 4242</p>
-                                    <p className="text-[10px] text-gray-500">{t('settings.expires')} 12/26</p>
+                                    <p className="text-xs text-gray-500">{t('settings.expires')} 12/26</p>
                                 </div>
                                 <button className="text-xs font-bold text-accent hover:underline">{t('settings.edit')}</button>
                             </div>

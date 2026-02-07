@@ -180,13 +180,18 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
     <div className="card-gradient rounded-2xl border border-border-subtle overflow-hidden shadow-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Tabs Header */}
       <div className="bg-black/20 border-b border-border-subtle">
-        <div className="flex items-end px-2">
+        <div className="flex items-end px-2" role="tablist" aria-label={t('campaigns.breakdown_tabs') || 'Breakdown tabs'}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
+              id={`tab-${tab.id}`}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
               onClick={() => handleTabClick(tab.id)}
               className={`
-                px-6 py-5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative
+                px-6 py-5 text-xs font-black uppercase tracking-widest transition-all duration-300 relative
                 ${activeTab === tab.id
                   ? 'text-foreground'
                   : 'text-text-muted hover:text-foreground'
@@ -198,7 +203,7 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
                 {tab.helpKey && <InfoTooltip tooltipKey={tab.helpKey} size="sm" />}
               </span>
               {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent shadow-[0_0_15px_rgba(99,102,241,0.6)] z-0 rounded-t-full" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent shadow-[0_0_15px_rgba(99,102,241,0.6)] z-0 rounded-t-full" aria-hidden="true" />
               )}
             </button>
           ))}
@@ -230,7 +235,13 @@ export const BreakdownTabs: React.FC<BreakdownTabsProps> = ({
       )}
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div
+        id={`tabpanel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+        tabIndex={0}
+        className="p-6"
+      >
         {!hasLoadedOnce && !isLoading && (
           <div className="flex items-center justify-center h-64 text-text-muted">
             <div className="text-center">

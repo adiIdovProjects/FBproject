@@ -153,7 +153,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
         <div className="flex gap-4 flex-wrap">
           {/* Primary Metric Selector */}
           <div className="flex flex-col">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">{t('reports.primary_metric')}</label>
+            <label className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1.5">{t('reports.primary_metric')}</label>
             <select
               value={selectedMetric}
               onChange={(e) => onMetricChange(e.target.value as MetricType)}
@@ -169,7 +169,7 @@ export const ActionsMetricsChart: React.FC<ActionsMetricsChartProps> = ({
 
           {/* Secondary Metric Selector */}
           <div className="flex flex-col">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">{t('reports.compare_with_optional')}</label>
+            <label className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1.5">{t('reports.compare_with_optional')}</label>
             <select
               value={secondMetric || ''}
               onChange={(e) => setSecondMetric(e.target.value ? e.target.value as MetricType : null)}

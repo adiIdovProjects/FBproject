@@ -276,7 +276,7 @@ export default function Step2Setup({ t, accountId, pageId }: Props) {
                                                 {pixelEvents.slice(0, 8).map((event) => (
                                                     <span
                                                         key={event.event_name}
-                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-300"
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-800 text-gray-300"
                                                     >
                                                         {event.event_name}
                                                         <span className="text-gray-500">({event.count.toLocaleString()})</span>

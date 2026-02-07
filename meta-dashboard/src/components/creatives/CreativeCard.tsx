@@ -95,7 +95,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                 {/* Video Duration Badge */}
                 {creative.is_video && (
-                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded border border-border-subtle font-medium">
+                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-1.5 py-0.5 rounded border border-border-subtle font-medium">
                         {creative.video_length_seconds ? `0:${creative.video_length_seconds.toString().padStart(2, '0')}` : 'Video'}
                     </div>
                 )}
@@ -111,7 +111,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                 {/* Score / Warning Icons (as seen in image) */}
                 <div className="absolute bottom-3 right-3 flex gap-2">
-                    <div className="bg-accent/80 rounded-full p-1 text-accent-text text-[10px] font-bold w-5 h-5 flex items-center justify-center">
+                    <div className="bg-accent/80 rounded-full p-1 text-accent-text text-xs font-bold w-5 h-5 flex items-center justify-center">
                         9.8
                     </div>
                 </div>
@@ -132,7 +132,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                 <div className="grid grid-cols-2 gap-y-3 gap-x-6">
                     {/* Item 1: Spend */}
                     <div className="space-y-0.5">
-                        <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                        <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                             <DollarSign className="w-2.5 h-2.5 mr-1 text-text-muted" />
                             {t('metrics.spend')}
                         </div>
@@ -143,7 +143,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                     {(creative.conversion_value || 0) > 0 && (
                         creative.conversions > 0 ? (
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                     <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('metrics.roas')}
                                 </div>
@@ -151,7 +151,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                             </div>
                         ) : (
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                     <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('metrics.roas')}
                                 </div>
@@ -163,7 +163,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                     {/* Item 3: CPA */}
                     {creative.conversions > 0 ? (
                         <div className="space-y-0.5">
-                            <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                            <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                 <Target className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                 {t('metrics.cpa')}
                             </div>
@@ -171,7 +171,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                         </div>
                     ) : (
                         <div className="space-y-0.5">
-                            <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                            <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                 <Target className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                 {t('metrics.cpa')}
                             </div>
@@ -182,7 +182,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                     {/* Item 4: CTR */}
                     <div className="space-y-0.5">
-                        <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                        <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                             <MousePointer className="w-2.5 h-2.5 mr-1 text-text-muted" />
                             {t('metrics.ctr')}
                         </div>
@@ -194,7 +194,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                         <>
                             {/* Thumbstop (Hook Rate) */}
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                     <Zap className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('creatives.hook_rate')}
                                 </div>
@@ -203,7 +203,7 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
 
                             {/* Hold Rate */}
                             <div className="space-y-0.5">
-                                <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                     <Play className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                     {t('creatives.hold_rate')}
                                 </div>
@@ -213,14 +213,14 @@ export const CreativeCard: React.FC<CreativeCardProps> = ({
                             {/* Completion & Watch Time row */}
                             <div className="col-span-2 grid grid-cols-2 gap-4 pt-2 border-t border-border-subtle mt-1">
                                 <div className="space-y-0.5">
-                                    <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                    <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                         <TrendingUp className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                         {t('creatives.avg_completion')}
                                     </div>
                                     <div className="text-xs font-bold text-foreground">{(creative.completion_rate || 0).toFixed(1)}%</div>
                                 </div>
                                 <div className="space-y-0.5">
-                                    <div className="flex items-center text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                                    <div className="flex items-center text-xs text-text-muted font-medium uppercase tracking-wider">
                                         <Play className="w-2.5 h-2.5 mr-1 text-text-muted" />
                                         {t('creatives.avg_watch_time')}
                                     </div>

@@ -67,7 +67,7 @@ export const MainLayout2: React.FC<MainLayout2Props> = ({ children, title, descr
                     {/* Footer */}
                     <footer className={`${compact ? 'mt-12' : 'mt-24'} pb-12 text-center`}>
                         <div className="h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent mb-8"></div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled hover:text-text-muted transition-colors cursor-default">
+                        <p className="text-xs font-black uppercase tracking-[0.2em] text-text-disabled hover:text-text-muted transition-colors cursor-default">
                             {t('footer.system_info')}
                         </p>
                     </footer>

@@ -144,7 +144,7 @@ export const CampaignComparisonModal: React.FC<CampaignComparisonModalProps> = (
                           <span className="text-white font-bold text-base">
                             {getCampaignName(campaignId)}
                           </span>
-                          <span className="text-[10px] text-gray-500 font-mono">
+                          <span className="text-xs text-gray-500 font-mono">
                             ID: {campaignId}
                           </span>
                         </div>

@@ -83,7 +83,7 @@ export const Sidebar: React.FC = () => {
                     </div>
                     <div>
                         <h2 className={`font-bold text-lg tracking-tight ${isColorful ? 'text-white' : 'text-foreground'}`}>AdManager</h2>
-                        <p className={`text-[10px] font-medium uppercase tracking-widest ${isColorful ? 'text-cyan-300' : 'text-text-muted'}`}>Analytics Platform</p>
+                        <p className={`text-xs font-medium uppercase tracking-widest ${isColorful ? 'text-cyan-300' : 'text-text-muted'}`}>Analytics Platform</p>
                     </div>
                 </div>
 
@@ -105,7 +105,7 @@ export const Sidebar: React.FC = () => {
                                 <p className="text-xs font-bold text-foreground truncate w-32">
                                     {selectedAccount ? selectedAccount.name : 'Select Account'}
                                 </p>
-                                <p className="text-[10px] text-text-muted font-mono truncate">
+                                <p className="text-xs text-text-muted font-mono truncate">
                                     ID: {selectedAccount ? selectedAccount.account_id : '---'}
                                 </p>
                             </div>
@@ -132,12 +132,12 @@ export const Sidebar: React.FC = () => {
                                                 }}
                                                 className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${selectedAccountId === account.account_id ? 'bg-accent/20 text-foreground' : 'text-text-muted hover:bg-secondary/50 hover:text-foreground'}`}
                                             >
-                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${selectedAccountId === account.account_id ? 'bg-accent text-accent-text' : 'bg-secondary'}`}>
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${selectedAccountId === account.account_id ? 'bg-accent text-accent-text' : 'bg-secondary'}`}>
                                                     {account.name[0]}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-bold truncate">{account.name}</p>
-                                                    <p className="text-[9px] opacity-70 truncate">{account.account_id}</p>
+                                                    <p className="text-xs opacity-70 truncate">{account.account_id}</p>
                                                 </div>
                                                 {selectedAccountId === account.account_id && (
                                                     <div className="w-1.5 h-1.5 rounded-full bg-accent" />

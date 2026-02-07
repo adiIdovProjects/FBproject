@@ -213,7 +213,7 @@ export default function BudgetTrackerCard({ className = '' }: BudgetTrackerCardP
           {customGoal !== null && (
             <button
               onClick={handleClearCustomGoal}
-              className="text-[10px] text-accent hover:underline"
+              className="text-xs text-accent hover:underline"
             >
               {t('budget_tracker.use_calculated') || 'Use auto'}
             </button>

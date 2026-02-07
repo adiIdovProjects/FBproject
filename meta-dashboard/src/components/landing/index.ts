@@ -7,3 +7,4 @@ export { default as FAQ } from './FAQ';
 export { default as AgencyComparison } from './AgencyComparison';
 export { default as LandingNavbar } from './LandingNavbar';
 export { default as LandingFooter } from './LandingFooter';
+export { default as AccessibilityWidget } from './AccessibilityWidget';

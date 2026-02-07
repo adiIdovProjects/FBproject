@@ -145,7 +145,7 @@ export const CreativeComparisonModal: React.FC<CreativeComparisonModalProps> = (
                           <span className="text-white font-bold text-base">
                             {getCreativeName(creativeId)}
                           </span>
-                          <span className="text-[10px] text-gray-500 font-mono">
+                          <span className="text-xs text-gray-500 font-mono">
                             ID: {creativeId}
                           </span>
                         </div>

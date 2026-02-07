@@ -71,33 +71,44 @@ export default function LanguageSwitcher() {
         disabled={isPending}
         className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-border-subtle bg-card-bg/50 backdrop-blur-xl text-foreground hover:border-accent/50 transition-all duration-300 disabled:opacity-50 shadow-2xl group"
         aria-label={t('common.switch_language')}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-controls="language-menu"
       >
-        <span className="text-xl group-hover:scale-110 transition-transform">{currentLanguage?.flag}</span>
+        <span className="text-xl group-hover:scale-110 transition-transform" aria-hidden="true">{currentLanguage?.flag}</span>
         <span className="text-xs font-black uppercase tracking-widest">{currentLanguage?.name}</span>
         <svg
           className={`w-4 h-4 transition-transform text-text-muted group-hover:text-foreground ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-3 right-0 bg-sidebar-bg rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-border-subtle overflow-hidden z-50 min-w-[200px] glass-effect border-glow">
+        <div
+          id="language-menu"
+          role="listbox"
+          aria-label={t('common.switch_language')}
+          className="absolute top-full mt-3 right-0 bg-sidebar-bg rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-border-subtle overflow-hidden z-50 min-w-[200px] glass-effect border-glow"
+        >
           {languages.map((language) => (
             <button
               key={language.code}
+              role="option"
+              aria-selected={currentLocale === language.code}
               onClick={() => switchLanguage(language.code)}
               disabled={isPending}
               className={`w-full flex items-center gap-4 px-5 py-4 text-xs font-black uppercase tracking-widest transition-all duration-200 ${currentLocale === language.code ? 'bg-accent/20 text-foreground' : 'text-text-muted hover:bg-secondary/50 hover:text-foreground'
                 }`}
             >
-              <span className="text-xl">{language.flag}</span>
+              <span className="text-xl" aria-hidden="true">{language.flag}</span>
               <span>{language.name}</span>
               {currentLocale === language.code && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(99,102,241,1)]" />
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(99,102,241,1)]" aria-hidden="true" />
               )}
             </button>
           ))}
