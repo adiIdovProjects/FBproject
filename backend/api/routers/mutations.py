@@ -9,7 +9,7 @@ from backend.api.repositories.campaign_repository import CampaignRepository
 from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.repositories.ad_repository import AdRepository
 from backend.api.repositories.metrics_repository import MetricsRepository
-from backend.api.schemas.mutations import SmartCampaignRequest, AddCreativeRequest, StatusUpdateRequest, BudgetUpdateRequest, UpdateAdSetTargetingRequest, UpdateAdCreativeRequest, CreateLeadFormRequest, LeadsResponse, LeadRecord, CreateCustomAudienceRequest, CreatePageEngagementAudienceRequest, CreateLookalikeAudienceRequest
+from backend.api.schemas.mutations import SmartCampaignRequest, AddCreativeRequest, StatusUpdateRequest, BudgetUpdateRequest, UpdateAdSetTargetingRequest, UpdateAdCreativeRequest, CreateLeadFormRequest, LeadsResponse, LeadRecord, CreateCustomAudienceRequest, CreatePageEngagementAudienceRequest, CreateLookalikeAudienceRequest, FunnelStagesResponse, UpdateFunnelStagesRequest, LeadStagesResponse, UpdateLeadStageRequest
 from backend.models.user_schema import User
 from backend.api.services.ad_mutation_service import AdMutationService
 
@@ -999,3 +999,75 @@ def get_captain_historical_recommendations(
     except Exception as e:
         logger.error(f"Failed to fetch captain recommendations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Lead Funnel Endpoints ---
+
+@router.get("/funnel-stages", response_model=FunnelStagesResponse)
+def get_funnel_stages(
+    account_id: str = Query(..., description="Ad Account ID"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Get funnel stage names for account. Creates default stages if none exist."""
+    from backend.api.repositories.lead_funnel_repository import LeadFunnelRepository
+
+    clean_id = int(account_id.replace("act_", ""))
+    repo = LeadFunnelRepository(db)
+    stages = repo.get_funnel_stages(clean_id)
+    return FunnelStagesResponse(stages=stages)
+
+
+@router.put("/funnel-stages", response_model=FunnelStagesResponse)
+def update_funnel_stages(
+    request: UpdateFunnelStagesRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Update funnel stage names for account."""
+    from backend.api.repositories.lead_funnel_repository import LeadFunnelRepository
+    import logging
+    logger = logging.getLogger(__name__)
+
+    clean_id = int(request.account_id.replace("act_", ""))
+    repo = LeadFunnelRepository(db)
+
+    logger.info(f"User {user.id} updating funnel stages for account {request.account_id}")
+    stages = repo.update_funnel_stages(clean_id, request.stages)
+    return FunnelStagesResponse(stages=stages)
+
+
+@router.get("/leads/stages", response_model=LeadStagesResponse)
+def get_lead_stages(
+    account_id: str = Query(..., description="Ad Account ID"),
+    lead_form_id: str = Query(..., description="Lead form ID"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Get stage assignments for all leads in a form."""
+    from backend.api.repositories.lead_funnel_repository import LeadFunnelRepository
+
+    clean_id = int(account_id.replace("act_", ""))
+    repo = LeadFunnelRepository(db)
+    stages = repo.get_lead_stages(clean_id, lead_form_id)
+    return LeadStagesResponse(stages=stages)
+
+
+@router.put("/leads/{lead_id}/stage")
+def update_lead_stage(
+    lead_id: str,
+    request: UpdateLeadStageRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Update a lead's funnel stage."""
+    from backend.api.repositories.lead_funnel_repository import LeadFunnelRepository
+    import logging
+    logger = logging.getLogger(__name__)
+
+    clean_id = int(request.account_id.replace("act_", ""))
+    repo = LeadFunnelRepository(db)
+
+    logger.info(f"User {user.id} updating lead {lead_id} to stage {request.stage_index}")
+    stage_index = repo.update_lead_stage(clean_id, lead_id, request.lead_form_id, request.stage_index)
+    return {"success": True, "lead_id": lead_id, "stage_index": stage_index}

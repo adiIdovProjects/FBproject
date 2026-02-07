@@ -644,5 +644,43 @@ export const mutationsService = {
             params: { account_id: accountId, lookback_days: lookbackDays }
         });
         return response.data;
+    },
+
+    // --- Lead Funnel ---
+
+    async getFunnelStages(accountId: string): Promise<{ stages: string[] }> {
+        const response = await apiClient.get('/api/mutations/funnel-stages', {
+            params: { account_id: accountId }
+        });
+        return response.data;
+    },
+
+    async updateFunnelStages(accountId: string, stages: string[]): Promise<{ stages: string[] }> {
+        const response = await apiClient.put('/api/mutations/funnel-stages', {
+            account_id: accountId,
+            stages: stages
+        });
+        return response.data;
+    },
+
+    async getLeadStages(accountId: string, leadFormId: string): Promise<{ stages: Record<string, number> }> {
+        const response = await apiClient.get('/api/mutations/leads/stages', {
+            params: { account_id: accountId, lead_form_id: leadFormId }
+        });
+        return response.data;
+    },
+
+    async updateLeadStage(
+        leadId: string,
+        accountId: string,
+        leadFormId: string,
+        stageIndex: number
+    ): Promise<{ success: boolean; lead_id: string; stage_index: number }> {
+        const response = await apiClient.put(`/api/mutations/leads/${leadId}/stage`, {
+            account_id: accountId,
+            lead_form_id: leadFormId,
+            stage_index: stageIndex
+        });
+        return response.data;
     }
 };

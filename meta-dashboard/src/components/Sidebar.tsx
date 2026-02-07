@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -10,6 +10,7 @@ import {
     Sparkles,
     PlusCircle,
     User,
+    Users,
     Lightbulb,
     TrendingUp,
     Home,
@@ -23,6 +24,7 @@ import { useUser } from '@/context/UserContext';
 import { useLocale, useTranslations } from 'next-intl';
 import ThemeSelector from '@/components/ThemeSelector';
 import { useTheme } from '@/context/ThemeContext';
+import { mutationsService } from '@/services/mutations.service';
 
 export const Sidebar: React.FC = () => {
     const { theme } = useTheme();
@@ -35,16 +37,36 @@ export const Sidebar: React.FC = () => {
     // Account Context
     const { selectedAccountId, setSelectedAccountId, linkedAccounts } = useAccount();
     const { isAdmin } = useUser();
-    const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
-    const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [hasLeadForms, setHasLeadForms] = useState(false);
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
-    // Flat navigation - 5 simple items
+    // Check if account has lead forms (for conditional nav)
+    useEffect(() => {
+        const checkLeadForms = async () => {
+            if (!selectedAccount?.page_id || !selectedAccountId) {
+                setHasLeadForms(false);
+                return;
+            }
+            try {
+                const forms = await mutationsService.getLeadForms(selectedAccount.page_id, String(selectedAccountId));
+                setHasLeadForms(forms && forms.length > 0);
+            } catch {
+                setHasLeadForms(false);
+            }
+        };
+        checkLeadForms();
+    }, [selectedAccount?.page_id, selectedAccountId]);
+
+    // Flat navigation - dynamic items
     const navItems = [
         { name: t('nav.dashboard') || 'Dashboard', href: `/${locale}/homepage`, icon: Home },
         { name: t('nav.create_ad') || 'Create Ad', href: `/${locale}/uploader/ai-captain`, icon: PlusCircle },
         { name: t('nav.campaigns') || 'Campaigns', href: `/${locale}/campaigns2`, icon: TrendingUp },
+        // Leads - only show if account has lead forms
+        ...(hasLeadForms ? [{ name: t('nav.leads') || 'Leads', href: `/${locale}/leads`, icon: Users }] : []),
         { name: t('nav.reports') || 'Reports', href: `/${locale}/my-reports`, icon: FileText },
         { name: t('nav.ask_ai') || 'Ask AI', href: `/${locale}/ai-investigator`, icon: Sparkles },
     ];

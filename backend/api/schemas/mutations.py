@@ -225,3 +225,28 @@ class CreateLookalikeAudienceRequest(BaseModel):
         le=0.10,
         description="Lookalike ratio (0.01 = 1%, 0.10 = 10%)"
     )
+
+
+# --- Lead Funnel Schemas ---
+
+class FunnelStagesResponse(BaseModel):
+    """Response containing funnel stage names"""
+    stages: List[str] = Field(..., description="List of 5 stage names")
+
+
+class UpdateFunnelStagesRequest(BaseModel):
+    """Request body for updating funnel stage names"""
+    account_id: str = Field(..., description="Ad Account ID")
+    stages: List[str] = Field(..., min_length=5, max_length=5, description="Exactly 5 stage names")
+
+
+class LeadStagesResponse(BaseModel):
+    """Response containing lead stage assignments"""
+    stages: dict = Field(..., description="Map of fb_lead_id to stage_index")
+
+
+class UpdateLeadStageRequest(BaseModel):
+    """Request body for updating a lead's stage"""
+    account_id: str = Field(..., description="Ad Account ID")
+    lead_form_id: str = Field(..., description="Lead form ID")
+    stage_index: int = Field(..., ge=0, le=4, description="Stage index (0-4)")

@@ -389,6 +389,39 @@ class BusinessProfile(Base):
     )
 
 
+# ==============================================================================
+# LEAD FUNNEL TRACKING
+# ==============================================================================
+
+class LeadFunnelStages(Base):
+    """Per-account customizable funnel stage names"""
+    __tablename__ = 'lead_funnel_stages'
+
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id', ondelete='CASCADE'), primary_key=True)
+    stage_names = Column(Text, nullable=False, default='["New Lead", "Contacted", "Meeting Booked", "Proposal Sent", "Closed"]')
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class LeadStageAssignment(Base):
+    """Individual lead to stage assignments for funnel tracking"""
+    __tablename__ = 'lead_stage_assignments'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(BigInteger, ForeignKey('dim_account.account_id', ondelete='CASCADE'), nullable=False)
+    fb_lead_id = Column(String(100), nullable=False)
+    lead_form_id = Column(String(100), nullable=False)
+    stage_index = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        UniqueConstraint('account_id', 'fb_lead_id', 'lead_form_id', name='uq_lead_stage_assignment'),
+        Index('idx_lead_stage_account', 'account_id'),
+        Index('idx_lead_stage_form', 'lead_form_id'),
+    )
+
+
 def create_schema(engine):
     """Create all tables"""
     Base.metadata.create_all(engine)
