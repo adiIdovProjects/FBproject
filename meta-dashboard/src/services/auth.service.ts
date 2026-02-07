@@ -71,30 +71,6 @@ export function getGoogleLoginUrl(state: string): string {
 }
 
 /**
- * Request a magic link for passwordless authentication
- * @param email User's email address
- */
-export async function requestMagicLink(email: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/api/v1/auth/magic-link/request', { email });
-    return response.data;
-}
-
-/**
- * Verify a magic link token and log in
- * @param token Magic link token from email
- * Security: Uses POST with token in body instead of GET with query param
- * to prevent token exposure in logs, browser history, and Referer headers
- */
-export async function verifyMagicLink(token: string): Promise<{
-    access_token: string;
-    token_type: string;
-    onboarding_status: any;
-}> {
-    const response = await apiClient.post('/api/v1/auth/magic-link/verify', { token });
-    return response.data;
-}
-
-/**
  * Get current user's onboarding status
  */
 export async function getOnboardingStatus(): Promise<any> {

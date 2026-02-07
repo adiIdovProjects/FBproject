@@ -44,17 +44,6 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def create_user_with_password(self, email: str, password_hash: str, full_name: str) -> User:
-        user = User(
-            email=email,
-            password_hash=password_hash,
-            full_name=full_name
-        )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
     def update_fb_token(self, user_id: int, access_token: str, expires_at: datetime):
         user = self.db.query(User).filter(User.id == user_id).first()
         if user:
@@ -62,13 +51,6 @@ class UserRepository:
             encrypted_token = TokenEncryption.encrypt_token(access_token)
             user.fb_access_token = encrypted_token
             user.fb_token_expires_at = expires_at
-            self.db.commit()
-        return user
-
-    def update_password(self, user_id: int, password_hash: str):
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if user:
-            user.password_hash = password_hash
             self.db.commit()
         return user
 
@@ -139,31 +121,7 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-
-    # Magic Link & Onboarding Methods
-
-    def create_user_with_email(self, email: str, full_name: Optional[str] = None) -> User:
-        """Create a new user with just email (passwordless)"""
-        user = User(
-            email=email,
-            full_name=full_name or email.split('@')[0],
-            email_verified=False,
-            onboarding_completed=False,
-            onboarding_step='connect_facebook'
-        )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
-    def mark_email_verified(self, user_id: int) -> Optional[User]:
-        """Mark user's email as verified after magic link confirmation"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if user:
-            user.email_verified = True
-            self.db.commit()
-            self.db.refresh(user)
-        return user
+    # Onboarding Methods
 
     def mark_onboarding_completed(self, user_id: int) -> Optional[User]:
         """Mark user's onboarding as complete"""

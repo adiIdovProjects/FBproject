@@ -344,25 +344,6 @@ async def rate_limiter_cleanup_task():
         await auth_rate_limiter.cleanup()
         logger.debug("Rate limiter cleanup completed")
 
-# Background task for magic link cleanup
-async def magic_link_cleanup_task():
-    """Periodically clean up expired magic link tokens."""
-    while True:
-        await asyncio.sleep(86400)  # Every 24 hours (daily cleanup)
-        try:
-            from backend.api.dependencies import SessionLocal
-            from backend.api.repositories.magic_link_repository import MagicLinkRepository
-
-            db = SessionLocal()
-            try:
-                repo = MagicLinkRepository(db)
-                deleted_count = repo.cleanup_expired_tokens(days_old=7)
-                logger.info(f"Magic link cleanup: Deleted {deleted_count} expired tokens")
-            finally:
-                db.close()
-        except Exception as e:
-            logger.error(f"Magic link cleanup failed: {e}", exc_info=True)
-
 # Startup event
 @app.on_event("startup")
 async def startup_event():
@@ -404,9 +385,7 @@ async def startup_event():
 
     # Start background cleanup tasks
     asyncio.create_task(rate_limiter_cleanup_task())
-    asyncio.create_task(magic_link_cleanup_task())
     logger.info("✅ Rate limiter enabled (100 req/min, 15 req/sec burst)")
-    logger.info("✅ Background cleanup tasks started (rate limiter, magic links)")
 
     logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
     logger.info("=" * 60)
