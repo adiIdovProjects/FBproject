@@ -968,3 +968,34 @@ def get_instagram_posts(
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# --- Historical Recommendations for AI Captain ---
+
+@router.get("/captain/historical-recommendations")
+def get_captain_historical_recommendations(
+    account_id: str = Query(..., description="Ad Account ID"),
+    lookback_days: int = Query(90, ge=30, le=365, description="Days to look back for historical data"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get historical recommendations for AI Captain based on past campaign performance.
+    Returns age groups, locations, CTAs, campaigns for clone, and ads for creative clone.
+    """
+    from backend.api.repositories.captain_recommendations_repository import CaptainRecommendationsRepository
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Clean account ID
+        clean_id = int(account_id.replace("act_", ""))
+
+        repo = CaptainRecommendationsRepository(db)
+        recommendations = repo.get_historical_recommendations([clean_id], lookback_days)
+
+        logger.info(f"User {user.id} fetched captain recommendations for account {account_id}")
+        return recommendations
+    except Exception as e:
+        logger.error(f"Failed to fetch captain recommendations: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

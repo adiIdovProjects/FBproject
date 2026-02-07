@@ -13,7 +13,9 @@ import { LeadFormBuilder } from './LeadFormBuilder';
 import { getCurrentNode } from '../lib/conversationFlow';
 import { getBudgetRecommendation, getAgeRangeSuggestion, getRecommendedCTAs, isCTARecommended } from '../lib/recommendations';
 import { useAccount } from '@/context/AccountContext';
-import { mutationsService, GeoLocation, InterestTarget, CustomAudience } from '@/services/mutations.service';
+import { mutationsService, GeoLocation, InterestTarget, CustomAudience, HistoricalRecommendations } from '@/services/mutations.service';
+import CopyTargetingModal from './CopyTargetingModal';
+import CopyCreativeModal from './CopyCreativeModal';
 import { TooltipIcon } from '@/components/common/TooltipIcon';
 import { getPersonalizedTooltip } from '@/utils/tooltipContent';
 import { businessProfileService, BusinessProfile } from '@/services/business_profile.service';
@@ -108,6 +110,11 @@ export const AICaptainChat: React.FC = () => {
     const [isLoadingAiSuggestions, setIsLoadingAiSuggestions] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
 
+    // Historical recommendations and modals
+    const [historicalRecs, setHistoricalRecs] = useState<HistoricalRecommendations | null>(null);
+    const [showCopyTargetingModal, setShowCopyTargetingModal] = useState(false);
+    const [showCopyCreativeModal, setShowCopyCreativeModal] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -123,6 +130,15 @@ export const AICaptainChat: React.FC = () => {
             businessProfileService.getBusinessProfile(selectedAccountId).then(setBusinessProfile);
         }
     }, [selectedAccountId]);
+
+    // Load historical recommendations when in create flow
+    useEffect(() => {
+        if (selectedAccountId && state.flow === 'create') {
+            mutationsService.getHistoricalRecommendations(selectedAccountId)
+                .then(setHistoricalRecs)
+                .catch(() => setHistoricalRecs(null));
+        }
+    }, [selectedAccountId, state.flow]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
@@ -1384,6 +1400,27 @@ export const AICaptainChat: React.FC = () => {
                                         {t('captain.confirm_locations')} ({state.selectedLocations.length})
                                     </button>
                                 )}
+
+                                {/* Copy targeting from existing campaign */}
+                                {state.flow === 'create' && historicalRecs?.campaigns_for_clone && historicalRecs.campaigns_for_clone.length > 0 && (
+                                    <>
+                                        <div className="relative my-3">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <div className="w-full border-t border-gray-700" />
+                                            </div>
+                                            <div className="relative flex justify-center text-sm">
+                                                <span className="px-3 bg-[#0a0a1a] text-gray-500">{t('captain.or')}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowCopyTargetingModal(true)}
+                                            className="w-full py-3 px-4 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <MapPin className="w-4 h-4" />
+                                            {t('captain.copy_targeting_from_campaign')}
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         )}
 
@@ -1435,19 +1472,31 @@ export const AICaptainChat: React.FC = () => {
 
                         {/* Multi-file upload (new batch flow) */}
                         {currentNode?.inputType === 'multi_file_upload' && (
-                            <MultiFileUpload
-                                files={uploadedFiles}
-                                previews={uploadedPreviews}
-                                maxFiles={5}
-                                onFilesChange={handleMultiFileUpload}
-                                onContinue={handleMultiFileContinue}
-                                isRTL={isRTL}
-                                accountId={selectedAccount?.account_id}
-                                pageId={selectedAccount?.page_id}
-                                onSelectExistingPost={handleExistingPostSelect}
-                                existingPost={existingPost}
-                                onClearExistingPost={handleClearExistingPost}
-                            />
+                            <div className="space-y-4">
+                                <MultiFileUpload
+                                    files={uploadedFiles}
+                                    previews={uploadedPreviews}
+                                    maxFiles={5}
+                                    onFilesChange={handleMultiFileUpload}
+                                    onContinue={handleMultiFileContinue}
+                                    isRTL={isRTL}
+                                    accountId={selectedAccount?.account_id}
+                                    pageId={selectedAccount?.page_id}
+                                    onSelectExistingPost={handleExistingPostSelect}
+                                    existingPost={existingPost}
+                                    onClearExistingPost={handleClearExistingPost}
+                                />
+
+                                {/* Copy creative from existing ad */}
+                                {state.flow === 'create' && historicalRecs?.ads_for_creative_clone && historicalRecs.ads_for_creative_clone.length > 0 && uploadedFiles.length === 0 && !existingPost && (
+                                    <button
+                                        onClick={() => setShowCopyCreativeModal(true)}
+                                        className="w-full py-3 px-4 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 hover:text-purple-300 font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {t('captain.copy_creative_from_ad')}
+                                    </button>
+                                )}
+                            </div>
                         )}
 
                         {/* AI Copy step (new batch flow) */}
@@ -1597,6 +1646,24 @@ export const AICaptainChat: React.FC = () => {
                 pageName={selectedAccount?.page_name || 'Your Page'}
                 isRTL={isRTL}
             />
+
+            {/* Copy Targeting Modal */}
+            {selectedAccount?.account_id && (
+                <CopyTargetingModal
+                    isOpen={showCopyTargetingModal}
+                    onClose={() => setShowCopyTargetingModal(false)}
+                    accountId={selectedAccount.account_id}
+                />
+            )}
+
+            {/* Copy Creative Modal */}
+            {selectedAccount?.account_id && (
+                <CopyCreativeModal
+                    isOpen={showCopyCreativeModal}
+                    onClose={() => setShowCopyCreativeModal(false)}
+                    accountId={selectedAccount.account_id}
+                />
+            )}
 
             {/* CSS for float animation */}
             <style jsx global>{`

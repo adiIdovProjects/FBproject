@@ -1839,7 +1839,23 @@
     "onboarding_step2_title": "2. Define Your Audience",
     "onboarding_step2_desc": "Choose where your customers are located. You can let Facebook find the best audience or customize it yourself.",
     "onboarding_step3_title": "3. Create Your Ad",
-    "onboarding_step3_desc": "Upload your image or video, add your message, and we'll help you write compelling copy with AI."
+    "onboarding_step3_desc": "Upload your image or video, add your message, and we'll help you write compelling copy with AI.",
+
+    "copy_targeting_from_campaign": "Copy targeting from existing campaign",
+    "copy_targeting_title": "Copy Targeting",
+    "copy_targeting_description": "Select a campaign to copy its targeting settings (locations, age range, gender, platforms)",
+    "copy_targeting_button": "Copy Targeting",
+    "copy_targeting_error": "Failed to load campaigns. Please try again.",
+    "copy_targeting_failed": "Failed to copy targeting. Please try again.",
+    "no_campaigns_found": "No campaigns with historical data found.",
+
+    "copy_creative_from_ad": "Copy creative from existing ad",
+    "copy_creative_title": "Copy Creative",
+    "copy_creative_description": "Select an ad to copy its headline, body text, and button. You'll still need to upload your own image.",
+    "copy_creative_button": "Copy Creative",
+    "copy_creative_error": "Failed to load ads. Please try again.",
+    "copy_creative_preview": "Selected creative:",
+    "no_ads_found": "No ads with creative data found."
   },
   "glossary": {
     "title": "Glossary",

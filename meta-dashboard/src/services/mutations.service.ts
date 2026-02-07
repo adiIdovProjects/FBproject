@@ -227,6 +227,63 @@ export interface BudgetRecommendation {
     currency: string;
 }
 
+export interface HistoricalAgeGroup {
+    age_group: string;
+    spend: number;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+}
+
+export interface HistoricalLocation {
+    country: string;
+    country_code: string | null;
+    spend: number;
+    impressions: number;
+    clicks: number;
+}
+
+export interface HistoricalCTA {
+    cta: string;
+    usage_count: number;
+    spend: number;
+    clicks: number;
+    ctr: number;
+}
+
+export interface CampaignForClone {
+    campaign_id: string;
+    campaign_name: string;
+    objective: string | null;
+    status: string | null;
+    spend: number;
+    impressions: number;
+    clicks: number;
+    roas: number;
+    ctr: number;
+}
+
+export interface AdForCreativeClone {
+    ad_id: string;
+    ad_name: string | null;
+    title: string | null;
+    body: string | null;
+    cta: string | null;
+    thumbnail_url: string | null;
+    is_video: boolean;
+    spend: number;
+    clicks: number;
+    ctr: number;
+}
+
+export interface HistoricalRecommendations {
+    age_groups: HistoricalAgeGroup[];
+    locations: HistoricalLocation[];
+    ctas: HistoricalCTA[];
+    campaigns_for_clone: CampaignForClone[];
+    ads_for_creative_clone: AdForCreativeClone[];
+}
+
 export const mutationsService = {
     async createSmartCampaign(data: SmartCampaignRequest) {
         const response = await apiClient.post('/api/mutations/smart-campaign', data);
@@ -573,6 +630,18 @@ export const mutationsService = {
     ): Promise<{ posts: PagePost[]; source: string; instagram_connected: boolean; instagram_account_id?: string }> {
         const response = await apiClient.get('/api/mutations/instagram-posts', {
             params: { account_id: accountId, page_id: pageId, limit }
+        });
+        return response.data;
+    },
+
+    // --- Historical Recommendations for AI Captain ---
+
+    async getHistoricalRecommendations(
+        accountId: string,
+        lookbackDays: number = 90
+    ): Promise<HistoricalRecommendations> {
+        const response = await apiClient.get('/api/mutations/captain/historical-recommendations', {
+            params: { account_id: accountId, lookback_days: lookbackDays }
         });
         return response.data;
     }
