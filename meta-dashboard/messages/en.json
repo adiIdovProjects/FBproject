@@ -317,6 +317,9 @@
     "advanced_link": "Want deeper analysis?",
     "view_advanced": "View Advanced Reports"
   },
+  "recommendations": {
+    "title": "Recommendations"
+  },
   "creatives": {
     "title": "Creative Insights",
     "subtitle": "Analyze creative performance patterns and video engagement",

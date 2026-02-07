@@ -291,6 +291,9 @@
       "add_grouping": "إضافة تجميع"
     }
   },
+  "recommendations": {
+    "title": "التوصيات"
+  },
   "creatives": {
     "title": "رؤى الإبداع",
     "subtitle": "تحليل أنماط أداء الإبداع وتفاعل الفيديو",

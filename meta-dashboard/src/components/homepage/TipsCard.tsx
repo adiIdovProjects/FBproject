@@ -5,10 +5,9 @@
  * Shows 1-2 actionable tips based on account data
  */
 
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { Lightbulb, Rocket, Video, Image, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
+import { Lightbulb, Rocket, Video, Image, DollarSign, TrendingUp } from 'lucide-react';
 import { fetchRecommendations, Recommendation } from '@/services/reports.service';
 import { useAccount } from '@/context/AccountContext';
 
@@ -26,8 +25,6 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 export default function TipsCard({ className = '' }: TipsCardProps) {
   const t = useTranslations();
-  const locale = useLocale();
-  const router = useRouter();
   const { selectedAccountId } = useAccount();
 
   const { data: recommendations, isLoading, error } = useQuery({
@@ -37,10 +34,6 @@ export default function TipsCard({ className = '' }: TipsCardProps) {
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     retry: 1,
   });
-
-  const handleBuildReport = () => {
-    router.push(`/${locale}/my-reports`);
-  };
 
   // Don't show card if no recommendations or error
   if (error || (!isLoading && (!recommendations || recommendations.length === 0))) {
@@ -55,12 +48,12 @@ export default function TipsCard({ className = '' }: TipsCardProps) {
           <Lightbulb className="w-5 h-5 text-yellow-400" />
         </div>
         <h3 className="text-lg font-semibold text-white">
-          {t('my_report.todays_tips') || "Today's Tips"}
+          {t('recommendations.title') || "Recommendations"}
         </h3>
       </div>
 
-      {/* Tips List */}
-      <div className="space-y-3 mb-4">
+      {/* Recommendations List */}
+      <div className="space-y-3">
         {isLoading ? (
           // Loading skeleton
           <>
@@ -87,14 +80,6 @@ export default function TipsCard({ className = '' }: TipsCardProps) {
         )}
       </div>
 
-      {/* Build Report Link */}
-      <button
-        onClick={handleBuildReport}
-        className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors group"
-      >
-        <span>{t('my_report.build_my_report') || 'Build My Report'}</span>
-        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-      </button>
     </div>
   );
 }

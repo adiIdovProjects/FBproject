@@ -297,6 +297,9 @@
       "add_grouping": "Ajouter un groupement"
     }
   },
+  "recommendations": {
+    "title": "Recommandations"
+  },
   "creatives": {
     "title": "Idées créatives",
     "subtitle": "Analyser les tendances de performance créative et l'engagement vidéo",

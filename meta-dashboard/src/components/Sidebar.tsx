@@ -40,13 +40,12 @@ export const Sidebar: React.FC = () => {
 
     const selectedAccount = linkedAccounts.find(a => a.account_id === selectedAccountId);
 
-    // Flat navigation - 6 simple items
+    // Flat navigation - 5 simple items
     const navItems = [
         { name: t('nav.dashboard') || 'Dashboard', href: `/${locale}/homepage`, icon: Home },
-        { name: t('nav.my_report') || 'My Report', href: `/${locale}/my-reports`, icon: FileText },
         { name: t('nav.create_ad') || 'Create Ad', href: `/${locale}/uploader/ai-captain`, icon: PlusCircle },
         { name: t('nav.campaigns') || 'Campaigns', href: `/${locale}/campaigns2`, icon: TrendingUp },
-        { name: t('nav.insights') || 'Insights', href: `/${locale}/insights`, icon: Lightbulb },
+        { name: t('nav.reports') || 'Reports', href: `/${locale}/my-reports`, icon: FileText },
         { name: t('nav.ask_ai') || 'Ask AI', href: `/${locale}/ai-investigator`, icon: Sparkles },
     ];
 

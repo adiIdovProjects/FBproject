@@ -291,6 +291,9 @@
       "add_grouping": "Gruppierung hinzufügen"
     }
   },
+  "recommendations": {
+    "title": "Empfehlungen"
+  },
   "creatives": {
     "title": "Kreative Einblicke",
     "subtitle": "Kreative Performancemuster und Video-Engagement analysieren",

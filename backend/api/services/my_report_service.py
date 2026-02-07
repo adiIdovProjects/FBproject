@@ -226,7 +226,7 @@ class MyReportService:
                     return {
                         'type': 'add_ads',
                         'icon': 'rocket',
-                        'message': f"Add more ads to '{campaign['campaign_name'][:30]}' - it's performing well"
+                        'message': f"Test another ad in '{campaign['campaign_name'][:30]}' - it's performing well"
                     }
 
             return None
@@ -333,7 +333,7 @@ class MyReportService:
                 return {
                     'type': 'budget_move',
                     'icon': 'dollar',
-                    'message': f"Consider moving budget from '{worst['name'][:20]}' to '{best['name'][:20]}'"
+                    'message': f"Increase spend in '{best['name'][:25]}' - it has the best CPA"
                 }
 
             return None
@@ -361,7 +361,7 @@ class MyReportService:
                 return {
                     'type': 'underspend',
                     'icon': 'trending_up',
-                    'message': "Room to increase spend on winning campaigns"
+                    'message': "Increase spend on your winning campaigns"
                 }
 
             return None
