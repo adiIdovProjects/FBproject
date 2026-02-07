@@ -42,6 +42,9 @@ export interface CalculatedMetrics {
 // Metric type for determining trend color logic (avoid string matching translated titles)
 export type TrendMetricType = 'spend' | 'efficiency' | 'performance' | 'neutral';
 
+// Metric card color themes
+export type MetricColor = 'emerald' | 'blue' | 'amber' | 'purple' | 'orange' | 'rose' | 'indigo';
+
 // Metric Card Props
 export interface MetricCardProps {
   title: string;
@@ -53,6 +56,7 @@ export interface MetricCardProps {
   currency?: string;  // Currency code (e.g., "USD", "EUR", "ILS")
   tooltipKey?: string;  // i18n key for metric explanation tooltip
   metricType?: TrendMetricType;  // Type of metric for trend color logic
+  color?: MetricColor;  // Color theme for the card
 }
 
 // Chart Data Point

@@ -268,6 +268,7 @@ export default function PerformanceDashboard() {
               currency={currency}
               tooltipKey="metrics.spend_tooltip"
               metricType="spend"
+              color="emerald"
             />
 
             <MetricCard
@@ -279,6 +280,7 @@ export default function PerformanceDashboard() {
               isLoading={isLoading}
               tooltipKey="metrics.ctr_tooltip"
               metricType="performance"
+              color="blue"
             />
 
             <MetricCard
@@ -291,6 +293,7 @@ export default function PerformanceDashboard() {
               currency={currency}
               tooltipKey="metrics.cpc_tooltip"
               metricType="efficiency"
+              color="amber"
             />
 
             <MetricCard
@@ -302,6 +305,7 @@ export default function PerformanceDashboard() {
               isLoading={isLoading}
               tooltipKey="metrics.clicks_tooltip"
               metricType="performance"
+              color="purple"
             />
 
             <MetricCard
@@ -313,6 +317,7 @@ export default function PerformanceDashboard() {
               isLoading={isLoading}
               tooltipKey="metrics.conversions_tooltip"
               metricType="performance"
+              color="orange"
             />
 
             <MetricCard
@@ -325,6 +330,7 @@ export default function PerformanceDashboard() {
               currency={currency}
               tooltipKey="metrics.cpa_tooltip"
               metricType="efficiency"
+              color="rose"
             />
 
             {hasROAS && (
@@ -337,6 +343,7 @@ export default function PerformanceDashboard() {
                 isLoading={isLoading}
                 tooltipKey="metrics.roas_tooltip"
                 metricType="performance"
+                color="indigo"
               />
             )}
           </>
