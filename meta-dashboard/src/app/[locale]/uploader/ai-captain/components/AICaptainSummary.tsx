@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, MapPin, Users, DollarSign, Image, Loader2, CheckCircle, XCircle, Target, Calendar } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, DollarSign, Image, Loader2, CheckCircle, XCircle, Target, Calendar, Pencil } from 'lucide-react';
 import { useCaptain } from './CaptainContext';
 import { SpeechBubble } from './SpeechBubble';
 import { useAccount } from '@/context/AccountContext';
@@ -432,6 +432,8 @@ export const AICaptainSummary: React.FC = () => {
                                 icon={<Target className="w-5 h-5" />}
                                 title={t('captain.summary_campaign')}
                                 color="blue"
+                                onEdit={() => dispatch({ type: 'GO_TO_STEP', questionId: 'campaign_name' })}
+                                editLabel={t('common.edit')}
                             >
                                 <div className="space-y-1">
                                     <p className="text-white font-medium">{state.campaignName || 'Untitled Campaign'}</p>
@@ -475,6 +477,8 @@ export const AICaptainSummary: React.FC = () => {
                                 icon={<MapPin className="w-5 h-5" />}
                                 title={t('captain.summary_targeting')}
                                 color="green"
+                                onEdit={() => dispatch({ type: 'GO_TO_STEP', questionId: 'location' })}
+                                editLabel={t('common.edit')}
                             >
                                 <div className="space-y-2">
                                     <div className="flex flex-wrap gap-1">
@@ -515,6 +519,8 @@ export const AICaptainSummary: React.FC = () => {
                                 icon={<DollarSign className="w-5 h-5" />}
                                 title={t('captain.summary_budget')}
                                 color="amber"
+                                onEdit={() => dispatch({ type: 'GO_TO_STEP', questionId: 'budget' })}
+                                editLabel={t('common.edit')}
                             >
                                 <p className="text-white text-2xl font-bold">
                                     ${state.dailyBudget}<span className="text-gray-400 text-base font-normal">/day</span>
@@ -528,6 +534,8 @@ export const AICaptainSummary: React.FC = () => {
                                 icon={<Image className="w-5 h-5" />}
                                 title={state.ads.length > 1 ? t('captain.summary_ads', { count: state.ads.length }) : t('captain.summary_ad')}
                                 color="pink"
+                                onEdit={() => dispatch({ type: 'GO_TO_STEP', questionId: 'creative_upload' })}
+                                editLabel={t('common.edit')}
                             >
                                 {/* Grid layout for multiple ads (3+ ads) */}
                                 {state.ads.length >= 3 ? (
@@ -642,9 +650,11 @@ interface SummaryCardProps {
     title: string;
     color: 'blue' | 'green' | 'amber' | 'pink' | 'purple';
     children: React.ReactNode;
+    onEdit?: () => void;
+    editLabel?: string;
 }
 
-const SummaryCard: React.FC<SummaryCardProps> = ({ icon, title, color, children }) => {
+const SummaryCard: React.FC<SummaryCardProps> = ({ icon, title, color, children, onEdit, editLabel = 'Edit' }) => {
     const colorClasses = {
         blue: 'border-blue-500/30 bg-blue-500/5',
         green: 'border-green-500/30 bg-green-500/5',
@@ -663,9 +673,20 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ icon, title, color, children 
 
     return (
         <div className={`p-4 rounded-xl border ${colorClasses[color]}`}>
-            <div className="flex items-center gap-2 mb-3">
-                <span className={iconColorClasses[color]}>{icon}</span>
-                <h3 className="font-medium text-gray-300">{title}</h3>
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <span className={iconColorClasses[color]}>{icon}</span>
+                    <h3 className="font-medium text-gray-300">{title}</h3>
+                </div>
+                {onEdit && (
+                    <button
+                        onClick={onEdit}
+                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/10"
+                    >
+                        <Pencil className="w-3 h-3" />
+                        {editLabel}
+                    </button>
+                )}
             </div>
             {children}
         </div>

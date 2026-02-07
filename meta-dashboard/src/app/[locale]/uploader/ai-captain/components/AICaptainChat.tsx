@@ -1244,42 +1244,62 @@ export const AICaptainChat: React.FC = () => {
                         )}
 
                         {/* Text input */}
-                        {currentNode?.inputType === 'text' && (
-                            <div className="space-y-2">
-                                {/* AI copy button for headline and body */}
-                                {(state.currentQuestionId === 'headline' || state.currentQuestionId === 'body') && (
-                                    <button
-                                        onClick={() => handleOpenAICopy(state.currentQuestionId as 'headline' | 'body')}
-                                        className="w-full py-2 text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        {t('write_for_me')}
-                                    </button>
-                                )}
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={textInput}
-                                        onChange={(e) => {
-                                            setTextInput(e.target.value);
-                                            setUrlError(null);
-                                        }}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
-                                        placeholder={currentNode.placeholder ? t(currentNode.placeholder) : ''}
-                                        className={`flex-1 bg-gray-900 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500 outline-none ${urlError ? 'border-red-500' : 'border-gray-700'}`}
-                                    />
-                                    <button
-                                        onClick={handleTextSubmit}
-                                        disabled={!textInput.trim()}
-                                        className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-700 rounded-xl transition-colors"
-                                    >
-                                        <Send className="w-5 h-5 text-white" />
-                                    </button>
+                        {currentNode?.inputType === 'text' && (() => {
+                            const isHeadline = state.currentQuestionId === 'headline';
+                            const isBody = state.currentQuestionId === 'body';
+                            const maxLength = isHeadline ? 40 : isBody ? 125 : undefined;
+                            const charCount = textInput.length;
+                            const isOverLimit = maxLength && charCount > maxLength;
+
+                            return (
+                                <div className="space-y-2">
+                                    {/* AI copy button for headline and body */}
+                                    {(isHeadline || isBody) && (
+                                        <button
+                                            onClick={() => handleOpenAICopy(state.currentQuestionId as 'headline' | 'body')}
+                                            className="w-full py-2 text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                                        >
+                                            {t('write_for_me')}
+                                        </button>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <input
+                                                type="text"
+                                                value={textInput}
+                                                onChange={(e) => {
+                                                    setTextInput(e.target.value);
+                                                    setUrlError(null);
+                                                }}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
+                                                placeholder={currentNode.placeholder ? t(currentNode.placeholder) : ''}
+                                                maxLength={maxLength ? maxLength + 20 : undefined}
+                                                className={`w-full bg-gray-900 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500 outline-none ${urlError || isOverLimit ? 'border-red-500' : 'border-gray-700'}`}
+                                            />
+                                            {/* Character count for headline/body */}
+                                            {maxLength && (
+                                                <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${isOverLimit ? 'text-red-400' : charCount > maxLength * 0.8 ? 'text-amber-400' : 'text-gray-500'}`}>
+                                                    {charCount}/{maxLength}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={handleTextSubmit}
+                                            disabled={!textInput.trim() || isOverLimit}
+                                            className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-700 rounded-xl transition-colors"
+                                        >
+                                            <Send className="w-5 h-5 text-white" />
+                                        </button>
+                                    </div>
+                                    {urlError && (
+                                        <p className="text-red-400 text-sm">{urlError}</p>
+                                    )}
+                                    {isOverLimit && (
+                                        <p className="text-red-400 text-sm">{t('captain.character_limit_exceeded', { max: maxLength })}</p>
+                                    )}
                                 </div>
-                                {urlError && (
-                                    <p className="text-red-400 text-sm">{urlError}</p>
-                                )}
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Budget input */}
                         {currentNode?.inputType === 'budget' && (() => {

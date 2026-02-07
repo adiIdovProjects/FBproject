@@ -87,7 +87,7 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_campaign_name',
         inputType: 'text',
         placeholder: 'captain.placeholder_campaign_name',
-        nextNode: () => 'location',
+        nextNode: () => 'budget',
         validate: (answer) => answer.trim().length > 0,
     },
     location: {
@@ -133,14 +133,14 @@ export const CREATE_FLOW_NODES: Record<string, ConversationNode> = {
         questionKey: 'captain.ask_platform',
         inputType: 'quick_reply',
         options: PLATFORM_OPTIONS,
-        nextNode: () => 'budget',
+        nextNode: () => 'creative_upload',
     },
     budget: {
         id: 'budget',
         questionKey: 'captain.ask_budget',
         inputType: 'budget',
         placeholder: 'captain.placeholder_budget',
-        nextNode: () => 'creative_upload',
+        nextNode: () => 'location',
         validate: (answer) => {
             const num = parseFloat(answer);
             return !isNaN(num) && num >= 5;

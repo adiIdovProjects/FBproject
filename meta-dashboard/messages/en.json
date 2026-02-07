@@ -57,6 +57,7 @@
     "my_report": "My Report",
     "create_ad": "Create Ad",
     "ask_ai": "Ask AI",
+    "leads": "Leads",
     "advanced_analytics": "Advanced Analytics",
     "performance": "Performance",
     "campaigns": "Campaigns",
@@ -1780,6 +1781,7 @@
     "validation_file_type_invalid": "File type not supported. Use JPG, PNG, GIF for images or MP4 for video",
     "validation_location_required": "Select at least one location to target",
     "validation_age_invalid": "Minimum age must be less than maximum age",
+    "character_limit_exceeded": "Too long! Maximum {max} characters",
     "cta": "Button",
     "link": "Link",
 
@@ -2149,6 +2151,20 @@
     "tip_4": "Visit the Beginner Guide for Facebook Ads best practices",
     "dismiss": "Got it, don't show again",
     "learn_more": "Learn More"
+  },
+  "leads": {
+    "title": "Leads",
+    "description": "View and manage your lead form submissions",
+    "select_form": "Select a lead form...",
+    "export_csv": "Export CSV",
+    "no_leads": "No leads found for this form",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "date": "Date",
+    "stage": "Stage",
+    "total_leads": "{count} leads",
+    "gdpr_tooltip": "You are the data controller for this lead data under GDPR."
   },
   "feedback": {
     "title": "Send Feedback",
