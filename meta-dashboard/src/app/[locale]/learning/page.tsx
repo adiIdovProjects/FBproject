@@ -12,7 +12,8 @@ import {
     Activity,
     ExternalLink,
     Lightbulb,
-    Youtube
+    Youtube,
+    AlertTriangle
 } from 'lucide-react';
 
 interface SectionProps {
@@ -278,6 +279,36 @@ export default function LearningCenterPage() {
                                 {t('learning.lead_youtube')}
                             </a>
                         </div>
+                    </div>
+                </Section>
+
+                {/* Section 5: Common Mistakes */}
+                <Section
+                    title={t('learning.common_mistakes')}
+                    description={t('learning.common_mistakes_desc')}
+                    icon={<AlertTriangle className="w-5 h-5 text-accent" />}
+                    isRTL={isRTL}
+                >
+                    <div className="space-y-3">
+                        <QuestionItem question={t('learning.mistake1_title')} isRTL={isRTL}>
+                            <p className="text-gray-300 text-sm">{t('learning.mistake1_content')}</p>
+                        </QuestionItem>
+
+                        <QuestionItem question={t('learning.mistake2_title')} isRTL={isRTL}>
+                            <p className="text-gray-300 text-sm">{t('learning.mistake2_content')}</p>
+                        </QuestionItem>
+
+                        <QuestionItem question={t('learning.mistake3_title')} isRTL={isRTL}>
+                            <p className="text-gray-300 text-sm">{t('learning.mistake3_content')}</p>
+                        </QuestionItem>
+
+                        <QuestionItem question={t('learning.mistake4_title')} isRTL={isRTL}>
+                            <p className="text-gray-300 text-sm">{t('learning.mistake4_content')}</p>
+                        </QuestionItem>
+
+                        <QuestionItem question={t('learning.mistake5_title')} isRTL={isRTL}>
+                            <p className="text-gray-300 text-sm">{t('learning.mistake5_content')}</p>
+                        </QuestionItem>
                     </div>
                 </Section>
 

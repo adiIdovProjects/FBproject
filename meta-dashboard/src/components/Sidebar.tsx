@@ -45,19 +45,21 @@ export const Sidebar: React.FC = () => {
 
     // Check if account has lead forms (for conditional nav)
     useEffect(() => {
+        let isMounted = true;
         const checkLeadForms = async () => {
             if (!selectedAccount?.page_id || !selectedAccountId) {
-                setHasLeadForms(false);
+                if (isMounted) setHasLeadForms(false);
                 return;
             }
             try {
                 const forms = await mutationsService.getLeadForms(selectedAccount.page_id, String(selectedAccountId));
-                setHasLeadForms(forms && forms.length > 0);
+                if (isMounted) setHasLeadForms(forms && forms.length > 0);
             } catch {
-                setHasLeadForms(false);
+                if (isMounted) setHasLeadForms(false);
             }
         };
         checkLeadForms();
+        return () => { isMounted = false; };
     }, [selectedAccount?.page_id, selectedAccountId]);
 
     // Flat navigation - dynamic items
@@ -73,6 +75,7 @@ export const Sidebar: React.FC = () => {
 
     return (
         <aside
+            data-tour="sidebar"
             className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} w-64 bg-sidebar border-border-subtle flex flex-col z-50 transition-all duration-300`}
         >
             {/* Brand Logo & Account Selector */}

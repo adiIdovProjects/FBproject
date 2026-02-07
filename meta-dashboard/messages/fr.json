@@ -330,7 +330,8 @@
     }
   },
   "recommendations": {
-    "title": "Recommandations"
+    "title": "Recommandations",
+    "why": "Pourquoi?"
   },
   "creatives": {
     "title": "Idées créatives",
@@ -875,6 +876,18 @@
     "mistake_narrow_targeting": "Un ciblage trop restreint (audience inférieure à 100 000) limite l’optimisation sur Facebook.",
     "mistake_learning_phase": "Modifier les annonces pendant la phase d'apprentissage réinitialise le processus d'optimisation",
     "mistake_no_testing": "Ne pas tester les variantes créatives signifie que vous risquez de passer à côté d'options plus performantes.",
+    "common_mistakes": "Erreurs courantes à éviter",
+    "common_mistakes_desc": "Apprenez des erreurs des autres pour économiser temps et argent",
+    "mistake1_title": "Modifier les publicités pendant la phase d'apprentissage",
+    "mistake1_content": "Facebook a besoin d'environ 50 conversions pour apprendre. Les modifications réinitialisent l'apprentissage. Attendez 3-5 jours.",
+    "mistake2_title": "Ciblage trop restreint",
+    "mistake2_content": "Les audiences inférieures à 100 000 personnes limitent l'optimisation de Facebook. Commencez large !",
+    "mistake3_title": "Abandonner trop tôt",
+    "mistake3_content": "La plupart des campagnes ont besoin d'au moins 7 jours. Donnez à Facebook le temps d'optimiser.",
+    "mistake4_title": "Pas de pixel de suivi installé",
+    "mistake4_content": "Sans le Pixel Facebook, vous ne pouvez pas suivre les conversions. Installez-le avant toute campagne.",
+    "mistake5_title": "Utiliser une seule création",
+    "mistake5_content": "Testez toujours 3-5 images ou vidéos différentes pour que Facebook trouve la meilleure option.",
     "objective_title": "Choisissez le bon objectif de campagne",
     "objective_tip": "L'objectif de votre campagne indique à Facebook l'action que vous souhaitez que les utilisateurs entreprennent. Choisissez toujours l'objectif qui correspond à votre objectif commercial : si vous souhaitez générer des ventes, sélectionnez « Ventes » ; si vous souhaitez générer des prospects, sélectionnez « Prospects ».",
     "objective_tip_box": "Ciblez précisément ce que vous souhaitez que l'utilisateur fasse : Facebook optimise pour répondre exactement à vos demandes.",
@@ -1846,6 +1859,41 @@
         "name": "Fatigue Publicitaire",
         "category": "créations",
         "definition": "Lorsque votre audience a vu votre publicité trop de fois et que les performances commencent à décliner. Les signes incluent l'augmentation du CPC et la baisse du CTR. Il est temps d'avoir une nouvelle création !"
+      },
+      "reach": {
+        "name": "Portée",
+        "category": "métriques",
+        "definition": "Le nombre de personnes uniques qui ont vu votre publicité. Contrairement aux impressions, chaque personne n'est comptée qu'une seule fois."
+      },
+      "frequency": {
+        "name": "Fréquence",
+        "category": "métriques",
+        "definition": "Nombre moyen de fois où chaque personne a vu votre publicité. Une fréquence élevée (8+) peut causer la fatigue publicitaire."
+      },
+      "engagement": {
+        "name": "Engagement",
+        "category": "métriques",
+        "definition": "Interactions avec votre publicité - likes, commentaires, partages. Un engagement élevé aide à atteindre plus de personnes."
+      },
+      "daily_budget": {
+        "name": "Budget Quotidien",
+        "category": "structure_campagne",
+        "definition": "Montant maximum que vous dépenserez par jour pour une campagne. Facebook répartira cela uniformément sur la journée."
+      },
+      "lifetime_budget": {
+        "name": "Budget Total",
+        "category": "structure_campagne",
+        "definition": "Montant total sur toute la durée de la campagne. Facebook optimise les dépenses en fonction des performances."
+      },
+      "interest_targeting": {
+        "name": "Ciblage par Intérêts",
+        "category": "ciblage",
+        "definition": "Ciblez les personnes en fonction de leurs intérêts et hobbies. Par exemple : 'Yoga', 'Entrepreneurs' ou 'Shopping en ligne'."
+      },
+      "pixel": {
+        "name": "Pixel Facebook",
+        "category": "ciblage",
+        "definition": "Un petit code sur votre site web qui suit les actions des visiteurs. Essentiel pour mesurer les conversions et le retargeting."
       }
     }
   },
@@ -2000,5 +2048,16 @@
     "success_title": "Merci !",
     "success_message": "Votre commentaire a été envoyé avec succès.",
     "button_tooltip": "Envoyez-nous vos commentaires"
+  },
+  "onboarding": {
+    "step1_title": "Navigation",
+    "step1_content": "Utilisez la barre latérale pour naviguer entre les différentes sections comme Tableau de bord, Campagnes et Créatifs.",
+    "step2_title": "Vos Performances",
+    "step2_content": "Ces cartes affichent vos indicateurs clés en un coup d'œil : dépenses, conversions et retour sur investissement.",
+    "step3_title": "Assistant IA",
+    "step3_content": "Cliquez ici pour poser des questions sur vos données. Notre IA peut analyser vos campagnes.",
+    "step4_title": "Créer des Campagnes",
+    "step4_content": "Prêt à faire de la publicité ? Cliquez ici pour créer votre première campagne avec notre assistant étape par étape.",
+    "finish": "Compris !"
   }
 }

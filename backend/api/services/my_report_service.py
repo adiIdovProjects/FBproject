@@ -226,7 +226,8 @@ class MyReportService:
                     return {
                         'type': 'add_ads',
                         'icon': 'rocket',
-                        'message': f"Test another ad in '{campaign['campaign_name'][:30]}' - it's performing well"
+                        'message': f"Test another ad in '{campaign['campaign_name'][:30]}' - it's performing well",
+                        'reason': f"This campaign has a ROAS of {campaign_roas:.1f}x, which is 20% better than your average. Adding more ads can help scale what's already working."
                     }
 
             return None
@@ -273,14 +274,16 @@ class MyReportService:
                     return {
                         'type': 'creative_format',
                         'icon': 'video',
-                        'message': f"Videos getting {diff}% more clicks than images"
+                        'message': f"Videos getting {diff}% more clicks than images",
+                        'reason': f"Your videos have a {video_ctr:.2f}% click rate vs {image_ctr:.2f}% for images. Consider creating more video content to maximize engagement."
                     }
                 elif image_ctr > video_ctr * 1.2:
                     diff = int((image_ctr / video_ctr - 1) * 100)
                     return {
                         'type': 'creative_format',
                         'icon': 'image',
-                        'message': f"Images getting {diff}% more clicks than videos"
+                        'message': f"Images getting {diff}% more clicks than videos",
+                        'reason': f"Your images have a {image_ctr:.2f}% click rate vs {video_ctr:.2f}% for videos. Your audience responds better to static images."
                     }
 
             return None
@@ -333,7 +336,8 @@ class MyReportService:
                 return {
                     'type': 'budget_move',
                     'icon': 'dollar',
-                    'message': f"Increase spend in '{best['name'][:25]}' - it has the best CPA"
+                    'message': f"Increase spend in '{best['name'][:25]}' - it has the best CPA",
+                    'reason': f"This campaign costs ${best['cpa']:.2f} per conversion vs ${worst['cpa']:.2f} for your worst. Moving budget here gets you more results for the same money."
                 }
 
             return None
@@ -361,7 +365,8 @@ class MyReportService:
                 return {
                     'type': 'underspend',
                     'icon': 'trending_up',
-                    'message': "Increase spend on your winning campaigns"
+                    'message': "Increase spend on your winning campaigns",
+                    'reason': f"You've used only {actual_spend_rate:.0f}% of your monthly budget with {days_in_month - days_passed} days left. Scaling your best campaigns can help reach more customers."
                 }
 
             return None

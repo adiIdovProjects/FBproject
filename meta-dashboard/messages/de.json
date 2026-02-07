@@ -324,7 +324,8 @@
     }
   },
   "recommendations": {
-    "title": "Empfehlungen"
+    "title": "Empfehlungen",
+    "why": "Warum?"
   },
   "creatives": {
     "title": "Kreative Einblicke",
@@ -875,6 +876,18 @@
     "mistake_narrow_targeting": "Eine zu enge Zielgruppenansprache (unter 100.000 Nutzern) schränkt die Optimierungsmöglichkeiten von Facebook ein.",
     "mistake_learning_phase": "Eine Änderung der Anzeigen während der Lernphase setzt den Optimierungsprozess zurück.",
     "mistake_no_testing": "Wenn kreative Varianten nicht getestet werden, könnten Ihnen leistungsfähigere Optionen entgehen.",
+    "common_mistakes": "Häufige Fehler vermeiden",
+    "common_mistakes_desc": "Lernen Sie aus den Fehlern anderer, um Zeit und Geld zu sparen",
+    "mistake1_title": "Anzeigen während der Lernphase bearbeiten",
+    "mistake1_content": "Facebook benötigt etwa 50 Conversions, um zu lernen, wer am besten auf Ihre Anzeigen reagiert. Änderungen während dieser Phase setzen den Lernprozess zurück. Warten Sie mindestens 3-5 Tage.",
+    "mistake2_title": "Zu enges Targeting",
+    "mistake2_content": "Zielgruppen unter 100.000 Personen schränken die Optimierungsmöglichkeiten von Facebook ein. Starten Sie breit und lassen Sie den Algorithmus Ihre Käufer finden!",
+    "mistake3_title": "Zu früh aufgeben",
+    "mistake3_content": "Die meisten Kampagnen brauchen mindestens 7 Tage und etwas Budget. Geben Sie Facebook Zeit zur Optimierung.",
+    "mistake4_title": "Kein Tracking-Pixel installiert",
+    "mistake4_content": "Ohne den Facebook-Pixel können Sie keine Conversions verfolgen. Installieren Sie Ihren Pixel vor jeder Kampagne.",
+    "mistake5_title": "Nur ein Creative verwenden",
+    "mistake5_content": "Testen Sie immer 3-5 verschiedene Bilder oder Videos, damit Facebook die beste Option finden kann.",
     "objective_title": "Wählen Sie das richtige Kampagnenziel",
     "objective_tip": "Mit Ihrem Kampagnenziel teilen Sie Facebook mit, welche Aktion Sie von den Nutzern erwarten. Wählen Sie immer das Ziel, das Ihrem tatsächlichen Geschäftsziel entspricht: Wenn Sie Käufe generieren möchten, wählen Sie „Verkäufe“; wenn Sie Leads generieren möchten, wählen Sie „Leads“.",
     "objective_tip_box": "Richten Sie die Aufmerksamkeit auf das, was der Nutzer wirklich tun soll – Facebook optimiert genau für das, was Sie verlangen.",
@@ -1846,6 +1859,41 @@
         "name": "Ad Fatigue",
         "category": "Anzeigenmotive",
         "definition": "Wenn Ihre Zielgruppe Ihre Anzeige zu oft gesehen hat und die Leistung nachlässt. Anzeichen dafür sind steigende CPC und fallende CTR. Zeit für frische Werbemittel!"
+      },
+      "reach": {
+        "name": "Reichweite",
+        "category": "Metriken",
+        "definition": "Die Anzahl der einzelnen Personen, die Ihre Anzeige gesehen haben. Im Gegensatz zu Impressionen wird jede Person nur einmal gezählt."
+      },
+      "frequency": {
+        "name": "Frequenz",
+        "category": "Metriken",
+        "definition": "Durchschnittliche Anzahl, wie oft jede Person Ihre Anzeige gesehen hat. Hohe Frequenz (8+) kann zu Werbemüdigkeit führen."
+      },
+      "engagement": {
+        "name": "Engagement",
+        "category": "Metriken",
+        "definition": "Interaktionen mit Ihrer Anzeige - Likes, Kommentare, Shares. Hohes Engagement hilft, mehr Menschen zu erreichen."
+      },
+      "daily_budget": {
+        "name": "Tagesbudget",
+        "category": "Kampagnenstruktur",
+        "definition": "Maximaler Betrag pro Tag für eine Kampagne. Facebook verteilt dies gleichmäßig über den Tag."
+      },
+      "lifetime_budget": {
+        "name": "Laufzeitbudget",
+        "category": "Kampagnenstruktur",
+        "definition": "Gesamtbetrag über die gesamte Kampagnendauer. Facebook optimiert die Ausgaben basierend auf der Leistung."
+      },
+      "interest_targeting": {
+        "name": "Interessenbasiertes Targeting",
+        "category": "Zielgruppen",
+        "definition": "Zielgruppe basierend auf Interessen und Hobbys. Zum Beispiel: 'Yoga', 'Kleinunternehmer' oder 'Online-Shopping'."
+      },
+      "pixel": {
+        "name": "Facebook Pixel",
+        "category": "Zielgruppen",
+        "definition": "Ein kleiner Code auf Ihrer Website, der Besucheraktionen verfolgt. Unverzichtbar für Conversions und Retargeting."
       }
     }
   },
@@ -2000,5 +2048,16 @@
     "success_title": "Vielen Dank!",
     "success_message": "Ihr Feedback wurde erfolgreich übermittelt.",
     "button_tooltip": "Senden Sie uns Feedback"
+  },
+  "onboarding": {
+    "step1_title": "Navigation",
+    "step1_content": "Verwenden Sie die Seitenleiste, um zwischen verschiedenen Bereichen wie Dashboard, Kampagnen und Creatives zu navigieren.",
+    "step2_title": "Ihre Leistung",
+    "step2_content": "Diese Karten zeigen Ihre wichtigsten Kennzahlen auf einen Blick: Ausgaben, Conversions und Return on Ad Spend.",
+    "step3_title": "KI-Assistent",
+    "step3_content": "Klicken Sie hier, um Fragen zu Ihren Daten zu stellen. Unsere KI kann Ihre Kampagnen analysieren.",
+    "step4_title": "Kampagnen erstellen",
+    "step4_content": "Bereit zum Werben? Klicken Sie hier, um Ihre erste Kampagne mit unserem Schritt-für-Schritt-Assistenten zu erstellen.",
+    "finish": "Verstanden!"
   }
 }

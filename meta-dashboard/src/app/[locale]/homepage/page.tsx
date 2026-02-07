@@ -16,6 +16,7 @@ import DashboardKPICards from '../../../components/homepage/DashboardKPICards';
 import WeeklyPerformanceChart from '../../../components/homepage/WeeklyPerformanceChart';
 import GettingStartedCard from '../../../components/homepage/GettingStartedCard';
 import TipsCard from '../../../components/homepage/TipsCard';
+import OnboardingTour from '../../../components/onboarding/OnboardingTour';
 
 export default function Homepage() {
   const t = useTranslations();
@@ -52,10 +53,14 @@ export default function Homepage() {
       description={t('dashboard.subtitle') || 'Monitor your advertising performance in real-time'}
       compact
     >
+      {/* Onboarding Tour for first-time users */}
+      <OnboardingTour />
+
       {/* Create New Ad Button */}
       <div className="flex justify-end mb-6 -mt-2">
         <button
           onClick={handleCreateAd}
+          data-tour="create-campaign"
           className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl"
         >
           <Sparkles className="w-4 h-4" />
@@ -69,7 +74,7 @@ export default function Homepage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="mb-6">
+      <div className="mb-6" data-tour="kpi-cards">
         <DashboardKPICards startDate={startDate} endDate={endDate} />
       </div>
 

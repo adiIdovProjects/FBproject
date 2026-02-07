@@ -86,6 +86,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title, descrip
             {/* Floating AI Chat Button */}
             <button
                 onClick={() => openChat()}
+                data-tour="ai-button"
                 className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-40 w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group`}
                 aria-label={t('insights.open_ai_chat')}
             >

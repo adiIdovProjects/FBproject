@@ -7,9 +7,9 @@ import { useTranslations, useLocale } from 'next-intl';
 const CATEGORY_ORDER = ['metrics', 'campaign_structure', 'targeting', 'creatives'] as const;
 
 const TERM_KEYS = [
-  'spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm', 'conversions', 'cpa', 'roas', 'conversion_rate',
-  'campaign', 'adset', 'ad',
-  'lookalike', 'custom_audience', 'broad_targeting',
+  'spend', 'impressions', 'reach', 'frequency', 'clicks', 'ctr', 'cpc', 'cpm', 'conversions', 'cpa', 'roas', 'conversion_rate', 'engagement',
+  'campaign', 'targeting', 'ad', 'daily_budget', 'lifetime_budget',
+  'lookalike', 'custom_audience', 'broad_targeting', 'interest_targeting', 'pixel',
   'hook_rate', 'hold_rate', 'fatigue'
 ] as const;
 

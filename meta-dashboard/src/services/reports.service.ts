@@ -601,6 +601,7 @@ export interface Recommendation {
   type: string;
   icon: string;
   message: string;
+  reason?: string; // Optional "Why?" explanation for beginners
 }
 
 export interface MyReportPreferences {

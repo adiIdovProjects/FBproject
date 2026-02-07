@@ -351,7 +351,8 @@
     "view_advanced": "View Advanced Reports"
   },
   "recommendations": {
-    "title": "Recommendations"
+    "title": "Recommendations",
+    "why": "Why?"
   },
   "creatives": {
     "title": "Creative Insights",
@@ -897,7 +898,19 @@
     "mistake_too_many_ads": "Too many ads in one targeting dilutes your budget across too many variations",
     "mistake_narrow_targeting": "Too narrow targeting (audience under 100k) limits Facebook's optimization",
     "mistake_learning_phase": "Changing ads during learning phase resets the optimization process",
-    "mistake_no_testing": "Not testing creative variations means you might miss better performing options"
+    "mistake_no_testing": "Not testing creative variations means you might miss better performing options",
+    "common_mistakes": "Common Mistakes to Avoid",
+    "common_mistakes_desc": "Learn from others' mistakes to save time and money",
+    "mistake1_title": "Editing ads during learning phase",
+    "mistake1_content": "Facebook needs about 50 conversions to learn who responds best to your ads. Making changes during this period resets the learning process. Wait at least 3-5 days before making changes.",
+    "mistake2_title": "Too narrow targeting",
+    "mistake2_content": "Audiences smaller than 100,000 people limit Facebook's ability to find the best customers. Start broad and let Facebook's algorithm find your buyers - it knows more about users than you do!",
+    "mistake3_title": "Giving up too early",
+    "mistake3_content": "Most campaigns need at least 7 days and some budget to gather enough data. Pausing after 2 days because you don't see results is a common mistake. Give Facebook time to optimize.",
+    "mistake4_title": "No tracking pixel installed",
+    "mistake4_content": "Without the Facebook Pixel, you can't track conversions or use powerful features like lookalike audiences. Install your pixel before running any campaign - it's the foundation of successful ads.",
+    "mistake5_title": "Using only one ad creative",
+    "mistake5_content": "Running a single ad means you're betting everything on one idea. Always test 3-5 different images, videos, or headlines so Facebook can find which one performs best."
   },
   "tips": {
     "budget_testing": "Start with $10-20/day for testing new audiences",
@@ -1937,6 +1950,21 @@
         "category": "metrics",
         "definition": "Actions you care about that people take after clicking your ad - like purchases, signups, form submissions, or downloads."
       },
+      "reach": {
+        "name": "Reach",
+        "category": "metrics",
+        "definition": "The number of unique people who saw your ad. Unlike impressions, each person is counted only once even if they saw your ad multiple times."
+      },
+      "frequency": {
+        "name": "Frequency",
+        "category": "metrics",
+        "definition": "Average number of times each person saw your ad. Calculated as impressions ÷ reach. High frequency (8+) can cause ad fatigue."
+      },
+      "engagement": {
+        "name": "Engagement",
+        "category": "metrics",
+        "definition": "Interactions with your ad - likes, comments, shares, and saves. High engagement helps your ad reach more people organically."
+      },
       "cpa": {
         "name": "CPA (Cost Per Acquisition)",
         "category": "metrics",
@@ -1967,6 +1995,16 @@
         "category": "campaign_structure",
         "definition": "The actual creative that people see - your image or video, headline, text, and call-to-action button. Multiple ads can be tested within one targeting."
       },
+      "daily_budget": {
+        "name": "Daily Budget",
+        "category": "campaign_structure",
+        "definition": "Maximum amount you'll spend per day on a campaign. Facebook will try to spend this evenly throughout the day. You can change it anytime."
+      },
+      "lifetime_budget": {
+        "name": "Lifetime Budget",
+        "category": "campaign_structure",
+        "definition": "Total amount you'll spend over the entire campaign duration. Facebook will optimize spending across days based on performance."
+      },
       "lookalike": {
         "name": "Lookalike Audience",
         "category": "targeting",
@@ -1981,6 +2019,16 @@
         "name": "Broad Targeting",
         "category": "targeting",
         "definition": "Letting Facebook's AI find the best audience for your ads with minimal restrictions. Often performs well because the algorithm optimizes delivery."
+      },
+      "interest_targeting": {
+        "name": "Interest Targeting",
+        "category": "targeting",
+        "definition": "Target people based on their interests, hobbies, and pages they like. For example: 'Yoga', 'Small business owners', or 'Online shopping'."
+      },
+      "pixel": {
+        "name": "Facebook Pixel",
+        "category": "targeting",
+        "definition": "A small piece of code on your website that tracks visitor actions. Essential for measuring conversions, retargeting visitors, and building lookalike audiences."
       },
       "hook_rate": {
         "name": "Hook Rate",
@@ -2196,7 +2244,12 @@
     "date": "Date",
     "stage": "Stage",
     "total_leads": "{count} leads",
-    "gdpr_tooltip": "You are the data controller for this lead data under GDPR."
+    "gdpr_tooltip": "You are the data controller for this lead data under GDPR.",
+    "tab_details": "Details",
+    "tab_board": "Board",
+    "unnamed": "Unnamed",
+    "no_contact": "No contact info",
+    "drop_here": "Drop leads here"
   },
   "feedback": {
     "title": "Send Feedback",
@@ -2219,5 +2272,16 @@
     "success_title": "Thank you!",
     "success_message": "Your feedback has been submitted successfully.",
     "button_tooltip": "Send us feedback"
+  },
+  "onboarding": {
+    "step1_title": "Navigation",
+    "step1_content": "Use the sidebar to navigate between different sections like Dashboard, Campaigns, Creatives, and more.",
+    "step2_title": "Your Performance",
+    "step2_content": "These cards show your key metrics at a glance: spending, conversions, and return on ad spend.",
+    "step3_title": "AI Assistant",
+    "step3_content": "Click here to ask questions about your data. Our AI can analyze your campaigns and give you insights.",
+    "step4_title": "Create Campaigns",
+    "step4_content": "Ready to advertise? Click here to create your first campaign with our step-by-step wizard.",
+    "finish": "Got it!"
   }
 }
