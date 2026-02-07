@@ -121,22 +121,16 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
         is_connect_flow = False
         frontend_redirect_path = ""
         
-        logger.info(f"DEBUG: Processing callback with state: {state}")
-
-        
         try:
             from backend.config.base_config import settings
             from jose import jwt
             # Attempt to decode state as JWT
             decoded_state = jwt.decode(state, settings.JWT_SECRET_KEY, algorithms=[settings.ALGORITHM])
-            logger.info(f"DEBUG: Decoded state: {decoded_state}")
             if decoded_state.get("type") == "connect":
                 connect_user_id = decoded_state.get("user_id")
                 is_connect_flow = True
                 frontend_redirect_path = "/select-accounts"
-                logger.info("DEBUG: Detected CONNECT flow")
-        except Exception as e:
-            logger.error(f"DEBUG: State decoding failed: {e}")
+        except Exception:
             # Not a JWT or invalid signature, treat as normal login flow
             pass
 
@@ -280,7 +274,7 @@ async def facebook_callback(code: str, state: str, db: Session = Depends(get_db)
 async def get_facebook_accounts(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Fetch available ad accounts from Facebook for the current user"""
     if not current_user.fb_access_token:
-        raise HTTPException(status_code=401, detail="Facebook not connected")
+        raise HTTPException(status_code=403, detail="Facebook not connected")
 
     try:
         accounts = fb_service.get_managed_accounts(current_user.decrypted_fb_token)
@@ -293,7 +287,7 @@ async def get_facebook_accounts(current_user=Depends(get_current_user), db: Sess
 async def reconnect_facebook(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Reconnect Facebook and update page_id for all existing linked accounts"""
     if not current_user.fb_access_token:
-        raise HTTPException(status_code=401, detail="Facebook not connected")
+        raise HTTPException(status_code=403, detail="Facebook not connected")
 
     repo = UserRepository(db)
 

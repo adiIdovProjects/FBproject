@@ -198,13 +198,17 @@ def save_dataframe(engine, df: pd.DataFrame, table_name: str, pk_columns: list, 
                     # Handles scientific notation if it exists, but avoids float precision loss
                     s = str(val).split('.')[0].strip()
                     return int(s)
-                except:
+                except (ValueError, TypeError):
                     return 0
             df_to_save[col] = df_to_save[col].apply(to_int_safe).astype(np.int64)
             
     # Filter out NULL primary keys and de-duplicate to avoid CardinalityViolation
+    original_count = len(df_to_save)
     df_filtered = df_to_save.dropna(subset=pk_columns).drop_duplicates(subset=pk_columns)
-    
+    dropped_count = original_count - len(df_filtered)
+    if dropped_count > 0:
+        logger.warning(f"Dropped {dropped_count} rows from {table_name} (NULL PKs or duplicates)")
+
     if df_filtered.empty:
         logger.warning(f"Skipping {table_name}: All rows have NULL primary keys or were duplicates")
         return True

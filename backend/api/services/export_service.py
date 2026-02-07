@@ -429,7 +429,7 @@ class ExportService:
                     cell_length = len(str(row[0].value))
                     if cell_length > max_length:
                         max_length = cell_length
-                except:
+                except (TypeError, AttributeError):
                     pass
             adjusted_width = min(max_length + 2, 50)
             ws.column_dimensions[column_letter].width = adjusted_width

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.repositories.historical_repository import HistoricalRepository
 from backend.config.settings import GEMINI_MODEL
+from backend.config.base_config import SUPPORTED_LANGUAGES
 from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
@@ -227,16 +228,7 @@ class HistoricalInsightsService:
 
             context_json = json.dumps(context, indent=2, ensure_ascii=False)
 
-            # Map locale to language name
-            lang_map = {
-                'en': 'English',
-                'he': 'Hebrew',
-                'fr': 'French',
-                'de': 'German',
-                'es': 'Spanish',
-                'ar': 'Arabic'
-            }
-            target_lang = lang_map.get(locale, 'English')
+            target_lang = SUPPORTED_LANGUAGES.get(locale, 'English')
 
             # Check if we have ROAS data
             has_roas = any(w.get('roas', 0) > 0 for w in weekly_trends) if weekly_trends else False

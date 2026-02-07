@@ -19,6 +19,7 @@ from backend.api.repositories.user_repository import UserRepository
 from backend.api.repositories.adset_repository import AdSetRepository
 from backend.api.services.comparison_service import ComparisonService
 from backend.config.settings import GEMINI_MODEL
+from backend.config.base_config import SUPPORTED_LANGUAGES
 from backend.utils.cache_utils import TTLCache
 
 logger = logging.getLogger(__name__)
@@ -418,16 +419,7 @@ class InsightsService:
             if breakdown_type:
                 prompt_context += f" (breakdown: {breakdown_type})"
 
-            # Map locale to language name
-            lang_map = {
-                'en': 'English',
-                'he': 'Hebrew',
-                'fr': 'French',
-                'de': 'German',
-                'es': 'Spanish',
-                'ar': 'Arabic'
-            }
-            target_lang = lang_map.get(locale, 'English')
+            target_lang = SUPPORTED_LANGUAGES.get(locale, 'English')
 
             # Format account context
             account_context_str = self._format_account_context(data.get('account_context'))
@@ -529,16 +521,7 @@ class InsightsService:
             # Fallback analysis
             result = self._generate_fallback_deep_analysis(data)
         else:
-            # Map locale to language name
-            lang_map = {
-                'en': 'English',
-                'he': 'Hebrew',
-                'fr': 'French',
-                'de': 'German',
-                'es': 'Spanish',
-                'ar': 'Arabic'
-            }
-            target_lang = lang_map.get(locale, 'English')
+            target_lang = SUPPORTED_LANGUAGES.get(locale, 'English')
 
             # Format account context
             account_context_str = self._format_account_context(data.get('account_context'))
@@ -1489,9 +1472,8 @@ class InsightsService:
         if not has_roas:
             no_roas_instruction = "IMPORTANT: There is NO ROAS data. Do NOT mention ROAS. Focus on conversions, CPA, CTR instead."
 
-        # Map locale
-        lang_map = {'en': 'English', 'he': 'Hebrew', 'fr': 'French', 'de': 'German', 'ar': 'Arabic'}
-        target_lang = lang_map.get(locale, 'English')
+        # Map locale to language name
+        target_lang = SUPPORTED_LANGUAGES.get(locale, 'English')
 
         prompt = OVERVIEW_INSIGHT_PROMPT.format(
             target_lang=target_lang,

@@ -168,7 +168,7 @@ def export_to_google_sheets(
         google_refresh_token = current_user.google_refresh_token
         if not google_token:
             raise HTTPException(
-                status_code=401,
+                status_code=403,
                 detail="Google account not connected. Please connect your Google account in settings."
             )
 
@@ -356,7 +356,7 @@ def export_to_google_sheets_generic(
         if not google_token:
             logger.error("User missing Google access token")
             raise HTTPException(
-                status_code=401,
+                status_code=403,
                 detail="Google account not connected. Please connect your Google account in settings."
             )
 

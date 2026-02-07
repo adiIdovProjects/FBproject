@@ -28,8 +28,7 @@ class MyReportPreferencesRequest(BaseModel):
 router = APIRouter(
     prefix="/api/v1/reports",
     tags=["reports"],
-    # TODO: Re-enable authentication later
-    # dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)]
 )
 
 

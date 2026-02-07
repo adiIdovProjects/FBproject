@@ -8,6 +8,7 @@ import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AIChatProvider } from '@/context/AIChatContext';
 import { ToastProvider } from '@/context/ToastContext';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import ChatWidget from '@/components/chat/ChatWidget';
 import CookieConsent from '@/components/CookieConsent';
 
@@ -25,10 +26,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     }));
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-                <UserProvider>
-                    <AccountProvider>
+        <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <ThemeProvider>
+                    <UserProvider>
+                        <AccountProvider>
                             <AIChatProvider>
                                 <ToastProvider>
                                     {children}
@@ -37,8 +39,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                                 </ToastProvider>
                             </AIChatProvider>
                         </AccountProvider>
-                </UserProvider>
-            </ThemeProvider>
-        </QueryClientProvider>
+                    </UserProvider>
+                </ThemeProvider>
+            </QueryClientProvider>
+        </ErrorBoundary>
     );
 }

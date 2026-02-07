@@ -1,10 +1,12 @@
 """
 Email Service - Handles sending emails via Resend
 """
+import logging
 import resend
 from typing import Optional
 from backend.config.base_config import settings
 
+logger = logging.getLogger(__name__)
 
 # Initialize Resend with API key
 resend.api_key = settings.RESEND_API_KEY
@@ -85,11 +87,16 @@ def send_welcome_email(email: str, user_name: str) -> bool:
         }
 
         response = resend.Emails.send(params)
-        print(f"Welcome email sent to {email}. Message ID: {response.get('id', 'N/A')}")
-        return True
+        message_id = response.get('id')
+        if message_id:
+            logger.info(f"Welcome email sent successfully. Message ID: {message_id}")
+            return True
+        else:
+            logger.warning("Welcome email sent but no message ID returned")
+            return True
 
     except Exception as e:
-        print(f"Failed to send welcome email to {email}: {str(e)}")
+        logger.error(f"Failed to send welcome email: {str(e)}")
         return False
 
 
@@ -266,9 +273,14 @@ View full report: {settings.FRONTEND_URL}/my-reports
         }
 
         response = resend.Emails.send(params)
-        print(f"Daily report email sent to {email}. Message ID: {response.get('id', 'N/A')}")
-        return True
+        message_id = response.get('id')
+        if message_id:
+            logger.info(f"Daily report email sent successfully. Message ID: {message_id}")
+            return True
+        else:
+            logger.warning("Daily report email sent but no message ID returned")
+            return True
 
     except Exception as e:
-        print(f"Failed to send daily report email to {email}: {str(e)}")
+        logger.error(f"Failed to send daily report email: {str(e)}")
         return False

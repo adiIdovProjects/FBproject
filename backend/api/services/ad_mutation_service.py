@@ -326,7 +326,7 @@ class AdMutationService:
             logger.info(f"Creating lead form with payload keys: {list(payload.keys())}")
             logger.info(f"Questions JSON being sent to Facebook: {payload.get('questions')}")
             logger.info(f"Full fb_questions list: {fb_questions}")
-            response = requests.post(url, data=payload)
+            response = requests.post(url, data=payload, timeout=15)
             data = response.json()
             logger.info(f"Lead form creation response: {data}")
 
@@ -368,7 +368,7 @@ class AdMutationService:
                 'access_token': self.access_token,
                 'fields': 'whatsapp_business_account'
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -401,7 +401,7 @@ class AdMutationService:
                 'access_token': page_token,
                 'fields': 'id,name,status,created_time'
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             # Check for Facebook API error in response
@@ -457,7 +457,7 @@ class AdMutationService:
                 'access_token': page_token,
                 'fields': 'id,name,status,questions,privacy_policy_url,context_card,thank_you_page,created_time'
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             # Check for Facebook API error
@@ -578,7 +578,7 @@ class AdMutationService:
 
             # Handle pagination
             while url:
-                response = requests.get(url, params=params)
+                response = requests.get(url, params=params, timeout=15)
                 data = response.json()
 
                 if 'error' in data:
@@ -677,7 +677,7 @@ class AdMutationService:
                 'fields': 'id,name,subtype,approximate_count_lower_bound,approximate_count_upper_bound'
             }
             logger.info(f"Fetching custom audiences from: {url}")
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
             logger.info(f"Custom audiences API response: {data}")
 
@@ -725,7 +725,7 @@ class AdMutationService:
             }
             if locale:
                 params['locale'] = locale
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -774,7 +774,7 @@ class AdMutationService:
                 'type': 'adinterest',
                 'q': query
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -1824,7 +1824,7 @@ class AdMutationService:
             }
 
             logger.info(f"Creating custom audience '{name}' from pixel {pixel_id} with event {event_type}")
-            response = requests.post(url, data=payload)
+            response = requests.post(url, data=payload, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -1918,7 +1918,7 @@ class AdMutationService:
             }
 
             logger.info(f"Creating page engagement audience '{name}' from page {page_id} with type {engagement_type}")
-            response = requests.post(url, data=payload)
+            response = requests.post(url, data=payload, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -1988,7 +1988,7 @@ class AdMutationService:
             }
 
             logger.info(f"Creating lookalike audience '{name}' from source {source_audience_id} in {country_code} at {ratio*100}%")
-            response = requests.post(url, data=payload)
+            response = requests.post(url, data=payload, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -2031,7 +2031,7 @@ class AdMutationService:
                 'limit': limit,
                 'access_token': page_token
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -2072,7 +2072,7 @@ class AdMutationService:
                 'fields': 'instagram_business_account',
                 'access_token': page_token
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             if 'error' in data:
@@ -2109,7 +2109,7 @@ class AdMutationService:
                 'limit': limit,
                 'access_token': page_token
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
             if 'error' in data:

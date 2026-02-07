@@ -188,6 +188,9 @@ export default function CookieConsent() {
                                     </p>
                                 </div>
                                 <button
+                                    role="switch"
+                                    aria-checked={preferences.analytics}
+                                    aria-label={t('cookies.analytics') || 'Analytics Cookies'}
                                     onClick={() => setPreferences(p => ({ ...p, analytics: !p.analytics }))}
                                     className={`w-12 h-6 rounded-full flex items-center px-1 transition-colors ${
                                         preferences.analytics ? 'bg-blue-600 justify-end' : 'bg-gray-600 justify-start'
@@ -208,13 +211,15 @@ export default function CookieConsent() {
                                     </p>
                                 </div>
                                 <button
+                                    role="switch"
+                                    aria-checked={preferences.marketing}
+                                    aria-label={t('cookies.marketing') || 'Marketing Cookies'}
                                     onClick={() => setPreferences(p => ({ ...p, marketing: !p.marketing }))}
                                     className={`w-12 h-6 rounded-full flex items-center px-1 transition-colors ${
                                         preferences.marketing ? 'bg-blue-600 justify-end' : 'bg-gray-600 justify-start'
                                     }`}
                                 >
                                     <div className="w-4 h-4 bg-white rounded-full" />
-                                </button>
                             </div>
                         </div>
 

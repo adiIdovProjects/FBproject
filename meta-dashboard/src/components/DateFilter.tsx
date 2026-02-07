@@ -21,10 +21,9 @@ interface DateFilterProps {
     endDate: string | null;
     onDateRangeChange: (startDate: string | null, endDate: string | null) => void;
 
-    // Props שהועברו מה-Page הראשי לצורך תרגום ו-RTL
+    // Props for RTL support
     lang?: string;
     isRTL?: boolean;
-    t?: any; // Keep for compatibility but use hook internally
 }
 
 // ----------------------------------------------------------------------
@@ -150,6 +149,9 @@ const DateFilter: React.FC<DateFilterProps> = ({
             {/* 1. Compact Main Trigger Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                aria-haspopup="listbox"
+                aria-label={t('date.select_range')}
                 className="flex items-center justify-between px-3 py-2 bg-input text-foreground rounded-xl border border-border-subtle hover:border-accent/50 transition-all duration-300 shadow-lg hover:shadow-accent/10 group min-w-[140px]"
             >
                 <div className={`flex items-center space-x-2 ${flexDirectionClass} whitespace-nowrap`}>

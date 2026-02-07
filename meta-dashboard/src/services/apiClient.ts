@@ -1,15 +1,11 @@
 import axios from 'axios';
 
-// Helper to get CSRF token from cookie
-function getCsrfToken(): string | null {
-    if (typeof document === 'undefined') return null;
-    const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
-    if (!match) return null;
+// CSRF token stored in memory (more secure than non-HttpOnly cookie)
+let csrfToken: string | null = null;
 
-    // Extract the plain token from signed cookie format: timestamp:token:signature
-    const signedToken = decodeURIComponent(match[1]);
-    const parts = signedToken.split(':');
-    return parts.length === 3 ? parts[1] : null;
+// Get stored CSRF token
+function getCsrfToken(): string | null {
+    return csrfToken;
 }
 
 // API calls use relative URLs - Next.js rewrites proxy them to the backend
@@ -44,11 +40,10 @@ apiClient.interceptors.request.use(
 // Response Interceptor: Handle 401s, 403s, and store CSRF token
 apiClient.interceptors.response.use(
     (response) => {
-        // Store CSRF token from response header if provided
-        const csrfToken = response.headers['x-csrf-token'];
-        if (csrfToken && typeof document !== 'undefined') {
-            // Token is already in cookie, this header is for convenience
-            // No action needed - browser already has the cookie
+        // Store CSRF token from response header in memory
+        const newCsrfToken = response.headers['x-csrf-token'];
+        if (newCsrfToken) {
+            csrfToken = newCsrfToken;
         }
         return response;
     },
@@ -85,8 +80,11 @@ apiClient.interceptors.response.use(
                         // Extract locale from current URL path (e.g., /he/dashboard -> he)
                         const pathParts = path.split('/');
                         const locale = pathParts[1] || 'en';
-                        // Redirect to login preserving locale
-                        window.location.href = `/${locale}/login`;
+                        const loginPath = `/${locale}/login`;
+                        // Prevent redirect loop - only redirect if not already going to login
+                        if (path !== loginPath && !path.endsWith('/login')) {
+                            window.location.href = loginPath;
+                        }
                     }
                 }
             }

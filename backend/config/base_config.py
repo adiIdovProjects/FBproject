@@ -110,4 +110,15 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+
+# Supported languages configuration (centralized to avoid duplication)
+SUPPORTED_LANGUAGES = {
+    'en': 'English',
+    'he': 'Hebrew',
+    'fr': 'French',
+    'de': 'German',
+    'ar': 'Arabic',
+    'es': 'Spanish'
+}
+
 settings = Settings()

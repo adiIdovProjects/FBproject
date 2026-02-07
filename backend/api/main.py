@@ -104,6 +104,8 @@ class SimpleRateLimiter:
 rate_limiter = SimpleRateLimiter(requests_per_minute=100, burst_limit=15)
 # Stricter rate limiter for authentication endpoints (prevents brute force)
 auth_rate_limiter = SimpleRateLimiter(requests_per_minute=10, burst_limit=3)
+# Rate limiter for expensive operations (mutations, exports, AI)
+expensive_rate_limiter = SimpleRateLimiter(requests_per_minute=30, burst_limit=5)
 
 # Create FastAPI application
 app = FastAPI(
@@ -133,12 +135,12 @@ async def csrf_protection_middleware(request: Request, call_next):
             response.set_cookie(
                 key="csrf_token",
                 value=signed_token,
-                httponly=False,  # JavaScript needs to read this to send in header
+                httponly=True,  # SECURITY: HttpOnly prevents XSS from reading CSRF token
                 secure=settings.ENVIRONMENT == "production",
                 samesite="lax",
                 max_age=86400  # 24 hours
             )
-            # Also send plain token in header for client to use
+            # Send plain token in header - frontend stores this in memory
             response.headers["X-CSRF-Token"] = csrf_token
 
         return response
@@ -187,6 +189,10 @@ async def rate_limit_middleware(request: Request, call_next):
     auth_paths = ["/api/v1/auth/", "/api/v1/magic-link/"]
     is_auth_endpoint = any(request.url.path.startswith(p) for p in auth_paths)
 
+    # Apply rate limiting for expensive operations (mutations, exports, AI)
+    expensive_paths = ["/api/v1/mutations/", "/api/v1/export/", "/api/v1/ai/"]
+    is_expensive_endpoint = any(request.url.path.startswith(p) for p in expensive_paths)
+
     if is_auth_endpoint:
         # Use stricter auth rate limiter (10 req/min, 3 req/sec)
         if await auth_rate_limiter.is_rate_limited(client_ip):
@@ -195,6 +201,15 @@ async def rate_limit_middleware(request: Request, call_next):
                 status_code=429,
                 content={"detail": "Too many authentication attempts. Please try again in a few minutes."},
                 headers={"Retry-After": "300"}  # 5 minutes
+            )
+    elif is_expensive_endpoint:
+        # Use expensive rate limiter (30 req/min, 5 req/sec)
+        if await expensive_rate_limiter.is_rate_limited(client_ip):
+            logger.warning(f"Expensive operation rate limit exceeded for IP: {client_ip} on {request.url.path}")
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests for this operation. Please wait a moment."},
+                headers={"Retry-After": "120"}  # 2 minutes
             )
     else:
         # Use normal rate limiter (100 req/min, 15 req/sec)
