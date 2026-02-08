@@ -31,6 +31,37 @@
     "ongoing_text": "We regularly test our platform with assistive technologies and conduct accessibility audits to identify and resolve issues. We are committed to maintaining and improving accessibility as our platform evolves.",
     "footer_link": "Accessibility"
   },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Have a question or need help? We'd love to hear from you.",
+    "name_label": "Your Name",
+    "name_placeholder": "John Doe",
+    "email_label": "Email Address",
+    "email_placeholder": "john@example.com",
+    "message_label": "Message",
+    "message_placeholder": "How can we help you?",
+    "send_button": "Send Message",
+    "sending": "Sending...",
+    "success_title": "Message Sent!",
+    "success_message": "Thank you for reaching out. We'll get back to you within 24 hours.",
+    "error_message": "Something went wrong. Please try again.",
+    "direct_email": "Or email us directly"
+  },
+  "about": {
+    "title": "About Adstyr",
+    "subtitle": "We're on a mission to make Facebook advertising accessible to everyone.",
+    "mission_title": "Our Mission",
+    "mission_text": "We believe small business owners shouldn't need a marketing degree or expensive agency to run successful Facebook ads. Adstyr puts the power of professional analytics and AI-driven insights in your hands, so you can make smart decisions and grow your business.",
+    "value1_title": "Built for Beginners",
+    "value1_text": "No jargon, no complexity. We explain everything in plain English and guide you every step of the way.",
+    "value2_title": "Transparent Pricing",
+    "value2_text": "No hidden fees, no long contracts. Pay only for what you use and cancel anytime.",
+    "value3_title": "AI-Powered Insights",
+    "value3_text": "Our AI analyzes your campaigns 24/7 and gives you actionable recommendations in simple terms.",
+    "value4_title": "Real Results",
+    "value4_text": "Our users see an average 40% improvement in ROAS within the first month.",
+    "cta_button": "See Our Pricing"
+  },
   "common": {
     "error_loading": "Error Loading Data",
     "error_loading_help": "Try refreshing the page or check your internet connection.",
@@ -393,10 +424,10 @@
     "no_preview": "No preview"
   },
   "chat": {
-    "welcome_message": "Hi! I'm here to help you learn about AdsAI and Facebook Ads optimization. How can I assist you today?",
+    "welcome_message": "Hi! I'm here to help you learn about Adstyr and Facebook Ads optimization. How can I assist you today?",
     "error_message": "Sorry, I'm having trouble responding. Please try again.",
     "placeholder": "Type your message...",
-    "assistant_name": "AdsAI Assistant",
+    "assistant_name": "Adstyr Assistant",
     "typically_replies": "Typically replies instantly",
     "open_chat": "Open chat",
     "close_chat": "Close chat"
@@ -471,7 +502,7 @@
     "month": "Month"
   },
   "footer": {
-    "system_info": "AdSolus Analytics System"
+    "system_info": "Adstyr Analytics System"
   },
   "ai_investigator": {
     "title": "Ask Sol",
@@ -2273,7 +2304,7 @@
     "success_message": "Your feedback has been submitted successfully.",
     "button_tooltip": "Send us feedback"
   },
-  "onboarding": {
+  "onboarding_tour": {
     "step1_title": "Navigation",
     "step1_content": "Use the sidebar to navigate between different sections like Dashboard, Campaigns, Creatives, and more.",
     "step2_title": "Your Performance",

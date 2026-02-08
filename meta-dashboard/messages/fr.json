@@ -31,6 +31,37 @@
     "ongoing_text": "Nous testons régulièrement notre plateforme avec des technologies d'assistance et effectuons des audits d'accessibilité pour identifier et résoudre les problèmes. Nous nous engageons à maintenir et améliorer l'accessibilité à mesure que notre plateforme évolue.",
     "footer_link": "Accessibilité"
   },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Vous avez une question ou besoin d'aide ? Nous serions ravis de vous entendre.",
+    "name_label": "Votre nom",
+    "name_placeholder": "Jean Dupont",
+    "email_label": "Adresse e-mail",
+    "email_placeholder": "jean@example.com",
+    "message_label": "Message",
+    "message_placeholder": "Comment pouvons-nous vous aider ?",
+    "send_button": "Envoyer le message",
+    "sending": "Envoi en cours...",
+    "success_title": "Message envoyé !",
+    "success_message": "Merci de nous avoir contactés. Nous vous répondrons dans les 24 heures.",
+    "error_message": "Une erreur s'est produite. Veuillez réessayer.",
+    "direct_email": "Ou envoyez-nous un e-mail directement"
+  },
+  "about": {
+    "title": "À propos d'Adstyr",
+    "subtitle": "Notre mission est de rendre la publicité Facebook accessible à tous.",
+    "mission_title": "Notre mission",
+    "mission_text": "Nous croyons que les propriétaires de petites entreprises n'ont pas besoin d'un diplôme en marketing ou d'une agence coûteuse pour gérer des publicités Facebook réussies. Adstyr met la puissance des analyses professionnelles et des insights alimentés par l'IA entre vos mains.",
+    "value1_title": "Conçu pour les débutants",
+    "value1_text": "Pas de jargon, pas de complexité. Nous expliquons tout en termes simples et vous guidons à chaque étape.",
+    "value2_title": "Tarification transparente",
+    "value2_text": "Pas de frais cachés, pas de contrats longs. Payez uniquement ce que vous utilisez et annulez à tout moment.",
+    "value3_title": "Insights alimentés par l'IA",
+    "value3_text": "Notre IA analyse vos campagnes 24h/24 et 7j/7 et vous donne des recommandations actionnables en termes simples.",
+    "value4_title": "Résultats réels",
+    "value4_text": "Nos utilisateurs constatent une amélioration moyenne de 40% du ROAS dès le premier mois.",
+    "cta_button": "Voir nos tarifs"
+  },
   "common": {
     "error_loading": "Erreur lors du chargement des données",
     "no_data_available": "Aucune donnée disponible",
@@ -372,10 +403,10 @@
     "no_preview": "Pas d'aperçu"
   },
   "chat": {
-    "welcome_message": "Bonjour ! Je suis là pour vous aider à en savoir plus sur AdsAI et l'optimisation des publicités Facebook. Comment puis-je vous aider aujourd'hui ?",
+    "welcome_message": "Bonjour ! Je suis là pour vous aider à en savoir plus sur Adstyr et l'optimisation des publicités Facebook. Comment puis-je vous aider aujourd'hui ?",
     "error_message": "Désolé, j'ai du mal à répondre. Veuillez réessayer.",
     "placeholder": "Tapez votre message...",
-    "assistant_name": "Assistant AdsAI",
+    "assistant_name": "Assistant Adstyr",
     "typically_replies": "Répond généralement instantanément",
     "open_chat": "Ouvrir le chat",
     "close_chat": "Fermer le chat"
@@ -2068,7 +2099,7 @@
     "no_contact": "Pas d'informations de contact",
     "drop_here": "Déposez les prospects ici"
   },
-  "onboarding": {
+  "onboarding_tour": {
     "step1_title": "Navigation",
     "step1_content": "Utilisez la barre latérale pour naviguer entre les différentes sections comme Tableau de bord, Campagnes et Créatifs.",
     "step2_title": "Vos Performances",

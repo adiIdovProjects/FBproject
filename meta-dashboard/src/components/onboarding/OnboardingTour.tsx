@@ -20,26 +20,26 @@ interface TourStep {
 const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="sidebar"]',
-    title: 'onboarding.step1_title',
-    content: 'onboarding.step1_content',
+    title: 'onboarding_tour.step1_title',
+    content: 'onboarding_tour.step1_content',
     position: 'right',
   },
   {
     target: '[data-tour="kpi-cards"]',
-    title: 'onboarding.step2_title',
-    content: 'onboarding.step2_content',
+    title: 'onboarding_tour.step2_title',
+    content: 'onboarding_tour.step2_content',
     position: 'bottom',
   },
   {
     target: '[data-tour="ai-button"]',
-    title: 'onboarding.step3_title',
-    content: 'onboarding.step3_content',
+    title: 'onboarding_tour.step3_title',
+    content: 'onboarding_tour.step3_content',
     position: 'left',
   },
   {
     target: '[data-tour="create-campaign"]',
-    title: 'onboarding.step4_title',
-    content: 'onboarding.step4_content',
+    title: 'onboarding_tour.step4_title',
+    content: 'onboarding_tour.step4_content',
     position: 'right',
   },
 ];
@@ -234,7 +234,7 @@ export default function OnboardingTour() {
             onClick={handleNext}
             className="flex items-center gap-1 px-4 py-2 bg-accent hover:bg-accent-hover text-accent-text text-sm font-medium rounded-lg transition-colors"
           >
-            {isLastStep ? t('onboarding.finish') : t('common.next')}
+            {isLastStep ? t('onboarding_tour.finish') : t('common.next')}
             {!isLastStep && <ChevronRight className="w-4 h-4" />}
           </button>
         </div>

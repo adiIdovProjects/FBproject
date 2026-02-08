@@ -31,6 +31,37 @@
     "ongoing_text": "Wir testen unsere Plattform regelmäßig mit unterstützenden Technologien und führen Barrierefreiheitsprüfungen durch, um Probleme zu identifizieren und zu beheben. Wir sind bestrebt, die Barrierefreiheit zu erhalten und zu verbessern, während unsere Plattform sich weiterentwickelt.",
     "footer_link": "Barrierefreiheit"
   },
+  "contact": {
+    "title": "Kontaktieren Sie uns",
+    "subtitle": "Haben Sie eine Frage oder brauchen Sie Hilfe? Wir freuen uns von Ihnen zu hören.",
+    "name_label": "Ihr Name",
+    "name_placeholder": "Max Mustermann",
+    "email_label": "E-Mail-Adresse",
+    "email_placeholder": "max@example.com",
+    "message_label": "Nachricht",
+    "message_placeholder": "Wie können wir Ihnen helfen?",
+    "send_button": "Nachricht senden",
+    "sending": "Wird gesendet...",
+    "success_title": "Nachricht gesendet!",
+    "success_message": "Vielen Dank für Ihre Nachricht. Wir melden uns innerhalb von 24 Stunden.",
+    "error_message": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut.",
+    "direct_email": "Oder kontaktieren Sie uns direkt per E-Mail"
+  },
+  "about": {
+    "title": "Über Adstyr",
+    "subtitle": "Wir haben es uns zur Aufgabe gemacht, Facebook-Werbung für jeden zugänglich zu machen.",
+    "mission_title": "Unsere Mission",
+    "mission_text": "Wir glauben, dass Kleinunternehmer keinen Marketing-Abschluss oder eine teure Agentur brauchen, um erfolgreiche Facebook-Anzeigen zu schalten. Adstyr legt die Macht professioneller Analysen und KI-gestützter Erkenntnisse in Ihre Hände.",
+    "value1_title": "Für Anfänger entwickelt",
+    "value1_text": "Kein Fachjargon, keine Komplexität. Wir erklären alles in einfacher Sprache und begleiten Sie bei jedem Schritt.",
+    "value2_title": "Transparente Preise",
+    "value2_text": "Keine versteckten Gebühren, keine langen Verträge. Zahlen Sie nur für das, was Sie nutzen, und kündigen Sie jederzeit.",
+    "value3_title": "KI-gestützte Einblicke",
+    "value3_text": "Unsere KI analysiert Ihre Kampagnen rund um die Uhr und gibt Ihnen umsetzbare Empfehlungen in einfachen Worten.",
+    "value4_title": "Echte Ergebnisse",
+    "value4_text": "Unsere Nutzer sehen durchschnittlich eine 40%ige Verbesserung des ROAS im ersten Monat.",
+    "cta_button": "Unsere Preise ansehen"
+  },
   "common": {
     "error_loading": "Fehler beim Laden der Daten",
     "no_data_available": "Keine Daten verfügbar",
@@ -366,10 +397,10 @@
     "no_preview": "Keine Vorschau"
   },
   "chat": {
-    "welcome_message": "Hallo! Ich bin hier, um Ihnen bei AdsAI und der Facebook-Anzeigenoptimierung zu helfen. Wie kann ich Ihnen heute helfen?",
+    "welcome_message": "Hallo! Ich bin hier, um Ihnen bei Adstyr und der Facebook-Anzeigenoptimierung zu helfen. Wie kann ich Ihnen heute helfen?",
     "error_message": "Entschuldigung, ich habe Probleme beim Antworten. Bitte versuchen Sie es erneut.",
     "placeholder": "Nachricht eingeben...",
-    "assistant_name": "AdsAI Assistent",
+    "assistant_name": "Adstyr Assistent",
     "typically_replies": "Antwortet normalerweise sofort",
     "open_chat": "Chat öffnen",
     "close_chat": "Chat schließen"
@@ -2068,7 +2099,7 @@
     "no_contact": "Keine Kontaktdaten",
     "drop_here": "Leads hier ablegen"
   },
-  "onboarding": {
+  "onboarding_tour": {
     "step1_title": "Navigation",
     "step1_content": "Verwenden Sie die Seitenleiste, um zwischen verschiedenen Bereichen wie Dashboard, Kampagnen und Creatives zu navigieren.",
     "step2_title": "Ihre Leistung",
