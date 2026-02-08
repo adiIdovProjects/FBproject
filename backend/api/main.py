@@ -287,6 +287,11 @@ app.include_router(recommendations.router)
 app.include_router(pixel_router.router)
 app.include_router(feedback.router)
 
+@app.get("/", tags=["health"])
+def root():
+    """Root endpoint for Render health check - must respond immediately."""
+    return {"status": "ok"}
+
 @app.get("/ping", tags=["health"])
 def ping():
     """Simple ping endpoint without DB dependency."""
