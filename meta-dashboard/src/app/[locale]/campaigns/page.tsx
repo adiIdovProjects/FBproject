@@ -245,7 +245,6 @@ export default function CampaignsPage() {
             endDate={endDate}
             onDateRangeChange={handleDateRangeChange}
             lang={locale as any}
-            t={t}
             isRTL={isRTL}
           />
 

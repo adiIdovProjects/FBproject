@@ -253,7 +253,6 @@ export default function TargetingPage() {
                         endDate={dateRange.endDate}
                         onDateRangeChange={handleDateRangeChange}
                         lang={locale as any}
-                        t={t as any}
                         isRTL={isRTL}
                     />
 

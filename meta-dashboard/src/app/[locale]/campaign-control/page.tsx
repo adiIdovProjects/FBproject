@@ -302,7 +302,6 @@ export default function AdvancedAnalyticsPage() {
           endDate={endDate}
           onDateRangeChange={handleDateRangeChange}
           lang={locale as any}
-          t={t}
           isRTL={isRTL}
         />
         {/* Campaign Filter */}

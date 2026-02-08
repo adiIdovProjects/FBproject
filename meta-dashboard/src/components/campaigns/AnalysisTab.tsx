@@ -155,7 +155,6 @@ export default function AnalysisTab({ accountId }: AnalysisTabProps) {
             endDate={endDate}
             onDateRangeChange={handleDateRangeChange}
             lang={locale as any}
-            t={t}
             isRTL={isRTL}
           />
           <div className="flex items-center gap-3 w-full md:w-auto">

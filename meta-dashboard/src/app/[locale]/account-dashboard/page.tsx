@@ -226,7 +226,6 @@ export default function PerformanceDashboard() {
           endDate={endDate}
           onDateRangeChange={handleDateRangeChange}
           lang={locale as any}
-          t={t}
           isRTL={isRTL}
         />
       </div>

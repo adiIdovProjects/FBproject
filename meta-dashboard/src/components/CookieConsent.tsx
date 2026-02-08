@@ -220,6 +220,7 @@ export default function CookieConsent() {
                                     }`}
                                 >
                                     <div className="w-4 h-4 bg-white rounded-full" />
+                                </button>
                             </div>
                         </div>
 

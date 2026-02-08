@@ -502,7 +502,6 @@ export default function ReportsPage() {
               endDate={period1End}
               onDateRangeChange={handleDateRangeChange}
               lang={locale as any}
-              t={t}
               isRTL={isRTL}
             />
 
