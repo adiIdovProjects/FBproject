@@ -61,9 +61,12 @@ class FacebookAuthService:
             "client_secret": self.app_secret,
             "code": code,
         }
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params)
+            if not response.is_success:
+                # Log Facebook's actual error response for debugging
+                logger.error(f"Facebook token exchange failed: {response.status_code} - {response.text}")
             response.raise_for_status()
             return response.json()
 
@@ -76,9 +79,12 @@ class FacebookAuthService:
             "client_secret": self.app_secret,
             "fb_exchange_token": short_lived_token,
         }
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params)
+            if not response.is_success:
+                # Log Facebook's actual error response for debugging
+                logger.error(f"Facebook long-lived token exchange failed: {response.status_code} - {response.text}")
             response.raise_for_status()
             data = response.json()
             # Add calculated expiration
